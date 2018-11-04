@@ -1,0 +1,32 @@
+This Inferno® distribution includes software from various sources and
+different portions are therefore subject to different licence terms.
+The most stringent is the GNU Public License (version 2), which governs the collection.
+Individual components might have their own NOTICE and licence files (LICENCE
+or COPYING) that cover their content.  All of them allow modification and redistribution.
+They are all compatible with the GPLv2.
+
+The following copyright notice covers the contents of this
+distribution unless otherwise specified by a given file, directory, or
+directory tree:
+
+Inferno® Copyright © 1996-1999 Lucent Technologies Inc.  All rights reserved.
+Inferno revisions Copyright © 1997-1999 Vita Nuova Limited.  All rights reserved.
+Inferno revisions Copyright © 2000-2015 Vita Nuova Holdings Limited.  All rights reserved.
+Inferno new material Copyright © 2000-2015 Vita Nuova Holdings Limited.  All rights reserved.
+
+Inferno, Styx, Dis and Limbo are registered trademarks of Vita Nuova Holdings Limited in the USA and other countries.
+Plan 9 is a registered trademark of Lucent Technologies Inc.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License (`GPL') as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
