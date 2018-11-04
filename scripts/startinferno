@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+emu -g1280x1024 wm/wm
+
