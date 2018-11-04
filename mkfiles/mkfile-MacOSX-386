@@ -1,0 +1,51 @@
+TARGMODEL=	Posix
+TARGSHTYPE=	sh
+CPUS=		386
+
+O=		o
+OS=		o
+
+AR=		ar
+ARFLAGS=	ruvs
+A=		a
+
+MACVER=	10.5
+
+
+AS=		cc -c -arch i386 -m32
+ASFLAGS= -mmacosx-version-min=$MACVER
+
+ISYSROOT=	-isysroot /Developer/SDKs/MacOSX$MACVER.sdk
+
+CC=		cc -c -m32
+COPTFLAGS=	-Os
+CDEBUGFLAGS=
+CTHREADFLAGS=
+CFLAGS= 	-arch i386 -m32\
+		-mmacosx-version-min=$MACVER\
+		-Wno-deprecated-declarations -Wuninitialized -Wunused -Wreturn-type -Wimplicit -Wno-four-char-constants -Wno-unknown-pragmas\
+		-Wno-main-return-type \
+		-Wno-logical-op-parentheses \
+		-Wno-constant-conversion -Wno-bitwise-op-parentheses -Wno-unused-function \
+		-Wno-shift-op-parentheses -Wno-dangling-else \
+		-Wno-parentheses \
+		-Wno-switch \
+		-Wno-tautological-compare \
+		-Wno-string-plus-int \
+		-pipe\
+		-fno-strict-aliasing\
+		-no-cpp-precomp\
+		-I$ROOT/MacOSX/386/include\
+		-I$ROOT/include\
+		$COPTFLAGS $CDEBUGFLAGS\
+
+LD=		cc -arch i386 -m32
+LDFLAGS=\
+		-mmacosx-version-min=$MACVER\
+		-multiply_defined suppress
+
+SYSLIBS=
+
+YACC=		iyacc
+YFLAGS=		-d
+

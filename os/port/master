@@ -1,0 +1,95 @@
+# do not edit; automatically generated
+
+$	pci
+$	pnp
+*	indir
+*	pet
+/	root
+A	audio
+B	boot
+B	bridge
+B	tiboot
+D	ssl
+E	mpeg
+F	flash
+F	tinyfs
+G	fpga
+G	gpio
+H	ata
+I	ip
+J	i2c
+J	touch
+K	kprof
+L	ds1620
+L	lpt
+M	mnt
+O	omap
+P	arch
+P	prof
+Q	ssfdc
+S	sd
+T	cerf
+T	ep7
+T	ipaq
+T	lm78
+T	ti925
+T	touch
+U	usb
+U	usbc
+U	usbh
+V	tv
+X	XXX
+X	ftl
+X	irlap
+X	loopback
+X	plap
+Y	pbus
+Y	pccard
+Z	test
+Z	zt5512
+a	beep
+b	dbg
+c	cons
+d	dup
+e	env
+f	floppy
+g	gray
+h	dsp
+i	draw
+k	ds
+l	ether
+l	lance
+m	modem
+m	mouse
+m	pointer
+p	prog
+r	pcf8563
+r	rtc
+s	srv
+t	ns16552
+t	uart
+v	vga
+v	vid
+v	vsc
+x	esw
+y	i82365
+y	pcmcia
+y	sapcm
+|	pipe
+¤	cap
+Û	isp1161
+Û	usbh
+Σ	sign
+τ	tk
+↓	power
+
+α	local use
+β	local use
+γ	local use
+δ	local use
+ε	local use
+ζ	local use
+η	local use
+θ	local use
+ι	local use
+κ	local use
