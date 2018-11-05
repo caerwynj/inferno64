@@ -1,1 +1,8 @@
 # emu sh initialisation here
+load std
+
+# Run the user's profile
+if {test -r /usr/inferno/lib/profile} {
+	sh /usr/^`{cat /dev/user}^/lib/profile
+}
+
