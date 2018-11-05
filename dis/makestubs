@@ -3,7 +3,7 @@
 # Opt material courtesy of powerman
 user=`{cat /dev/user}
 home=/usr/$user
-dirs=($home/keyring /tmp /mnt/keys /mnt/registry /n/remote /chan /keydb)
+dirs=($home/keyring /tmp /mnt/keys /mnt/registry /mnt/acme /n/remote /chan /keydb)
 
 mkdir -p $home
 cp -r /usr/inferno/* $home/

@@ -1,0 +1,41 @@
+#!/dis/sh
+# find a given filename in a series of paths
+# find mc -i /dis /appl
+
+load expr
+load std
+
+fn usage {
+	echo >[1=2] usage: find filename paths...
+	exit usage
+}
+
+if {! ntest ${expr $#* 2 ge} } {
+	usage
+}
+
+# Get grep options
+ind=1
+dirs=()
+opts=()
+for i in $* { 
+	if {~ $i -*} {
+		opts=($opts $1)
+		ind = ${expr $ind 1 +}
+	}
+}
+
+# Get grep pattern
+pattern=${index $ind $*}
+ind = ${expr $ind 1 +}
+
+# Get directory list
+n = 1
+for i in $* {
+	if { ntest ${expr $n $ind ge} } {
+		dirs = ($dirs $i)
+	}
+	n = ${expr $n 1 +}
+}
+
+du -an $dirs | grep $opts $pattern
