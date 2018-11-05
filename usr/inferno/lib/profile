@@ -5,6 +5,7 @@ memfs
 # Networking
 ndb/cs
 ndb/dns
+bind -b '#scs' /net
 
 # /opt package setup
 /opt/setup/cmd

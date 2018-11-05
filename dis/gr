@@ -2,6 +2,7 @@
 # gr - recursive grep(1)
 
 load expr
+load std
 
 fn usage {
 	echo >[1=2] usage: gr [grep options] pattern [file...]
