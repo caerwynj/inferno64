@@ -1,0 +1,73 @@
+# MANDIRS=\
+# 	2\
+# 
+
+MKINDICES=$MKFILES/mkindices
+
+all:V:			indices-$OSTARG
+
+install:V:		all
+
+test:V:			install
+
+clean:V:		${MANDIRS:%=clean-%}
+
+clean-%:V:
+	rm -f $stem/INDEX
+
+nuke:V:			clean
+
+indices-Inferno:QV:
+	MKINDICESABS=`{ cleanname -d `{pwd} $"MKINDICES }
+	for j in $MANDIRS {
+		if { ftest -d $j } {
+			echo cd $j'; mk -f' $MKINDICES $MKFLAGS 'MANPAGES=… INDEX'
+			@{ pctl forkns; cd $j; mk -f $MKINDICESABS $MKFLAGS 'MANPAGES=`{ ls | grep -v ''^INDEX$'' }' INDEX }
+		} {
+			! ftest -e $j || raise $j^' not a directory'
+		}
+	}
+
+indices-os:QV:
+	MKINDICESABS=$(realpath $MKINDICES)
+	for j in $MANDIRS; do
+		if test -d $j; then
+			echo cd $j'; mk -f' $MKINDICES $MKFLAGS 'MANPAGES=… INDEX'
+			(cd $j; mk -f $MKINDICESABS $MKFLAGS "MANPAGES=$(echo $(ls | grep -v '^INDEX$'))" INDEX) || exit 1
+		else
+			test ! -e $j || { echo $j not a directory; exit 1; }
+		fi
+	done
+
+INDEX:N:		INDEX-$OSTARG
+
+INDEX-Inferno:QEV:	$MANPAGES
+	test -z $"prereq || {
+		echo 'generating INDEX'
+		# /man/*/INDEX generator by Pete Elmore
+		load regex
+		for f in $prereq {
+			ws := ${re sg '0intro' 'intro' $f}
+			h := ()
+			getlines {
+				(s n rest) := ${split ' ' $line}
+				if {~ $s .SH}	{h = $n; raise continue}
+				if {no $h}	{raise continue}
+				if {~ $h NAME}	{ws = $ws $line}	{raise break}
+			} < $f
+			ws = `{echo ${re sg '( |\\)-.*' '' $"ws} | tr A-Z a-z | tr -dc 'a-z0-9_/!~. -'}
+			for w in $ws {echo $w $f} | sort
+		} | uniq >INDEX
+	}
+
+INDEX-os:QV:		$MANPAGES
+	if test -n "$prereq"; then
+		echo 'generating INDEX'
+		perl -0777 -ne '
+			s/\A.*?^\.SH\s+NAME\s*\n(.*?)^\.SH\s.*/$1/ms;
+			s/(?:\s|\\)-.*//ms;
+			$f=$ARGV;
+			$f=~s/0intro/intro/ms;
+			print "$_ $ARGV\n" for sort map {lc} $f, /([\w\/!~.-]+)/msg;
+		' $prereq | uniq >INDEX
+	fi

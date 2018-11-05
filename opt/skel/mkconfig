@@ -1,0 +1,26 @@
+<$ROOT/mkconfig
+
+
+# PKGDIR: [host,emu] path to project's root (from mkfile's dir).
+# Used to run tests. Also very useful to simplify paths in any mkfile.
+PKGDIR=$PKGDIR	# MUST BE SET IN EVERY mkfile BEFORE INCLUDING THIS mkconfig!
+
+# OPTDIR: [host,emu] path to dir with opt/ subdir (from mkfile's dir).
+# Used to find modules by relative path (e.g. opt/powerman/tap/module/t.m).
+OPTDIR=${OSTARG:Inferno=/}
+OPTDIR=${OPTDIR:os=$INFERNO_HOME}
+
+# MKFILES: [host,emu] path to mkfiles/ dir (from mkfile's dir).
+# Used to find helper files needed by some mkfiles and ease including them.
+MKFILES=$OPTDIR/opt/mkfiles
+
+# EMUCMD: command to run .dis file from host os.
+# EMUPKGDIR: [emu] path to project's root (from $EMUCMD's dir).
+# Used to run tests from host os (e.g. $EMUCMD $EMUPKGDIR/appl/lib/t/smoke.dis).
+EMUCMD='emu-g sh -c "run /lib/sh/profile; \$1; shutdown -h"'
+EMUPKGDIR=/opt/skel
+
+
+# Default target (first target in first loaded mkfile).
+usage:QV:
+    echo mk all, install, test, clean or nuke

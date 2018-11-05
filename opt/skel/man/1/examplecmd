@@ -1,0 +1,22 @@
+.TH EXAMPLECMD 1
+.SH NAME
+examplecmd \- Example command in /opt skeleton project
+.SH SYNOPSIS
+.EX
+examplecmd [-v]
+
+.EE
+.SH DESCRIPTION
+.PP
+This command is example how to implement commands in /opt project.
+.PP
+.B -v
+will increase log verbosity level.
+.SH SOURCE
+.PP
+.B /opt/skel/appl/cmd/examplecmd.b
+.br
+.SH SEE ALSO
+.PP
+.IR examplelib (2)
+.SH BUGS

@@ -1,0 +1,10 @@
+PKGDIR=../..
+<$PKGDIR/mkconfig
+
+
+MANDIR=$PKGDIR/man/1
+
+MANTARG=\
+	examplecmd\
+
+<$MKFILES/mkasciidoc

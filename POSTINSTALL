@@ -1,0 +1,11 @@
+Post-installation setup procedures
+
+When in doubt, refer to the install document located in /doc.
+
+If directories are missing, run makestubs as per:
+
+	$ emu
+	; makestubs
+
+if Inferno is being hosted.
+

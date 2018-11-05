@@ -1,0 +1,42 @@
+# DISBIN=$PKGDIR/dis/lib
+# 
+# TARG=\
+# 	somelib.dis\
+# 
+# SYSMODULES=\
+# 	sys.m\
+# 
+# OPTMODULES=\
+#	opt/powerman/hashtable/module/hashtable.m\
+# 
+# MODULES=\
+# 	$PKGDIR/module/somelib.m\
+# 
+
+MODDIR=$ROOT/module
+SYS_MODULE=${SYSMODULES:%=$MODDIR/%}
+OPT_MODULE=${OPTMODULES:%=$OPTDIR/%}
+LIMBOFLAGS=-I$MODDIR -I$OPTDIR
+
+all:V:			$TARG
+
+install:V:		${TARG:%=$DISBIN/%}
+
+test:V:			install
+
+clean:V:
+	rm -f *.dis *.sbl *.s
+
+nuke:V:			clean
+	cd $DISBIN; rm -f $TARG
+
+%.dis:			$MODULES $SYS_MODULE $OPT_MODULE
+
+%.dis:			%.b
+	limbo $LIMBOFLAGS -gw $stem.b
+
+%.s:			%.b
+	limbo $LIMBOFLAGS -w -G -S $stem.b
+
+$DISBIN/%.dis:		%.dis
+	rm -f $DISBIN/$stem.dis && cp $stem.dis $DISBIN/$stem.dis

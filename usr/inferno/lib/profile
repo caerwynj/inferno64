@@ -1,0 +1,10 @@
+# Personal sh intialisation
+
+# Networking
+ndb/cs
+ndb/dns
+
+# /opt package setup
+/opt/setup/cmd
+/opt/setup/man
+

@@ -1,0 +1,38 @@
+EXAMPLELIB(2)
+=============
+
+== NAME
+
+examplelib - Example library in /opt skeleton project
+
+
+== SYNOPSIS
+
+----
+include "opt/skel/module/examplelib.m";
+	examplelib: ExampleLib;
+examplelib = load ExampleLib ExampleLib->PATH;
+
+init: fn();
+----
+
+
+== DESCRIPTION
+
+This module provide example how to implement library in /opt project.
+
+*init* will say "hi" to you.
+
+
+== SOURCE
+
+`/opt/skel/appl/lib/examplelib.b`
+
+
+== SEE ALSO
+
+examplecmd(1)
+
+
+== BUGS
+

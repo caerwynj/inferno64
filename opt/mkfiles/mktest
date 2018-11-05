@@ -1,0 +1,51 @@
+# TESTS=\
+# 	smoke.dis\
+# 	sometest.dis\
+# 
+# TESTTARG=\
+# 	share.dis\
+# 
+# SYSMODULES=\
+# 	sys.m\
+# 	draw.m\
+# 
+# OPTMODULES=\
+#	opt/powerman/tap/module/t.m\
+#	opt/powerman/tap/module/tap.m\
+# 
+# MODULES=\
+# 	$PKGDIR/module/somelib.m\
+# 
+
+MODDIR=$ROOT/module
+SYS_MODULE=${SYSMODULES:%=$MODDIR/%}
+OPT_MODULE=${OPTMODULES:%=$OPTDIR/%}
+LIMBOFLAGS=-I$MODDIR -I$OPTDIR
+
+all:V:			$TESTTARG $TESTS ${TESTS:%.dis=%.t}
+
+install:V:		all
+
+test:V:			install ${TESTS:%.dis=%.test-$OSTARG}
+
+clean:V:
+	rm -f *.dis *.sbl *.s *.t
+
+nuke:V:			clean
+
+%.dis:			$MODULES $SYS_MODULE $OPT_MODULE
+
+%.dis:			%.b
+	limbo $LIMBOFLAGS -gw $stem.b
+
+%.s:			%.b
+	limbo $LIMBOFLAGS -w -G -S $stem.b
+
+%.t:			$MKFILES/runtest.sh
+	cp $MKFILES/runtest.sh $stem.t
+
+%.test-Inferno:V:
+	d=`{pwd}; cd $PKGDIR; $d/$stem.dis
+
+%.test-os:V:
+	./$stem.t

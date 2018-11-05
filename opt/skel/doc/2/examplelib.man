@@ -1,0 +1,26 @@
+.TH EXAMPLELIB 2
+.SH NAME
+examplelib \- Example library in /opt skeleton project
+.SH SYNOPSIS
+.EX
+include "opt/skel/module/examplelib.m";
+        examplelib: ExampleLib;
+examplelib = load ExampleLib ExampleLib->PATH;
+
+init: fn();
+
+.EE
+.SH DESCRIPTION
+.PP
+This module provide example how to implement library in /opt project.
+.PP
+.B init
+will say "hi" to you.
+.SH SOURCE
+.PP
+.B /opt/skel/appl/lib/examplelib.b
+.br
+.SH SEE ALSO
+.PP
+.IR examplecmd (1)
+.SH BUGS

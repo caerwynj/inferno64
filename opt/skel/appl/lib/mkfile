@@ -1,0 +1,24 @@
+PKGDIR=../..
+<$PKGDIR/mkconfig
+
+
+DIRS=\
+	t\
+
+<$MKFILES/mksubdirs
+
+
+DISBIN=$PKGDIR/dis/lib
+
+TARG=\
+	examplelib.dis\
+
+SYSMODULES=\
+	sys.m\
+
+OPTMODULES=\
+
+MODULES=\
+	$PKGDIR/module/examplelib.m\
+
+<$MKFILES/mkdis

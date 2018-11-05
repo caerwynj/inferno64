@@ -1,2 +1,2 @@
 #!/dis/sh
-ls -p $* | mc
+ls -Fp $* | mc

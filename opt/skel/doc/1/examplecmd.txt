@@ -1,0 +1,34 @@
+EXAMPLECMD(1)
+=============
+
+== NAME
+
+examplecmd - Example command in /opt skeleton project
+
+
+== SYNOPSIS
+
+----
+examplecmd [-v]
+----
+
+
+== DESCRIPTION
+
+This command is example how to implement commands in /opt project.
+
+*-v* will increase log verbosity level.
+
+
+== SOURCE
+
+`/opt/skel/appl/cmd/examplecmd.b`
+
+
+== SEE ALSO
+
+examplelib(2)
+
+
+== BUGS
+

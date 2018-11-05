@@ -1,0 +1,30 @@
+# DIRS=\
+# 	subdir1\
+# 	subdir2\
+# 
+
+all:V:			all-$SHELLTYPE
+install:V:		install-$SHELLTYPE
+test:V:			test-$SHELLTYPE
+clean:V:		clean-$SHELLTYPE
+nuke:V:			nuke-$SHELLTYPE
+
+%-rc:QV:
+	for j in $DIRS {
+		if { ftest -d $j } {
+			echo cd $j'; mk' $MKFLAGS $stem
+			@{ pctl forkns; cd $j; mk $MKFLAGS $stem }
+		} {
+			! ftest -e $j || raise $j' not a directory'
+		}
+	}
+
+%-sh:QV:
+	for j in $DIRS; do
+		if test -d $j; then
+			echo cd $j'; mk' $MKFLAGS $stem
+			(cd $j; mk $MKFLAGS $stem) || exit 1
+		else
+			test ! -e $j || { echo $j not a directory; exit 1; }
+		fi
+	done

@@ -1,0 +1,43 @@
+# MANDIR=$PKGDIR/man/2
+# 
+# MANTARG=\
+# 	somelib\
+# 
+
+KEEPMTIME=${OSTARG:Inferno=-x}
+KEEPMTIME=${KEEPMTIME:os=-p}
+
+all:V:			${MANTARG:%=%.man}
+
+install:V:		${MANTARG:%=$MANDIR/%}
+
+test:V:			install
+
+clean:V:
+	rm -f *.man
+
+nuke:V:			clean
+	cd $MANDIR; rm -f $MANTARG
+
+%.man:N:		%.man-$OSTARG
+
+%.man-Inferno:QV:	%.txt
+	echo 'Require asciidoc (run mk install in host os)'
+	raise 'not implemented'
+
+%.man-os:QV:		%.txt
+	if ! asciidoc 2>/dev/null; then
+	    echo 'Require asciidoc: http://www.methods.co.nz/asciidoc/'
+	    false
+	elif ! asciidoc --backend list 2>/dev/null | grep -q 9man; then
+	    echo 'Require 9man backend for asciidoc: http://powerman.name/asciidoc/'
+	    false
+	else
+	    echo asciidoc -d manpage -b 9man $stem.txt
+	    asciidoc -d manpage -b 9man $stem.txt 
+	    # avoid redundant INDEX regen on next mk all
+	    touch -c -r $stem.txt -d '+1 second' $stem.man
+	fi
+
+$MANDIR/%:		%.man
+	rm -f $MANDIR/$stem && cp $KEEPMTIME $stem.man $MANDIR/$stem

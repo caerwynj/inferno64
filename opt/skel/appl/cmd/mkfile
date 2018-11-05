@@ -1,0 +1,27 @@
+PKGDIR=../..
+<$PKGDIR/mkconfig
+
+
+DIRS=\
+	t\
+
+<$MKFILES/mksubdirs
+
+
+DISBIN=$PKGDIR/dis/cmd
+
+TARG=\
+	examplecmd.dis\
+
+SYSMODULES=\
+	sys.m\
+	draw.m\
+	arg.m\
+
+OPTMODULES=\
+	opt/powerman/logger/module/logger.m\
+
+MODULES=\
+	$PKGDIR/module/examplelib.m\
+
+<$MKFILES/mkdis

@@ -8,8 +8,8 @@
 
 # change these defines as appropriate here or in mkconfig
 # ROOT should be the root of the Inferno tree
-ROOT=/usr/inferno
-SYSTARG=FreeBSD
+ROOT=$HOME/src/purgatorio
+SYSTARG=Linux
 OBJTYPE=386
 SYSTYPE=posix
 
@@ -19,8 +19,8 @@ grep -s 'SYSTARG=Plan9' mkconfig || . ./mkconfig
 PLAT=$ROOT/$SYSTARG/$OBJTYPE
 
 # you might need to adjust the CC, LD, AR, and RANLIB definitions after this point
-CC="p gcc -m32 -c -I$PLAT/include -I$ROOT/include -I$ROOT/utils/include"
-LD="p gcc -m32"
+CC="p cc -m32 -c -I$PLAT/include -I$ROOT/include -I$ROOT/utils/include"
+LD="p cc -m32"
 AR="p ar crvs"
 RANLIB=":"	# some systems still require `ranlib'
 
