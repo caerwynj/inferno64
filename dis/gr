@@ -1,0 +1,43 @@
+#!/dis/sh
+# gr - recursive grep(1)
+
+load expr
+
+fn usage {
+	echo >[1=2] usage: gr [grep options] pattern [file...]
+	exit usage
+}
+
+fn findfiles {
+	du -an $*
+}
+
+# Get grep options
+ind=1
+dirs=()
+opts=()
+for i in $* { 
+	if {~ $i -*} {
+		opts=($opts $1)
+		ind = ${expr $ind 1 +}
+	}
+}
+
+if { ntest ${expr $ind $#* ge} } {
+	usage
+}
+
+# Get grep pattern
+pattern=${index $ind $*}
+ind = ${expr $ind 1 +}
+
+# Get directory list
+n = 1
+for i in $* {
+	if { ntest ${expr $n $ind ge} } {
+		dirs = ($dirs $i)
+	}
+	n = ${expr $n 1 +}
+}
+
+grep $opts -n $pattern `{findfiles $dirs}

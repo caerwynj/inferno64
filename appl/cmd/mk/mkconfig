@@ -4,12 +4,12 @@
 #	They are almost always the same.
 
 #	On Nt systems, the ROOT path MUST be of the form `drive:/path'
-ROOT=
+ROOT=$HOME/src/purgatorio
 
 #
 #	Except for building kernels, SYSTARG must always be the same as SYSHOST
 #
-SYSHOST=Plan9		# build system OS type (Hp, Inferno, Irix, Linux, Nt, Plan9, Solaris)
+SYSHOST=Linux		# build system OS type (Hp, Inferno, Irix, Linux, Nt, Plan9, Solaris)
 SYSTARG=$SYSHOST		# target system OS type (Hp, Inferno, Irix, Linux, Nt, Plan9, Solaris)
 
 #
