@@ -2,11 +2,14 @@
 
 memfs
 
+# Set up environment
+bind -b $home/dis /dis
+bind -b $home/module /module
+
 # Networking
 ndb/cs
 ndb/dns
 
 # /opt package setup
-/opt/setup/cmd
-/opt/setup/man
-
+run /opt/setup/cmd
+run /opt/setup/man
