@@ -62,16 +62,18 @@ following in the root of the Inferno tree:
      name), SYSHOST and OBJTYPE.  The comments in  the  file
      should help you choose.
 
-2    Run  makemk.sh to rebuild the   mk  command,  which  is
+2    Run `makemk.sh` to rebuild the `mk` command,  which  is
      used to build everything else.
 
 3    Set  PATH (or  path on Plan 9)  to  include  the    bin
      directory for the platform, which will now contain the
      mk binary just built.  On Unix, export  PATH.
 
-4    Then  mk nuke to remove any extraneous object files.
+4    Then `mk nuke` to remove any extraneous object files.
 
-5    Finally,    mk  install  to  create  and  install   the
+5	Then `mk mkdirs` to create all the missing directories.
+
+6    Finally, `mk install` to create and install   the
      libraries,    limbo  compiler,  emu for hosted Inferno,
      and auxiliary commands.  The rules do that in an  order
      that ensures that the commands or libraries needed by a
@@ -84,3 +86,4 @@ requires  the  executable  for    mk  to be available in the
 search path, since there is no  equivalent  of    makemk.sh.
 Otherwise  the procedure is the same.  On Plan 9, of course,
 the host system's normal version of  mk should be adequate.
+
