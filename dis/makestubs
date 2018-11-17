@@ -1,6 +1,8 @@
 #!/dis/sh
 # Initialise stub directories that may be missing in the base install
 # Opt material courtesy of powerman
+load std
+
 user=`{cat /dev/user}
 home=/usr/$user
 dirs=($home/keyring $home/dis $home/module /tmp /mnt/keys /mnt/registry /mnt/acme /n/remote /chan /keydb)
