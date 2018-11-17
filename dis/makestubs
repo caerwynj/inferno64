@@ -4,12 +4,11 @@
 load std
 
 user=`{cat /dev/user}
-home=/usr/$user
-dirs=($home/keyring $home/dis $home/module /tmp /mnt/keys /mnt/registry /mnt/acme /n/remote /chan /keydb)
 
-mkdir -p $home
-cp -r /usr/inferno/* $home/
+dirs=(/tmp /mnt/keys /mnt/registry /mnt/acme /n/remote /chan /keydb)
 
 for i in $dirs {
 	mkdir -p $i
 }
+
+/dis/newuser $user

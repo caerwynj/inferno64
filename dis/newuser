@@ -1,0 +1,15 @@
+#!/dis/sh
+# Initialise directories and files for a new user
+load std
+
+user=$1
+home=/usr/$user
+
+dirs=($home/keyring $home/dis $home/module)
+
+mkdir -p $home
+cp -r /usr/inferno/* $home/
+
+for i in $dirs {
+	mkdir -p $i
+}
