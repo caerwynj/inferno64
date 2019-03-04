@@ -4,6 +4,7 @@ random: randomint, randombuf \-
 random number generation
 .SH SYNOPSIS
 .EX
+include "keyring.m";
 include "security.m";
 random := load Random Random->PATH;
 
