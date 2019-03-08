@@ -1,11 +1,14 @@
 Post-installation setup procedures
 
-When in doubt, refer to the install document located in /doc.
+Note: When in doubt, refer to the install document located in /doc.
 
-If directories are missing, run makestubs as per:
+If directories are missing, such as when running hosted,run makestubs as per
 
 	$ emu
 	; makestubs
 
-if Inferno is being hosted.
+If you want to create a new user by name on the fs, if hosted:
+
+	$ emu
+	; newuser myusername
 

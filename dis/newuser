@@ -2,6 +2,19 @@
 # Initialise directories and files for a new user
 load std
 
+args = $*
+argv0 = $0
+user = $1
+
+fn usage {
+		echo >[1=2] usage: $argv0 username
+		exit usage
+}
+
+if {! ~ $#args 1} {
+	usage
+}
+
 user=$1
 home=/usr/$user
 
