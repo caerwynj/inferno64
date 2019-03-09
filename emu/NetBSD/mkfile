@@ -1,18 +1,14 @@
+CONF=emu			#default configuration
+CONFLIST=emu
+CLEANCONFLIST=
+
 SYSTARG=NetBSD
 OBJTYPE=386
 <../../mkconfig
 SYSTARG=NetBSD
 OBJTYPE=386
 
-#Configurable parameters
-
-CONF=emu			#default configuration
-CONFLIST=emu
-CLEANCONFLIST=
-
 INSTALLDIR=$ROOT/$SYSTARG/$OBJTYPE/bin	#path of directory where kernel is installed
-
-#end configurable parameters
 
 # can remove or override X11LIBS using env section in config files
 X11LIBS= -L/usr/X11R7/lib -R/usr/X11R7/lib -lXext -lX11

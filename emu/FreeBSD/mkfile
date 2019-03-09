@@ -1,20 +1,16 @@
+CONF=emu			#default configuration
+CONFLIST=emu
+CLEANCONFLIST=
+
 SYSTARG=FreeBSD
 OBJTYPE=386
 <../../mkconfig
 SYSTARG=FreeBSD
 OBJTYPE=386
 
-#Configurable parameters
-
-CONF=emu			#default configuration
-CONFLIST=emu
-CLEANCONFLIST=
-
 INSTALLDIR=$ROOT/$SYSTARG/$OBJTYPE/bin	#path of directory where kernel is installed
 
 X11LIBS= -lX11 -lXext
-
-#end configurable parameters
 
 <$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE	#set vars based on target system
 

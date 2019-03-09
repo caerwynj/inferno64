@@ -11,6 +11,11 @@ ROOT=$HOME/src/purgatorio
 #
 TKSTYLE=std
 
+# emu target, emu-g is a headless variant. Linux/BSD only (emu, emu-g)
+CONF=emu
+
+#	binary will be placed at $SYSTARG/$OBJTYPE/bin/$CONF
+
 #
 #	Except for building kernels, SYSTARG must always be the same as SYSHOST
 #

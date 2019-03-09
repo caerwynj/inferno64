@@ -71,7 +71,7 @@ following in the root of the Inferno tree:
 
 4    Then `mk nuke` to remove any extraneous object files.
 
-5	Then `mk mkdirs` to create all the missing directories.
+5    Then `mk mkdirs` to create all the missing directories.
 
 6    Finally, `mk install` to create and install   the
      libraries,    limbo  compiler,  emu for hosted Inferno,

@@ -1,16 +1,12 @@
-<../../mkconfig
-SYSTARG=OpenBSD
-OBJTYPE=386
-
-#Configurable parameters
-
 CONF=emu			#default configuration
 CONFLIST=emu
 CLEANCONFLIST=
 
-INSTALLDIR=$ROOT/$SYSTARG/$OBJTYPE/bin	#path of directory where kernel is installed
+<../../mkconfig
+SYSTARG=OpenBSD
+OBJTYPE=386
 
-#end configurable parameters
+INSTALLDIR=$ROOT/$SYSTARG/$OBJTYPE/bin	#path of directory where kernel is installed
 
 <$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE	#set vars based on target system
 
