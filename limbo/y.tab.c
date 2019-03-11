@@ -2025,14 +2025,14 @@ case 103:
 {
 		yyval.ids = mkids(&yypt[-2].yyv.node->src, enter("junk", 0), yypt[-0].yyv.type, nil);
 		yyval.ids->store = Darg;
-		yyerror("illegal argument declaraion");
+		yyerror("illegal argument declaration");
 	} break;
 case 104:
 #line	588	"limbo.y"
 {
 		yyval.ids = mkids(&yypt[-2].yyv.node->src, enter("junk", 0), yypt[-0].yyv.type, nil);
 		yyval.ids->store = Darg;
-		yyerror("illegal argument declaraion");
+		yyerror("illegal argument declaration");
 	} break;
 case 105:
 #line	596	"limbo.y"

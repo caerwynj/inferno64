@@ -63,3 +63,12 @@ syntax: regexp
 ^libinterp/cryptmod.h
 ^libinterp/ipintsmod.h
 ^libinterp/keyringif.h
+^libinterp/drawmod.h
+^libinterp/freetypemod.h
+^libinterp/keyring.h
+^libinterp/loadermod.h
+^libinterp/mathmod.h
+^libinterp/runt.h
+^libinterp/sysmod.h
+^libinterp/tkmod.h
+^limbo/runt.h

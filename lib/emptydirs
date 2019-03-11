@@ -1,3 +1,4 @@
+AIX/power/lib
 FreeBSD/386/lib
 Inferno/386/bin
 Inferno/386/lib
@@ -16,6 +17,8 @@ Linux/arm/lib
 MacOSX/386/lib
 MacOSX/power/lib
 NetBSD/386/lib
+NetBSD/power/lib
+NetBSD/power/bin
 Nt/386/lib
 OpenBSD/386/bin
 OpenBSD/386/lib
