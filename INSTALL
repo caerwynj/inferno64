@@ -87,3 +87,13 @@ search path, since there is no  equivalent  of    makemk.sh.
 Otherwise  the procedure is the same.  On Plan 9, of course,
 the host system's normal version of  mk should be adequate.
 
+To build hosted Inferno for Windows/Nt you will need Microsoft Visual Studio installed. Then from the Inferno source root do:
+
+1    Edit mkconfig
+
+2    Add $INFERNO/Nt/bin to Path 
+
+3    Start Developer Command Prompt
+
+4    `mk install`
+
