@@ -207,9 +207,19 @@ main(argl : list of string)
 	f := utils->getenv("acme-font");
 	if (f != nil)
 		fontnames[0] = f;
+	else {
+		f = utils->getenv("font");
+		if (f != nil)
+			fontnames[0] = f;
+	}
 	f = utils->getenv("acme-Font");
 	if (f != nil)
 		fontnames[1] = f;
+	else {
+		f = utils->getenv("Font");
+		if (f != nil)
+			fontnames[0] = f;
+	}
 	arg = arginit(argl);
 	while(ac = argopt(arg)) case(ac){
 	'b' =>

@@ -91,7 +91,7 @@ To build hosted Inferno for Windows/Nt you will need Microsoft Visual Studio ins
 
 1    Edit mkconfig
 
-2    Add $INFERNO/Nt/bin to Path 
+2    Add $INFERNO/Nt/386/bin to Path 
 
 3    Start Developer Command Prompt
 
