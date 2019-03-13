@@ -142,6 +142,7 @@ TARG=\
 	styxmon.dis\
 	styxlisten.dis\
 	sum.dis\
+	tac.dis\
 	tail.dis\
 	tarfs.dis\
 	tclsh.dis\
@@ -170,6 +171,7 @@ TARG=\
 	wav2iaf.dis\
 	wc.dis\
 	webgrab.dis\
+	whois.dis\
 	wish.dis\
 	wmexport.dis\
 	wmimport.dis\
