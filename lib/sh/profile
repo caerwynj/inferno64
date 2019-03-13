@@ -6,6 +6,10 @@ home = /usr/^$user
 
 bind /locale/US_Central /locale/timezone
 
+# Fix creation annoyance for hosted inferno
+# this might be relevant for native, but is untested
+bind -c '#U'/dis /dis
+
 # Set up environment
 bind -b '#s' /chan
 
