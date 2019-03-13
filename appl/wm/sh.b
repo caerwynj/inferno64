@@ -100,6 +100,7 @@ scrolling := 1;
 partialread: array of byte;
 cwd := "";
 width, height, font: string;
+blackmode := 0;
 
 events: list of string;
 evrdreq: list of Rdreq;
@@ -130,6 +131,32 @@ init(ctxt: ref Context, argv: list of string)
 		badmod(Arg->PATH);
 	arg->init(argv);
 
+	arg->setusage("wm/sh [-bilxvn] [-w width] [-h height] [-f font] [-c command] [file [args...]");
+
+	shargs: list of string;
+	while ((opt := arg->opt()) != 0) {
+		case opt {
+		'w' =>
+			width = arg->earg();
+		'h' =>
+			height = arg->earg();
+		'b' =>
+			blackmode = 1;
+		'f' =>
+			font = arg->earg();
+		'c' =>
+			a := arg->earg();
+			shargs = a :: "-c" :: shargs;
+		'i' or 'l' or 'x' or 'v' or 'n' =>
+			shargs = sys->sprint("-%c", opt) :: shargs;
+		* =>
+			arg->usage();
+		}
+	}
+	argv = arg->argv();
+	for (; shargs != nil; shargs = tl shargs)
+		argv = hd shargs :: argv;
+
 	plumbmsg = load Plumbmsg Plumbmsg->PATH;
 
 	sys->pctl(Sys->FORKNS | Sys->NEWPGRP | Sys->FORKENV, nil);
@@ -147,30 +174,6 @@ init(ctxt: ref Context, argv: list of string)
 		workdir := load Workdir Workdir->PATH;
 		cwd = workdir->init();
 	}
-
-	shargs: list of string;
-	while ((opt := arg->opt()) != 0) {
-		case opt {
-		'w' =>
-			width = arg->arg();
-		'h' =>
-			height = arg->arg();
-		'f' =>
-			font = arg->arg();
-		'c' =>
-			a := arg->arg();
-			if (a == nil) {
-				sys->print("usage: wm/sh [-ilxvn] [-w width] [-h height] [-f font] [-c command] [file [args...]\n");
-				raise "fail:usage";
-			}
-			shargs = a :: "-c" :: shargs;
-		'i' or 'l' or 'x' or 'v' or 'n' =>
-			shargs = sys->sprint("-%c", opt) :: shargs;
-		}
-	}
-	argv = arg->argv();
-	for (; shargs != nil; shargs = tl shargs)
-		argv = hd shargs :: argv;
 
 	winname = Name + " " + cwd;
 
@@ -249,6 +252,10 @@ main(ctxt: ref Draw->Context, argv: list of string)
 	fwrite := file.write;
 
 	rdrpc: Rdreq;
+
+	if(blackmode) {
+		cmd(t, ".ft.t configure -bg black -selectforeground white");
+	}
 
 	# outpoint is place in text to insert characters printed by programs
 	cmd(t, ".ft.t mark set outpoint 1.0; .ft.t mark gravity outpoint left");
@@ -505,17 +512,15 @@ setholding(t: ref Tk->Toplevel, hold: int)
 
 setcols(t: ref Tk->Toplevel)
 {
-	fgcol := "black";
+	if(blackmode)
+		fgcol := "white";
+	else
+		fgcol = "black";
 	if(holding){
 		if(haskbdfocus)
 			fgcol = "#000099FF";	# DMedblue
 		else
 			fgcol = "#005DBBFF";	# DGreyblue
-	}else{
-		if(haskbdfocus)
-			fgcol = "black";
-		else
-			fgcol = "#666666FF";	# dark grey
 	}
 	cmd(t, ".ft.t configure -foreground "+fgcol+" -selectforeground "+fgcol);
 	cmd(t, ".ft.t tag configure sel -foreground "+fgcol);

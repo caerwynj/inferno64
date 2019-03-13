@@ -4,6 +4,8 @@ sh, mash \- Window frames for the Inferno shells
 .SH SYNOPSIS
 .B wm/sh
 [
+.B -b
+] [
 .B -w
 .I width
 ] [
@@ -43,6 +45,10 @@ with the arguments
 accepts the following additional options, which are
 not passed through to
 .IR sh :
+.HP
+.B -b
+.br
+Inverts the default background and text color scheme.
 .HP
 .B -w
 .I width
