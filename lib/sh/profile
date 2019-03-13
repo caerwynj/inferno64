@@ -14,8 +14,11 @@ bind -c '#U'/dis /dis
 bind -b '#s' /chan
 
 # Networking
-bind -b '#scs' /net
+ndb/dns -r
+ndb/cs
+# bind -b '#scs' /net
 mount {mntgen} /n
+mount {mntgen} /mnt
 
 # Run the user's profile
 cd

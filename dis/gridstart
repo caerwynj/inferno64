@@ -1,0 +1,17 @@
+#!/dis/sh
+# Connect to mycroftiv's public grid services
+load std
+
+echo '/n/griddisk
+/fonts/vga/unicode.font
+/fonts/vga/unicode.font
+          0          66
+f          1           1          36          36           3 
+          1          33          36           1           0 /n/griddisk/ Del Snarf Get | Look 
+F          1           1          15          15          28          15 
+          2          23          15           0           1  Del Snarf Undo | Look 
+Wiki /mnt/wiki' >/tmp/gridacme
+
+run /dis/engridden
+wm/sh -c hubchat
+acme -l/tmp/gridacme

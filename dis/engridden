@@ -1,0 +1,10 @@
+#!/dis/sh
+# If used with `run /dis/engridden`, will load public grid resources into the current namespace
+load std
+
+mount -Ac tcp!registry.9gridchan.org!6675 /mnt/registry
+
+grep 'service /bin/exportfs' /mnt/registry/index | getlines {
+	(srv is srvname mountpoint mpath rest) := ${split ' ' $line}
+	mount -Ac $srv $mpath
+}
