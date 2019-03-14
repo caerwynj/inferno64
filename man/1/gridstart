@@ -1,0 +1,29 @@
+.TH GRIDSTART 1
+.SH NAME
+gridstart, engridden \- connect to a public 9p service grid
+.SH SYNOPSIS
+.B gridstart
+.PP
+.B engridden
+.PP
+.SH DESCRIPTION
+.I gridstart
+is a startup script which connects to a set of public 9p services. By default it launches a subrio with several applications running. It can also make all connections via tls if desired.
+.PP
+The script begins by dialing and mounting an Inferno registry which lists the publicly available services. It then processes the index file to create a series of commands to dial and mount the services listed. The services are an irc-like chat provided by hubfs, an acme-editable wiki which can also be viewed (but not edited) via browser at http://wiki.9gridchan.org, a publicly writable ramdisk, a read-only root fs, a shared plumber that can be used to send messages between clients, and a separate publicly-writable registry for users to share additional services. The wiki has documentation on these services. The
+.IR engridden(1)
+script is used to mount all the services as per their respective entries in the grid registry.
+.PP
+The script launches the 
+.IR hubchat(1)
+client which connects to the default chat channel. It also starts
+.IR acme(1)
+with the wiki-editing command in a window, highlight the 'Wiki /mnt/wiki' command and middle-click to start the acme wiki viewing/editing program. 
+.PP
+.SH SOURCE
+.B /dis/gridstart
+.B /dis/engridden
+.SH BUGS
+It took almost ten years to figure out how to make a useful public 9p service grid.
+.SH META
+"A simple task, connecting using a script, but still to many, untouchable. Climbing a mountain is simple, you find a mountain and you walk forward until you reach the top, stopping to rest and eat. Running a script is simple, you download the tools required and run the script. Both require one to truly want the end result when they are things that the person is not accustomed to." - henesy

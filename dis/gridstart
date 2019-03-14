@@ -2,6 +2,14 @@
 # Connect to mycroftiv's public grid services
 load std
 
+args = $*
+
+# -m argument stub for now
+run /dis/engridden
+if {~ $#args  1}  {
+	{ exit }
+}
+
 echo '/n/griddisk
 /fonts/vga/unicode.font
 /fonts/vga/unicode.font
@@ -12,6 +20,5 @@ F          1           1          15          15          28          15
           2          23          15           0           1  Del Snarf Undo | Look 
 Wiki /mnt/wiki' >/tmp/gridacme
 
-run /dis/engridden
 wm/sh -c hubchat
 acme -l/tmp/gridacme
