@@ -2,13 +2,7 @@
 # Connect to mycroftiv's public grid services
 load std
 
-args = $*
-
-# -m argument stub for now
 run /dis/engridden
-if {~ $#args  1}  {
-	{ exit }
-}
 
 echo '/n/griddisk
 /fonts/vga/unicode.font
