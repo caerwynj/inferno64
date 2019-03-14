@@ -1,5 +1,7 @@
 include "sys.m";
 include "bufio.m";
+include "env.m";
+include "arg.m";
 include "plumbmsg.m";
 include "workdir.m";
 include "draw.m";

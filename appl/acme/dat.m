@@ -6,6 +6,8 @@ Dat : module {
 	Mods : adt {
 		sys : Sys;
 		bufio : Bufio;
+		env : Env;
+		arg : Arg;
 		draw : Draw;
 		styx : Styx;
 		styxaux : Styxaux;

@@ -2,7 +2,6 @@ implement Utils;
 
 include "common.m";
 include "sh.m";
-include "env.m";
 
 sys : Sys;
 draw : Draw;
@@ -115,25 +114,6 @@ strncmp(s, t : string, n : int) : int
 	return 0;
 }
 
-env : Env;
-
-getenv(s : string) : string
-{
-	if (env == nil)
-		env = load Env Env->PATH;
-	e := env->getenv(s);
-	if(e != nil && e[len e - 1] == '\n')	# shell bug
-		return e[0: len e -1];
-	return e;
-}
-
-setenv(s, t : string)
-{
-	if (env == nil)
-		env = load Env Env->PATH;
-	env->setenv(s, t);
-}
-
 stob(s : string, n : int) : array of byte
 {
 	b := array[2*n] of byte;
@@ -161,59 +141,6 @@ reverse(ol : list of string) : list of string
 		ol = tl ol;
 	}
 	return nl;
-}
-
-nextarg(p : ref Arg) : int
-{
-	bp : string;
-
-	if(p.av != nil){
-		bp = hd p.av;
-		if(bp != nil && bp[0] == '-'){
-			p.p = bp[1:];
-			p.av = tl p.av;
-			return 1;
-		}
-	}
-	p.p = nil;
-	return 0;
-}
-
-arginit(av : list of string) : ref Arg
-{
-	p : ref Arg;
-
-	p = ref Arg;
-	p.arg0 = hd av;
-	p.av = tl av;
-	nextarg(p);
-	return p;
-}
-
-argopt(p : ref Arg) : int
-{
-	r : int;
-
-	if(p.p == nil && nextarg(p) == 0)
-		return 0;
-	r = p.p[0];
-	p.p = p.p[1:];
-	return r;
-}
-
-argf(p : ref Arg) : string
-{
-	bp : string;
-
-	if(p.p != nil){
-		bp = p.p;
-		p.p = nil;
-	} else if(p.av != nil){
-		bp = hd p.av;
-		p.av = tl p.av;
-	} else
-		bp = nil;
-	return bp;
 }
 
 exec(cmd : string, argl : list of string)

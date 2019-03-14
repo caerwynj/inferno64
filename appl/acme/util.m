@@ -3,18 +3,9 @@ Utils : module {
 
 	stderr : ref Sys->FD;
 
-	Arg : adt {
-		arg0 : string;
-		av : list of string;
-		p : string;
-	};
-
 	PNPROC, PNGROUP : con iota;
 
 	init : fn(mods : ref Dat->Mods);
-	arginit : fn(av : list of string) : ref Arg;
-	argopt : fn(p : ref Arg) : int;
-	argf : fn(p : ref Arg) : string;
 	min : fn(a : int, b : int) : int;
 	max : fn(a : int, b : int) : int;
 	abs : fn(x : int) : int;
@@ -40,8 +31,6 @@ Utils : module {
 	strchr : fn(s : string, c : int) : int;
 	strrchr: fn(s : string, c : int) : int;
 	strncmp : fn(s, t : string, n : int) : int;
-	getenv : fn(s : string) : string;
-	setenv : fn(s, t : string);
 	stob : fn(s : string, n : int) : array of byte;
 	btos : fn(b : array of byte, s : ref Dat->Astring);
 	findbl : fn(s : string, n : int) : (string, int);

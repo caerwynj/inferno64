@@ -3,6 +3,7 @@ implement Exec;
 include "common.m";
 
 sys : Sys;
+env : Env;
 dat : Dat;
 acme : Acme;
 utils : Utils;
@@ -39,6 +40,7 @@ setalphabet: import textm;
 init(mods : ref Dat->Mods)
 {
 	sys = mods.sys;
+	env = mods.env;
 	dat = mods.dat;
 	acme = mods.acme;
 	utils = mods.utils;
@@ -1203,7 +1205,7 @@ run(win : ref Window, s : string, rdir : string, ndir : int, newns : int, argadd
 			dir = nil;
 		}
 		if(filename != nil)
-			utils->setenv("%", filename);
+			env->setenv("%", filename);
 		c.md = fsys->fsysmount(rdir, ndir, incl, nincl);
 		if(c.md == nil){
 			# error("child: can't mount /mnt/acme");
@@ -1242,7 +1244,7 @@ run(win : ref Window, s : string, rdir : string, ndir : int, newns : int, argadd
 		else
 			sys->dup(1, 2);
 		tfd = nil;
-		utils->setenv("acmewin", wids);
+		env->setenv("acmewin", wids);
 	}else{
 		if(win != nil)
 			win.close();
@@ -1271,7 +1273,7 @@ run(win : ref Window, s : string, rdir : string, ndir : int, newns : int, argadd
 	}
 
 	if(argaddr != nil)
-		utils->setenv("acmeaddr", argaddr);
+		env->setenv("acmeaddr", argaddr);
 	hard := 0;
 	if(len s > 512-10)	# may need to print into stack 
 		hard = 1;
