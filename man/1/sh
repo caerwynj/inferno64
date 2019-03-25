@@ -13,7 +13,7 @@ sh, builtin, exit, load, loaded, local, whatis, quote, run, set, unload, unquote
 .I file
 [
 .I arg ...
-]
+]]
 .SH DESCRIPTION
 .I Sh
 is a programmable user level interface (a shell) for Inferno.
@@ -23,7 +23,7 @@ flag, from
 .IR sh 's
 argument list. It can also be used to give programmable functionality
 to Limbo modules (see
-.IR sh "" "" (2)).
+.IR sh (2)).
 .SS Command Lines
 A command line is a sequence of commands, separated by ampersands or semicolons
 .RB ( &
