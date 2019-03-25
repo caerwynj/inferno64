@@ -922,8 +922,7 @@ This option implies
 .B -l
 If
 .B -l
-is given or the first character of argument zero is
-.BR - ,
+is given
 .I sh
 reads commands from
 .BR /lib/sh/profile ,

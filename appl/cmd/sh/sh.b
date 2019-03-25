@@ -12,6 +12,8 @@ include "filepat.m";
 	filepat: Filepat;
 include "env.m";
 	env: Env;
+include "arg.m";
+	argm: Arg;
 include "sh.m";
 	myself: Sh;
 	myselfbuiltin: Shellbuiltin;
@@ -62,8 +64,8 @@ Options: adt {
 	carg:			string;
 };
 
+# module definition is in shell.m
 
-	# module definition is in shell.m
 DUP: con	57346;
 REDIR: con	57347;
 WORD: con	57348;
@@ -77,7 +79,6 @@ YYERRCODE: con 2;
 YYMAXDEPTH: con 200;
 
 
-
 EPERM: con "permission denied";
 EPIPE: con "write on closed pipe";
 
@@ -87,15 +88,9 @@ BUILTINPATH: con "/dis/sh";
 DEBUG: con 0;
 
 ENVSEP: con 0;				# word seperator in external environment
-ENVHASHSIZE: con 7;		# XXX profile usage of this...
+ENVHASHSIZE: con 7;			# XXX profile usage of this...
 OAPPEND: con 16r80000;		# make sure this doesn't clash with O* constants in sys.m
 OMASK: con 7;
-
-usage()
-{
-	sys->fprint(stderr(), "usage: sh [-ilexn] [-c command] [file [arg...]]\n");
-	raise "fail:usage";
-}
 
 badmodule(path: string)
 {
@@ -124,51 +119,43 @@ initialise()
 		if (myselfbuiltin == nil) badmodule("$self(Shellbuiltin)");
 
 		env = load Env Env->PATH;
+		if(env == nil) badmodule(Env->PATH);
+		
+		argm = load Arg Arg->PATH;
+		if(argm == nil) badmodule(Arg->PATH);
 	}
 }
+
 blankopts: Options;
+
 init(drawcontext: ref Draw->Context, argv: list of string)
 {
 	initialise();
 	opts := blankopts;
-	if (argv != nil) {
-		if ((hd argv)[0] == '-')
-			opts.lflag++;
-		argv = tl argv;
-	}
 
 	interactive := 0;
-loop: while (argv != nil && hd argv != nil && (hd argv)[0] == '-') {
-		for (i := 1; i < len hd argv; i++) {
-			c := (hd argv)[i];
-			case c {
-			'i' =>
-				interactive = Context.INTERACTIVE;
-			'l' =>
-				opts.lflag++;	# login (read $home/lib/profile)
-			'n' =>
-				opts.nflag++;	# don't fork namespace
-			'e' =>
-				opts.ctxtflags |= Context.ERROREXIT;
-			'x' =>
-				opts.ctxtflags |= Context.EXECPRINT;
-			'c' =>
-				arg: string;
-				if (i < len hd argv - 1) {
-					arg = (hd argv)[i + 1:];
-				} else if (tl argv == nil || hd tl argv == "") {
-					usage();
-				} else {
-					arg = hd tl argv;
-					argv = tl argv;
-				}
-				argv = tl argv;
-				opts.carg = arg;
-				continue loop;
-			}
+
+	argm->init(argv);
+	argm->setusage("sh [-ilexn] [-c command] [file [arg...]]");
+ 
+	while ((c := argm->opt()) != 0) {
+		case c {
+		'i' =>
+			interactive = Context.INTERACTIVE;
+		'l' =>
+			opts.lflag++;	# login (read /lib/sh/profile which may call another */lib/profile)
+		'n' =>
+			opts.nflag++;	# don't fork namespace
+		'e' =>
+			opts.ctxtflags |= Context.ERROREXIT;
+		'x' =>
+			opts.ctxtflags |= Context.EXECPRINT;
+		'c' =>
+			opts.carg = argm->earg();
 		}
-		argv = tl argv;
 	}
+	
+	argv = argm->argv();
 
 	sys->pctl(Sys->FORKFD, nil);
 	if (!opts.nflag)
