@@ -2,13 +2,33 @@ Post-installation setup procedures
 
 Note: When in doubt, refer to the install document located in /doc.
 
-If directories are missing, such as when running hosted,run makestubs as per
+If directories are missing, such as when running hosted, run makestubs as per:
 
-	$ emu
 	; makestubs
 
 If you want to create a new user by name on the fs, if hosted:
 
-	$ emu
 	; newuser myusername
+
+To set up an auth server on a new hosted install and user $user:
+
+	; newuser $user							# Make user on fs
+	; auth/createsignerkey example.com		# Create signer key
+	; svc/auth &							# Start auth server
+	Key: myserverpassword
+	Confirm key: myserverpassword
+	; auth/changelogin $user				# Configure user's auth
+	secret: myuserpassword
+	confirm: myuserpassword
+	expires [DDMMYYYY/permanent, ...]: permanent
+
+To set up a client to an auth server on a new hosted install with $user:
+
+	getauthinfo default
+	use signer [$SIGNER]: example.com
+	remote user name [someuser]: $user
+	password: myuserpassword
+	save in file [yes]: yes
+
+Note: Substitute localhost for example.com if you're just running local Inferno instances. 
 
