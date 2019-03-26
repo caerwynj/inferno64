@@ -14,32 +14,36 @@ Emuinit: module
 init()
 {
 	sys = load Sys Sys->PATH;
+
 	sys->bind("#e", "/env", sys->MREPL|sys->MCREATE);	# if #e not configured, that's fine
 	args := getenv("emuargs");
 	arg = load Arg Arg->PATH;
-	if (arg == nil)
+	if (arg == nil) {
 		sys->fprint(sys->fildes(2), "emuinit: cannot load %s: %r\n", Arg->PATH);
-	else{
+	} else {
 		arg->init(args);
 		while((c := arg->opt()) != 0)
 			case c {
 			'g' or 'c' or 'C' or 'm' or 'p' or 'f' or 'r' or 'd' =>
 				arg->arg();
-	                  }
+			}
 		args = arg->argv();
 	}
+
 	mod: Command;
 	(mod, args) = loadmod(args);
+
 	mod->init(nil, args);
 }
 
 loadmod(args: list of string): (Command, list of string)
 {
 	path := Command->PATH;
+	
 	if(args != nil)
 		path = hd args;
 	else
-		args = "-l" :: nil;	# add startup option
+		args = "sh" :: "-l" :: nil;	# add startup option
 
 	# try loading the module directly.
 	mod: Command;
@@ -60,6 +64,7 @@ loadmod(args: list of string): (Command, list of string)
 		sys->fprint(sys->fildes(2), "emuinit: unable to load %s: %s\n", path, err);
 		raise "fail:error";
 	}
+
 	return (mod, "sh" :: "-c" :: "$*" :: args);
 }
 

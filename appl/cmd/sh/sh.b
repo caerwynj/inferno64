@@ -152,6 +152,8 @@ init(drawcontext: ref Draw->Context, argv: list of string)
 			opts.ctxtflags |= Context.EXECPRINT;
 		'c' =>
 			opts.carg = argm->earg();
+		* =>
+			argm->usage();
 		}
 	}
 	
