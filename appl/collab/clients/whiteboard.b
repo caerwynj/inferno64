@@ -108,8 +108,10 @@ Connect:
 	(err, strokeimg, sfd, ctlfd) = <-cc =>
 		if (err == nil)
 			break Connect;
-		else
+		else {
 			showtext(cimage, "Error: " + err);
+			sys->fprint(sys->fildes(2), "Error: %s\n", err);
+		}
 
 	s := <-winctl or
 	s = <-win.wreq or

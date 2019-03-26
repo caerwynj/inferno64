@@ -12,11 +12,16 @@ init(root: string, fd: ref Sys->FD, rc: chan of ref Srvreq, user: string)
 {
 	sys = load Sys Sys->PATH;
 
+	if(fd == nil)
+		raise "err: fd for export was nil";
+
 	sys->chdir(root);
 	sys->bind("export/services", "export/services", Sys->MCREATE);
 	sys->bind("#s", "export/services", Sys->MBEFORE);
 
 	ctlio := sys->file2chan("export/services", "ctl");
+	if(ctlio == nil)
+		raise "err: export/services file2chan failed -- " + root + "/export/services directory does not exist" ;
 
 	hangup := chan of int;
 	spawn export(fd, "export", hangup);

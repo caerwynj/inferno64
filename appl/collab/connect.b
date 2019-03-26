@@ -14,7 +14,8 @@ Connect: module
 };
 
 remotedir := "/n/remote";
-localdir := "/n/ftree/collab";
+# localdir := "/n/ftree/collab";	# deprecated?
+localdir := "/n/remote/collab";
 COLLABPORT: con "9999";	# TO DO: needs symbolic name in services
 
 usage()

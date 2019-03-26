@@ -86,3 +86,6 @@ tmp
 usr/inferno/charon
 usr/inferno/keyring
 usr/inferno/tmp
+services/collab/export/services
+services/collab/export/collab
+

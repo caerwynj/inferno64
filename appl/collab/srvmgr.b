@@ -107,7 +107,7 @@ srv(rc: chan of ref Srvreq)
 #
 startservice(name: string): (string, string, ref Sys->FD)
 {
-sys->print("startservice [%s]\n", name);
+	sys->print("startservice [%s]\n", name);
 	srv: ref Srvinfo;
 	for (sl := services; sl != nil; sl = tl sl) {
 		s := hd sl;
