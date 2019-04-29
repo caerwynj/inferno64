@@ -11,6 +11,8 @@ Inferno/power/lib
 Inferno/sparc/bin
 Inferno/sparc/lib
 Irix/mips/lib
+Linux/386/bin
+Linux/386/include
 Linux/386/lib
 Linux/arm/bin
 Linux/arm/lib

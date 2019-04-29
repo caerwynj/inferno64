@@ -24,7 +24,7 @@ To set up an auth server on a new hosted install and user $user:
 
 To set up a client to an auth server on a new hosted install with $user:
 
-	getauthinfo default
+	; getauthinfo default
 	use signer [$SIGNER]: example.com
 	remote user name [someuser]: $user
 	password: myuserpassword
