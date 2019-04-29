@@ -22,6 +22,7 @@ emu/*/srvm.h
 [A-Z]*/*/bin/data2s
 [A-Z]*/*/bin/emu
 [A-Z]*/*/bin/limbo
+Linux/*/bin/*
 Nt/*/bin/?[acl].exe
 Nt/*/bin/5coff.exe
 Nt/*/bin/5cv.exe
