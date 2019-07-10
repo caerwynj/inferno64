@@ -6,6 +6,8 @@ os \- interface to host OS commands (hosted Inferno only)
 .br
 .B os
 [
+.B -rc
+] [
 .B -b
 ] [
 .B -m
@@ -44,7 +46,23 @@ option causes the command to run in directory
 .IR dir ;
 an error results and the command will not run if
 .I dir
-does not exist or is inaccessible.
+does not exist or is inaccessible. If the
+.B -r
+option is specified, 
+.B $emuroot
+will be prepended to the operating directory, which may include
+.I dir
+if specified. If the
+.B -c
+option is specified, the current working directory will be used for execution, setting
+the 
+.B -r
+option in the process. 
+Note that the
+.B -c
+option overrides the 
+.B -d
+option. 
 The standard output and standard error of the command appear on the standard output
 and standard error streams of the
 .I os

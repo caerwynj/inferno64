@@ -8,6 +8,12 @@ include "draw.m";
 include "string.m";
 	str: String;
 
+include "env.m";
+	env: Env;
+
+include "workdir.m";
+	wd: Workdir;
+
 include "arg.m";
 
 Os: module
@@ -21,21 +27,35 @@ init(nil: ref Draw->Context, args: list of string)
 	str = load String String->PATH;
 	if(str == nil)
 		fail(sys->sprint("cannot load %s: %r", String->PATH));
+	env = load Env Env->PATH;
+	if(env == nil)
+		fail(sys->sprint("cannot load %s: %r", Env->PATH));
+	wd= load Workdir Workdir->PATH;
+	if(wd== nil)
+		fail(sys->sprint("cannot load %s: %r", Workdir->PATH));
 	arg := load Arg Arg->PATH;
 	if(arg == nil)
 		fail(sys->sprint("cannot load %s: %r", Arg->PATH));
 
 	arg->init(args);
-	arg->setusage("os [-d dir] [-m mount] [-n] [-N nice] [-b] command [arg...]");
+	arg->setusage("os [-rc] [-d dir] [-m mount] [-n] [-N nice] [-b] command [arg...]");
 
 	nice := 0;
 	nicearg: string;
-	workdir := "";
+	workdir:= "";
 	mntpoint := "";
 	foreground := 1;
+	rooted := 0;
+	usecwd := 0;
 
 	while((opt := arg->opt()) != 0) {
 		case opt {
+		'r' =>
+			rooted = 1;
+		'c' =>
+			# Since the cwd is rooted, we set rooted flag
+			rooted = 1;
+			usecwd = 1;
 		'd' =>
 			workdir = arg->earg();
 		'm' =>
@@ -78,6 +98,15 @@ init(nil: ref Draw->Context, args: list of string)
 	wfd := sys->open(dir+"/wait", Sys->OREAD);
 	if(nice && sys->fprint(cfd, "nice%s", nicearg) < 0)
 		sys->fprint(sys->fildes(2), "os: warning: can't set nice priority: %r\n");
+
+	if(usecwd)
+		workdir = wd->init();
+
+	if(rooted){
+		# If $emuroot is not set, don't care, directory is checked below
+		emuroot := env->getenv("emuroot");
+		workdir = emuroot + workdir;
+	}
 
 	if(workdir != nil && sys->fprint(cfd, "dir %s", workdir) < 0)
 		fail(sys->sprint("cannot set cwd %q: %r", workdir));
