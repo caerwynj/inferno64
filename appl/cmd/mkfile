@@ -130,6 +130,7 @@ TARG=\
 	runas.dis\
 	sed.dis\
 	sendmail.dis\
+	seq.dis\
 	sha1sum.dis\
 	sleep.dis\
 	sort.dis\
