@@ -16,6 +16,7 @@ TARG=\
 	getpk.dis\
 	logind.dis\
 	mkauthinfo.dis\
+	newns.dis\
 	passwd.dis\
 	rsagen.dis\
 	secstore.dis\
