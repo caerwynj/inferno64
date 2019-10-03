@@ -9,6 +9,8 @@ TARG=\
 	spout.dis\
 	awd.dis\
 	cd.dis\
+	ind.dis\
+	unind.dis\
 
 MODULES=\
 	

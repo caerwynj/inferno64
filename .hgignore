@@ -59,6 +59,7 @@ syntax: regexp
 ^dis/*/.*.dis
 ^appl/.*.dis
 ^appl/.*.sbl
+^acme/dis/.*.dis
 ^tmp/.*
 ^contrib/.*
 ^usr/\.*
