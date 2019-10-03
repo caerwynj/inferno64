@@ -1,0 +1,47 @@
+.TH ZIPFS 4
+.SH NAME
+zipfs \- mount zip archive
+.SH SYNOPSIS
+mount {
+.B zip/zipfs
+[
+.B -dDp
+]
+.I zipfile
+}
+mtpt
+.SH DESCRIPTION
+.I Zipfs
+makes the contents of
+.I zipfile
+available in the file system, for reading.
+.I Zipfs
+serves the styx protocol on its file descriptor 0.
+.PP
+Options
+.TP
+.B -d
+Print debugging information.  A second
+.B -d
+increases output.
+.TP
+.B -D
+Print a trace of styx messages.
+.TP
+.B -p
+Read uncompressed files in the zip file more efficiently.  The downside is that checksums are not checked.
+.SH SOURCE
+.B /appl/cmd/zip/zipfs.b
+.br
+.B /appl/lib/zip.b
+.br
+.B /module/zip.m
+.SH SEE ALSO
+.IR getzip (1),
+.IR zipstream (1).
+.SH BUGS
+Zip64 extensions are not supported.
+.br
+Encrypted archives are not supported.
+.br
+Only uncompressed and deflate-compressed files are supported.

@@ -21,6 +21,7 @@ DIRS=\
 	spki\
 	ssh\
 	usb\
+	zip\
 
 TARG=\
 	9660srv.dis\
@@ -34,7 +35,7 @@ TARG=\
 	auhdr.dis\
 	basename.dis\
 	bind.dis\
-	# bit2gif.dis\
+	bit2gif.dis\
 	bytes.dis\
 	cal.dis\
 	calc.dis\

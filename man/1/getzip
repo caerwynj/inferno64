@@ -1,0 +1,104 @@
+.TH GETZIP 1
+.SH NAME
+getzip, lszip, putzip \- zip file utilities
+.SH SYNOPSIS
+.B zip/getzip
+[
+.B -dv
+] [
+.B -k
+]
+.I zipfile
+[
+.I path
+.I ...
+]
+.br
+.B zip/lszip
+[
+.B -d
+]
+.I zipfile
+.br
+.B zip/putzip
+[
+.I -dvp
+]
+.I zipfile
+[
+.I path
+.I ...
+]
+.SH DESCRIPTION
+.BR Getzip ,
+.B lszip
+and
+.B putzip
+read, list and create zip files.
+.I Zipfile
+is the file to be read or created.
+.PP
+.B Getzip
+extracts only the
+.I paths
+given on the command-line.  If no paths are specified, all files in the zip file are extracted.
+.PP
+.B Lszip
+lists the files present in the zip file.
+.PP
+.B Putzip
+creates a zip file.
+If
+.I paths
+are given on the command-line, those paths and their children are added to the zip file.
+Otherwise, a list of paths to put in the zip file are read from
+standard input.  Directories from the standard input are not added
+recursively.
+.TP
+
+.PP
+Options
+.PP
+.TP
+.B -d
+Print debugging information.  A second
+.B -d prints more information.
+.TP
+.B -v
+Be verbose.
+For
+.B getzip
+this prints the files extracted.
+For
+.B putzip
+this prints the files added to the zip file.
+.TP
+.B -k
+Keep existing files.  For
+.B getzip
+only.
+By default, existing files are overwritten.
+.TP
+.B -p
+Do not compress files added to the zip file.  For
+.B putzip
+only.
+
+.SH SOURCE
+.B /appl/cmd/zip/getzip.b
+.br
+.B /appl/cmd/zip/lszip.b
+.br
+.B /appl/cmd/zip/putzip.b
+.br
+.B /appl/lib/zip.b
+.br
+.B /appl/lib/zip.m
+.SH SEE ALSO
+.IR gettar (1),
+.IR zipstream (1),
+.IR zipfs (4)
+.SH BUGS
+Zip64 extensions are not supported.
+.br
+Encrypted zip files are not supported.

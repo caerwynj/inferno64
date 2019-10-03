@@ -155,6 +155,7 @@ TARG=\
 	workdir.dis\
 	writegif.dis\
 	xml.dis\
+	zip.dis\
 
 MODULES=
 
