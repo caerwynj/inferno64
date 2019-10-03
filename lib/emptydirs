@@ -126,6 +126,7 @@ dis/alphabet/grid
 dis/alphabet/main
 dis/alphabet/auth
 dis/alphabet/auth/proto
+dis/auth/proto
 dis/auxi
 dis/avr
 dis/charon
