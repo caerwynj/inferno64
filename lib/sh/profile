@@ -16,7 +16,7 @@ bind -b '#s' /chan
 # Networking
 ndb/dns -r
 ndb/cs
-# bind -b '#scs' /net
+# bind -a '#scs' /net
 mount {mntgen} /n
 mount {mntgen} /mnt
 

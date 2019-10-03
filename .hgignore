@@ -55,6 +55,8 @@ keydb/signerkey
 tmp/*
 
 syntax: regexp
+^dis/.*.dis
+^dis/*/.*.dis
 ^appl/.*.dis
 ^appl/.*.sbl
 ^tmp/.*

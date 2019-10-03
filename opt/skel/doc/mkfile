@@ -1,9 +1,0 @@
-PKGDIR=..
-<$PKGDIR/mkconfig
-
-
-DIRS=\
-	1\
-	2\
-
-<$MKFILES/mksubdirs

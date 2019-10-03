@@ -10,6 +10,3 @@ bind -b $home/module /module
 ndb/cs
 ndb/dns
 
-# /opt package setup
-run /opt/setup/cmd
-run /opt/setup/man

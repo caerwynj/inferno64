@@ -1,0 +1,13 @@
+<../../../mkconfig
+
+TARG=\
+	bf.dis\
+
+SYSMODULES=\
+	arg.m\
+	sys.m\
+	draw.m\
+
+DISBIN=$ROOT/dis/games
+
+<$ROOT/mkfiles/mkdis

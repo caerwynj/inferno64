@@ -5,7 +5,7 @@ load std
 
 user=`{cat /dev/user}
 
-dirs=(/tmp /mnt/keys /mnt/registry /mnt/acme /n/remote /chan /keydb)
+dis=`{cat /lib/emptydirs}
 
 for i in $dirs {
 	mkdir -p $i

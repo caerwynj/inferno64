@@ -6,6 +6,7 @@ DIRS=\
 	avr\
 	disk\
 	fs\
+	games\
 	install\
 	ip\
 	lego\
@@ -74,7 +75,7 @@ TARG=\
 	ftpfs.dis\
 	getauthinfo.dis\
 	gettar.dis\
-	# gif2bit.dis\
+	gif2bit.dis\
 	grep.dis\
 	gunzip.dis\
 	gzip.dis\

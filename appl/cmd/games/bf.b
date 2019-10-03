@@ -21,6 +21,8 @@ init(nil: ref Draw->Context, args: list of string)
 	arg := load Arg Arg->PATH;
 
 	arg->init(args);
+	arg->setusage("games/bf [-d|-c] [program.bf|-e inline-program]");
+
 	eflag := 0;
 	outputmode := 0;
 	source := "";
@@ -34,13 +36,13 @@ init(nil: ref Draw->Context, args: list of string)
 		'c' =>
 			outputmode = 2;
 		* =>
-			usage();
+			arg->usage();
 		}
 	}
 	args = arg->argv();
 	if(!eflag) {
 		if(len args != 1)
-			usage();
+			arg->usage();
 		else
 			source = readfile(hd args);
 	}
@@ -51,12 +53,6 @@ init(nil: ref Draw->Context, args: list of string)
 	1 => sys->print("%s", disassemble(code));
 	2 => sys->print("%s", bf2limbo(code));
 	}
-}
-
-usage()
-{
-	sys->fprint(sys->fildes(2), "usage: bf [-d|-c] [program.bf|-e inline-program]");
-	raise "fail:usage";
 }
 
 compile(p: string): array of int
