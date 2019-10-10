@@ -1,0 +1,1011 @@
+.TH VIXEN 1
+.SH NAME
+vixen \- vi-like text editor
+.SH SYNOPSIS
+.B wm/vixen
+[
+.B -d
+.I debug
+] [
+.B -c
+.I macro
+] [
+.B -i
+]
+.I path
+.SH DESCRIPTION
+.I Vixen
+is a vi-like text editor for Inferno.
+
+.SS Options
+.I Vixen
+edits
+.IR path ,
+or a new buffer if no path is given.
+If
+.I path
+is a directory, nothing is read.
+.TP
+.BI -d " debug"
+Print debug messages to standard error.
+Each character in
+.I debug
+enables debug printing for functionality associated with that character (
+.I `a-z'
+only).  See the source code for the mapping of character to functionality.  As a special case,
+.I `+'
+enables all debug printing.
+.TP
+.BI -c " macro"
+After startup, before giving control to the user,
+.I macro
+is executed.
+.TP
+.B -i
+Reads initial buffer from standard input instead of from file.  This can be used to start
+.I vixen
+with a directory as
+.I filename
+and pipe the output of a command to it.
+
+
+.SS Modes
+.I Vixen
+is a modeful text editor.  It starts in
+.I command
+mode, interpreting key strokes as commands.  Commands can move the insertion cursor, modify the buffer, change the mode, and more.  Many commands that modify the buffer expect to be followed by a motion commands, causing the command to operate on text from the insertion cursor to the position after the motion.
+.I Insert
+mode, entered by
+.B i
+(among others),
+inserts further keys at the insertion cursor and advances it.
+.I Replace
+mode, started by
+.BR r ,
+is similar but overwrites text instead of inserting it.
+.I Visual
+mode, started by
+.BR v ,
+accepts commands just as
+.I command
+mode, but commands operate on the selection (indicated by reverse colors), and motion commands change the selection.
+.I "Visual line"
+mode only allows whole lines to be selected.
+.I Ex
+commands can be entered by typing a colon, though this is not considered a separate mode.
+Pressing escape in any mode switches back to
+.I command
+mode.
+
+.SS User interface
+The main text
+.I window
+is a view of the current buffer.  The title contains the name ``vixen'' and the absolute path of the file being edited.
+.I Vixen
+makes sure the insertion cursor is always visible, unless the view is scrolled by the scrollbar.
+Under the window is the status bar, it contains the current mode, the buffer's file name (or that none has been set yet), the number of lines and characters in the file, the current insertion position, the characters that have been collected as a command, and optionally an error message.  When entering line-based commands, such as
+.I ex
+commands and searches, the status bar is temporarily replaced by a text entry widget.
+The end of the buffer is indicated by an EOT character in blue color on white background color.
+The insertion cursor is shown before the character it is positioned at.  The visual selection is indicated in reverse colors.
+A text search match is indicated with black text on a yellow background, after a change of the text the colors are removed.
+After an incoming plumb message, the added text or addressed line is indicated by white text on a blue background.  The colors are removed on the first key stroke or command.
+The edit entry, for ex commands and searches, has file name completion and a history.  Pressing
+.I tab
+interprets the word before the cursor as a filename completes it to the largest common prefix of the matches.  If the word is already the largest common prefix, each
+.I tab
+fills in the next match.
+History is accessed with the up and down arrow keys.  Up selects the previous line that prefix-matches the text typed so far, down the next.
+
+.SS Buffer
+The buffer is the data that commands operate on.  All data is utf-8, arbitrary binary files cannot be edited.
+.I Vixen
+always has exactly one buffer
+The buffer can be in `modified' state, i.e. not yet flushed to disk.  A file name may be associated with a buffer, either because the buffer was read from that file or because the buffer has previously been written to it.
+
+.SS Insertion cursor and positions
+The buffer always has a insertion cursor (or just `cursor'), where text in
+.I insert
+or
+.I replace
+mode will be inserted, and commands will operate from.  The
+.I position
+of the insertion cursor is represented as a line (starting at 1) and column (starting at 0) within that line.  Positions always represent a character with one exception:  it can be positioned after the last character in the buffer, at the end of file.  Different from most vi clones, the insertion cursor can be positioned at a newline.  In an empty buffer, e.g. when starting
+.I vixen
+without parameters, the only valid position is
+.IR ``1.0'' .
+
+.SS Selection
+The selection is indicated by reverse colors, and only present while in one of the visual modes.  On entering the
+.I visual
+mode, the start and end of the selection is set to the cursor position.
+On entering the
+.I "visual line"
+mode, the selection is set from start of the cursor's line to the end of the cursor's line (including newline).
+Motion commands are interpreted from the end of the selection, even if its position is before the start of the selection (possible due to backwards motions).
+
+.SS Registers and macro's
+Registers can hold textual data.  They are useful to temporarily store text, for later use.  Special registers exist too, automatically updated.  Some commands, especially those that delete or insert text, modify a register.  This register can be changed by prefixing the command with the
+.B "<reg>"
+command.  The same applies to commands that use a register, e.g. yank.
+The contents of a register can also be executed with the
+.B @<reg>
+command, as a
+.IR macro .
+Macro's can also be recorded by the
+.B q<reg>
+command, and ended by a subsequent
+.B q
+command.
+.BR "<reg>" .
+
+.PP
+Registers:
+.TP
+.B "
+Holds text removed during last deletion.
+.TP
+.B \.
+Holds last insertion with
+.I insert
+or
+.I replace
+mode.
+.TP
+.B %
+Current filename, may be empty.  Read-only.
+.TP
+.B /
+Pattern of last text search.
+.TP
+.B *
+Contents of snarf buffer.
+.TP
+.B !
+Command last executed by
+.I ex
+command
+.B :b
+.IR command .
+.TP
+.B a-z
+Registers available to user.
+.TP
+.B A-Z
+Aliases for registers
+.IR a-z .
+Writes to these registers append to the lower cased registers, instead of writing them.
+
+.SS Marks
+Marks are
+.I positions
+in the file.  They can be set by the
+.B m<mark>
+command and jumped to by
+.B `<mark>
+and
+.B '<mark>
+commands (the first jumps to the exact position, the second to the first non-blank character of the position's line).  Some marks are automatically set when navigating the buffer, some cannot be modified by the user, see the table below.  A mark is automatically deleted when the text at its position is deleted.  Marks always point to the same character, and are automatically adjusted on insertions and deletions before them.
+The following marks are available:
+.TP
+.B <
+First character of visual selection (regardless of direction of selection, so not necessarily the start of the selection).  Set automatically when changing the visual selection, read-only.
+.BR m -command.
+.TP
+.B >
+Last character of visual selection.
+.TP
+.B "` and '"
+Many non-trivial motion commands are considered jumps.  These identical marks contain the position of the insertion cursor before the last jump.
+.TP
+.B .
+Location of last change, insertion or deletion.  Read-only.
+.TP
+.B ^
+Location of last insertion of text.  Read-only.
+.TP
+.B a-z
+No special meaning.  Note that marks A-Z and 0-9 are not available.
+
+.SS Changes and undo/redo
+Each modification of the buffer, e.g. by a command or an insertion through
+.I insert
+mode, is recorded as a change.  It can be undone by the
+.B u
+command.  Undone commands can be redone by the
+.B ^r
+command.
+
+.SS Inserting text
+Text can be inserted in the buffer while in an editing mode,
+.I insert
+or
+.I replace
+mode.  The last typed character can be removed by
+.BR ^h ,
+the last typed word by
+.BR ^w ,
+the last typed line by
+.BR ^u .
+Only text typed after switching to the current editing mode can be removed with the commands above.  Commands have to be used for other deletions.
+When in
+.I replace
+mode, text is overwritten.  Newlines are never overwritting though, so when the cursor is at the end of a line,
+.I replace
+mode is effectively the same as
+.I insert
+mode.  Erasing overwritten text reveals the original text again.
+
+.SS Plumbing
+Plumbing is supported through the non-visual
+.BR gP , gpp " and " gp<motion>
+commands, and the (identical) visual commands
+.BR gp " and " gP .
+Quick write and compile cycles are supported by the
+.B gb
+and
+.I ex'
+.B ":b [command]"
+commands.
+.I Vixen
+uses a helper program
+.I vixenplumb
+(not otherwise documented)
+to keep track of which files are being edited, and routes plumb requests accordingly or starts a new
+.IR vixen .
+
+.SH COMMANDS
+
+.SS Motion commands
+Motion commands set the insertion cursor.  While in visual select, they change the selection.  As modifier in commands, they indicate the range of text for the command to operate on.  Many motion commands can be prefixed by a repeat count (not starting with zero).  For example
+.B j
+moves the cursor down one line, while
+.B 3j
+moves the cursor down three lines.
+
+.PP
+The table below lists the motion commands and their cursor destination when a repeat has not been specified.  Commands prefixed with
+.I <n>
+interpret a repeat count, but all commands accept them.
+.TP
+.BI 0 " or " Home
+Column 0 of line.
+.TP
+.BI <n>h " or " <n>Left
+Character to the left, stopping at column 0.
+.TP
+.BI <n>l " or " <n>Right
+Character to the right, stopping at the newline.
+.TP
+.B <n>space
+Character to the right, not stopping at newlines.
+.TP
+.B <n>w
+Start of next word, stopping at interpunction.
+.TP
+.B <n>W
+Start of next word, not stopping at interpunction.
+.TP
+.B <n>e
+End of next word, stopping at interpunction.
+.TP
+.B <n>E
+End of next word, not stopping at interpunction.
+.TP
+.B <n>b
+To start of previous word, stopping at interpunction.
+.TP
+.B <n>G
+If
+.I <n>
+was not specified, moves to the end of the file.
+Otherwise, interprets
+.I <n>
+as line number and moves to first non-blank character on the line.
+.TP
+.BI $ " or " End
+End of current line (at newline if any).
+.TP
+.B ^
+First non-blank character on line.
+.TP
+.B <n>-
+First non-blank character on previous line.
+.TP
+.BI <n>+ " or " <n><newline>
+First non-blank character on next line.
+.TP
+.B <n>_
+First non-blank on current line or
+.I <n>-1
+lines relative from cursor.
+.TP
+.B <n>[fFtT]<char>
+Find next (for
+.B f
+and
+.BR t )
+or previous (for
+.B F
+and
+.BR T )
+.I char
+on current line.
+.B f
+and
+.B F
+place the cursor at the character,
+.B t
+on the character before it,
+.B T
+on the character after it.
+.TP
+.B <n>;
+Repeat last character find command (
+.BR [fFtT] )
+.TP
+.B <n>,
+Repeat last character find command, but in reverse direction (effectively executing the command with swapped case).
+.TP
+.BI <n>/ " or " <n>?
+Search forward or backward.  The
+.IR regex (6)
+pattern to search for must entered in the edit entry at the bottom of the window.
+.TP
+.BI <n>* " or " <n>#
+Search for the word under the cursor,
+.B #
+searches in reverse.  This sets the last search string used by commands
+.B n
+and
+.BR N .
+.TP
+.BI <n>n " or " <n>N
+Repeat last search,
+.B N
+reverse the search direction.
+.TP
+.B <n>%
+If 
+.I n
+was given it is interpreted as a percentage of the lines in the file, and the cursor is moved to that line, to the first non-blank character.
+Otherwise,
+jump to the counterpart of the nearest (forward) character in
+.IR (){}[] ,
+taking nesting into account.
+.TP
+.B <n>|
+Column
+.I n
+on current line, or column 0 by default.
+.TP
+.BI <n>( " or " <n>) " or " <n>{ " or " <n>}
+Next/previous sentence (
+.B )
+and
+.BR ( )
+or next/previous paragraph (
+.B }
+and
+.BR { ).
+In other vi implementations, the
+.B {
+and
+.B }
+commands also stop at troff paragraph commands,
+.I vixen
+does not.
+.TP
+.BI `<mark> " or " '<mark>
+To
+.IR mark .
+.TP
+.B 
+.TP
+.BI <n>H " or " M " or " <n>L
+Move relative to currently visible part of buffer.  If
+.I n
+was not specified, it defaults to 0.
+.B H
+jumps to the
+.RI first+ n th
+visible line.
+.B L
+jumps to the
+.RI last- n th
+visible line.
+.B M
+jumps to the middle, between the first and last.
+.TP
+.B <n>gg
+Like
+.BR G ,
+but jump to first line if 
+.I n
+was not specified.
+.TP
+.B <n>go
+To character
+.IR n th
+character of file, 1 by default (the first character in the file).
+.TP
+.BI ^e " and " ^y
+Scroll visible window up/down by one line.  This is not really a motion command because it only scrolls the window, however the insertion cursor is always kept in view and so may change as a side effect.  The same applies to
+.BR ^u ", " ^d ", " ^b " and " ^f .
+.TP
+.BI ^u " and " ^d
+Scroll visible window up/down by half a window.
+.TP
+.BI ^b " and " ^f
+Scroll visible window up/down by one window.
+
+.SS Visual commands
+Visual commands operate on the current text selection and can only be executed while in one of the visual modes.  Some commands operate on whole lines, even if lines are partially selected.  The cursor is usually left at the first character of the affected range after an execution.  The commands are very similar to the non-visual commands.  Visual commands:
+
+.PP
+.TP
+.B d
+Delete text.
+.TP
+.B y
+Yank text, i.e. copy text to the register.
+.TP
+.B J
+Join lines, i.e. replace newlines by a space.
+.TP
+.BI < " or " >
+Unindent/indent text, removing or inserting tabs.  Empty lines are kept empty.
+.TP
+.B r<char>
+Replace all selected characters by as many
+.IR char 's.
+.TP
+.B !
+Start
+.I ex
+command with visual registers and execute command preset as range, i.e.
+.IR :'<,'>! .
+.TP
+.B :
+Start
+.I ex
+command with visual registers as range, i.e.
+.IR :'<,'> .
+.TP
+.BI ~ " or " g~
+Swap case (of ascii characters only).
+.TP
+.B gJ
+Join, but remove newlines altogether, don't replace them by a space.
+.TP
+.BI gu " or " gU
+Change to lower/upper case (ascii characters only).
+.TP
+.BI q<reg> " or " q
+Start (with
+.IR reg )
+or stop (without)
+recording a macro to register
+.IR reg .
+.TP
+.B o
+Swap
+.I start
+and
+.I end
+of visual selection, changing the cursor.
+.TP
+.B "<reg>
+Use register
+.I reg
+for next command.
+.TP
+.BI c " or " s
+Change (substitute) selected text:  delete it and switch to
+.I insert
+mode.
+.TP
+.BI C " or " S " or " R
+Change (substitute, replace) all lines that are part of the selection:  Delete them and switch to
+.I insert
+mode.
+.TP
+.BI p " or " P
+Plumb text.
+
+.SS Commands
+Non-visual commands are very similar to the visual commands.  Instead of operating on visually selected text, they often operate on the line with the insertion cursor.  Many of the commands accept a motion command as modifier, the text range to operate on is then from the cursor to where the motion command moves (the motion command is interpreted relative to the cursor).
+Just like motion commands, most modification commands also accept a repeat count.  This allows for two repeat counts in a combined modification and motion command, e.g.
+.BR 3d4w .
+This means "delete 4 words and do it 3 times".  This is interpreted as "delete twelve words".
+Commands that delete text put it in register
+.BR " .
+The register can be overridden by prefixing the command with the
+.B "<reg>
+command, e.g.
+.BR "a3d4w .
+
+.TP
+.B i
+Switch to
+.I insert
+mode, at the cursor.
+.TP
+.B I
+switch to
+.I insert
+mode, at the first non-blank character on the line.
+.TP
+.B a
+Move to next position on the line and switch to
+.I insert
+mode.
+.TP
+.B A
+Move to end of line and switch to
+.I insert
+mode.
+.TP
+.B o
+Insert empty line after current, move to it and switch to
+.I insert
+mode.
+.TP
+.B O
+Like
+.BR o ,
+but inserts empty line before current line.
+.TP
+.B R
+Switch to
+.I replace
+mode.
+.TP
+.B <n>r<char>
+Replace
+.I n
+(1 by default)
+characters by occurrences of
+.IR char .
+.TP
+.B gi
+To
+.I insert
+mode at the end of the last text insertion.
+.TP
+.B gI
+To
+.I insert
+mode at the first column of the line.
+.TP
+.BI <n>cc " or " c<motion>
+Change
+.I n
+lines or by motion range.  I.e. delete the text and switch to
+.I insert
+mode.
+.TP
+.B <n>C
+Change from cursor to end of
+.RI current+ n -1th
+line.
+.TP
+.B <n>s
+Substitute
+.I n
+characters, i.e. delete them and switch to
+.I insert
+mode.
+.TP
+.B <n>S
+Substitute the entire current and following
+.IR n -1
+lines.
+.TP
+.B v
+Switch to
+.I visual
+mode, setting start and end of visual selection to current cursor.
+.TP
+.B V
+switch to
+.I "visual line"
+mode, setting start of visual selection to start of current line, and end of selection to end of current line (including newline).
+.TP
+.B <n>x
+Delete character at cursor, on same line.
+.TP
+.B <n>X
+Delete character before cursor, on same line.
+.TP
+.BI <n>dd " or "<n>d<motion>"
+Delete line or motion range.
+.TP
+.B <n>D
+Delete end of 
+.RI current+ n -1th
+line.
+.TP
+.BI <n>yy " or " <n>y<motion>
+Yank text (copy to register,
+.B "
+by default) line or motion range.
+.TP
+.B <n>Y
+Yank entire current line.
+.TP
+.B <n>p
+Paste from register to after cursor.  If the register (
+.B "
+by default) ends with a newline, the text is inserted on a new line after the current cursor.
+.TP
+.B <n>P
+Like
+.B p
+but if register ends with a newline place the text on a new line
+.I before
+the current cursor.
+.TP
+.BI [n]<< " or " [n]<[motion] " or " [n]>> " or " [n]>[motion] " or " 
+Unindent or indent line or motion range.
+.TP
+.B <n>J
+Join current and next
+.I n
+lines.
+.TP
+.B <n>gJ
+Join
+.I n
+lines, remove newlines altogether, don't replace them by a space.
+.TP
+.B m<mark>
+Set
+.I mark
+to current position.
+.TP
+.BI <n>!! " or " !<motion>
+Start
+.I ex
+command for
+.I n
+lines or motion range.
+.TP
+.B ZZ
+Quit, but first write the buffer if it has unwritten changes.
+.TP
+.B ~
+Change case of character under cursor, on same line.
+.TP
+.BI <n>g~~ " or " g~<motion>
+Change case of
+.I n
+lines, or up to motion range.
+.TP
+.BI <n>guu " or " <n>gUU " or g[uU]<motion>
+Change
+.I n
+lines to lower/upper case, or by motion range.
+.TP
+.B ^g
+Update status bar.
+.TP
+.B ^l
+Redraw screen.
+.TP
+.B u
+Undo last change.
+.TP
+.B ^r
+Redo last change.
+.TP
+.BI @<reg> " or " @@
+Execute register
+.I reg
+as macro, or execute same macro as last
+.B @
+command.
+.TP
+.BI : " or " Q
+Start
+.I ex
+command.
+.TP
+.B .
+Repeat last modification command.  E.g. if last command was
+.B d3w
+that same command is executed again, interpreted from the current cursor.
+.TP
+.BI q<reg> " or " q
+Start recording macro into register
+.IR reg ,
+or stop recording.
+.TP
+.B "<reg>
+Use register
+.I reg
+for the next command.
+.TP
+.B gP
+Plumb pattern under cursor.  Pattern is path optionally followed by a semicolon and an
+.I ex
+address, e.g. a line number.  The start of the pattern is looked for before the cursor too.
+.TP
+.B gpp " or " <n>gp<motion>
+Plumb line or motion range.
+.TP
+.B gb
+Equivalent to
+.I ex
+command
+.BR b :
+execute the command in register
+.I !
+and plumb the standard output and standard error as message
+.I kind
+`newtext'.
+
+.SH EX COMMANDS
+.I "Ex commands"
+can be entered after pressing
+.BR :
+(this shows an edit entry and places the focus in it),
+and are executed when return is hit, or aborted by escape.
+Either way, text entry is replaced by the status bar again.
+.I Vixen
+does not have an
+.I ex
+mode for consecutive entering of
+.I ex
+commands.
+
+.PP
+.I Ex
+commands operate on whole lines of text.  By default they operate on
+.IR dot ,
+the line of the cursor.  Most commands can be prefixed with an
+.I address
+expression.
+And many of those commands accept a
+.I range
+expression to instead operate an multiple range.
+A
+.I range
+is specified as two addresses, separated by a comma or semicolon.  The semicolon causes the second address to be interpreted relative to the first address, instead of to the start of the file.
+An address is one or more (optionally whitespace separated) components, evaluated after each other, starting with the current cursor:
+.TP
+.B .
+.IR Dot ,
+the current location.  Initially the cursor.
+.TP
+.B $
+Last line of the file.
+.TP
+.B 0-9+
+Number, absolute line number in file.
+.TP
+.BI +0-9* " or " -0-9*
+Moves
+.I number
+lines relative to
+.IR dot .
+If the number is absent, it defaults to 1.
+.TP
+.BI /pattern/ " or " ?pattern?
+Line that contains pattern.
+.TP
+.B '<mark>
+Line that contains
+.IR mark .
+
+.PP
+Supported commands:
+.TP
+.B [range]!command
+Execute command.  If no
+.I range
+is given, just execute
+.IR command .
+Otherwise, pass the text range to
+.I command
+and replace it with its output.
+.TP
+.B [range]s/pattern/repl/[g]
+For each line in
+.IR range ,
+match against
+.I pattern
+and replace the matching text with
+.IR repl .
+References to matching groups from the regular expression can be made in
+.I repl
+by a backslash followed by a digit.  Digit `0' is the whole match, groups are counted from 1.
+If
+.I g
+was specified, perform the replacement for every match on the line, instead of on only the first.
+See
+.IR regex (6)
+for valid values for
+.IR pattern .
+The separator can be any non-alphanumeric besides whitespace, double quote and pipe.
+.TP
+.B [range]r [!]arg
+If
+.I !
+is specified,
+.I arg
+is executed as command.
+Otherwise it is read as a file.
+The text reads is inserted either instead of
+.IR range ,
+or on a newline after the cursor when
+.I range
+was not specified.
+.TP
+.BI "[range]w[q!] [>>]filename" " or " q[!]"
+Write and/or quite.
+If
+.B w
+is specified, the current buffer is written to disk.  If a file name has previously been set for the file, the
+.I filename
+parameter may be left out.  If
+.I filename
+is specified and different from the current file name, and
+.I filename
+already exists, the write will fail unless
+.I !
+was also specified.
+If
+.I filename
+starts with
+.IR >> ,
+the text is appended to the file.
+If
+.I range
+is specified, only that range is written.
+Appending and writing a range never clears the
+.I modified
+status from the buffer.
+Then, if
+.B q
+is specified,
+.I vixen
+quits.  If the buffer still has unwritten modifications,
+.I vixen
+will not quit unless
+.B !
+was also specified.
+.TP
+.B x
+Same as the
+.B ZZ
+command:  quit, but first write the buffer if it has unwritten modifications.
+.TP
+.B "cd <path>"
+Change working directory to
+.IR path .
+.TP
+.B "f [filename]"
+If
+.I filename
+is absent, prints the current file name associated with the buffer.
+Otherwise sets the current filename for the buffer to
+.IR filename .
+.TP
+.B D<chars>
+Toggle debug settings for
+.IR chars ,
+which must be one or more chars of:  a-z, or - (disable all) or + (enable all).
+.TP
+.B "b [command]"
+.I Build
+by executing
+.IR command .
+The output (both standard output and standard error) are plumbed with
+.I kind
+`newtext', with only the current working directory set.  This the text to be sent to a
+.I vixen
+that gathers output for that directory, a mechanism similar to that in
+.IR acme (1).
+If
+.I command
+is absent, the command previously executed with
+.B b
+is executed again.  This command is available in register
+.IR !
+and is set to
+.I `mk'
+by default.
+Also see
+.RI non- ex
+command
+.BR gb .
+
+.SH Missing features
+.I Vixen
+lacks many features and commands that other vi implementations do have.  Below, some of the more popular commands and features are listed.
+
+.PP
+Commands
+.BR zz ,
+.BR zt ,
+and
+.BR zb ,
+for scrolling the window to place the cursor at the middle, top and bottom of the window.
+
+.PP
+Other implementations treat some motion commands differently based on the command they are executed with, e.g.
+.B cw
+is actually interpreted as ``delete to end of word'', i.e. more like
+.BR ce .
+.I Vixen
+always interprets motion commands in one single way.
+
+.PP
+Key mappings for commands, through ex'
+.B :map
+command is not supported,
+.B :ab
+for abbreviations in
+.I insert
+mode is not supported either.
+
+.PP
+.I Vixen
+does not have a full
+.I ex
+mode, where consecutive commands are interpreted as
+.I ex
+commands.  Commands to print multiple lines of text have not been implemented.
+
+.PP
+The full command names of
+.I ex
+commands are not supported.  E.g. only
+.B :q
+is supported, not
+.BR :quit .
+
+.PP
+Some featurse that likely won't be supported:
+.br
+\(bu Multiple editing windows within on instance of
+.IR vixen .
+.br
+\(bu Text folding (hiding parts of the text).
+.br
+\(bu Visual block mode, where any rectangular block of text (over multiple lines) can be selected.
+.br
+\(bu Spell checking, text completion.
+.br
+\(bu Editing non-utf-8 (e.g. binary) files.
+
+.SH SOURCE
+.B /appl/wm/vixen.b
+.br
+.B /appl/wm/vixen/buffers.b
+.br
+.B /appl/wm/vixen/change.b
+.br
+.B /appl/wm/vixen/cmd.b
+.br
+.B /appl/wm/vixen/ex.b
+.br
+.B /appl/wm/vixen/filter.b
+.br
+.B /appl/wm/vixen/interp.b
+.br
+.B /appl/wm/vixen/subs.b
+.br
+.SH SEE ALSO
+.IR acme (1),
+.IR regex (6).
+.SH BUGS
+Many.
+.PP
+.I Vixen
+will not implement all commands and features found in the various vi clones, or the original vi.  The behaviour of some commands may be different, that could be a bug.
+.I Vixen
+also has features that the vi clones and the original vi do not have, such as plumbing.
+.PP
+Entire file is kept in memory twice:  in vixen and in Tk.
