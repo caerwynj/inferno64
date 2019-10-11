@@ -162,6 +162,7 @@ TARG=\
 	tr.dis\
 	trfs.dis\
 	tsort.dis\
+	ttffs.dis\
 	unicode.dis\
 	units.dis\
 	uniq.dis\

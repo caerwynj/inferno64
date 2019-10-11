@@ -1,0 +1,101 @@
+.TH TTFFS 4
+.SH NAME
+ttffs \- serve ttf fonts as Inferno (sub)fonts
+.SH SYNOPSIS
+.B ttffs
+[
+.B -dM
+] [
+.B -p
+.I fontpath
+]
+.SH DESCRIPTION
+.I Ttffs
+serves
+.I TrueType
+(ttf) font files
+as Inferno (sub)fonts in arbitrary sizes, over 9P2000.
+Directory /fonts/ttf is read at startup (or
+.I fontpath
+set with
+.BR -p ),
+and all ttf files added to ttffs' index.
+New ttf files are automatically indexed when the
+.I index
+file (described below) is opened.
+Each ttf file has an associated
+.I ranges
+file listing the glyphs available in the ttf file.
+If a ttf file does not yet have a ranges file, it is created by ttffs automatically.
+.I Ttffs
+mounts itself on
+.I /mnt/ft
+by default.
+With
+.BR -M ,
+9P2000 is served on file descriptor 0 instead.
+Option
+.B -d
+enables debug printing.
+.SS Files
+The following files are served:
+.TP
+index
+A read-only file returning the available fonts, one line for each font name.
+A line consists of two quoted strings, separated by a space.
+The first is a cleaned-up version of the name (as found in the ttf file) of the font.
+The second field is a font specification as understood by
+.IR fontsrv (4).
+The font name in the specification is the original name found in the ttf file.
+Multiple ttf files may result in a single line, e.g. in the case of a single font face available in multiple styles (regular, italic, bold).
+.TP
+.IR fontname . style . size .font
+When a file of this form is walked to, the ttf file associated with that font specification is opened, parsed and cached for subsequent use.
+.I Fontname
+is a cleaned-up version of the font name contained in the
+.I ttf
+file.
+.I Style
+must be one of
+.IR r ,
+.IR i ,
+.I b 
+or
+.IR ib .
+.I Size
+(in pixels) must be a number greater than 1.
+.TP
+.IR fontname . style . size . index
+Subfonts that are referenced by the
+.IR .font -files.
+.I Index
+is a number indicating the glyph range of the subfont.
+.SH EXAMPLES
+.EX
+# ensure /fonts/ttf/DejaVuSansMono.ttf and /mnt/ft exist
+ttffs
+wm/sh -f /mnt/ft/dejavu-sans-mono.r.10.font
+.EE
+.SH SOURCE
+.B /appl/cmd/ttffs.b
+.SH FILES
+.B /mnt/ft/index
+.br
+.B /mnt/ft/*.font
+.br
+.B /fonts/ttf/*.ttf
+.br
+.B /fonts/ttf/ranges.*
+.SH SEE ALSO
+.IR draw-font (2),
+.IR fontsrv (4),
+.IR fonts (6).
+.SH BUGS
+No kerning or subpixel rendering is supported.
+Only 8-bit greyscale anti-aliased fonts are served.
+.PP
+The name
+.I ttffs
+ is not appropriate, more formats than just ttf could be served: freetype supports more than just ttf.
+.PP
+Generating ranges.* files is slow.

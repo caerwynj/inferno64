@@ -1,0 +1,292 @@
+.TH IOBUF 2
+.SH NAME
+iobuf: ReadBuf, WriteBuf \- read/write buffers
+.SH SYNOPSIS
+.EX
+include "iobuf.m";
+        iobuf: IOBuf;
+        ReadBuf, WriteBuf: import iobuf;
+iobuf = load IOBuf IOBuf->PATH;
+
+init: fn();
+
+ReadBuf: adt{
+        new:            fn(fd: ref Sys->FD, bufsize: int): ref ReadBuf;
+        newc:           fn(queuesize, bufsize: int): ref ReadBuf;
+        setsep:         fn(r: self ref ReadBuf, sep: string, strip: int);
+        reads:          fn(r: self ref ReadBuf): array of byte;
+        readn:          fn(r: self ref ReadBuf, n: int): array of byte;
+        fill:           fn(r: self ref ReadBuf, data: array of byte, wc: Sys->Rwrite);
+}
+
+WriteBuf: adt{
+        new:            fn(fd: ref Sys->FD, bufsize: int): ref WriteBuf;
+        newc:           fn(bufsize: int): ref WriteBuf;
+        write:          fn(w: self ref WriteBuf, buf: array of byte);
+        flush:          fn(w: self ref WriteBuf);
+        eof:            fn(w: self ref WriteBuf);
+        request:        fn(w: self ref WriteBuf, n: int, rc: Sys->Rread);
+}
+
+.EE
+.SH DESCRIPTION
+.PP
+This module provide simpler and faster alternative to 
+.IR bufio (2).
+On reading text file it's about 30-40 times faster than bufio,
+on writing text file it's about 3-4 times faster than bufio.
+.PP
+.B init
+must be called before invoking any other operation of the module.
+.SS ReadBuf
+.PP
+ReadBuf is used when we receive stream of bytes (from fd or
+file2chan for ex.) while we need to read by full records (either
+separated by some delimiter or having known size).
+.PP
+Reading from ReadBuf is blocking operation.
+.PP
+.B setsep
+convert 
+.I sep
+from string to array of byte, and 
+.B reads
+will use
+that array to search for separator.
+If separator will be Unicode char which may be encoded with different
+sequences of bytes, 
+.B reads
+may fail to find it.
+.PP
+.B reads
+return record separated by 
+.IR sep ,
+optionally with separator
+stripped from end of record.
+Last record may not end with separator, so ReadBuf can't distinguish
+between incomplete record because of unexpected EOF and full last record
+without separator.
+Will return nil on EOF.
+Will raise on I/O error.
+Will raise if neither 
+.I sep
+nor EOF will be found in 
+.I bufsize
+bytes.
+.PP
+.B readn
+return record with 
+.I n
+bytes size, or less on EOF.
+It's possible to have 
+.I n
+greater than 
+.IR bufsize .
+Will return array with less than 
+.I n
+bytes on EOF.
+Will return nil on EOF.
+Will raise on I/O error.
+.PP
+Arrays returned by 
+.B reads
+and 
+.B readn
+usually will be slices of
+ReadBuf's internal buffer, which may be overwritten on next
+.B reads
+or 
+.B readn
+calls, so these calls may change contents of
+previously returned arrays.
+.PP
+When ReadBuf used with chan instead of fd, 
+.I queuesize
+define
+maximum amount of packets (not bytes!) received from chan, which
+wasn't fetched yet by 
+.B reads
+or 
+.BR readn .
+This is needed to optimize latency.
+.PP
+When ReadBuf used with chan, while one process may block in
+.B reads
+or 
+.BR readn ,
+another may receive data from chan, and
+should call 
+.B fill
+to put this data into ReadBuf.
+.PP
+.B fill
+will either immediately send reply to 
+.I wc
+if it was able
+to add data to ReadBuf, or save pending 
+.I data
+and 
+.I wc
+in
+ReadBuf (reply to 
+.I wc
+will be sent later from process
+calling 
+.B reads
+or 
+.BR readn ).
+Call to 
+.B fill
+never blocks.
+Will send error "concurrent writes not supported" to 
+.I wc
+and drop 
+.I data
+if will be called again before reply to
+previous 
+.I wc
+will be sent (i.e. when previous 
+.I wc
+is in
+pending state because of full incoming queue).
+.PP
+Resume:
+.RS
+.IP •
+Process reading from ReadBuf doesn't need to know about
+data source (fd or chan).
+.IP •
+Process reading from ReadBuf may intermix reads() and
+readn(), may change record separator at any time.
+.IP •
+Process reading from ReadBuf receive nil on EOF or got
+exception on I/O error.
+.IP •
+Process receiving data from chan (usually, file2chan) for
+ReadBuf just call fill() and don't bother about errors or
+replying to 
+.IR wc .
+.RE
+.PP
+Limitations:
+.RS
+.IP •
+Unicode separator may not be detected in some cases.
+.IP •
+Offset/seek doesn't supported (so offset received with
+file2chan request will be ignored).
+.IP •
+No getb(), getc(), ungetb(), ungetc() - but they can be
+added later.
+.IP •
+Only one process may call reads() or readn() and only one
+(another) process may call fill().
+.RE
+.SS WriteBuf
+.PP
+WriteBuf is used when we sending stream of bytes (to fd or
+file2chan for ex.) while we want to write data by (possibly
+small) records.
+.PP
+Writing to WriteBuf is blocking operation.
+.PP
+.B write
+is adding data from 
+.I buf
+to WriteBuf. Size of 
+.I buf
+may
+be greater than 
+.IR bufsize .
+It may call 
+.BR flush .
+Will raise on I/O error.
+.PP
+.B flush
+ensure all buffered data in WriteBuf is actually written.
+Will raise on I/O error.
+.PP
+When WriteBuf used with chan, while one process may block in
+.B write
+or 
+.BR flush ,
+another may receive read request from chan,
+and should call 
+.B request
+to let 
+.B write
+or 
+.B flush
+send data from
+WriteBuf to chan when they'll be ready.
+.PP
+.B eof
+calls 
+.BR flush ,
+but what it does next depends on WriteBuf type.
+When WriteBuf used with fd, it do nothing more and just returns.
+When WriteBuf used with chan, it'll wait for next 
+.B request
+and will reply
+on all with EOF 
+.BI ( "" nil "" , "" nil "" )
+, and will returns only after got 
+.B request
+with 
+.B nil
+.IR rc .
+.PP
+.B request
+notified WriteBuf about data requested by chan, to let
+.B write
+or 
+.B flush
+to send data from 
+.I buf
+to chan.
+Call to 
+.B request
+never blocks.
+Will send error "concurrent reads not supported" to 
+.I rc
+if will be called again before reply to previous 
+.I rc
+will
+be sent.
+.PP
+Resume:
+.RS
+.IP •
+Process writing to WriteBuf doesn't need to know about
+data destination (fd or chan).
+.IP •
+Process writing to WriteBuf got exception on I/O error.
+.IP •
+Process receiving read requests from chan (usually, file2chan)
+from WriteBuf just call request() and don't bother about errors
+or replying to 
+.IR rc .
+.RE
+.PP
+Limitations:
+.RS
+.IP •
+Offset/seek doesn't supported (so offset received with
+file2chan request will be ignored).
+.IP •
+Only one process may call write() or flush() and only one
+(another) process may call request().
+.RE
+.SH EXAMPLES
+.EX
+
+
+.EE
+.SH SOURCE
+.PP
+.B /opt/powerman/iobuf/appl/lib/iobuf.b
+.br
+.SH SEE ALSO
+.PP
+.IR bufio (2)
+.SH BUGS
