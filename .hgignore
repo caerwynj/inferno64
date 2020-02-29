@@ -53,6 +53,7 @@ keydb/countersigned
 keydb/signed
 keydb/signerkey
 tmp/*
+*.rej
 
 syntax: regexp
 ^dis/.*.dis
