@@ -47,3 +47,4 @@ install:V: $O.$CONF
 <../port/portmkfile
 
 devfs.$O:	../port/devfs-posix.c
+devds.$O:	../port/devds.c
