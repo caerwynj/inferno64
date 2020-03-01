@@ -10,6 +10,12 @@ m4 \- macro processor
 .B -t
 ]
 [
+.BI -p prefix
+]
+[
+.B -t
+]
+[
 .BI -D name = value
 ] [
 .BI -Q name = value
