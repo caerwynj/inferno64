@@ -130,7 +130,8 @@ execsh(char *args, char *cmd, Bufblock *buf, Envy *e)
 			perror(shell);
 			_exits("exec");
 		}
-		close(out[1]);
+		if(buf)
+			close(out[1]);
 		close(in[0]);
 		if(DEBUG(D_EXEC))
 			fprint(1, "starting: %s\n", cmd);
