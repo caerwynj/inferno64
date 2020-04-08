@@ -102,8 +102,9 @@ Inferno can also be built with the provided Dockerfile:
 
 2    `docker run -it purgatorio emu`
 
-This will build Inferno on a small Ubuntu base. Note that Docker sandboxes network connections by default. If you want to forward ports from the Inferno container to your host machine, you can use `docker run -p 8080:80` to forward the port 8080 (host) to the port 80 (Inferno). If you want to run graphical programs and have an Xorg server running, you have to disable network sandboxing and pass the $DISPLAY variable to Docker like this:
+This will build Inferno on a small Linux base. Note that Docker sandboxes network connections by default. If you want to forward ports from the Inferno container to your host machine, you can use `docker run -p 8080:80` to forward the port 8080 (host) to the port 80 (Inferno). If you want to run graphical programs and have an Xorg server running, you have to disable network sandboxing and pass the $DISPLAY variable to Docker like this:
 
 `docker run --net=host --env="DISPLAY" --volume="$HOME/.Xauthority:/root/.Xauthority:rw" purgatorio emu wm/wm`
 
-This works on Linux. On Windows and macOS you would need some kind of custom Xserver setup to make this work.
+This works on Linux. On Windows and MacOS you would need some kind of custom Xserver setup to make this work. Option include vcxsrv on Windows and XQuartz on MacOS. 
+
