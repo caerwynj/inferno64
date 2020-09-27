@@ -256,7 +256,7 @@ readline(io: ref Sys->FD, mode: string): (int, string)
 	if(mode == "rawon"){
 		fdctl = sys->open("/dev/consctl", sys->OWRITE);
 		if(fdctl == nil || sys->write(fdctl,array of byte mode,len mode) != len mode){
-			sys->fprint(stderr, "unable to change console mode");
+			sys->fprint(stderr, "unable to change console mode ⇒ %r\n");
 			return (0,nil);
 		}
 	}
@@ -268,7 +268,7 @@ readline(io: ref Sys->FD, mode: string): (int, string)
 	for(;;) {
 		r = sys->read(io, buf, len buf);
 		if(r <= 0){
-			sys->fprint(stderr, "error read from console mode");
+			sys->fprint(stderr, "error read from console mode ⇒ %r\n");
 			if(mode == "rawon")
 				sys->write(fdctl,rawoff,6);
 			return (0, nil);
