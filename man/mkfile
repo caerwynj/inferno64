@@ -6,6 +6,14 @@ LIB=$DOC/man/lib
 
 default:V: check
 
+# Can be called from hosted Inferno
+indices.hosted:V:
+	for i in `{seq 10} {
+		$LIB/secindex.hosted $i > $i/INDEX
+	}
+	mk lookindex.hosted
+
+# Can only be called from plan9
 indices:V:
 	rfork n
 	for (i in [0-9] 10){
@@ -68,6 +76,12 @@ checksource:QV:
 	,>rc
 	!
 
+# Can be called from hosted Inferno
+lookindex.hosted:V:
+	builtin cd $LIB/lookman
+	mkindex.hosted
+
+# Only works called from plan9
 lookindex:V:
 	builtin cd $LIB/lookman
 	mkindex

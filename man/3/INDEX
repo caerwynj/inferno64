@@ -1,4 +1,3 @@
-intro 0intro
 arch arch
 audio audio
 boot boot
@@ -22,6 +21,7 @@ gpio gpio
 i2c i2c
 i82365 i82365
 indir indir
+intro 0intro
 ip ip
 kprof kprof
 logfs logfs
@@ -29,9 +29,9 @@ lpt lpt
 mnt mnt
 mpeg mpeg
 pbus pbus
+pci pnp
 pipe pipe
 plap plap
-pci pnp
 pnp pnp
 pointer pointer
 prof prof

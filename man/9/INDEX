@@ -1,11 +1,10 @@
-intro 0intro
 1copyright 1copyright
-copyright 1copyright
 bind bind
 button button
 canvas canvas
 checkbutton checkbutton
 choicebutton choicebutton
+copyright 1copyright
 cursor cursor
 destroy destroy
 entry entry
@@ -14,6 +13,7 @@ frame frame
 grab grab
 grid grid
 image image
+intro 0intro
 label label
 listbox listbox
 lower lower
