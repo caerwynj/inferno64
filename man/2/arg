@@ -120,12 +120,15 @@ init(nil: ref Draw->Context, args: list of string)
     bflag := cflag := 0;
     file := "";
     arg->init(args);
+    arg->setusage("prog [-bc] [-f file] args ...");
     while((c := arg->opt()) != 0)
         case c {
         'b' => bflag = 1;
         'c' => cflag = 1;
-        'f' => file = arg->arg();
-        * =>   sys->print("unknown option (%c)\en", c);
+        'f' => file = arg->earg();
+        * =>
+            sys->print("unknown option (%c)\en", c);
+            arg->usage();
         }
     args = arg->argv();
     sys->print("%s %d %d %s\en", arg->progname(), bflag, cflag, file);
