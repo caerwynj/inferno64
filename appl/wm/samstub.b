@@ -174,8 +174,9 @@ receiver(samio: ref Samio, msgchan: chan of ref Sammsg)
 	for (;;) {
 		if (samio.count == 0) {
 			n := sys->read(samio.data, samio.buffer, len samio.buffer);
+			#sys->fprint(stderr, "fd = %d ­ len = %d\n", samio.data.fd, len samio.buffer);
 			if (n <= 0) {
-				fprint(stderr, "Read error on sam's pipe\n");
+				fprint(stderr, "Read error on sam's pipe ⇒ %r\n");
 				return;
 			}
 			samio.index = 0;

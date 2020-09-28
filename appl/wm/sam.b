@@ -29,7 +29,7 @@ init(context: ref draw->Context, nil: list of string)
 	draw = load Draw Draw->PATH;
 	stderr = sys->fildes(2);
 
-	logfd = sys->create("samterm.log", sys->OWRITE, 8r666);
+	logfd = sys->create("/fd/1", sys->OWRITE, 8r666);
 	if (logfd == nil) {
 		fprint(stderr, "Can't create samterm.log\n");
 		logfd = stderr;

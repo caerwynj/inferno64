@@ -80,7 +80,7 @@ newflayer(tag, tp: int): ref Flayer
 		tk->cmd(ctxt.which.t,
 			".Wm_t.title configure -background blue; update");
 	}
-	(t, cmdc) := tkclient->toplevel(ctxt.ctxt.screen, "-borderwidth 1 -relief raised", "SamTerm", Tkclient->Appl);
+	(t, cmdc) := tkclient->toplevel(ctxt.ctxt, "-borderwidth 1 -relief raised", "SamTerm", Tkclient->Appl);
 	tk->cmd(t, ". configure -x "+string x+" -y "+string y+"; update");
 
 	if (x == 10 && y == 10) {
@@ -102,15 +102,15 @@ newflayer(tag, tp: int): ref Flayer
 	lines: int;
 	if (tp) {
 		lines = 8;
-		tkclient->tkcmds(t, tksam1);
+		tkcmds(t, tksam1);
 		mkmenu2c(t);
 	} else {
 		lines = 20;
-		tkclient->tkcmds(t, tkwork1);
+		tkcmds(t, tkwork1);
 		mkmenu2(t);
 	}
 	mkmenu3(t);
-	tkclient->tkcmds(t, tkcmdlist);
+	tkcmds(t, tkcmdlist);
 
 	f := ref Flayer(
 		tag,		# tag
@@ -152,7 +152,7 @@ mkmenu2c(t: ref Tk->Toplevel)
 	for (i := 0; i < NMENU2; i++) {
 		menus[i+1] = addmenuitem(2, "menu2", menu2str[i]);
 	}
-	tkclient->tkcmds(t, menus);
+	tkcmds(t, menus);
 }
 
 mkmenu2(t: ref Tk->Toplevel)
@@ -164,7 +164,7 @@ mkmenu2(t: ref Tk->Toplevel)
 		menus[i+1] = addmenuitem(2, "menu2", menu2str[i]);
 	}
 	menus[NMENU2] = addmenuitem(2, "edit", "/");
-	tkclient->tkcmds(t, menus);
+	tkcmds(t, menus);
 }
 
 mkmenu3(t: ref Tk->Toplevel)
@@ -178,7 +178,7 @@ mkmenu3(t: ref Tk->Toplevel)
 	for (i = 0; i < len ctxt.menus; i++) {
 		menus[i+NMENU3+1] = addmenuitem(3, "menu3", ctxt.menus[i].name);
 	}
-	tkclient->tkcmds(t, menus);
+	tkcmds(t, menus);
 }
 
 addmenuitem(d: int, m, s: string): string
@@ -685,4 +685,16 @@ chandel(n: int)
 	flayers[0:] = ctxt.flayers[0:n];
 	flayers[n:] = ctxt.flayers[n+1:];
 	ctxt.flayers = flayers;
+}
+
+tkcmd(t: ref Tk->Toplevel, s: string): string
+{
+	res := tk->cmd(t, s);
+	return res;
+}
+
+tkcmds(top: ref Tk->Toplevel, a: array of string)
+{
+	for(i := 0; i < len a; i++)
+		v := tkcmd(top, a[i]);
 }

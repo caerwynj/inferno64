@@ -3,7 +3,6 @@
 DIRS=\
 	brutus\
 	camera\
-#	diary\
 	drawmux\
 	ftree\
 	mailtool\
@@ -47,6 +46,9 @@ TARG=\
 	reversi.dis\
 	rmtdir.dis\
 	rt.dis\
+	sam.dis\
+	samstub.dis\
+	samtk.dis\
 	sendmail.dis\
 	sh.dis\
 	smenu.dis\
