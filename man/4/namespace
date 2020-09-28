@@ -322,7 +322,7 @@ to use.
 .B /icons/tk
 This should contain icons used by applications that run within Tk.
 .TP
-.BI /user/ user
+.BI /usr/ user
 At least one user directory must exist if
 .IR logon (1)
 is to function correctly.
