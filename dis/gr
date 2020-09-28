@@ -1,5 +1,5 @@
 #!/dis/sh
-# gr - recursive grep(1)
+# gr - recursive g(1)
 
 load expr
 load std
@@ -41,4 +41,4 @@ for i in $* {
 	n = ${expr $n 1 +}
 }
 
-grep $opts -n $pattern `{findfiles $dirs}
+g $opts $pattern `{findfiles $dirs}

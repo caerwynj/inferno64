@@ -1,0 +1,3 @@
+#!/dis/sh
+
+grep -n $* /dev/null
