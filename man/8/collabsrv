@@ -298,7 +298,7 @@ A stroke has the following representation:
 where all values are space-separated decimal numbers:
 .I colour
 is an index into the
-.IR rgbv (6)
+.IR colour (6)
 colour map;
 .I width
 is the width of the line in pixels, and

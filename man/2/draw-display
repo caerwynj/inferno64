@@ -95,7 +95,7 @@ and
 for greyscale (depths 1, 2 and 8);
 .BR CMAP8
 for 8-bit
-.IR rgbv (8)
+.IR colour (8)
 colour-mapped images;
 .BR RGB16
 for 16-bit
