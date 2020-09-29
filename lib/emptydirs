@@ -118,6 +118,7 @@ usr/inferno/keyring
 usr/inferno/tmp
 services/collab/export/services
 services/collab/export/collab
+acme/dis
 dis/acme
 dis/alphabet
 dis/alphabet/abc
