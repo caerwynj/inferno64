@@ -124,7 +124,9 @@ init(ctxt: ref Draw->Context, argv: list of string)
 		badmod(Arg->PATH);
 	if (ctxt == nil)
 		ctxt = tkclient->makedrawcontext();
+
 	blocksize := 17;			# preferred block size
+
 	arg->init(argv);
 	while ((opt := arg->opt()) != 0) {
 		case opt {
@@ -140,13 +142,21 @@ init(ctxt: ref Draw->Context, argv: list of string)
 		usage();
 	
 	sys->pctl(Sys->NEWPGRP|Sys->FORKNS, nil);
+
 	scoretab = load Scoretable Scoretable->PATH;
+
 	scorech := chan of int;
+
 	spawn scoresrvwait(scorech);
+
 	(win, winctl) := tkclient->toplevel(ctxt, "", "Tetris",Tkclient->Hide);
+
 	seedrand();
+
 	fromuser := chan of string;
+
 	tk->namechan(win, fromuser, "user");
+
 	cmd(win, "bind . <Key> {send user k %s}");
 	cmd(win, "bind . <ButtonRelease-1> {focus .}");
 	cmd(win, "bind .Wm_t <ButtonRelease-1> +{focus .}");
@@ -162,24 +172,38 @@ init(ctxt: ref Draw->Context, argv: list of string)
 		
 	tkclient->onscreen(win, nil);
 	tkclient->startinput(win, "kbd"::"ptr"::nil);
+
 	for (;;) {
 		bd := Board.new(win, ".f", blocksize, maxsize);
 		if (bd == nil) {
 			sys->fprint(stderr, "tetris: couldn't make board\n");
 			return;
 		}
+
 		cmd(win, "bind .f.c <ButtonRelease-1> {send user m %x %y}");
 		cmd(win, "pack .f -side top");
 		cmd(win, "update");
+
 		g := Game.new(bd);
+
 		(finished, rank) := rungame(g, win, fromuser, winctl, scorech);
 		if (finished)
 			break;
+
 		cmd(win, "pack propagate . 0");
+
 		if (scoretab != nil) {
 			cmd(win, "destroy .f");
+
 			if (showhighscores(win, fromuser, winctl, rank) == 0)
 				break;
+			
+			# Needs kicked after new game
+			# Some may be erroneous
+			cmd(win, "bind . <Key> {send user k %s}");
+			cmd(win, "bind . <ButtonRelease-1> {focus .}");
+			cmd(win, "bind .Wm_t <ButtonRelease-1> +{focus .}");
+			cmd(win, "focus .");
 		} else
 			cmd(win, "destroy .f");
 	}
@@ -188,6 +212,7 @@ init(ctxt: ref Draw->Context, argv: list of string)
 wsize(win: ref Tk->Toplevel, w: string): Point
 {
 	bd := int cmd(win, w + " cget -bd");
+
 	return (int cmd(win, w + " cget -width") + bd * 2,
 		int cmd(win, w + " cget -height") + bd * 2);
 }
@@ -196,30 +221,38 @@ rungame(g: ref Game, win: ref Tk->Toplevel, fromuser: chan of string, winctl: ch
 {	
 	tickchan := chan of int;
 	spawn ticker(g, tickchan);
+
 	paused := 0;
 	tch := chan of int;
 
 	gameover := 0;
 	rank := -1;
+
 	bdsize := wsize(win, ".f.c");
 	boundy := bdsize.y * 2 / 3;
-	id := cmd(win, ".f.c create line " + p2s((0, boundy)) + " " + p2s((bdsize.x, boundy)) +
-			" -fill white");
+
+	id := cmd(win, ".f.c create line " + p2s((0, boundy)) + " " + p2s((bdsize.x, boundy)) + " -fill white");
 	cmd(win, ".f.c lower " + id);
+
 	for (;;) alt {
-	s := <-win.ctxt.kbd =>
-		tk->keyboard(win, s);
-	s := <-win.ctxt.ptr =>
-		tk->pointer(win, *s);
+	key := <-win.ctxt.kbd =>
+		tk->keyboard(win, key);
+
+	ptr := <-win.ctxt.ptr =>
+		tk->pointer(win, *ptr);
+
 	s := <-fromuser =>
 		key: int;
 		if (s[0] == 'm') {
+			# Mouse
 			(nil, toks) := sys->tokenize(s, " ");
+
 			p := Point(int hd tl toks, int hd tl tl toks);
 			if (p.y > boundy)
 				key = ' ';
 			else {
 				x := p.x / (bdsize.x / 3);
+
 				case x {
 				0 =>
 					key = '7';
@@ -235,49 +268,62 @@ rungame(g: ref Game, win: ref Tk->Toplevel, fromuser: chan of string, winctl: ch
 			key = int s[1:];
 		else
 			sys->print("oops (%s)\n", s);
+
 		if (gameover)
 			return (key == 'q', rank);
+
 		if (paused) {
 			paused = 0;
+
 			(tickchan, tch) = (tch, tickchan);
 			if (key != 'q')
 				continue;
 		}
+
 		case key {
 		'9'  or 'c' or Right =>
 			g.move(1);
+
 		'7' or 'z' or Left =>
 			g.move(-1);
+
 		'8' or 'x' or Up =>
 			g.rotate(0);
+
 		' ' or Down =>
 			g.drop();
+
 		'p' =>
 			paused = 1;
 			(tickchan, tch) = (tch, tickchan);
+
 		'q' =>
 			g.delay = -1;
 			while (<-tickchan)
 				;
 			return (1, rank);
 		}
+
 	s := <-win.ctxt.ctl or
 	s = <-win.wreq or
 	s = <-winctl =>
 		tkclient->wmctl(win, s);
+
 	n := <-tickchan =>
 		if (g.tick() == -1) {
 			while (n)
 				n = <-tickchan;
+
 			if (awaitingscore && !<-scorech) {
 				awaitingscore = 0;
 				scoretab = nil;
 			}
+
 			if (scoretab != nil)
-				rank = scoretab->setscore(g.score, sys->sprint("%d %d %bd", g.nrows, g.level,
-						big readfile("/dev/time") / big 1000000));
+				rank = scoretab->setscore(g.score, sys->sprint("%d %d %bd", g.nrows, g.level, big readfile("/dev/time") / big 1000000));
 			gameover = 1;
 		}
+
 	ok := <-scorech =>
 		awaitingscore = 0;
 		if (!ok)
@@ -292,6 +338,7 @@ tablerow(win: ref Tk->Toplevel, w, bg: string, relief: string, vals: array of st
 		cw := cmd(win, "label " + w + "." + string i + " -text " + tk->quote(vals[i]) + " -width " + widths[i] + bg);
 		cmd(win, "pack " + cw + " -side left -anchor w");
 	}
+
 	cmd(win, "pack " + w + " -side top");
 }
 
@@ -304,6 +351,7 @@ showhighscores(win: ref Tk->Toplevel, fromuser: chan of string, winctl: chan of 
 	tablerow(win, ".f.h", nil, "raised", array[] of {"User", "Score", "Level", "Rows"}, widths);
 	sl := scoretab->scores();
 	n := 0;
+
 	while (sl != nil) {
 		s := hd sl;
 		bg := "";
@@ -319,23 +367,37 @@ showhighscores(win: ref Tk->Toplevel, fromuser: chan of string, winctl: chan of 
 		tablerow(win, f, bg, "sunken", array[] of {s.user, string s.score, level, nrows}, widths);
 		sl = tl sl;
 	}
+
+	# New game button - breaks keyboard
 	cmd(win, "button .f.b -text {New game} -command {send user s}");
 	cmd(win, "pack .f.b -side top");
+
+	# Renders final scores
 	cmd(win, "pack .f -side top");
 	cmd(win, "update");
+
+	# Events for scoreboard
 	for (;;) alt {
-	s := <-win.ctxt.kbd =>
-		tk->keyboard(win, s);
-	s := <-win.ctxt.ptr =>
-		tk->pointer(win, *s);
+	key := <-win.ctxt.kbd =>
+		tk->keyboard(win, key);
+
+	ptr := <-win.ctxt.ptr =>
+		tk->pointer(win, *ptr);
+
 	s := <-fromuser =>
 		if (s[0] == 'k') {
 			cmd(win, "destroy .f");
+
+			# Don't quit unless 'q' is pressed
 			return int s[1:] != 'q';
+
 		} else if (s[0] == 's') {
 			cmd(win, "destroy .f");
+
+			# Don't quit
 			return 1;
 		}
+
 	s := <-win.ctxt.ctl or
 	s = <-win.wreq or
 	s = <-winctl =>
@@ -719,7 +781,6 @@ Board.gameover(bd: self ref Board)
 cmd(top: ref Tk->Toplevel, s: string): string
 {
 	e := tk->cmd(top, s);
-#	sys->print("%s\n", s);
 	if (e != nil && e[0] == '!')
 		sys->fprint(stderr, "tetris: tk error on '%s': %s\n", s, e);
 	return e;
