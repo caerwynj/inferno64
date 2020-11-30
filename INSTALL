@@ -69,9 +69,9 @@ following in the root of the Inferno tree:
      directory for the platform, which will now contain the
      mk binary just built.  On Unix, export  PATH.
 
-4    Then `mk nuke` to remove any extraneous object files.
+4    Then `mk mkdirs` to create all the missing directories.
 
-5    Then `mk mkdirs` to create all the missing directories.
+5    Then `mk nuke` to remove any extraneous object files.
 
 6    Finally, `mk install` to create and install   the
      libraries,    limbo  compiler,  emu for hosted Inferno,

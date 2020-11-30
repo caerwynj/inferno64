@@ -26,8 +26,8 @@ echo >>mkconfig '<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE'
 # build code
 RUN ./makemk.sh
 ENV PATH="$INFERNO/Linux/386/bin:${PATH}"
-RUN mk nuke
 RUN mk mkdirs
+RUN mk nuke
 RUN mk install
 
 
