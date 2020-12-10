@@ -24,6 +24,7 @@ include "string.m";
 	str: String;
 
 include "arg.m";
+include "env.m";
 
 WmSh: module
 {
@@ -126,6 +127,10 @@ init(ctxt: ref Context, argv: list of string)
 	if (str == nil)
 		badmod(String->PATH);
 
+	env := load Env Env->PATH;
+	if(env == nil)
+		badmod(Env->PATH);
+
 	arg := load Arg Arg->PATH;
 	if (arg == nil)
 		badmod(Arg->PATH);
@@ -156,6 +161,14 @@ init(ctxt: ref Context, argv: list of string)
 	argv = arg->argv();
 	for (; shargs != nil; shargs = tl shargs)
 		argv = hd shargs :: argv;
+
+	# If font is not set, check $font
+	if(font == nil){
+		f := env->getenv("font");
+		if(f != nil){
+			font = f;
+		}
+	}
 
 	plumbmsg = load Plumbmsg Plumbmsg->PATH;
 

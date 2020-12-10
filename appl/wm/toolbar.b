@@ -1,19 +1,27 @@
 implement Toolbar;
+
 include "sys.m";
 	sys: Sys;
+
 include "draw.m";
 	draw: Draw;
 	Screen, Display, Image, Rect, Point, Wmcontext, Pointer: import draw;
+
 include "tk.m";
 	tk: Tk;
+
 include "tkclient.m";
 	tkclient: Tkclient;
+
 include "sh.m";
 	shell: Sh;
 	Listnode, Context: import shell;
+
 include "string.m";
 	str: String;
+
 include "arg.m";
+include "env.m";
 
 myselfbuiltin: Shellbuiltin;
 
@@ -30,6 +38,9 @@ Toolbar: module
 };
 
 MAXCONSOLELINES:	con 1024;
+
+font: string;
+icon: string = "vitasmall.bit";
 
 # execute this if no menu items have been created
 # by the init script.
@@ -71,6 +82,9 @@ init(ctxt: ref Draw->Context, argv: list of string)
 	arg := load Arg Arg->PATH;
 	if (arg == nil)
 		badmodule(Arg->PATH);
+	env := load Env Env->PATH;
+	if(env == nil)
+		badmodule(Env->PATH);
 
 	myselfbuiltin = load Shellbuiltin "$self";
 	if (myselfbuiltin == nil)
@@ -82,7 +96,7 @@ init(ctxt: ref Draw->Context, argv: list of string)
 	sys->bind("#s", "/chan", sys->MBEFORE);
 
 	arg->init(argv);
-	arg->setusage("toolbar [-s] [-p]");
+	arg->setusage("toolbar [-s] [-p] [-f font] [-i icon.bit]");
 	startmenu := 1;
 #	ownsnarf := (sys->open("/chan/snarf", Sys->ORDWR) == nil);
 	ownsnarf := sys->stat("/chan/snarf").t0 < 0;
@@ -92,6 +106,10 @@ init(ctxt: ref Draw->Context, argv: list of string)
 			startmenu = 0;
 		'p' =>
 			ownsnarf = 1;
+		'f' =>
+			font = arg->earg();
+		'i' =>
+			icon = arg->earg();
 		* =>
 			arg->usage();
 		}
@@ -102,6 +120,15 @@ init(ctxt: ref Draw->Context, argv: list of string)
 	if (ctxt == nil){
 		sys->fprint(sys->fildes(2), "toolbar: must run under a window manager\n");
 		raise "fail:no wm";
+	}
+
+	if(font == nil){
+		font = "/fonts/misc/latin1.6x13.font";
+		f := env->getenv("font");
+		if(f != nil)
+			font = f;
+
+		font = " -font " + font + " ";
 	}
 
 	exec := chan of string;
@@ -235,7 +262,7 @@ iconify(id, label: string)
 {
 	label = condenselabel(label);
 	e := tk->cmd(tbtop, "button .toolbar." +id+" -command {send task "+id+"} -takefocus 0");
-	cmd(tbtop, ".toolbar." +id+" configure -text '" + label);
+	cmd(tbtop, ".toolbar." +id+" configure" + font + " -text '" + label);
 	if(e[0] != '!')
 		cmd(tbtop, "pack .toolbar."+id+" -side left -fill y");
 	cmd(tbtop, "update");
@@ -258,6 +285,7 @@ layout(top: ref Tk->Toplevel)
 	if(r.dy() < 480)
 		h = tk->rect(top, ".b", Tk->Border|Tk->Required).dy();
 	cmd(top, ". configure -x " + string r.min.x +
+			font +
 			" -y " + string (r.max.y - h) +
 			" -width " + string r.dx() +
 			" -height " + string h);
@@ -278,7 +306,7 @@ toolbar(ctxt: ref Draw->Context, startmenu: int,
 	tk->namechan(tbtop, task, "task");
 	cmd(tbtop, "frame .toolbar");
 	if (startmenu) {
-		cmd(tbtop, "menubutton .toolbar.start -menu .m -borderwidth 0 -bitmap vitasmall.bit");
+		cmd(tbtop, "menubutton .toolbar.start -menu .m -borderwidth 0 -bitmap " + icon);
 		cmd(tbtop, "pack .toolbar.start -side left");
 	}
 	cmd(tbtop, "pack .toolbar -fill x");
@@ -383,6 +411,8 @@ builtin_menu(nil: ref Context, nil: Sh, argv: list of ref Listnode): string
 	primary := (hd tl argv).word;
 	argv = tl tl argv;
 
+	cmd(tbtop, ".m configure " + font);
+
 	if (n == 3) {
 		w := word(hd argv);
 		if (len w == 0)
@@ -395,17 +425,23 @@ builtin_menu(nil: ref Context, nil: Sh, argv: list of ref Listnode): string
 		argv = tl argv;
 
 		mpath := menupath(primary);
+
 		e := tk->cmd(tbtop, mpath+" cget -width");
 		if(e[0] == '!') {
 			cmd(tbtop, "menu "+mpath);
 			cmd(tbtop, ".m insert 0 cascade -label "+tk->quote(primary)+" -menu "+mpath);
 		}
 		w := word(hd argv);
-		if (len w == 0)
+		if (len w == 0){
 			cmd(tbtop, mpath + " insert 0 separator");
-		else
+		}else{
+			# Set font for entries
+			cmd(tbtop, mpath+" configure " + font);
+
 			cmd(tbtop, mpath+" insert 0 command -label "+tk->quote(secondary)+
 				" -command {send exec "+w+"}");
+		}
+
 	}
 	return nil;
 }
@@ -480,15 +516,22 @@ con_cfg := array[] of
 {
 	"frame .cons",
 	"scrollbar .cons.scroll -command {.cons.t yview}",
+
 	"text .cons.t -width 60w -height 15w -bg white "+
-		"-fg black -font /fonts/misc/latin1.6x13.font "+
-		"-yscrollcommand {.cons.scroll set}",
+		"-fg black -yscrollcommand {.cons.scroll set} ", 	# Need the font appended later
+		#"",
+
 	"pack .cons.scroll -side left -fill y",
+
 	"pack .cons.t -fill both -expand 1",
+
 	"pack .cons -expand 1 -fill both",
+
 	"pack propagate . 0",
+
 	"update"
 };
+
 nlines := 0;		# transcript length
 
 consoleproc(ctxt: ref Draw->Context, sync: chan of string)
@@ -507,11 +550,15 @@ consoleproc(ctxt: ref Draw->Context, sync: chan of string)
 	sync <-= nil;
 
 	(top, titlectl) := tkclient->toplevel(ctxt, "", "Log", tkclient->Appl); 
+
+	# Patch in font - why was this an array to start?
+	con_cfg[2] += font;
+
 	for(i := 0; i < len con_cfg; i++)
 		cmd(top, con_cfg[i]);
 
 	r := tk->rect(top, ".", Tk->Border|Tk->Required);
-	cmd(top, ". configure -x " + string ((top.screenr.dx() - r.dx()) / 2 + top.screenr.min.x) +
+	cmd(top, ". configure " + font + " -x " + string ((top.screenr.dx() - r.dx()) / 2 + top.screenr.min.x) +
 				" -y " + string (r.dy() / 3 + top.screenr.min.y));
 
 	tkclient->startinput(top, "ptr"::"kbd"::nil);

@@ -7,6 +7,12 @@ toolbar \- window manager toolbar
 .B -s
 ] [
 .B -p
+] [
+.B -f
+.I font
+] [
+.B -i
+.I icon.bit
 ]
 .SH DESCRIPTION
 .I Toolbar
@@ -64,6 +70,23 @@ packs a menu button referring to the start menu at the left hand side of the too
 The
 .B -s
 option suppresses that.
+
+.PP
+The 
+.B -f
+option sets the font to use, with
+.I $font
+being checked if
+.B -f
+is omitted. 
+
+.PP
+The 
+.B -i
+option sets the
+.IR image (6)
+bitmap to use as the start menu icon.
+
 .PP
 .I Toolbar
 serves the shared
@@ -85,6 +108,7 @@ option is given,
 will create its own snarf buffer, private to the set of
 applications running under the current instance of
 .IR wm (1).
+
 .SH FILES
 .TP
 .B /lib/wmsetup
