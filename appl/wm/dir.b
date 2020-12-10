@@ -7,6 +7,7 @@ include "sys.m";
 include "draw.m";
 	draw: Draw;
 	ctxt: ref Draw->Context;
+	Font: import draw;
 
 include "tk.m";
 	tk: Tk;
@@ -28,7 +29,10 @@ include "plumbmsg.m";
 	plumbmsg: Plumbmsg;
 	Msg: import plumbmsg;
 
-Fontwidth: 	con 8;
+include "env.m";
+
+Fontwidth: 	int;
+font:		string;
 Xwidth:		con 50;
 
 WmDir: module
@@ -55,12 +59,16 @@ dirwin_cfg := array[] of {
 	# Lay out the screen
 	"frame .fc",
 	"scrollbar .fc.scroll -command {.fc.c yview}",
+
 	"canvas .fc.c -relief sunken -yscrollincrement 25"+
 		" -borderwidth 2 -width 10c -height 300"+
-		" -yscrollcommand {.fc.scroll set}"+
-		" -font /fonts/misc/latin1.8x13.font",
+		" -yscrollcommand {.fc.scroll set}",
+		# Add -font here (2)
+
 	"frame .mbar",
 	"menubutton .mbar.opt -text {Options} -menu .opt",
+	".mbar configure", # Add font (5)
+	".mbar.opt configure", # Add font (6)
 	"pack .mbar.opt -side left",
 	"pack .fc.scroll -side right -fill y",
 	"pack .fc.c -fill both -expand 1",
@@ -73,6 +81,7 @@ dirwin_cfg := array[] of {
 
 	# Build the options menu
 	"menu .opt",
+	".opt configure", # Add font (15)
 	".opt add radiobutton -text {by name}"+
 		" -variable sort -value n -command {send opt sort}",
 	".opt add radiobutton -text {by access}"+
@@ -136,6 +145,16 @@ init(env: ref Draw->Context, argv: list of string)
 	plumbmsg = load Plumbmsg Plumbmsg->PATH;
 	if(plumbmsg != nil && plumbmsg->init(1, nil, 0) >= 0)
 		plumbed = 1;
+	environ := load Env Env->PATH;
+
+	font = environ->getenv("font");
+	if(font == nil)
+		font = "/fonts/misc/latin1.8x13.font";
+
+	# Graceful guards?
+	Fontwidth = Font.open(ctxt.display, font).width(" ");
+
+	font = " -font " + font + " ";
 
 	tkclient->init();
 	dialog->init();
@@ -160,6 +179,13 @@ init(env: ref Draw->Context, argv: list of string)
 		getdir(t, "");
 	else
 		getdir(t, hd argv);
+
+	# Patch in font (need a replaceall?)
+	dirwin_cfg[2] += font;
+	dirwin_cfg[5] += font;
+	dirwin_cfg[6] += font;
+	dirwin_cfg[15] += font;
+
 	for (c:=0; c<len dirwin_cfg; c++)
 		tk->cmd(t, dirwin_cfg[c]);
 	drawdir(t);
