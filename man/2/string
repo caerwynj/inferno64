@@ -13,6 +13,7 @@ in:        fn(c: int, cl: string): int;
 prefix:    fn(pre, s: string): int;
 splitl:    fn(s, cl: string): (string, string);
 splitr:    fn(s, cl: string): (string, string);
+replace:   fn(in, s, with: string, max: int): string;
 splitstrl: fn(s, t: string): (string, string);
 splitstrr: fn(s, t: string): (string, string);
 take:      fn(s, cl: string): string;
@@ -110,6 +111,30 @@ does not occur in
 .IR s ,
 the result is
 .RI ( nil, s ).
+
+.PP
+.B Replace
+returns the string
+.I in
+with up to
+.I max
+instances of
+.I s
+removed and replaced by
+.IR with .
+If 
+.I max
+is less than 0, there is no limit to the number of replacements.
+If 
+.I max
+is 0 or 
+.I s
+is
+.IR nil ,
+the string
+.I in
+is returned unchanged. 
+
 .PP
 .B Take
 returns the maximal prefix of string

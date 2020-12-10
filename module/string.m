@@ -20,6 +20,7 @@ String: module
 	# in these, the second string is a string to match, not a class
 	splitstrl:	fn(s, t: string): (string, string);
 	splitstrr:	fn(s, t: string): (string, string);
+	replace:	fn(in, s, with: string, max: int): string;
 
 	# is first arg a prefix of second?
 	prefix:		fn(pre, s: string): int;

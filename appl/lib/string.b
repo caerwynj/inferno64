@@ -425,3 +425,73 @@ unquoted(s: string): list of string
 		return unquoted(s + "'");
 	return args;
 }
+
+# Replace up to 'max' instances of 's' with 'with' in 'in'
+replace(in, s, with: string, max: int): string {
+	if(max == 0 || s == "") {
+		# Nothing to replace
+		return in;
+	}
+	if(len in < 1) {
+		# No string given
+		return "";
+	}
+	
+	n := 0;
+	
+	# For each rune 'in' the original string
+	for(r0 := 0; r0 < len in ; r0++) {
+		# Try to build 's'	
+		r1: int;
+		
+		substring:
+		for(r1 = 0; r1 < len s; r1++) {
+			if(in[r0 + r1] == s[r1]) {
+				# Match so far
+				continue substring;
+			} else {
+				# No longer matches
+				break substring;
+			}
+		}
+		
+		# We didn't break the loop, this is a match 
+		# String will be [r0 , r0+len(s))
+		if(r1 >= len s) {
+			left, right: string;
+			
+			# Left side
+			case r0 {
+			0 =>
+				# First rune, no left side
+				left = "";
+			* =>
+				left = in[:r0];
+			}
+			
+			# Right side
+			redge := r0 + len s;
+
+			if(redge == len in - 1)
+				# Last rune
+				right = "";
+			else
+				right = in[redge:];
+			
+			# Insert
+			in = left + with + right;
+			
+			# Skip forward to end of replacement string
+			r0 = r0 + (len with - 1);
+			
+			# Tick counts
+			n++;
+			if(n == max && max > 0) {
+				# We hit max and care about the number of replacements
+				return in;
+			}
+		}
+	}
+	
+	return in;
+}
