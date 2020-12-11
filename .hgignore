@@ -1,6 +1,9 @@
 syntax: glob
 *.[8qkv5967o]
 *.obj
+*.patch
+*.diff
+*.log
 [8qkv965o].out
 [8qkv965o].emu
 obj.out

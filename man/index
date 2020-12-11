@@ -2610,6 +2610,7 @@ appl	/man/1/asm
 appl	/man/1/auplay
 appl	/man/1/avr
 appl	/man/1/basename
+appl	/man/1/bb
 appl	/man/1/bind
 appl	/man/1/blur
 appl	/man/1/brutus
@@ -2918,6 +2919,7 @@ applicable	/man/6/dis
 applicable	/man/9/types
 application	/man/1/0intro
 application	/man/1/avr
+application	/man/1/bb
 application	/man/1/brutus
 application	/man/1/disdep
 application	/man/1/emu
@@ -4839,6 +4841,7 @@ bad	/man/8/kfscmd
 badel	/man/2/spki-verifier
 balancing	/man/2/ida
 balancing	/man/9/0intro
+ball	/man/1/bb
 band	/man/2/keyring-0intro
 bang	/man/1/sh-tk
 bank	/man/3/flash
@@ -5028,7 +5031,9 @@ baud	/man/4/palmsrv
 baud	/man/8/mangaload
 baud	/man/8/rdbgsrv
 baw	/man/8/prep
+bb	/man/1/bb
 bb	/man/9/types
+bb.b	/man/1/bb
 bbaabb	/man/2/regex
 bbbbbb.bbbbbbbb.bbbbbbbb	/man/6/utf
 bbox	/man/9/canvas
@@ -5520,6 +5525,7 @@ bit64sz	/man/10/styx
 bit8sz	/man/10/styx
 bitmap	/man/1/mash-tk
 bitmap	/man/1/mux
+bitmap	/man/1/toolbar
 bitmap	/man/1/wm-misc
 bitmap	/man/2/convcs
 bitmap	/man/2/dis
@@ -6035,6 +6041,7 @@ bottom	/man/9/see
 bottom	/man/9/text
 bottommost	/man/9/canvas
 bottommost	/man/9/menu
+bouncing	/man/1/bb
 bound	/man/1/acme
 bound	/man/1/bind
 bound	/man/1/cpu
@@ -8422,6 +8429,7 @@ checkbutton	/man/9/radiobutton
 checkbutton	/man/9/variable
 checkbutton's	/man/9/checkbutton
 checkbuttons	/man/9/checkbutton
+checked	/man/1/toolbar
 checked	/man/10/devattach
 checked	/man/2/filter-deflate
 checked	/man/2/spki
@@ -14936,6 +14944,7 @@ demo	/man/1/mux
 demonstrate	/man/1/blur
 demonstrate	/man/6/colour
 demonstrated	/man/1/mux
+demonstration	/man/1/bb
 demonstration	/man/1/miniterm
 demonstration	/man/1/mux
 demonstrations	/man/1/mux
@@ -24161,6 +24170,7 @@ follow	/man/9/text
 font	/man/1/acme
 font	/man/1/brutus
 font	/man/1/emu
+font	/man/1/toolbar
 font	/man/1/unicode
 font	/man/1/wm-misc
 font	/man/1/wm-sh
@@ -25537,6 +25547,7 @@ graphic	/man/10/plan9.ini
 graphical	/man/1/0intro
 graphical	/man/1/9win
 graphical	/man/1/alphabet-fs
+graphical	/man/1/bb
 graphical	/man/1/charon
 graphical	/man/1/cprof
 graphical	/man/1/deb
@@ -26790,9 +26801,11 @@ icon	/man/1/cprof
 icon	/man/1/deb
 icon	/man/1/mash-tk
 icon	/man/1/mux
+icon	/man/1/toolbar
 icon	/man/2/dialog
 icon	/man/2/prefab-compound
 icon	/man/2/prefab-element
+icon.bit	/man/1/toolbar
 iconbox	/man/2/prefab-compound
 iconising	/man/1/wm-misc
 icons	/man/1/cprof
@@ -27246,6 +27259,7 @@ image	/man/1/charon
 image	/man/1/emu
 image	/man/1/mash-tk
 image	/man/1/mprof
+image	/man/1/toolbar
 image	/man/1/wm
 image	/man/1/wm-misc
 image	/man/1/zeros
@@ -29457,6 +29471,7 @@ instances	/man/1/calendar
 instances	/man/1/ls
 instances	/man/10/error
 instances	/man/2/filter
+instances	/man/2/string
 instances	/man/2/styxflush
 instances	/man/2/styxservers
 instances	/man/2/sys-dup
@@ -30390,6 +30405,7 @@ intervals	/man/1/acme
 intervals	/man/9/text
 intervening	/man/1/mash
 intervening	/man/1/sh
+intial	/man/1/bb
 intialise	/man/2/styxflush
 intrdisable	/man/10/intrenable
 intrenable	/man/10/intrenable
@@ -32995,6 +33011,7 @@ limit	/man/2/0intro
 limit	/man/2/9p-ninep
 limit	/man/2/rfc822
 limit	/man/2/sets
+limit	/man/2/string
 limit	/man/2/styx
 limit	/man/3/cons
 limit	/man/3/eia
@@ -35290,6 +35307,7 @@ max	/man/2/draw-0intro
 max	/man/2/draw-rect
 max	/man/2/ip
 max	/man/2/rabin
+max	/man/2/string
 max	/man/3/draw
 max.add	/man/2/draw-rect
 max.sub	/man/2/draw-rect
@@ -39721,6 +39739,7 @@ omitted	/man/1/mk
 omitted	/man/1/sh-alphabet
 omitted	/man/1/sh-file2chan
 omitted	/man/1/sh-tk
+omitted	/man/1/toolbar
 omitted	/man/10/9load
 omitted	/man/10/mk
 omitted	/man/10/plan9.ini
@@ -40250,7 +40269,6 @@ opposite	/man/9/canvas
 ops	/man/10/styxserver
 opt	/man/1/sh-arg
 opt	/man/2/arg
-opt	/man/2/iobuf
 opt	/man/6/dis
 opt	/man/6/sbl
 optargs	/man/2/alphabet-intro
@@ -40527,6 +40545,7 @@ options	/man/1/alphabet-abc
 options	/man/1/alphabet-fs
 options	/man/1/alphabet-grid
 options	/man/1/auplay
+options	/man/1/bb
 options	/man/1/bind
 options	/man/1/charon
 options	/man/1/chgrp
@@ -43196,6 +43215,7 @@ pixel	/man/9/text
 pixel's	/man/2/draw-image
 pixel's	/man/6/colour
 pixel's	/man/6/image
+pixels	/man/1/bb
 pixels	/man/1/emu
 pixels	/man/1/filename
 pixels	/man/1/wm-sh
@@ -44004,7 +44024,6 @@ pow10	/man/2/math-elem
 powered	/man/10/dev
 powered	/man/3/fpga
 powerful	/man/1/0intro
-powerman	/man/2/iobuf
 powerpc	/man/1/emu
 powerpc	/man/10/5cv
 powerpc	/man/10/a.out
@@ -45552,6 +45571,7 @@ proportional	/man/1/acme
 proportional	/man/2/dict
 proportionally	/man/1/ebook
 proportionally	/man/2/print
+proportions	/man/1/bb
 propose	/man/2/spree-gather
 proposed	/man/1/idea
 proposed	/man/1/tktester
@@ -46627,6 +46647,7 @@ radiobutton	/man/9/send
 radiobutton	/man/9/variable
 radiobutton's	/man/9/radiobutton
 radiobuttons	/man/9/radiobutton
+radius	/man/1/bb
 radius	/man/1/blur
 radix	/man/1/fc
 radix	/man/1/sh-expr
@@ -47992,6 +48013,7 @@ recv	/man/2/0intro
 recv	/man/2/plumbmsg
 recv	/man/3/prog
 recvra	/man/2/ip
+red	/man/1/bb
 red	/man/1/charon
 red	/man/1/cprof
 red	/man/1/deb
@@ -49096,6 +49118,7 @@ removed	/man/2/lists
 removed	/man/2/registries
 removed	/man/2/sets
 removed	/man/2/sh
+removed	/man/2/string
 removed	/man/2/styxservers
 removed	/man/2/sys-fd2path
 removed	/man/2/sys-print
@@ -49258,6 +49281,7 @@ replace	/man/1/tr
 replace	/man/1/vixen
 replace	/man/10/iar
 replace	/man/2/dbm
+replace	/man/2/string
 replace	/man/2/sys-0intro
 replace	/man/2/sys-bind
 replace	/man/2/tkclient
@@ -49292,6 +49316,7 @@ replaced	/man/2/math-0intro
 replaced	/man/2/msgio
 replaced	/man/2/rfc822
 replaced	/man/2/sh
+replaced	/man/2/string
 replaced	/man/2/sys-dial
 replaced	/man/2/sys-print
 replaced	/man/3/kprof
@@ -49307,6 +49332,7 @@ replacement	/man/1/acme
 replacement	/man/1/m4
 replacement	/man/1/vixen
 replacement	/man/9/bind
+replacements	/man/2/string
 replaces	/man/1/acme
 replaces	/man/1/brutus
 replaces	/man/1/man
@@ -52393,6 +52419,7 @@ scr	/man/3/draw
 scrambled	/man/2/security-0intro
 scratch	/man/1/acme
 scratch	/man/6/namespace
+screen	/man/1/bb
 screen	/man/1/blur
 screen	/man/1/brutus
 screen	/man/1/charon
@@ -55560,6 +55587,7 @@ source	/man/1/asm
 source	/man/1/auplay
 source	/man/1/avr
 source	/man/1/basename
+source	/man/1/bb
 source	/man/1/bind
 source	/man/1/blur
 source	/man/1/brutus
@@ -62876,6 +62904,7 @@ unchanged	/man/2/math-fp
 unchanged	/man/2/math-linalg
 unchanged	/man/2/names
 unchanged	/man/2/security-ssl
+unchanged	/man/2/string
 unchanged	/man/2/sys-byte2char
 unchanged	/man/2/sys-open
 unchanged	/man/3/dbg
@@ -66077,6 +66106,7 @@ widgets	/man/9/text
 widows	/man/6/man
 width	/man/1/9win
 width	/man/1/acme
+width	/man/1/bb
 width	/man/1/brutus
 width	/man/1/charon
 width	/man/1/emu
@@ -66357,6 +66387,7 @@ wk	/man/6/keyboard
 wl	/man/2/dividers
 wlock	/man/10/qlock
 wm	/man/1/0intro
+wm	/man/1/bb
 wm	/man/1/brutus
 wm	/man/1/calendar
 wm	/man/1/charon
@@ -66419,6 +66450,7 @@ wm	/man/8/touchcal
 wm.b	/man/1/wm
 wm.dis	/man/1/emu
 wmchan	/man/8/plumber
+wmclient	/man/1/bb
 wmclient	/man/1/toolbar
 wmclient	/man/1/wm
 wmclient	/man/2/wmclient
