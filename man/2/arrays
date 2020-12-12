@@ -1,0 +1,151 @@
+.TH Arrays 2
+.SH NAME
+arrays: filter, map, pair, find, prepend, append, final element, stringify\- array operations
+.SH SYNOPSIS
+.EX
+include "arrays.m"
+arrays := load Arrays Arrays->PATH;
+
+filter:    fn[T](a: array of T, f: ref fn(x: T): int): array of T;
+map:       fn[T](a₀: array of T, f: ref fn(x: T): T): array of T;
+pair:      fn[T₁, T₂](a₁: array of T₁, a₂: array of T₂): array of (T₁, T₂);
+find:      fn[T](a: array of T, x: T): array of T
+               for {  T =>  Equals:  fn(a, b: T): int;  };
+prepend:   fn[T](a₀: array of T, x: T): array of T;
+append:    fn[T](a₀: array of T, x: T): array of T;
+tail:      fn[T](a: array of T): array of T;
+stringify: fn[T](a: array of T): string
+               for {  T =>  String:  fn(a: self T): string;  };
+.EE
+.SH DESCRIPTION
+The module
+.I arrays
+provides operations on arrays of type
+.IR T ,
+which may be any reference type, or
+.BR string .
+Reference types are
+.BR array ,
+.BR chan ,
+.BR array ,
+.BR module ,
+and
+.BI ref " adt".
+None of the operations change their parameter arrays: they always return a new array.
+.PP
+First, there is a group of common array operations.
+
+.PP
+.B Find
+finds the first instance of
+.I x
+in array
+.I a
+and returns the slice
+.IR a[x:] .
+.B Find
+returns nil if there is no
+instance of
+.I x
+in
+.IR a .
+The type
+.I T
+must implement a method
+.I Equals
+which returns a number greater than zero if the elements
+.I a
+and
+.I b
+are equal and zero if
+.I a
+and
+.I b
+are not equal. 
+
+
+.PP
+.B Append
+returns a new array with the elements of
+.I a₀
+followed by the element
+.IR x .
+
+.PP
+.B Prepend
+returns a new array with the element
+.I x
+followed by the elements of
+.IR a₀ .
+
+.PP
+.B Tail
+returns a new array which is the slice
+.IR a[1:] .
+Nil is returned if the length of a is less than 2 elements. 
+
+
+.PP
+.B Pair
+takes two arrays
+.I a₁
+and
+.IR a₂ ,
+and returns a new array of tuples
+.BI ( v1,\ v2 )
+in which each element of
+.I a₁
+has been paired with the corresponding element of
+.IR a₂ .
+Nil is returned if the arrays are not equal in length.
+
+.PP
+.B Stringify
+returns a visually pleasing string representation of
+.IR a .
+The type
+.I T
+must implement a method
+.I String
+which returns a string representation of an element in the array of type
+.IR T .
+
+
+.PP
+A second group of operations applies a function
+.I f
+or a Boolean predicate
+.I p
+to each element of a array, returning a transformed array or a Boolean value.
+A predicate
+.I p
+must return non-zero if its parameter value satisfies its condition, and must return zero if it does not.
+
+
+.PP
+.B Filter
+returns a new array containing only the elements of
+.I a
+that satisfy
+.IR p .
+
+.PP
+.B Map
+returns a new array in which each element of
+.I a₀
+has been transformed by
+.I f
+(ie, if
+.I a₀
+is
+.IB e0, e1, ⋯
+then the result is
+.IB f(e0), f(e1), ⋯ ).
+
+.SH SOURCE
+.B /appl/lib/arrays.b
+.SH BUGS
+The current implementation of polymorphism is limited to reference types and strings,
+which in turn limits use of this module.
+.SH SEE ALSO
+.IR arrays (2)
