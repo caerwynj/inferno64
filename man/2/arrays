@@ -150,4 +150,4 @@ then the result is
 The current implementation of polymorphism is limited to reference types and strings,
 which in turn limits use of this module.
 .SH SEE ALSO
-.IR arrays (2)
+.IR lists (2)
