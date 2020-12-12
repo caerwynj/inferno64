@@ -31,6 +31,12 @@ include "plumbmsg.m";
 
 include "env.m";
 
+include "arrays.m";
+	arrays: Arrays;
+
+include "string.m";
+	strings: String;
+
 Fontwidth: 	int;
 font:		string;
 Xwidth:		con 50;
@@ -62,13 +68,12 @@ dirwin_cfg := array[] of {
 
 	"canvas .fc.c -relief sunken -yscrollincrement 25"+
 		" -borderwidth 2 -width 10c -height 300"+
-		" -yscrollcommand {.fc.scroll set}",
-		# Add -font here (2)
+		" -yscrollcommand {.fc.scroll set} $font",
 
 	"frame .mbar",
 	"menubutton .mbar.opt -text {Options} -menu .opt",
-	".mbar configure", # Add font (5)
-	".mbar.opt configure", # Add font (6)
+	".mbar configure $font",
+	".mbar.opt configure $font",
 	"pack .mbar.opt -side left",
 	"pack .fc.scroll -side right -fill y",
 	"pack .fc.c -fill both -expand 1",
@@ -81,7 +86,7 @@ dirwin_cfg := array[] of {
 
 	# Build the options menu
 	"menu .opt",
-	".opt configure", # Add font (15)
+	".opt configure $font",
 	".opt add radiobutton -text {by name}"+
 		" -variable sort -value n -command {send opt sort}",
 	".opt add radiobutton -text {by access}"+
@@ -146,6 +151,8 @@ init(env: ref Draw->Context, argv: list of string)
 	if(plumbmsg != nil && plumbmsg->init(1, nil, 0) >= 0)
 		plumbed = 1;
 	environ := load Env Env->PATH;
+	arrays = load Arrays Arrays->PATH;
+	strings = load String String->PATH;
 
 	font = environ->getenv("font");
 	if(font == nil)
@@ -181,10 +188,7 @@ init(env: ref Draw->Context, argv: list of string)
 		getdir(t, hd argv);
 
 	# Patch in font (need a replaceall?)
-	dirwin_cfg[2] += font;
-	dirwin_cfg[5] += font;
-	dirwin_cfg[6] += font;
-	dirwin_cfg[15] += font;
+	dirwin_cfg = arrays->map(dirwin_cfg, fontify);
 
 	for (c:=0; c<len dirwin_cfg; c++)
 		tk->cmd(t, dirwin_cfg[c]);
@@ -534,4 +538,9 @@ sysname(): string
 	if(n < 0) 
 		return "Anon";
 	return string buf[0:n];
+}
+
+# Substitute '$font' with font string
+fontify(s: string): string {
+	return strings->replace(s, "$font", font, -1);
 }

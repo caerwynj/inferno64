@@ -17,11 +17,15 @@ include "sh.m";
 	shell: Sh;
 	Listnode, Context: import shell;
 
+include "arg.m";
+
+include "env.m";
+
 include "string.m";
 	str: String;
 
-include "arg.m";
-include "env.m";
+include "arrays.m";
+	arrays: Arrays;
 
 myselfbuiltin: Shellbuiltin;
 
@@ -85,6 +89,9 @@ init(ctxt: ref Draw->Context, argv: list of string)
 	env := load Env Env->PATH;
 	if(env == nil)
 		badmodule(Env->PATH);
+	arrays = load Arrays Arrays->PATH;
+	if(arrays == nil)
+		badmodule(Arrays->PATH);
 
 	myselfbuiltin = load Shellbuiltin "$self";
 	if (myselfbuiltin == nil)
@@ -518,7 +525,7 @@ con_cfg := array[] of
 	"scrollbar .cons.scroll -command {.cons.t yview}",
 
 	"text .cons.t -width 60w -height 15w -bg white "+
-		"-fg black -yscrollcommand {.cons.scroll set} ", 	# Need the font appended later
+		"-fg black -yscrollcommand {.cons.scroll set} $font",
 		#"",
 
 	"pack .cons.scroll -side left -fill y",
@@ -552,7 +559,7 @@ consoleproc(ctxt: ref Draw->Context, sync: chan of string)
 	(top, titlectl) := tkclient->toplevel(ctxt, "", "Log", tkclient->Appl); 
 
 	# Patch in font - why was this an array to start?
-	con_cfg[2] += font;
+	con_cfg = arrays->map(con_cfg, fontify);
 
 	for(i := 0; i < len con_cfg; i++)
 		cmd(top, con_cfg[i]);
@@ -612,4 +619,8 @@ conout(top: ref Tk->Toplevel, data: array of byte, wc: Sys->Rwrite)
 	}
 
 	tk->cmd(top, ".cons.t see end; update");
+}
+
+fontify(s: string): string {
+	return str->replace(s, "$font", font, -1);
 }
