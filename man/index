@@ -1444,6 +1444,7 @@ adt	/man/10/devattach
 adt	/man/2/0intro
 adt	/man/2/9p-ninep
 adt	/man/2/alphabet-intro
+adt	/man/2/arrays
 adt	/man/2/asn1
 adt	/man/2/attrdb
 adt	/man/2/bufio
@@ -2542,6 +2543,7 @@ append	/man/10/acid
 append	/man/10/iar
 append	/man/10/styxserver
 append	/man/2/9p-ninep
+append	/man/2/arrays
 append	/man/2/attrdb
 append	/man/2/lists
 append	/man/2/palmfile
@@ -2610,7 +2612,6 @@ appl	/man/1/asm
 appl	/man/1/auplay
 appl	/man/1/avr
 appl	/man/1/basename
-appl	/man/1/bb
 appl	/man/1/bind
 appl	/man/1/blur
 appl	/man/1/brutus
@@ -2748,6 +2749,7 @@ appl	/man/10/c2l
 appl	/man/2/9p-ninep
 appl	/man/2/alphabet-intro
 appl	/man/2/arg
+appl	/man/2/arrays
 appl	/man/2/asn1
 appl	/man/2/attrdb
 appl	/man/2/bloomfilter
@@ -2919,7 +2921,6 @@ applicable	/man/6/dis
 applicable	/man/9/types
 application	/man/1/0intro
 application	/man/1/avr
-application	/man/1/bb
 application	/man/1/brutus
 application	/man/1/disdep
 application	/man/1/emu
@@ -3093,6 +3094,7 @@ applies	/man/1/cp
 applies	/man/1/sh-regex
 applies	/man/1/vixen
 applies	/man/10/kproc
+applies	/man/2/arrays
 applies	/man/2/daytime
 applies	/man/2/draw-image
 applies	/man/2/lists
@@ -3543,6 +3545,7 @@ array	/man/10/print
 array	/man/10/strcat
 array	/man/2/0intro
 array	/man/2/9p-ninep
+array	/man/2/arrays
 array	/man/2/asn1
 array	/man/2/bloomfilter
 array	/man/2/bufio
@@ -3645,6 +3648,7 @@ arrays	/man/1/limbo
 arrays	/man/10/c2l
 arrays	/man/10/memory
 arrays	/man/2/9p-ninep
+arrays	/man/2/arrays
 arrays	/man/2/crc
 arrays	/man/2/dbm
 arrays	/man/2/dis
@@ -3655,6 +3659,7 @@ arrays	/man/2/iobuf
 arrays	/man/2/keyring-0intro
 arrays	/man/2/keyring-getmsg
 arrays	/man/2/keyring-getstring
+arrays	/man/2/lists
 arrays	/man/2/math-export
 arrays	/man/2/math-linalg
 arrays	/man/2/msgio
@@ -3664,6 +3669,8 @@ arrays	/man/2/styx
 arrays	/man/2/sys-0intro
 arrays	/man/6/image
 arrays	/man/6/json
+arrays.b	/man/2/arrays
+arrays.m	/man/2/arrays
 arrival	/man/1/collab-clients
 arrival	/man/3/usb
 arrive	/man/1/sh-tk
@@ -4841,7 +4848,6 @@ bad	/man/8/kfscmd
 badel	/man/2/spki-verifier
 balancing	/man/2/ida
 balancing	/man/9/0intro
-ball	/man/1/bb
 band	/man/2/keyring-0intro
 bang	/man/1/sh-tk
 bank	/man/3/flash
@@ -5031,9 +5037,7 @@ baud	/man/4/palmsrv
 baud	/man/8/mangaload
 baud	/man/8/rdbgsrv
 baw	/man/8/prep
-bb	/man/1/bb
 bb	/man/9/types
-bb.b	/man/1/bb
 bbaabb	/man/2/regex
 bbbbbb.bbbbbbbb.bbbbbbbb	/man/6/utf
 bbox	/man/9/canvas
@@ -5883,6 +5887,7 @@ bookmark	/man/1/charon
 books	/man/2/palmfile
 bool	/man/2/asn1
 boolean	/man/1/sh-expr
+boolean	/man/2/arrays
 boolean	/man/2/asn1
 boolean	/man/2/draw-0intro
 boolean	/man/2/draw-image
@@ -6041,7 +6046,6 @@ bottom	/man/9/see
 bottom	/man/9/text
 bottommost	/man/9/canvas
 bottommost	/man/9/menu
-bouncing	/man/1/bb
 bound	/man/1/acme
 bound	/man/1/bind
 bound	/man/1/cpu
@@ -6570,6 +6574,7 @@ bugs	/man/10/plan9.ini
 bugs	/man/10/print
 bugs	/man/10/strcat
 bugs	/man/10/styxserver
+bugs	/man/2/arrays
 bugs	/man/2/asn1
 bugs	/man/2/bufio
 bugs	/man/2/crypt-sha1
@@ -7875,6 +7880,7 @@ chan	/man/10/devattach
 chan	/man/10/dmainit
 chan	/man/10/newchan
 chan	/man/2/0intro
+chan	/man/2/arrays
 chan	/man/2/command
 chan	/man/2/devpointer
 chan	/man/2/dhcpclient
@@ -9716,6 +9722,7 @@ common	/man/10/9load
 common	/man/10/devattach
 common	/man/10/plan9.ini
 common	/man/2/0intro
+common	/man/2/arrays
 common	/man/2/dial
 common	/man/2/draw-0intro
 common	/man/2/draw-display
@@ -10394,6 +10401,7 @@ condition	/man/1/sh
 condition	/man/1/sh-std
 condition	/man/10/error
 condition	/man/10/sleep
+condition	/man/2/arrays
 condition	/man/2/lists
 condition	/man/2/sys-bind
 condition	/man/3/eia
@@ -13170,6 +13178,7 @@ current	/man/10/styxserver
 current	/man/2/0intro
 current	/man/2/9p-ninep
 current	/man/2/arg
+current	/man/2/arrays
 current	/man/2/bufio
 current	/man/2/command
 current	/man/2/crc
@@ -14944,7 +14953,6 @@ demo	/man/1/mux
 demonstrate	/man/1/blur
 demonstrate	/man/6/colour
 demonstrated	/man/1/mux
-demonstration	/man/1/bb
 demonstration	/man/1/miniterm
 demonstration	/man/1/mux
 demonstrations	/man/1/mux
@@ -19983,6 +19991,7 @@ equal	/man/10/memory
 equal	/man/10/newchan
 equal	/man/10/strcat
 equal	/man/10/styx
+equal	/man/2/arrays
 equal	/man/2/draw-0intro
 equal	/man/2/draw-image
 equal	/man/2/draw-point
@@ -20018,6 +20027,7 @@ equalize	/man/6/man
 equally	/man/1/diff
 equally	/man/8/httpd
 equally	/man/9/grid
+equals	/man/2/arrays
 equals	/man/2/asn1
 equals	/man/2/draw-image
 equation	/man/6/man
@@ -23519,6 +23529,7 @@ filter	/man/1/alphabet-main
 filter	/man/1/fs
 filter	/man/1/gzip
 filter	/man/1/sh-alphabet
+filter	/man/2/arrays
 filter	/man/2/bloomfilter
 filter	/man/2/filter
 filter	/man/2/filter-deflate
@@ -23620,6 +23631,7 @@ finds	/man/1/sh-alphabet
 finds	/man/1/stack
 finds	/man/1/strings
 finds	/man/10/9load
+finds	/man/2/arrays
 finds	/man/2/disks
 finds	/man/2/lists
 finds	/man/2/spree
@@ -23942,6 +23954,7 @@ fn	/man/1/wm-sh
 fn	/man/1/yacc
 fn	/man/2/9p-ninep
 fn	/man/2/arg
+fn	/man/2/arrays
 fn	/man/2/asn1
 fn	/man/2/attrdb
 fn	/man/2/bloomfilter
@@ -25547,7 +25560,6 @@ graphic	/man/10/plan9.ini
 graphical	/man/1/0intro
 graphical	/man/1/9win
 graphical	/man/1/alphabet-fs
-graphical	/man/1/bb
 graphical	/man/1/charon
 graphical	/man/1/cprof
 graphical	/man/1/deb
@@ -25609,6 +25621,7 @@ greater	/man/10/dev
 greater	/man/10/memory
 greater	/man/10/strcat
 greater	/man/10/styx
+greater	/man/2/arrays
 greater	/man/2/bloomfilter
 greater	/man/2/draw-0intro
 greater	/man/2/iobuf
@@ -27122,6 +27135,7 @@ ie	/man/10/kproc
 ie	/man/10/newchan
 ie	/man/10/ntsrv
 ie	/man/10/styxserver
+ie	/man/2/arrays
 ie	/man/2/dbm
 ie	/man/2/dhcpclient
 ie	/man/2/dis
@@ -27413,6 +27427,7 @@ implement	/man/10/qio
 implement	/man/10/qlock
 implement	/man/2/alphabet-intro
 implement	/man/2/arg
+implement	/man/2/arrays
 implement	/man/2/crypt-rc4
 implement	/man/2/draw-example
 implement	/man/2/ir
@@ -27457,6 +27472,7 @@ implementation	/man/10/qio
 implementation	/man/2/0intro
 implementation	/man/2/9p-ninep
 implementation	/man/2/alphabet-intro
+implementation	/man/2/arrays
 implementation	/man/2/bufio
 implementation	/man/2/bufio-chanfill
 implementation	/man/2/convcs
@@ -27768,6 +27784,7 @@ include	/man/10/styxserver
 include	/man/2/0intro
 include	/man/2/9p-ninep
 include	/man/2/arg
+include	/man/2/arrays
 include	/man/2/asn1
 include	/man/2/attrdb
 include	/man/2/bloomfilter
@@ -29388,6 +29405,7 @@ instance	/man/10/sleep
 instance	/man/10/styxserver
 instance	/man/2/0intro
 instance	/man/2/alphabet-intro
+instance	/man/2/arrays
 instance	/man/2/asn1
 instance	/man/2/bufio
 instance	/man/2/bufio-chanfill
@@ -29562,6 +29580,7 @@ int	/man/10/styxserver
 int	/man/10/xalloc
 int	/man/2/9p-ninep
 int	/man/2/arg
+int	/man/2/arrays
 int	/man/2/asn1
 int	/man/2/attrdb
 int	/man/2/bloomfilter
@@ -30405,7 +30424,6 @@ intervals	/man/1/acme
 intervals	/man/9/text
 intervening	/man/1/mash
 intervening	/man/1/sh
-intial	/man/1/bb
 intialise	/man/2/styxflush
 intrdisable	/man/10/intrenable
 intrenable	/man/10/intrenable
@@ -32328,6 +32346,7 @@ length	/man/10/rune
 length	/man/10/strcat
 length	/man/10/styx
 length	/man/2/9p-ninep
+length	/man/2/arrays
 length	/man/2/asn1
 length	/man/2/convcs
 length	/man/2/crypt-crypt
@@ -32630,6 +32649,7 @@ lib	/man/10/c2l
 lib	/man/10/conf
 lib	/man/2/9p-ninep
 lib	/man/2/arg
+lib	/man/2/arrays
 lib	/man/2/asn1
 lib	/man/2/attrdb
 lib	/man/2/bloomfilter
@@ -33037,6 +33057,7 @@ limited	/man/1/sh-file2chan
 limited	/man/10/dynld
 limited	/man/10/error
 limited	/man/10/readnum
+limited	/man/2/arrays
 limited	/man/2/lists
 limited	/man/2/math-0intro
 limited	/man/2/spki-verifier
@@ -33060,6 +33081,7 @@ limiting	/man/2/styx
 limits	/man/1/charon
 limits	/man/10/allocb
 limits	/man/10/qio
+limits	/man/2/arrays
 limits	/man/2/bufio
 limits	/man/2/crypt-0intro
 limits	/man/2/draw-0intro
@@ -33656,6 +33678,7 @@ load	/man/10/plan9.ini
 load	/man/2/0intro
 load	/man/2/9p-ninep
 load	/man/2/arg
+load	/man/2/arrays
 load	/man/2/asn1
 load	/man/2/attrdb
 load	/man/2/bloomfilter
@@ -34939,6 +34962,7 @@ map	/man/1/stack
 map	/man/1/vixen
 map	/man/10/c2l
 map	/man/10/kbdputc
+map	/man/2/arrays
 map	/man/2/asn1
 map	/man/2/dbm
 map	/man/2/debug
@@ -36009,6 +36033,7 @@ method	/man/1/diff
 method	/man/1/fs
 method	/man/10/0intro
 method	/man/10/5cv
+method	/man/2/arrays
 method	/man/2/bloomfilter
 method	/man/2/bufio
 method	/man/2/draw-font
@@ -36652,6 +36677,7 @@ module	/man/2/0intro
 module	/man/2/9p-ninep
 module	/man/2/alphabet-intro
 module	/man/2/arg
+module	/man/2/arrays
 module	/man/2/asn1
 module	/man/2/attrdb
 module	/man/2/bloomfilter
@@ -38356,6 +38382,7 @@ nil	/man/2/0intro
 nil	/man/2/9p-ninep
 nil	/man/2/alphabet-intro
 nil	/man/2/arg
+nil	/man/2/arrays
 nil	/man/2/asn1
 nil	/man/2/attrdb
 nil	/man/2/bufio
@@ -38584,6 +38611,7 @@ non	/man/10/qlock
 non	/man/10/sleep
 non	/man/10/splhi
 non	/man/10/styxserver
+non	/man/2/arrays
 non	/man/2/asn1
 non	/man/2/convcs
 non	/man/2/crypt-crypt
@@ -38723,6 +38751,7 @@ none	/man/1/vixen
 none	/man/10/plan9.ini
 none	/man/10/rune
 none	/man/10/strcat
+none	/man/2/arrays
 none	/man/2/bloomfilter
 none	/man/2/bufio
 none	/man/2/dbm
@@ -40126,6 +40155,7 @@ operations	/man/10/qio
 operations	/man/10/strcat
 operations	/man/10/styxserver
 operations	/man/2/alphabet-intro
+operations	/man/2/arrays
 operations	/man/2/bufio
 operations	/man/2/crypt-0intro
 operations	/man/2/crypt-dsagen
@@ -40545,7 +40575,6 @@ options	/man/1/alphabet-abc
 options	/man/1/alphabet-fs
 options	/man/1/alphabet-grid
 options	/man/1/auplay
-options	/man/1/bb
 options	/man/1/bind
 options	/man/1/charon
 options	/man/1/chgrp
@@ -41574,6 +41603,7 @@ pair	/man/1/dd
 pair	/man/1/mash
 pair	/man/1/sh
 pair	/man/1/sh-csv
+pair	/man/2/arrays
 pair	/man/2/attrdb
 pair	/man/2/crypt-dsagen
 pair	/man/2/crypt-gensk
@@ -41602,6 +41632,7 @@ pair	/man/6/json
 pair	/man/6/keyboard
 pair	/man/8/ai2key
 pair	/man/9/text
+paired	/man/2/arrays
 paired	/man/2/lists
 paired	/man/2/string
 paired	/man/4/registry
@@ -41759,6 +41790,7 @@ parameter	/man/10/plan9.ini
 parameter	/man/10/print
 parameter	/man/2/9p-ninep
 parameter	/man/2/arg
+parameter	/man/2/arrays
 parameter	/man/2/bufio
 parameter	/man/2/crc
 parameter	/man/2/crypt-dsagen
@@ -42339,6 +42371,7 @@ path	/man/10/styxserver
 path	/man/2/0intro
 path	/man/2/9p-ninep
 path	/man/2/arg
+path	/man/2/arrays
 path	/man/2/asn1
 path	/man/2/attrdb
 path	/man/2/bloomfilter
@@ -43215,7 +43248,6 @@ pixel	/man/9/text
 pixel's	/man/2/draw-image
 pixel's	/man/6/colour
 pixel's	/man/6/image
-pixels	/man/1/bb
 pixels	/man/1/emu
 pixels	/man/1/filename
 pixels	/man/1/wm-sh
@@ -43464,6 +43496,7 @@ plays	/man/1/auplay
 plays	/man/2/mpeg
 plaything	/man/1/wm-misc
 please	/man/1/collab-clients
+pleasing	/man/2/arrays
 plethora	/man/6/keyboard
 plot	/man/1/wm-misc
 plotted	/man/1/wm-misc
@@ -43683,6 +43716,7 @@ polyhedra	/man/1/mprof
 polyhedra	/man/1/sh-alphabet
 polyhedra	/man/1/wm-misc
 polyhedra.b	/man/1/wm-misc
+polymorphism	/man/2/arrays
 polymorphism	/man/2/lists
 polynomial	/man/1/math-misc
 polynomial	/man/2/crc
@@ -44133,6 +44167,7 @@ predefined	/man/2/w3c-xpointers
 predefined	/man/6/man
 predicate	/man/10/sleep
 predicate	/man/2/9p-ninep
+predicate	/man/2/arrays
 predicate	/man/2/lists
 predicate	/man/2/styx
 predicate	/man/2/w3c-xpointers
@@ -44251,6 +44286,7 @@ prepares	/man/2/drawmux
 prepares	/man/2/sys-open
 prepares	/man/8/prep
 prepares	/man/8/rstyxd
+prepend	/man/2/arrays
 prepended	/man/1/mash
 prepended	/man/1/os
 prepending	/man/1/mash-tk
@@ -45571,7 +45607,6 @@ proportional	/man/1/acme
 proportional	/man/2/dict
 proportionally	/man/1/ebook
 proportionally	/man/2/print
-proportions	/man/1/bb
 propose	/man/2/spree-gather
 proposed	/man/1/idea
 proposed	/man/1/tktester
@@ -45934,6 +45969,7 @@ provides	/man/10/styxserver
 provides	/man/2/0intro
 provides	/man/2/9p-ninep
 provides	/man/2/alphabet-intro
+provides	/man/2/arrays
 provides	/man/2/asn1
 provides	/man/2/bufio
 provides	/man/2/command
@@ -46647,7 +46683,6 @@ radiobutton	/man/9/send
 radiobutton	/man/9/variable
 radiobutton's	/man/9/radiobutton
 radiobuttons	/man/9/radiobutton
-radius	/man/1/bb
 radius	/man/1/blur
 radix	/man/1/fc
 radix	/man/1/sh-expr
@@ -48013,7 +48048,6 @@ recv	/man/2/0intro
 recv	/man/2/plumbmsg
 recv	/man/3/prog
 recvra	/man/2/ip
-red	/man/1/bb
 red	/man/1/charon
 red	/man/1/cprof
 red	/man/1/deb
@@ -48102,6 +48136,7 @@ ref	/man/2/0intro
 ref	/man/2/9p-ninep
 ref	/man/2/alphabet-intro
 ref	/man/2/arg
+ref	/man/2/arrays
 ref	/man/2/asn1
 ref	/man/2/attrdb
 ref	/man/2/bufio
@@ -48289,6 +48324,7 @@ reference	/man/10/ref
 reference	/man/2/0intro
 reference	/man/2/9p-ninep
 reference	/man/2/alphabet-intro
+reference	/man/2/arrays
 reference	/man/2/asn1
 reference	/man/2/attrdb
 reference	/man/2/bufio
@@ -49548,6 +49584,7 @@ representation	/man/10/dev
 representation	/man/10/readnum
 representation	/man/10/styx
 representation	/man/2/9p-ninep
+representation	/man/2/arrays
 representation	/man/2/asn1
 representation	/man/2/crypt-dsagen
 representation	/man/2/crypt-rc4
@@ -50728,6 +50765,7 @@ return	/man/2/0intro
 return	/man/2/9p-ninep
 return	/man/2/alphabet-intro
 return	/man/2/arg
+return	/man/2/arrays
 return	/man/2/asn1
 return	/man/2/attrdb
 return	/man/2/bloomfilter
@@ -50877,6 +50915,7 @@ returned	/man/10/xalloc
 returned	/man/2/9p-ninep
 returned	/man/2/alphabet-intro
 returned	/man/2/arg
+returned	/man/2/arrays
 returned	/man/2/asn1
 returned	/man/2/bufio
 returned	/man/2/cfg
@@ -50984,6 +51023,7 @@ returning	/man/10/qio
 returning	/man/10/styx
 returning	/man/10/styxserver
 returning	/man/2/alphabet-intro
+returning	/man/2/arrays
 returning	/man/2/bufio
 returning	/man/2/dial
 returning	/man/2/diskblocks
@@ -51055,6 +51095,7 @@ returns	/man/10/styxserver
 returns	/man/10/xalloc
 returns	/man/2/9p-ninep
 returns	/man/2/alphabet-intro
+returns	/man/2/arrays
 returns	/man/2/asn1
 returns	/man/2/attrdb
 returns	/man/2/bloomfilter
@@ -52245,11 +52286,13 @@ satisfies	/man/1/mk
 satisfies	/man/10/conf
 satisfies	/man/10/mk
 satisfies	/man/10/readnum
+satisfies	/man/2/arrays
 satisfies	/man/2/lists
 satisfy	/man/1/alphabet-fs
 satisfy	/man/1/fs
 satisfy	/man/1/wm
 satisfy	/man/10/xalloc
+satisfy	/man/2/arrays
 satisfy	/man/2/keyset
 satisfy	/man/2/lists
 satisfy	/man/9/canvas
@@ -52419,7 +52462,6 @@ scr	/man/3/draw
 scrambled	/man/2/security-0intro
 scratch	/man/1/acme
 scratch	/man/6/namespace
-screen	/man/1/bb
 screen	/man/1/blur
 screen	/man/1/brutus
 screen	/man/1/charon
@@ -53226,6 +53268,7 @@ selects	/man/9/text
 self	/man/1/yacc
 self	/man/2/0intro
 self	/man/2/9p-ninep
+self	/man/2/arrays
 self	/man/2/asn1
 self	/man/2/attrdb
 self	/man/2/bufio
@@ -55317,6 +55360,7 @@ sleeping	/man/10/qio
 sleeping	/man/10/sleep
 sleeps	/man/10/malloc
 slice	/man/1/sh-string
+slice	/man/2/arrays
 slice	/man/2/secstore
 slice	/man/2/sexprs
 slices	/man/2/iobuf
@@ -55587,7 +55631,6 @@ source	/man/1/asm
 source	/man/1/auplay
 source	/man/1/avr
 source	/man/1/basename
-source	/man/1/bb
 source	/man/1/bind
 source	/man/1/blur
 source	/man/1/brutus
@@ -55772,6 +55815,7 @@ source	/man/10/styx
 source	/man/10/styxserver
 source	/man/2/9p-ninep
 source	/man/2/arg
+source	/man/2/arrays
 source	/man/2/asn1
 source	/man/2/attrdb
 source	/man/2/bloomfilter
@@ -57963,6 +58007,7 @@ string	/man/2/0intro
 string	/man/2/9p-ninep
 string	/man/2/alphabet-intro
 string	/man/2/arg
+string	/man/2/arrays
 string	/man/2/asn1
 string	/man/2/attrdb
 string	/man/2/bloomfilter
@@ -58183,6 +58228,7 @@ string1	/man/1/tr
 string2	/man/1/tr
 string2attrs	/man/2/plumbmsg
 string2tm	/man/2/daytime
+stringify	/man/2/arrays
 stringint	/man/2/stringinttab
 stringinttab	/man/2/stringinttab
 stringlist2list	/man/2/sh
@@ -58210,6 +58256,7 @@ strings	/man/10/readnum
 strings	/man/10/strcat
 strings	/man/10/styx
 strings	/man/2/9p-ninep
+strings	/man/2/arrays
 strings	/man/2/asn1
 strings	/man/2/command
 strings	/man/2/convcs
@@ -60161,6 +60208,7 @@ tail	/man/1/tee
 tail	/man/10/acid
 tail	/man/10/mk
 tail	/man/10/qio
+tail	/man/2/arrays
 tail	/man/2/lists
 tail	/man/2/sexprs
 tail	/man/3/cons
@@ -60207,6 +60255,7 @@ takes	/man/10/mk
 takes	/man/10/print
 takes	/man/10/styx
 takes	/man/2/arg
+takes	/man/2/arrays
 takes	/man/2/attrdb
 takes	/man/2/bufio
 takes	/man/2/crypt-dsagen
@@ -61766,6 +61815,7 @@ transformations	/man/1/sh-alphabet
 transformations	/man/10/c2l
 transformations	/man/2/geodesy
 transformations	/man/9/canvas
+transformed	/man/2/arrays
 transformed	/man/2/lists
 transient	/man/2/draw-screen
 transient	/man/2/spree
@@ -62247,6 +62297,7 @@ tuple	/man/6/ubfa
 tuple	/man/7/db
 tuple's	/man/6/sbl
 tuples	/man/1/limbo
+tuples	/man/2/arrays
 tuples	/man/2/attrdb
 tuples	/man/2/cfg
 tuples	/man/2/convcs
@@ -62375,6 +62426,7 @@ type	/man/10/styx
 type	/man/10/styxserver
 type	/man/2/9p-ninep
 type	/man/2/alphabet-intro
+type	/man/2/arrays
 type	/man/2/asn1
 type	/man/2/bufio
 type	/man/2/convcs
@@ -62538,6 +62590,7 @@ types	/man/10/styx
 types	/man/2/0intro
 types	/man/2/9p-ninep
 types	/man/2/alphabet-intro
+types	/man/2/arrays
 types	/man/2/asn1
 types	/man/2/cfg
 types	/man/2/crypt-0intro
@@ -64587,6 +64640,7 @@ value	/man/10/styxserver
 value	/man/2/0intro
 value	/man/2/9p-ninep
 value	/man/2/alphabet-intro
+value	/man/2/arrays
 value	/man/2/asn1
 value	/man/2/attrdb
 value	/man/2/bufio
@@ -65626,6 +65680,7 @@ visual	/man/8/getauthinfo
 visually	/man/1/grid-monitor
 visually	/man/1/grid-ns
 visually	/man/1/vixen
+visually	/man/2/arrays
 visually	/man/4/grid-cpu
 vita	/man/9/0intro
 vita	/man/9/1copyright
@@ -66106,7 +66161,6 @@ widgets	/man/9/text
 widows	/man/6/man
 width	/man/1/9win
 width	/man/1/acme
-width	/man/1/bb
 width	/man/1/brutus
 width	/man/1/charon
 width	/man/1/emu
@@ -66387,7 +66441,6 @@ wk	/man/6/keyboard
 wl	/man/2/dividers
 wlock	/man/10/qlock
 wm	/man/1/0intro
-wm	/man/1/bb
 wm	/man/1/brutus
 wm	/man/1/calendar
 wm	/man/1/charon
@@ -66450,7 +66503,6 @@ wm	/man/8/touchcal
 wm.b	/man/1/wm
 wm.dis	/man/1/emu
 wmchan	/man/8/plumber
-wmclient	/man/1/bb
 wmclient	/man/1/toolbar
 wmclient	/man/1/wm
 wmclient	/man/2/wmclient
