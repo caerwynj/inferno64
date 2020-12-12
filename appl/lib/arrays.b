@@ -3,17 +3,17 @@ implement Arrays;
 include "arrays.m";
 
 # Return the array 'a' for which 'f' is fulfilled on its contents
-filter[T](a: array of T, f: ref fn(x: T): int): array of T {
+filter[T](a: array of T, p: ref fn(x: T): int): array of T {
 	if(a == nil)
 		return nil;
 
-	if(f(a[0]))
-		return prepend(filter(tail(a), f), a[0]);
+	if(p(a[0]))
+		return prepend(filter(tail(a), p), a[0]);
 
 	if(len a < 2)
 		return nil;
 
-	return filter(tail(a), f);
+	return filter(tail(a), p);
 }
 
 # Return the array 'a₀' with the function 'f' applied to its contents

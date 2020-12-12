@@ -202,3 +202,5 @@ that do not satisfy
 .SH BUGS
 The current implementation of polymorphism is limited to reference types and strings,
 which in turn limits use of this module.
+.SH SEE ALSO
+.IR arrays (2)

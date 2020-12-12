@@ -4,6 +4,7 @@ syntax: glob
 *.patch
 *.diff
 *.log
+*.orig
 [8qkv965o].out
 [8qkv965o].emu
 obj.out
