@@ -498,13 +498,9 @@ replace(in, s, with: string, max: int): string {
 
 # Returns >0 if s∈in and <=0 if s∋in
 contains(in, s: string): int {
-	if(s == "") {
-		# Of course
+	if(in == "" || s == "") {
+		# Can't do anything
 		return 1;
-	}
-	if(len in < 1) {
-		# Can't have anything
-		return 0;
 	}
 	
 	# For each rune 'in' the original string
@@ -513,7 +509,7 @@ contains(in, s: string): int {
 		r1: int;
 		
 		substring:
-		for(r1 = 0; r1 < len s; r1++) {
+		for(r1 = 0; r1 < len s && r0 + r1 < len in; r1++) {
 			if(in[r0 + r1] == s[r1]) {
 				# Match so far
 				continue substring;
