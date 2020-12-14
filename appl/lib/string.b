@@ -495,3 +495,39 @@ replace(in, s, with: string, max: int): string {
 	
 	return in;
 }
+
+# Returns >0 if s∈in and <=0 if s∋in
+contains(in, s: string): int {
+	if(s == "") {
+		# Of course
+		return 1;
+	}
+	if(len in < 1) {
+		# Can't have anything
+		return 0;
+	}
+	
+	# For each rune 'in' the original string
+	for(r0 := 0; r0 < len in ; r0++) {
+		# Try to build 's'	
+		r1: int;
+		
+		substring:
+		for(r1 = 0; r1 < len s; r1++) {
+			if(in[r0 + r1] == s[r1]) {
+				# Match so far
+				continue substring;
+			} else {
+				# No longer matches
+				break substring;
+			}
+		}
+		
+		# We didn't break the loop, this is a match 
+		# String will be [r0 , r0+len(s))
+		if(r1 >= len s)
+			return 1;
+	}
+	
+	return 0;
+}

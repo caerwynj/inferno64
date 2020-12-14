@@ -21,6 +21,7 @@ String: module
 	splitstrl:	fn(s, t: string): (string, string);
 	splitstrr:	fn(s, t: string): (string, string);
 	replace:	fn(in, s, with: string, max: int): string;
+	contains:	fn(in, s: string): int;
 
 	# is first arg a prefix of second?
 	prefix:		fn(pre, s: string): int;
