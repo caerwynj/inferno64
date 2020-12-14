@@ -1,6 +1,6 @@
 .TH WMCLIENT 2
 .SH NAME
-wmclient: makedrawcontext, window, snarfput, snarfget \-
+wmclient: makedrawcontext, window, snarfput, snarfget, cursorspec \-
 window manager interface for Draw-based applications.
 .SH SYNOPSIS
 .EX
@@ -12,32 +12,36 @@ Resize,
 Hide,
 Help,
 OK,
-Plain:     con 1 << iota;
+Popup,
+Plain:  con 1 << iota;
 
 Appl:   con Resize | Hide;
 
-init:       fn();
-makedrawcontext: fn():  ref Draw->Context;
-window:	fn(ctxt: ref Draw->Context, title: string, buts: int): ref Window;
-snarfput:   fn(buf: string);
-snarfget:   fn(): string;
-Window: adt{
-	display:	ref Draw->Display;
-	r: Draw->Rect;		# full rectangle of window, including titlebar.
-	image: ref Draw->Image;
-	screenr: Draw->Rect;
-	ctxt: ref Draw->Wmcontext;
-	focused:	int;
-	ctl:		chan of string;
+init:             fn();
+makedrawcontext:  fn():  ref Draw->Context;
+window:           fn(ctxt: ref Draw->Context, title: string, buts: int): ref Window;
+snarfput:         fn(buf: string);
+snarfget:         fn(): string;
+cursorspec:       fn(img: ref Draw->Image): string;
 
-	startinput:	fn(w: self ref Window, devs: list of string);
-	wmctl:	fn(w: self ref Window, request: string): string;
-	settitle:	fn(w: self ref Window, name: string): string;
-	reshape:	fn(w: self ref Window, r: Draw->Rect);
-	onscreen:	fn(w: self ref Window, how: string);
-	screenr2imager:	fn(w: self ref Window, sr: Draw->Rect): Draw->Rect;
-	imager2screenr:	fn(w: self ref Window, ir: Draw->Rect): Draw->Rect;
-	pointer:	fn(w: self ref Window, p: Draw->Pointer): int;
+Window: adt{
+	display:   ref Draw->Display;
+	r:         Draw->Rect;
+	image:     ref Draw->Image;
+	displayr:  Draw->Rect;
+	ctxt:      ref Draw->Wmcontext;
+	bd:        int;
+	focused:   int;
+	ctl:       chan of string;
+
+	startinput:  fn(w: self ref Window, devs: list of string);
+	wmctl:       fn(w: self ref Window, request: string): string;
+	settitle:    fn(w: self ref Window, name: string): string;
+	reshape:     fn(w: self ref Window, r: Draw->Rect);
+	onscreen:    fn(w: self ref Window, how: string);
+	screenr:     fn(w: self ref Window, sr: Draw->Rect): Draw->Rect;
+	imager:      fn(w: self ref Window, ir: Draw->Rect): Draw->Rect;
+	pointer:     fn(w: self ref Window, p: Draw->Pointer): int;
 };
 
 .EE
@@ -49,10 +53,12 @@ module provides routines for making windows controlled by
 containing an image that can be drawn on with the
 routines described in
 .IR draw-image (2).
+
 .PP
 .B Init
 should be called once to initialise the internal state of
 .BR wmclient .
+
 .PP
 .B Makedrawcontext
 establishes an initial connection with the window manager,
@@ -61,6 +67,7 @@ creating a new
 context suitable for creating new windows. It is only
 necessary to call this if the application has not already
 been provided with a context.
+
 .PP
 .B Window
 creates a new window through
@@ -80,6 +87,7 @@ and
 If
 .B Plain
 is given, the window is given no decoration at all.
+
 .PP
 When a window, say
 .IR w ,
@@ -94,17 +102,19 @@ where
 gives the requested rectangle of the new
 image, excluding window decoration, such as the
 title bar and the window border.
+
 An application can use
-.IB w .screenr2imager
+.IB w .imager
 to find out the usable rectangle within screen
 rectangle
-.I sr
+.I ir
 when window decorations are taken into account.
-.IB W .imager2screenr
+.IB W .screenr
 converts in the other direction.
 .IB W .screenr
 contains the current rectangle of the screen containing
 the window.
+
 .PP
 .IB W .image
 holds the window's image when it has been successfully created;
@@ -121,6 +131,8 @@ to start input for.
 sets the title that is shown on the window's title bar;
 it can make the window's size (and therefore the window's image)
 change.
+
+
 .PP
 .IB W .ctl
 is a channel down which requests from the titlebar are sent.
@@ -133,12 +145,14 @@ as with
 in
 .IR string (2).
 The messages include:
+
 .TP
 .B exit
 The window should be closed.
 .IB W .wmctl
 will kill all processes in the current
 process group.
+
 .TP
 .B !move \fIx\fP \fIy\fP
 The user has started to try to drag the window.
@@ -146,6 +160,7 @@ The user has started to try to drag the window.
 and
 .I y
 give the location of the initial pointer click.
+
 .TP
 .B !size \fImindx\fP \fImindy\fP
 The user wishes to resize the window.
@@ -153,18 +168,22 @@ The user wishes to resize the window.
 and
 .I mindy
 give the minimum size acceptable for the window.
+
 .TP
 .B help
 The help button has been clicked.
 .TP
 .B ok
 The OK  button has been clicked.
+
 .TP
 .B hide
 The Hide button has been clicked.
 .IB W .wmctl
 will delete the window, and an entry
 will be shown on the toolbar.
+
+
 .PP
 In order to function correctly, an application
 should process not only events from the
@@ -186,6 +205,7 @@ for processing; if this returns zero, the
 application should process the pointer event,
 otherwise the event has been consumed by the
 titlebar.
+
 .PP
 When created, the window is not visible;
 .IB w .onscreen
@@ -193,7 +213,8 @@ makes it visible, and possibly chooses a
 position and a size for it.
 .I How
 specifies what sort of placement is required
-for the window; it can be one of
+for the window; it can be one of:
+
 .TP
 .B place
 tries to choose a suitable place on the screen
@@ -202,32 +223,44 @@ window as it feels appropriate. This the default
 (if
 .I how
 is nil).
+
 .TP
 .B onscreen
 tries to keep the position and size the same
 as specified on the window, adjusting them only
 to bring the window fully on screen, and making sure
 that the window is no bigger than the entire display.
+
 .TP
 .B exact
 does not change the specified size or position
 of the window unless absolutely necessary.
+
+.TP
+.B max
+makes the window take up the entire display. 
+
+
 .PP
 .B Snarfget
 and
 .B snarfput
 retrieve and replace the contents of the window
 manager's snarf buffer.
+
 .SH FILES
 .TF /chan/snarf
 .TP
 .B /chan/snarf
 snarf buffer maintained by
 .IR wm (1)
+
 .TP
-.B /chan/wm
+.B /chan/wmctl
 channel for interaction with
 .IR wm (1)
+
+
 .SH SOURCE
 .B /appl/lib/wmclient.b
 .SH SEE ALSO

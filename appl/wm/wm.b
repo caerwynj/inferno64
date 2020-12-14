@@ -207,6 +207,7 @@ handlerequest(win: ref Wmclient->Window, wmctxt: ref Wmcontext, c: ref Client, r
 	n := len args;
 	if(req[0] == '!' && n < 3)
 		return "bad arg count";
+
 	case hd args {
 	"key" =>
 		# XXX should we restrict this capability to certain clients only?
@@ -217,6 +218,7 @@ handlerequest(win: ref Wmclient->Window, wmctxt: ref Wmcontext, c: ref Client, r
 			spawn bufferproc(fakekbdin, fakekbd);
 		}
 		fakekbdin <-= hd tl args;
+
 	"ptr" =>
 		# ptr x y
 		if(n != 3)
@@ -228,6 +230,7 @@ handlerequest(win: ref Wmclient->Window, wmctxt: ref Wmcontext, c: ref Client, r
 			c.ptr <-= nil;		# flush queue
 			c.ptr <-= ref Pointer(buttons, (int hd tl args, int hd tl tl args), sys->millisec());
 		}
+
 	"cursor" =>
 		# cursor hotx hoty dx dy data
 		if(n != 6 && n != 1)
@@ -235,6 +238,7 @@ handlerequest(win: ref Wmclient->Window, wmctxt: ref Wmcontext, c: ref Client, r
 		c.cursor = req;
 		if(ptrfocus == c || kbdfocus == c)
 			return wmclient->win.wmctl(c.cursor);
+
 	"start" =>
 		if(n != 2)
 			return "bad arg count";
@@ -255,6 +259,7 @@ handlerequest(win: ref Wmclient->Window, wmctxt: ref Wmcontext, c: ref Client, r
 		* =>
 			return "unknown input source";
 		}
+
 	"!reshape" =>
 		# reshape tag reqid rect [how]
 		# XXX allow "how" to specify that the origin of the window is never
@@ -285,6 +290,7 @@ handlerequest(win: ref Wmclient->Window, wmctxt: ref Wmcontext, c: ref Client, r
 			}
 		}
 		return reshape(c, tag, r);
+
 	"delete" =>
 		# delete tag
 		if(tl args == nil)
@@ -292,10 +298,13 @@ handlerequest(win: ref Wmclient->Window, wmctxt: ref Wmcontext, c: ref Client, r
 		c.setimage(hd tl args, nil);
 		if(c.wins == nil && c == kbdfocus)
 			setfocus(win, nil);
+
 	"raise" =>
 		c.top();
+
 	"lower" =>
 		c.bottom();
+
 	"!move" or
 	"!size" =>
 		# !move tag reqid startx starty
@@ -318,10 +327,13 @@ handlerequest(win: ref Wmclient->Window, wmctxt: ref Wmcontext, c: ref Client, r
 				return "bad arg count";
 			sizewin(wmctxt.ptr, c, w, Point(int hd args, int hd tl args));
 		}
+
 	"fixedorigin" =>
 		c.flags |= Fixedorigin;
+
 	"rect" =>
 		;
+
 	"kbdfocus" =>
 		if(n != 2)
 			return "bad arg count";
@@ -329,10 +341,12 @@ handlerequest(win: ref Wmclient->Window, wmctxt: ref Wmcontext, c: ref Client, r
 			setfocus(win, c);
 		else if(c == kbdfocus)
 			setfocus(win, nil);
+
 	# controller specific messages:
 	"request" =>		# can be used to test for control.
 		if((c.flags & Controller) == 0)
 			return "you are not in control";
+
 	"ctl" =>
 		# ctl id msg
 		if((c.flags & Controlstarted) == 0)
@@ -346,12 +360,14 @@ handlerequest(win: ref Wmclient->Window, wmctxt: ref Wmcontext, c: ref Client, r
 		if(z == nil)
 			return "no such client";
 		z.ctl <-= str->quoted(tl tl args);
+
 	"endcontrol" =>
 		if(c != controller)
 			return "invalid request";
 		controller = nil;
 		allowcontrol = 1;
 		c.flags &= ~(Controlstarted | Controller);
+
 	* =>
 		if(c == controller || controller == nil || (controller.flags & Controlstarted) == 0)
 			return "unknown control request";

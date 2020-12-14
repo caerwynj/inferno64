@@ -44,6 +44,9 @@ init(ctxt: ref Draw->Context, nil: list of string)
 	sys->pctl(Sys->NEWPGRP, nil);
 	wmclient->init();
 
+	if(ctxt == nil)
+		ctxt = wmclient->makedrawcontext();
+
 	w := wmclient->window(ctxt, "clock", Wmclient->Appl);	# Plain?
 	display := w.display;
 	back = display.colormix(Draw->Palebluegreen, Draw->White);
@@ -53,10 +56,10 @@ init(ctxt: ref Draw->Context, nil: list of string)
 	dots = display.newimage(Rect((0,0),(1,1)), Draw->CMAP8, 1, Draw->Blue);
 
 	w.reshape(Rect((0, 0), (100, 100)));
+	w.onscreen("place");
 	w.startinput("ptr" :: nil);
 
 	now := daytime->now();
-	w.onscreen(nil);
 	drawclock(w.image, now);
 
 	ticks := chan of int;
@@ -67,8 +70,10 @@ init(ctxt: ref Draw->Context, nil: list of string)
 		w.wmctl(ctl);
 		if(ctl != nil && ctl[0] == '!')
 			drawclock(w.image, now);
+
 	p := <-w.ctxt.ptr =>
 		w.pointer(*p);
+
 	<-ticks =>
 		t := daytime->now();
 		if(t != now){
