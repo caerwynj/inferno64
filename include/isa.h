@@ -223,7 +223,7 @@ enum
 	REGRET	= 4,
 	NREG	= 5,
 
-	IBY2WD	= 4,
+	IBY2WD	= (sizeof(intptr)) /* 4 */,
 	IBY2FT	= 8,
 	IBY2LG	= 8,
 

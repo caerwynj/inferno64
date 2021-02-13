@@ -696,7 +696,7 @@ Math_lgamma(void *fp)
 
 	f = fp;
 
-	f->ret->t1 = __ieee754_lgamma_r(f->x, &f->ret->t0);
+	f->ret->t1 = __ieee754_lgamma_r(f->x, (int*)&f->ret->t0);
 }
 
 void

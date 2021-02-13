@@ -1380,9 +1380,9 @@ ecom(Src *src, Node *nto, Node *n)
 			if(left->ty->tof == treal)
 				op = IINDF;
 			break;
-		case IBY2WD:
+/*		case IBY2WD: TODO make this into an if from case to check the sizeof intptr
 			op = IINDW;
-			break;
+			break; */
 		case 1:
 			op = IINDB;
 			break;
