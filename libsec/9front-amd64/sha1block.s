@@ -190,7 +190,7 @@ loop4:
 	ADDL SI,16(DI)
 
 	MOVQ edata+EDATA(SP),DI
-	CMPQ data+DATA(FP),DI
+	CMPQ Rpdata,DI
 	JCS mainloop
 
 	RET
