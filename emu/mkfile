@@ -17,3 +17,7 @@ nuke:V:	nuke-$HOSTMODEL
 &-Plan9:QV:
 	echo '@{builtin cd' $SYSTARG '; mk $MKFLAGS $stem}'
 	@{builtin cd $SYSTARG; mk $MKFLAGS $stem }
+
+&-9front:QV:
+	echo '@{builtin cd' $SYSTARG '; mk $MKFLAGS $stem}'
+	@{builtin cd $SYSTARG; mk $MKFLAGS $stem }

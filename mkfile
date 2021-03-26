@@ -94,6 +94,13 @@ nukedist:V: nuke
 		@{builtin cd $j; mk $MKFLAGS $stem }
 	}
 
+&-9front:QV:
+	for (j in $DIRS utils)
+	{
+		echo '@{builtin cd' $j '; mk $MKFLAGS $stem}'
+		@{builtin cd $j; mk $MKFLAGS $stem }
+	}
+
 emu/&-Posix:QV:
 	for j in $EMUDIRS
 	do
@@ -109,6 +116,13 @@ emu/&-Nt:QV:
 	}
 
 emu/&-Plan9:QV:
+	for (j in $EMUDIRS)
+	{
+		echo '@{builtin cd' $j '; mk $MKFLAGS $stem}'
+		@{builtin cd $j; mk $MKFLAGS $stem }
+	}
+
+emu/&-9front:QV:
 	for (j in $EMUDIRS)
 	{
 		echo '@{builtin cd' $j '; mk $MKFLAGS $stem}'
@@ -143,6 +157,13 @@ kernel/&-Plan9:QV:
 		@{builtin cd $j; mk $MKFLAGS $stem }
 	}
 
+kernel/&-9front:QV:
+	for (j in $KERNEL_DIRS)
+	{
+		echo '@{builtin cd' $j '; mk $MKFLAGS $stem}'
+		@{builtin cd $j; mk $MKFLAGS $stem }
+	}
+
 # Convenience targets
 
 Inferno-% inferno-% Inferno-386-% inferno-386-%:V:
@@ -153,6 +174,9 @@ Inferno-arm-% inferno-arm-%:V:
 
 Plan9-% plan9-%:V:
 	mk 'SYSHOST=Plan9' 'OBJTYPE=386' $stem
+
+9front-% 9front-%:V:
+	mk 'SYSHOST=9front' 'OBJTYPE=amd64' $stem
 
 Irix-% irix-%:V:
 	mk 'SYSHOST=Irix' 'OBJTYPE=mips' $stem

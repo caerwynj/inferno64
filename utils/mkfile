@@ -92,6 +92,15 @@ nuke:QV:	nuke-$TARGMODEL
 		} || test ! -e $j
 	}
 
+%-9front:QV:
+	for (j in $ALWAYS)
+	{
+		test -d $j && {
+			echo '@{cd' $j '; mk $MKFLAGS $stem}'
+			@{cd $j; mk $MKFLAGS $stem }
+		} || test ! -e $j
+	}
+
 %-Posix:QV:
 	for j in  $ALWAYS $NOTPLAN9
 	do
