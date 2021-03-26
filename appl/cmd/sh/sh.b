@@ -943,10 +943,11 @@ externalexec(mod: Command,
 	startchan <-= sys->pctl(0, nil);
 	{
 		mod->init(drawcontext, argv);
-	}
-	exception {
+	}exception e{
 	EPIPE =>
 		raise "fail:" + EPIPE;
+	* => raise e; # TODO the manual says that leaving this out is
+intentional. Not sure how man pages work without this
 	}
 }
 
