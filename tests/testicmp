@@ -1,0 +1,12 @@
+#!/bin/sh
+
+echo testing >/tmp/test
+cat /tmp/test
+
+<>/net/icmp/clone {
+	dir=/net/icmp/`{sed 1q}
+	echo connect 8.8.8.8!1 > $dir/ctl
+	ls $dir
+	cat $dir/status;
+	sleep 60
+}

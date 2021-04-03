@@ -1,0 +1,12 @@
+#!/bin/sh
+
+echo testing >/tmp/test
+cat /tmp/test
+
+<>/net/tcp/clone {
+	dir=/net/tcp/`{sed 1q}
+	echo connect 142.250.68.4!80 > $dir/ctl
+	ls $dir
+	cat $dir/status;
+	sleep 60
+}

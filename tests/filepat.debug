@@ -1,0 +1,2679 @@
+declare module Sys
+declare module Readdir
+declare module Filepat
+variable 'SELF' val '"$self"'
+variable 'Sys->PATH' val '"$Sys"'
+variable 'Sys->Maxint' val '2147483647'
+variable 'Sys->QTDIR' val '128'
+variable 'Sys->QTAPPEND' val '64'
+variable 'Sys->QTEXCL' val '32'
+variable 'Sys->QTAUTH' val '8'
+variable 'Sys->QTTMP' val '4'
+variable 'Sys->QTFILE' val '0'
+variable 'Sys->nulldir' val 'Dir(nil, nil, nil, nil, (-1, -1, -1), -1, -1, -1, -1, -1, -1)'
+variable 'Sys->zerodir' val 'Dir(nil, nil, nil, nil, (0, 0, 0), 0, 0, 0, 0, 0, 0)'
+variable 'Sys->ATOMICIO' val '8192'
+variable 'Sys->SEEKSTART' val '0'
+variable 'Sys->SEEKRELA' val '1'
+variable 'Sys->SEEKEND' val '2'
+variable 'Sys->NAMEMAX' val '256'
+variable 'Sys->ERRMAX' val '128'
+variable 'Sys->WAITLEN' val '192'
+variable 'Sys->OREAD' val '0'
+variable 'Sys->OWRITE' val '1'
+variable 'Sys->ORDWR' val '2'
+variable 'Sys->OTRUNC' val '16'
+variable 'Sys->ORCLOSE' val '64'
+variable 'Sys->OEXCL' val '4096'
+variable 'Sys->DMDIR' val '-2147483648'
+variable 'Sys->DMAPPEND' val '1073741824'
+variable 'Sys->DMEXCL' val '536870912'
+variable 'Sys->DMAUTH' val '134217728'
+variable 'Sys->DMTMP' val '67108864'
+variable 'Sys->MREPL' val '0'
+variable 'Sys->MBEFORE' val '1'
+variable 'Sys->MAFTER' val '2'
+variable 'Sys->MCREATE' val '4'
+variable 'Sys->MCACHE' val '16'
+variable 'Sys->NEWFD' val '(1)'
+variable 'Sys->FORKFD' val '(2)'
+variable 'Sys->NEWNS' val '(4)'
+variable 'Sys->FORKNS' val '(8)'
+variable 'Sys->NEWPGRP' val '(16)'
+variable 'Sys->NODEVS' val '(32)'
+variable 'Sys->NEWENV' val '(64)'
+variable 'Sys->FORKENV' val '(128)'
+variable 'Sys->EXPWAIT' val '0'
+variable 'Sys->EXPASYNC' val '1'
+variable 'Sys->UTFmax' val '4'
+variable 'Sys->UTFerror' val '65533'
+variable 'Sys->Runemax' val '1114111'
+variable 'Sys->Runemask' val '2097151'
+variable 'Readdir->PATH' val '"/dis/lib/r..."'
+variable 'Readdir->NAME' val 'iota'
+variable 'Readdir->ATIME' val 'iota'
+variable 'Readdir->MTIME' val 'iota'
+variable 'Readdir->SIZE' val 'iota'
+variable 'Readdir->NONE' val 'iota'
+variable 'Readdir->DESCENDING' val '(32)'
+variable 'Readdir->COMPACT' val '(16)'
+variable 'PATH' val '"/dis/lib/f..."'
+typecheck tree: 
+fn(){} fn(pat: string): list of string 0 0
+  name expand fn(pat: string): list of string 0 0
+  seq nothing 0 0
+    if nothing 0 0
+      == nothing 0 0
+        name sys nothing 0 0
+        name nil polymorphic type 0 0
+      seq nothing 0 0
+        scope nothing 0 0
+          seq nothing 0 0
+            = nothing 0 0
+              name sys nothing 0 0
+              load Sys 0 0
+                -> nothing 0 0
+                  name Sys nothing 0 0
+                  name PATH nothing 0 0
+    seq nothing 0 0
+      if nothing 0 0
+        == nothing 0 0
+          name rdir nothing 0 0
+          name nil polymorphic type 0 0
+        seq nothing 0 0
+          scope nothing 0 0
+            seq nothing 0 0
+              = nothing 0 0
+                name rdir nothing 0 0
+                load Readdir 0 0
+                  -> nothing 0 0
+                    name Readdir nothing 0 0
+                    name PATH nothing 0 0
+      seq nothing 0 0
+        := nothing 0 0
+          tuple nothing 0 0
+            seq nothing 0 0
+              name nil polymorphic type 0 0
+              seq nothing 0 0
+                name elem nothing 0 0
+          call nothing 0 0
+            -> nothing 0 0
+              name sys nothing 0 0
+              name tokenize nothing 0 0
+            seq nothing 0 0
+              name pat nothing 0 0
+              seq nothing 0 0
+                const / string 0 0
+        seq nothing 0 0
+          if nothing 0 0
+            == nothing 0 0
+              name elem nothing 0 0
+              name nil polymorphic type 0 0
+            seq nothing 0 0
+              return nothing 0 0
+                call nothing 0 0
+                  name filepat1 nothing 0 0
+                  seq nothing 0 0
+                    name pat nothing 0 0
+                    seq nothing 0 0
+                      name nil polymorphic type 0 0
+                      seq nothing 0 0
+                        const (0) int 0 0
+          seq nothing 0 0
+            vardecl list of string 0 0
+              seq nothing 0 0
+            seq nothing 0 0
+              if nothing 0 0
+                == nothing 0 0
+                  index nothing 0 0
+                    name pat nothing 0 0
+                    const (0) int 0 0
+                  const (47) int 0 0
+                seq nothing 0 0
+                  = nothing 0 0
+                    name files nothing 0 0
+                    :: nothing 0 0
+                      const / string 0 0
+                      name nil polymorphic type 0 0
+              seq nothing 0 0
+                for nothing 0 0
+                  != nothing 0 0
+                    name elem nothing 0 0
+                    name nil polymorphic type 0 0
+                  seq nothing 0 0
+                    scope nothing 0 0
+                      seq nothing 0 0
+                        = nothing 0 0
+                          name files nothing 0 0
+                          call nothing 0 0
+                            name filepat1 nothing 0 0
+                            seq nothing 0 0
+                              hd nothing 0 0
+                                name elem nothing 0 0
+                              seq nothing 0 0
+                                name files nothing 0 0
+                                seq nothing 0 0
+                                  != nothing 0 0
+                                    tl nothing 0 0
+                                      name elem nothing 0 0
+                                    name nil polymorphic type 0 0
+                        seq nothing 0 0
+                          if nothing 0 0
+                            == nothing 0 0
+                              name files nothing 0 0
+                              name nil polymorphic type 0 0
+                            seq nothing 0 0
+                              break nothing 0 0
+                          seq nothing 0 0
+                            = nothing 0 0
+                              name elem nothing 0 0
+                              tl nothing 0 0
+                                name elem nothing 0 0
+                seq nothing 0
+typecheck tree: 
+fn(){} fn(pat: string, files: list of string, mustbedir: int): list of string 0 0
+  name filepat1 fn(pat: string, files: list of string, mustbedir: int): list of string 0 0
+  seq nothing 0 0
+    if nothing 0 0
+      == nothing 0 0
+        name files nothing 0 0
+        name nil polymorphic type 0 0
+      seq nothing 0 0
+        return nothing 0 0
+          call nothing 0 0
+            name filepatdir nothing 0 0
+            seq nothing 0 0
+              name pat nothing 0 0
+              seq nothing 0 0
+                const  string 0 0
+                seq nothing 0 0
+                  name nil polymorphic type 0 0
+                  seq nothing 0 0
+                    name mustbedir nothing 0 0
+    seq nothing 0 0
+      vardecl list of string 0 0
+        seq nothing 0 0
+      seq nothing 0 0
+        for nothing 0 0
+          != nothing 0 0
+            name files nothing 0 0
+            name nil polymorphic type 0 0
+          seq nothing 0 0
+            scope nothing 0 0
+              seq nothing 0 0
+                = nothing 0 0
+                  name r nothing 0 0
+                  :: nothing 0 0
+                    hd nothing 0 0
+                      name files nothing 0 0
+                    name r nothing 0 0
+                seq nothing 0 0
+                  = nothing 0 0
+                    name files nothing 0 0
+                    tl nothing 0 0
+                      name files nothing 0 0
+        seq nothing 0 0
+          = nothing 0 0
+            name files nothing 0 0
+            name r nothing 0 0
+          seq nothing 0 0
+            vardecli nothing 0 0
+              vardecl list of string 0 0
+                seq nothing 0 0
+              = nothing 0 0
+                name nfiles nothing 0 0
+                name nil polymorphic type 0 0
+            seq nothing 0 0
+              for nothing 0 0
+                != nothing 0 0
+                  name files nothing 0 0
+                  name nil polymorphic type 0 0
+                seq nothing 0 0
+                  scope nothing 0 0
+                    seq nothing 0 0
+                      = nothing 0 0
+                        name nfiles nothing 0 0
+                        call nothing 0 0
+                          name filepatdir nothing 0 0
+                          seq nothing 0 0
+                            name pat nothing 0 0
+                            seq nothing 0 0
+                              hd nothing 0 0
+                                name files nothing 0 0
+                              seq nothing 0 0
+                                name nfiles nothing 0 0
+                                seq nothing 0 0
+                                  name mustbedir nothing 0 0
+                      seq nothing 0 0
+                        = nothing 0 0
+                          name files nothing 0 0
+                          tl nothing 0 0
+                            name files nothing 0 0
+              seq nothing 0 0
+                return nothing 0 0
+                  name nfiles nothing 0 0
+typecheck tree: 
+fn(){} fn(pat: string, dir: string, files: list of string, mustbedir: int): list of string 0 0
+  name filepatdir fn(pat: string, dir: string, files: list of string, mustbedir: int): list of string 0 0
+  seq nothing 0 0
+    if nothing 0 0
+      || nothing 0 0
+        == nothing 0 0
+          name pat nothing 0 0
+          const . string 0 0
+        == nothing 0 0
+          name pat nothing 0 0
+          const .. string 0 0
+      seq nothing 0 0
+        scope nothing 0 0
+          seq nothing 0 0
+            if nothing 0 0
+              || nothing 0 0
+                == nothing 0 0
+                  name dir nothing 0 0
+                  const / string 0 0
+                == nothing 0 0
+                  name dir nothing 0 0
+                  const  string 0 0
+              seq nothing 0 0
+                = nothing 0 0
+                  name files nothing 0 0
+                  :: nothing 0 0
+                    + nothing 0 0
+                      name dir nothing 0 0
+                      name pat nothing 0 0
+                    name files nothing 0 0
+                = nothing 0 0
+                  name files nothing 0 0
+                  :: nothing 0 0
+                    + nothing 0 0
+                      + nothing 0 0
+                        name dir nothing 0 0
+                        const / string 0 0
+                      name pat nothing 0 0
+                    name files nothing 0 0
+            seq nothing 0 0
+              return nothing 0 0
+                name files nothing 0 0
+    seq nothing 0 0
+      := nothing 0 0
+        name dirname nothing 0 0
+        name dir nothing 0 0
+      seq nothing 0 0
+        if nothing 0 0
+          == nothing 0 0
+            name dir nothing 0 0
+            const  string 0 0
+          seq nothing 0 0
+            = nothing 0 0
+              name dirname nothing 0 0
+              const . string 0 0
+        seq nothing 0 0
+          := nothing 0 0
+            tuple nothing 0 0
+              seq nothing 0 0
+                name d nothing 0 0
+                seq nothing 0 0
+                  name n nothing 0 0
+            call nothing 0 0
+              -> nothing 0 0
+                name rdir nothing 0 0
+                name init nothing 0 0
+              seq nothing 0 0
+                name dirname nothing 0 0
+                seq nothing 0 0
+                  | nothing 0 0
+                    | nothing 0 0
+                      -> nothing 0 0
+                        name rdir nothing 0 0
+                        name NAME nothing 0 0
+                      -> nothing 0 0
+                        name rdir nothing 0 0
+                        name DESCENDING nothing 0 0
+                    -> nothing 0 0
+                      name rdir nothing 0 0
+                      name COMPACT nothing 0 0
+          seq nothing 0 0
+            if nothing 0 0
+              == nothing 0 0
+                name d nothing 0 0
+                name nil polymorphic type 0 0
+              seq nothing 0 0
+                return nothing 0 0
+                  name files nothing 0 0
+            seq nothing 0 0
+              seq nothing 0 0
+                := nothing 0 0
+                  name i nothing 0 0
+                  const (1) int 0 0
+                for nothing 0 0
+                  < nothing 0 0
+                    name i nothing 0 0
+                    name n nothing 0 0
+                  seq nothing 0 0
+                    if nothing 0 0
+                      == nothing 0 0
+                        . nothing 0 0
+                          index nothing 0 0
+                            name d nothing 0 0
+                            - nothing 0 0
+                              name i nothing 0 0
+                              const (1) int 0 0
+                          name name nothing 0 0
+                        . nothing 0 0
+                          index nothing 0 0
+                            name d nothing 0 0
+                            name i nothing 0 0
+                          name name nothing 0 0
+                      seq nothing 0 0
+                        scope nothing 0 0
+               
+typecheck tree: 
+fn(){} fn(pat: string, name: string): int 0 0
+  name match fn(pat: string, name: string): int 0 0
+  seq nothing 0 0
+    := nothing 0 0
+      name n nothing 0 0
+      const (0) int 0 0
+    seq nothing 0 0
+      := nothing 0 0
+        name p nothing 0 0
+        const (0) int 0 0
+      seq nothing 0 0
+        for nothing 0 0
+          < nothing 0 0
+            name p nothing 0 0
+            len nothing 0 0
+              name pat nothing 0 0
+          seq nothing 0 0
+            scope nothing 0 0
+              seq nothing 0 0
+                := nothing 0 0
+                  name r nothing 0 0
+                  index nothing 0 0
+                    name pat nothing 0 0
+                    ++ nothing 0 0
+                      name p nothing 0 0
+                seq nothing 0 0
+                  case nothing 0 0
+                    name r nothing 0 0
+                    seq nothing 0 0
+                      label nothing 0 0
+                        seq nothing 0 0
+                          const (42) int 0 0
+                        scope nothing 0 0
+                          seq nothing 0 0
+                            seq nothing 0 0
+                              seq nothing 0 0
+                                = nothing 0 0
+                                  name pat nothing 0 0
+                                  slice nothing 0 0
+                                    name pat nothing 0 0
+                                    seq nothing 0 0
+                                      name p nothing 0 0
+                                      nothing nothing 0 0
+                                if nothing 0 0
+                                  == nothing 0 0
+                                    len nothing 0 0
+                                      name pat nothing 0 0
+                                    const (0) int 0 0
+                                  seq nothing 0 0
+                                    return nothing 0 0
+                                      const (1) int 0 0
+                              for nothing 0 0
+                                <= nothing 0 0
+                                  name n nothing 0 0
+                                  len nothing 0 0
+                                    name name nothing 0 0
+                                seq nothing 0 0
+                                  if nothing 0 0
+                                    call nothing 0 0
+                                      name match nothing 0 0
+                                      seq nothing 0 0
+                                        name pat nothing 0 0
+                                        seq nothing 0 0
+                                          slice nothing 0 0
+                                            name name nothing 0 0
+                                            seq nothing 0 0
+                                              name n nothing 0 0
+                                              nothing nothing 0 0
+                                    seq nothing 0 0
+                                      return nothing 0 0
+                                        const (1) int 0 0
+                                  ++ nothing 0 0
+                                    name n nothing 0 0
+                            return nothing 0 0
+                              const (0) int 0 0
+                      seq nothing 0 0
+                        label nothing 0 0
+                          seq nothing 0 0
+                            const (91) int 0 0
+                          scope nothing 0 0
+                            seq nothing 0 0
+                              seq nothing 0 0
+                                seq nothing 0 0
+                                  seq nothing 0 0
+                                    seq nothing 0 0
+                                      seq nothing 0 0
+                                        seq nothing 0 0
+                                          if nothing 0 0
+                                            == nothing 0 0
+                                              name n nothing 0 0
+                                          
+typecheck tree: 
+fn(){} fn(pat: string, p: int): (int, int, int) 0 0
+  name range fn(pat: string, p: int): (int, int, int) 0 0
+  seq nothing 0 0
+    := nothing 0 0
+      tuple nothing 0 0
+        seq nothing 0 0
+          name q nothing 0 0
+          seq nothing 0 0
+            name lo nothing 0 0
+            seq nothing 0 0
+              name nil polymorphic type 0 0
+      call nothing 0 0
+        name char nothing 0 0
+        seq nothing 0 0
+          name pat nothing 0 0
+          seq nothing 0 0
+            name p nothing 0 0
+    seq nothing 0 0
+      := nothing 0 0
+        tuple nothing 0 0
+          seq nothing 0 0
+            name q1 nothing 0 0
+            seq nothing 0 0
+              name hi nothing 0 0
+              seq nothing 0 0
+                name esc nothing 0 0
+        call nothing 0 0
+          name char nothing 0 0
+          seq nothing 0 0
+            name pat nothing 0 0
+            seq nothing 0 0
+              name q nothing 0 0
+      seq nothing 0 0
+        if nothing 0 0
+          && nothing 0 0
+            ! nothing 0 0
+              name esc nothing 0 0
+            == nothing 0 0
+              name hi nothing 0 0
+              const (45) int 0 0
+          seq nothing 0 0
+            scope nothing 0 0
+              seq nothing 0 0
+                = nothing 0 0
+                  tuple nothing 0 0
+                    seq nothing 0 0
+                      name q1 nothing 0 0
+                      seq nothing 0 0
+                        name hi nothing 0 0
+                        seq nothing 0 0
+                          name nil polymorphic type 0 0
+                  call nothing 0 0
+                    name char nothing 0 0
+                    seq nothing 0 0
+                      name pat nothing 0 0
+                      seq nothing 0 0
+                        name q1 nothing 0 0
+                seq nothing 0 0
+                  return nothing 0 0
+                    tuple nothing 0 0
+                      seq nothing 0 0
+                        name q1 nothing 0 0
+                        seq nothing 0 0
+                          name lo nothing 0 0
+                          seq nothing 0 0
+                            name hi nothing 0 0
+        seq nothing 0 0
+          return nothing 0 0
+            tuple nothing 0 0
+              seq nothing 0 0
+                name q nothing 0 0
+                seq nothing 0 0
+                  name lo nothing 0 0
+                  seq nothing 0 0
+                    name lo nothing 0 0
+typecheck tree: 
+fn(){} fn(pat: string, p: int): (int, int, int) 0 0
+  name char fn(pat: string, p: int): (int, int, int) 0 0
+  seq nothing 0 0
+    if nothing 0 0
+      == nothing 0 0
+        name p nothing 0 0
+        len nothing 0 0
+          name pat nothing 0 0
+      seq nothing 0 0
+        return nothing 0 0
+          tuple nothing 0 0
+            seq nothing 0 0
+              name p nothing 0 0
+              seq nothing 0 0
+                const (0) int 0 0
+                seq nothing 0 0
+                  - nothing 0 0
+                    const (1) int 0 0
+    seq nothing 0 0
+      := nothing 0 0
+        name r nothing 0 0
+        index nothing 0 0
+          name pat nothing 0 0
+          ++ nothing 0 0
+            name p nothing 0 0
+      seq nothing 0 0
+        if nothing 0 0
+          || nothing 0 0
+            == nothing 0 0
+              name p nothing 0 0
+              len nothing 0 0
+                name pat nothing 0 0
+            != nothing 0 0
+              name r nothing 0 0
+              const (92) int 0 0
+          seq nothing 0 0
+            return nothing 0 0
+              tuple nothing 0 0
+                seq nothing 0 0
+                  name p nothing 0 0
+                  seq nothing 0 0
+                    name r nothing 0 0
+                    seq nothing 0 0
+                      const (0) int 0 0
+        seq nothing 0 0
+          return nothing 0 0
+            tuple nothing 0 0
+              seq nothing 0 0
+                + nothing 0 0
+                  name p nothing 0 0
+                  const (1) int 0 0
+                seq nothing 0 0
+                  index nothing 0 0
+                    name pat nothing 0 0
+                    name p nothing 0 0
+                  seq nothing 0 0
+                    const (1) int 0 0
+fncom: expand 2 44aeb8
+ecom: 
+= Sys 10 1
+  name sys Sys 1 0
+  load Sys 10 1
+    const $Sys string 1 0
+    name .m.Sys Sys 17 1
+ecom: 
+load Sys 10 1
+  const $Sys string 1 0
+  name .m.Sys Sys 17 1
+ecom to: 
+name sys Sys 1 0
+ecom: 
+= Readdir 10 1
+  name rdir Readdir 1 0
+  load Readdir 10 1
+    const /dis/lib/readdir.dis string 1 0
+    name .m.Readdir Readdir 17 1
+ecom: 
+load Readdir 10 1
+  const /dis/lib/readdir.dis string 1 0
+  name .m.Readdir Readdir 17 1
+ecom to: 
+name rdir Readdir 1 0
+ecom: 
+= (int, list of string) 10 2
+  tuple (int, list of string) 10 1
+    seq nothing 10 1
+      name nil polymorphic type 1 0
+      seq nothing 10 1
+        name elem list of string 0 0
+  call (int, list of string) 10 2
+    -> fn(s: string, delim: string): (int, list of string) 12 1
+      name sys Sys 1 0
+      name tokenize nothing 11 1
+    seq no type 10 1
+      name pat string 0 0
+      seq no type 10 1
+        const / string 1 0
+generate desc for (int, list of string)
+descmap adt offset 0
+descmap offset 0
+descmap t0 type int offset 0 (d->offset=0 start=0) returns -1
+descmap t1 type list of string offset 8 (d->offset=8 start=0) returns 8
+generate desc for (int, list of string)
+	desc	$-1,16,"40"
+ecom: 
+call (int, list of string) 10 2
+  -> fn(s: string, delim: string): (int, list of string) 12 1
+    name sys Sys 1 0
+    name tokenize nothing 11 1
+  seq no type 10 1
+    name pat string 0 0
+    seq no type 10 1
+      const / string 1 0
+ecom to: 
+name .b1 (int, list of string) 0 0
+generate desc for big
+generate desc for big
+	desc	$-1,8,""
+ecom: 
+name pat string 0 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b2 big 0 0
+    const (64) int 6 0
+ecom: 
+const / string 1 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b2 big 0 0
+    const (72) int 6 0
+ecom: 
+= list of string 10 1
+  * list of string 0 0
+    + int 13 1
+      adr int 13 1
+        name .b1 (int, list of string) 0 0
+      const t1 (8) int 6 0
+  name nil list of string 1 0
+ecom: 
+name nil list of string 1 0
+ecom to: 
+* list of string 0 0
+  + int 13 1
+    adr int 13 1
+      name .b1 (int, list of string) 0 0
+    const t1 (8) int 6 0
+ecom: 
+call list of string 10 2
+  name filepat1 fn(pat: string, files: list of string, mustbedir: int): list of string 11 1
+  seq no type 10 1
+    name pat string 0 0
+    seq no type 10 1
+      name nil list of string 1 0
+      seq no type 10 1
+        const (0) int 6 0
+ecom to: 
+* list of string 8 0
+  name .ret int 0 0
+generate desc for big
+ecom: 
+name pat string 0 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b2 big 0 0
+    const (64) int 6 0
+ecom: 
+name nil list of string 1 0
+ecom to: 
+* list of string 8 0
+  + int 15 0
+    name .b2 big 0 0
+    const (72) int 6 0
+ecom: 
+const (0) int 6 0
+ecom to: 
+* int 8 0
+  + int 15 0
+    name .b2 big 0 0
+    const (80) int 6 0
+eacom: 
+inds int 10 1
+  name pat string 0 0
+  const (0) int 6 0
+ecom: 
+inds int 10 1
+  name pat string 0 0
+  const (0) int 6 0
+ecom to: 
+name .t0 int 0 0
+ecom: 
+= list of string 10 1
+  name files list of string 0 0
+  :: list of string 10 1
+    const / string 1 0
+    name nil polymorphic type 1 0
+ecom: 
+:: list of string 10 1
+  const / string 1 0
+  name nil polymorphic type 1 0
+ecom to: 
+name files list of string 0 0
+ecom: 
+name nil polymorphic type 1 0
+ecom to: 
+name .t3 list of string 0 0
+ecom: 
+= list of string 10 1
+  name .t3 list of string 0 0
+  name nil list of string 1 0
+ecom: 
+name nil list of string 1 0
+ecom to: 
+name .t3 list of string 0 0
+ecom: 
+= list of string 10 2
+  name files list of string 0 0
+  call list of string 10 2
+    name filepat1 fn(pat: string, files: list of string, mustbedir: int): list of string 11 1
+    seq no type 10 2
+      hd string 10 1
+        name elem list of string 0 0
+      seq no type 10 1
+        name files list of string 0 0
+        seq no type 10 1
+          != int 10 1
+            tl list of string 10 1
+              name elem list of string 0 0
+            name nil list of string 1 0
+ecom: 
+call list of string 10 2
+  name filepat1 fn(pat: string, files: list of string, mustbedir: int): list of string 11 1
+  seq no type 10 2
+    hd string 10 1
+      name elem list of string 0 0
+    seq no type 10 1
+      name files list of string 0 0
+      seq no type 10 1
+        != int 10 1
+          tl list of string 10 1
+            name elem list of string 0 0
+          name nil list of string 1 0
+ecom to: 
+name files list of string 0 0
+generate desc for big
+ecom: 
+hd string 10 1
+  name elem list of string 0 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b2 big 0 0
+    const (64) int 6 0
+ecom: 
+name files list of string 0 0
+ecom to: 
+* list of string 8 0
+  + int 15 0
+    name .b2 big 0 0
+    const (72) int 6 0
+ecom: 
+!= int 10 1
+  tl list of string 10 1
+    name elem list of string 0 0
+  name nil list of string 1 0
+ecom to: 
+* int 8 0
+  + int 15 0
+    name .b2 big 0 0
+    const (80) int 6 0
+eacom: 
+tl list of string 10 1
+  name elem list of string 0 0
+ecom: 
+tl list of string 10 1
+  name elem list of string 0 0
+ecom to: 
+name .t3 list of string 0 0
+ecom: 
+= list of string 10 1
+  name .t3 list of string 0 0
+  name nil list of string 1 0
+ecom: 
+name nil list of string 1 0
+ecom to: 
+name .t3 list of string 0 0
+ecom: 
+= list of string 10 1
+  name elem list of string 0 0
+  tl list of string 10 1
+    name elem list of string 0 0
+ecom: 
+tl list of string 10 1
+  name elem list of string 0 0
+ecom to: 
+name elem list of string 0 0
+ecom: 
+name files list of string 0 0
+ecom to: 
+* list of string 8 0
+  name .ret int 0 0
+fn: expand
+64: argument pat string ref 3
+72: local .t0 int ref 1
+80: local elem list of string ref 7
+88: local files list of string ref 5
+96: local .b2 big ref 3
+104: local .t3 list of string ref 1
+112: local .b1 (int, list of string) ref 1
+generate desc for expand
+descmap offset 0
+descmap pat type string offset 64 (d->offset=64 start=0) returns 64
+descmap .t0 type int offset 72 (d->offset=72 start=0) returns -1
+descmap elem type list of string offset 80 (d->offset=80 start=0) returns 80
+descmap files type list of string offset 88 (d->offset=88 start=0) returns 88
+descmap .b2 type big offset 96 (d->offset=96 start=0) returns -1
+descmap .t3 type list of string offset 104 (d->offset=104 start=0) returns 104
+descmap adt offset 112
+descmap offset 112
+descmap t0 type int offset 112 (d->offset=0 start=112) returns -1
+descmap t1 type list of string offset 120 (d->offset=8 start=112) returns 120
+descmap .b1 type (int, list of string) offset 112 (d->offset=112 start=0) returns 120
+fncom: filepat1 3 464258
+ecom: 
+call list of string 10 2
+  name filepatdir fn(pat: string, dir: string, files: list of string, mustbedir: int): list of string 11 1
+  seq no type 10 1
+    name pat string 0 0
+    seq no type 10 1
+      const  string 1 0
+      seq no type 10 1
+        name nil list of string 1 0
+        seq no type 10 1
+          name mustbedir int 0 0
+ecom to: 
+* list of string 8 0
+  name .ret int 0 0
+generate desc for big
+ecom: 
+name pat string 0 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b4 big 0 0
+    const (64) int 6 0
+ecom: 
+const  string 1 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b4 big 0 0
+    const (72) int 6 0
+ecom: 
+name nil list of string 1 0
+ecom to: 
+* list of string 8 0
+  + int 15 0
+    name .b4 big 0 0
+    const (80) int 6 0
+ecom: 
+name mustbedir int 0 0
+ecom to: 
+* int 8 0
+  + int 15 0
+    name .b4 big 0 0
+    const (88) int 6 0
+ecom: 
+= list of string 10 1
+  name r list of string 0 0
+  :: list of string 10 1
+    hd string 10 1
+      name files list of string 0 0
+    name r list of string 0 0
+ecom: 
+:: list of string 10 1
+  hd string 10 1
+    name files list of string 0 0
+  name r list of string 0 0
+ecom to: 
+name r list of string 0 0
+eacom: 
+hd string 10 1
+  name files list of string 0 0
+ecom: 
+hd string 10 1
+  name files list of string 0 0
+ecom to: 
+name .t5 string 0 0
+ecom: 
+= string 10 1
+  name .t5 string 0 0
+  name nil string 1 0
+ecom: 
+name nil string 1 0
+ecom to: 
+name .t5 string 0 0
+ecom: 
+= list of string 10 1
+  name files list of string 0 0
+  tl list of string 10 1
+    name files list of string 0 0
+ecom: 
+tl list of string 10 1
+  name files list of string 0 0
+ecom to: 
+name files list of string 0 0
+ecom: 
+= list of string 10 1
+  name files list of string 0 0
+  name r list of string 0 0
+ecom: 
+name r list of string 0 0
+ecom to: 
+name files list of string 0 0
+ecom: 
+= list of string 10 1
+  name nfiles list of string 0 0
+  name nil polymorphic type 1 0
+ecom: 
+name nil list of string 1 0
+ecom to: 
+name nfiles list of string 0 0
+ecom: 
+= list of string 10 2
+  name nfiles list of string 0 0
+  call list of string 10 2
+    name filepatdir fn(pat: string, dir: string, files: list of string, mustbedir: int): list of string 11 1
+    seq no type 10 2
+      name pat string 0 0
+      seq no type 10 2
+        hd string 10 1
+          name files list of string 0 0
+        seq no type 10 1
+          name nfiles list of string 0 0
+          seq no type 10 1
+            name mustbedir int 0 0
+ecom: 
+call list of string 10 2
+  name filepatdir fn(pat: string, dir: string, files: list of string, mustbedir: int): list of string 11 1
+  seq no type 10 2
+    name pat string 0 0
+    seq no type 10 2
+      hd string 10 1
+        name files list of string 0 0
+      seq no type 10 1
+        name nfiles list of string 0 0
+        seq no type 10 1
+          name mustbedir int 0 0
+ecom to: 
+name nfiles list of string 0 0
+generate desc for big
+ecom: 
+name pat string 0 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b4 big 0 0
+    const (64) int 6 0
+ecom: 
+hd string 10 1
+  name files list of string 0 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b4 big 0 0
+    const (72) int 6 0
+ecom: 
+name nfiles list of string 0 0
+ecom to: 
+* list of string 8 0
+  + int 15 0
+    name .b4 big 0 0
+    const (80) int 6 0
+ecom: 
+name mustbedir int 0 0
+ecom to: 
+* int 8 0
+  + int 15 0
+    name .b4 big 0 0
+    const (88) int 6 0
+ecom: 
+= list of string 10 1
+  name files list of string 0 0
+  tl list of string 10 1
+    name files list of string 0 0
+ecom: 
+tl list of string 10 1
+  name files list of string 0 0
+ecom to: 
+name files list of string 0 0
+ecom: 
+name nfiles list of string 0 0
+ecom to: 
+* list of string 8 0
+  name .ret int 0 0
+fn: filepat1
+64: argument pat string ref 2
+72: argument files list of string ref 10
+80: argument mustbedir int ref 2
+88: local nfiles list of string ref 4
+96: local r list of string ref 3
+104: local .b4 big ref 2
+112: local .t5 string ref 1
+generate desc for filepat1
+descmap offset 0
+descmap pat type string offset 64 (d->offset=64 start=0) returns 64
+descmap files type list of string offset 72 (d->offset=72 start=0) returns 72
+descmap mustbedir type int offset 80 (d->offset=80 start=0) returns -1
+descmap nfiles type list of string offset 88 (d->offset=88 start=0) returns 88
+descmap r type list of string offset 96 (d->offset=96 start=0) returns 96
+descmap .b4 type big offset 104 (d->offset=104 start=0) returns -1
+descmap .t5 type string offset 112 (d->offset=112 start=0) returns 112
+fncom: filepatdir 3 464318
+ecom: 
+= list of string 10 1
+  name files list of string 0 0
+  :: list of string 10 1
+    + string 10 1
+      name dir string 0 0
+      name pat string 0 0
+    name files list of string 0 0
+ecom: 
+:: list of string 10 1
+  + string 10 1
+    name dir string 0 0
+    name pat string 0 0
+  name files list of string 0 0
+ecom to: 
+name files list of string 0 0
+eacom: 
++ string 10 1
+  name dir string 0 0
+  name pat string 0 0
+ecom: 
++ string 10 1
+  name dir string 0 0
+  name pat string 0 0
+ecom to: 
+name .t6 string 0 0
+ecom: 
+= string 10 1
+  name .t6 string 0 0
+  name nil string 1 0
+ecom: 
+name nil string 1 0
+ecom to: 
+name .t6 string 0 0
+ecom: 
+= list of string 10 1
+  name files list of string 0 0
+  :: list of string 10 1
+    + string 10 1
+      + string 10 1
+        name dir string 0 0
+        const / string 1 0
+      name pat string 0 0
+    name files list of string 0 0
+ecom: 
+:: list of string 10 1
+  + string 10 1
+    + string 10 1
+      name dir string 0 0
+      const / string 1 0
+    name pat string 0 0
+  name files list of string 0 0
+ecom to: 
+name files list of string 0 0
+eacom: 
++ string 10 1
+  + string 10 1
+    name dir string 0 0
+    const / string 1 0
+  name pat string 0 0
+ecom: 
++ string 10 1
+  + string 10 1
+    name dir string 0 0
+    const / string 1 0
+  name pat string 0 0
+ecom to: 
+name .t6 string 0 0
+ecom: 
++ string 10 1
+  name dir string 0 0
+  const / string 1 0
+ecom to: 
+name .t6 string 0 0
+ecom: 
+= string 10 1
+  name .t6 string 0 0
+  name nil string 1 0
+ecom: 
+name nil string 1 0
+ecom to: 
+name .t6 string 0 0
+ecom: 
+name files list of string 0 0
+ecom to: 
+* list of string 8 0
+  name .ret int 0 0
+ecom: 
+= string 10 1
+  name dirname string 0 0
+  name dir string 0 0
+ecom: 
+name dir string 0 0
+ecom to: 
+name dirname string 0 0
+ecom: 
+= string 10 1
+  name dirname string 0 0
+  const . string 1 0
+ecom: 
+const . string 1 0
+ecom to: 
+name dirname string 0 0
+ecom: 
+= (array of ref Sys->Dir, int) 10 2
+  tuple (array of ref Sys->Dir, int) 10 1
+    seq nothing 10 1
+      name d array of ref Sys->Dir 0 0
+      seq nothing 10 1
+        name n int 0 0
+  call (array of ref Sys->Dir, int) 10 2
+    -> fn(path: string, sortkey: int): (array of ref Sys->Dir, int) 12 1
+      name rdir Readdir 1 0
+      name init nothing 11 1
+    seq no type 10 1
+      name dirname string 0 0
+      seq no type 10 1
+        const (48) int 6 0
+ecom: 
+call (array of ref Sys->Dir, int) 10 2
+  -> fn(path: string, sortkey: int): (array of ref Sys->Dir, int) 12 1
+    name rdir Readdir 1 0
+    name init nothing 11 1
+  seq no type 10 1
+    name dirname string 0 0
+    seq no type 10 1
+      const (48) int 6 0
+ecom to: 
+name d (array of ref Sys->Dir, int) 0 0
+generate desc for big
+ecom: 
+name dirname string 0 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b7 big 0 0
+    const (64) int 6 0
+ecom: 
+const (48) int 6 0
+ecom to: 
+* int 8 0
+  + int 15 0
+    name .b7 big 0 0
+    const (72) int 6 0
+ecom: 
+name files list of string 0 0
+ecom to: 
+* list of string 8 0
+  name .ret int 0 0
+ecom: 
+= int 10 1
+  name i int 0 0
+  const (1) int 6 0
+ecom: 
+const (1) int 6 0
+ecom to: 
+name i int 0 0
+ecom: 
+* string 10 1
+  * ref Sys->Dir 10 1
+    indx big 10 1
+      name d array of ref Sys->Dir 0 0
+      name i int 0 0
+ecom to: 
+name .t6 string 0 0
+eacom: 
+* string 10 1
+  * ref Sys->Dir 10 1
+    indx big 10 1
+      name d array of ref Sys->Dir 0 0
+      name i int 0 0
+ecom: 
+* ref Sys->Dir 10 1
+  indx big 10 1
+    name d array of ref Sys->Dir 0 0
+    name i int 0 0
+ecom to: 
+name .t6 ref Sys->Dir 0 0
+eacom: 
+* ref Sys->Dir 10 1
+  indx big 10 1
+    name d array of ref Sys->Dir 0 0
+    name i int 0 0
+generate desc for big
+ecom: 
+indx big 10 1
+  name d array of ref Sys->Dir 0 0
+  name i int 0 0
+ecom to: 
+name .b7 big 0 0
+eacom: 
+* string 10 1
+  * ref Sys->Dir 10 1
+    indx big 10 1
+      name d array of ref Sys->Dir 0 0
+      - int 10 1
+        name i int 0 0
+        const (1) int 6 0
+ecom: 
+* ref Sys->Dir 10 1
+  indx big 10 1
+    name d array of ref Sys->Dir 0 0
+    - int 10 1
+      name i int 0 0
+      const (1) int 6 0
+ecom to: 
+name .t8 ref Sys->Dir 0 0
+eacom: 
+* ref Sys->Dir 10 1
+  indx big 10 1
+    name d array of ref Sys->Dir 0 0
+    - int 10 1
+      name i int 0 0
+      const (1) int 6 0
+generate desc for big
+ecom: 
+indx big 10 1
+  name d array of ref Sys->Dir 0 0
+  - int 10 1
+    name i int 0 0
+    const (1) int 6 0
+ecom to: 
+name .b7 big 0 0
+eacom: 
+- int 10 1
+  name i int 0 0
+  const (1) int 6 0
+ecom: 
+- int 10 1
+  name i int 0 0
+  const (1) int 6 0
+ecom to: 
+name .t9 int 0 0
+ecom: 
+= ref Sys->Dir 10 1
+  name .t8 ref Sys->Dir 0 0
+  name nil ref Sys->Dir 1 0
+ecom: 
+name nil ref Sys->Dir 1 0
+ecom to: 
+name .t8 ref Sys->Dir 0 0
+ecom: 
+= string 10 1
+  name .t6 string 0 0
+  name nil string 1 0
+ecom: 
+name nil string 1 0
+ecom to: 
+name .t6 string 0 0
+ecom: 
+= array of ref Sys->Dir 10 2
+  slice array of ref Sys->Dir 10 2
+    name d array of ref Sys->Dir 0 0
+    seq no type 10 2
+      - int 10 1
+        name i int 0 0
+        const (1) int 6 0
+      nothing no type 10 1
+  slice array of ref Sys->Dir 10 1
+    name d array of ref Sys->Dir 0 0
+    seq no type 10 1
+      name i int 0 0
+      nothing no type 10 1
+ecom: 
+- int 10 1
+  name i int 0 0
+  const (1) int 6 0
+ecom to: 
+name .t9 int 0 0
+eacom: 
+slice array of ref Sys->Dir 10 1
+  name d array of ref Sys->Dir 0 0
+  seq no type 10 1
+    name i int 0 0
+    nothing no type 10 1
+ecom: 
+slice array of ref Sys->Dir 10 1
+  name d array of ref Sys->Dir 0 0
+  seq no type 10 1
+    name i int 0 0
+    nothing no type 10 1
+ecom to: 
+name .t8 array of ref Sys->Dir 0 0
+ecom: 
+len int 10 1
+  name d array of ref Sys->Dir 0 0
+ecom to: 
+name .t10 int 0 0
+ecom: 
+name d array of ref Sys->Dir 0 0
+ecom to: 
+name .t8 array of ref Sys->Dir 0 0
+ecom: 
+= array of ref Sys->Dir 10 1
+  name .t8 array of ref Sys->Dir 0 0
+  name nil array of ref Sys->Dir 1 0
+ecom: 
+name nil array of ref Sys->Dir 1 0
+ecom to: 
+name .t8 array of ref Sys->Dir 0 0
+ecom: 
+-- int 10 1
+  name n int 0 0
+  const (1) int 6 0
+ecom: 
+-- int 10 1
+  name i int 0 0
+  const (1) int 6 0
+ecom: 
+++ int 10 1
+  name i int 0 0
+  const (1) int 6 0
+ecom: 
+= int 10 1
+  name i int 0 0
+  const (0) int 6 0
+ecom: 
+const (0) int 6 0
+ecom to: 
+name i int 0 0
+eacom: 
+call int 10 2
+  name match fn(pat: string, name: string): int 11 1
+  seq no type 10 1
+    name pat string 0 0
+    seq no type 10 1
+      * string 10 1
+        * ref Sys->Dir 10 1
+          indx big 10 1
+            name d array of ref Sys->Dir 0 0
+            name i int 0 0
+ecom: 
+call int 10 2
+  name match fn(pat: string, name: string): int 11 1
+  seq no type 10 1
+    name pat string 0 0
+    seq no type 10 1
+      * string 10 1
+        * ref Sys->Dir 10 1
+          indx big 10 1
+            name d array of ref Sys->Dir 0 0
+            name i int 0 0
+ecom to: 
+name .t10 int 0 0
+generate desc for big
+ecom: 
+name pat string 0 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b7 big 0 0
+    const (64) int 6 0
+ecom: 
+* string 10 1
+  * ref Sys->Dir 10 1
+    indx big 10 1
+      name d array of ref Sys->Dir 0 0
+      name i int 0 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b7 big 0 0
+    const (72) int 6 0
+eacom: 
+* string 10 1
+  * ref Sys->Dir 10 1
+    indx big 10 1
+      name d array of ref Sys->Dir 0 0
+      name i int 0 0
+ecom: 
+* ref Sys->Dir 10 1
+  indx big 10 1
+    name d array of ref Sys->Dir 0 0
+    name i int 0 0
+ecom to: 
+name .t8 ref Sys->Dir 0 0
+eacom: 
+* ref Sys->Dir 10 1
+  indx big 10 1
+    name d array of ref Sys->Dir 0 0
+    name i int 0 0
+generate desc for big
+ecom: 
+indx big 10 1
+  name d array of ref Sys->Dir 0 0
+  name i int 0 0
+ecom to: 
+name .b11 big 0 0
+ecom: 
+= ref Sys->Dir 10 1
+  name .t8 ref Sys->Dir 0 0
+  name nil ref Sys->Dir 1 0
+ecom: 
+name nil ref Sys->Dir 1 0
+ecom to: 
+name .t8 ref Sys->Dir 0 0
+eacom: 
+& int 10 1
+  * int 10 1
+    + int 10 1
+      * ref Sys->Dir 10 1
+        indx big 10 1
+          name d array of ref Sys->Dir 0 0
+          name i int 0 0
+      const mode (48) int 6 0
+  const .i.80000000 (-2147483648) int 1 0
+ecom: 
+& int 10 1
+  * int 10 1
+    + int 10 1
+      * ref Sys->Dir 10 1
+        indx big 10 1
+          name d array of ref Sys->Dir 0 0
+          name i int 0 0
+      const mode (48) int 6 0
+  const .i.80000000 (-2147483648) int 1 0
+ecom to: 
+name .t10 int 0 0
+eacom: 
+* int 10 1
+  + int 10 1
+    * ref Sys->Dir 10 1
+      indx big 10 1
+        name d array of ref Sys->Dir 0 0
+        name i int 0 0
+    const mode (48) int 6 0
+ecom: 
+* ref Sys->Dir 10 1
+  indx big 10 1
+    name d array of ref Sys->Dir 0 0
+    name i int 0 0
+ecom to: 
+name .t8 ref Sys->Dir 0 0
+eacom: 
+* ref Sys->Dir 10 1
+  indx big 10 1
+    name d array of ref Sys->Dir 0 0
+    name i int 0 0
+generate desc for big
+ecom: 
+indx big 10 1
+  name d array of ref Sys->Dir 0 0
+  name i int 0 0
+ecom to: 
+name .b11 big 0 0
+ecom: 
+= ref Sys->Dir 10 1
+  name .t8 ref Sys->Dir 0 0
+  name nil ref Sys->Dir 1 0
+ecom: 
+name nil ref Sys->Dir 1 0
+ecom to: 
+name .t8 ref Sys->Dir 0 0
+ecom: 
+= list of string 10 1
+  name files list of string 0 0
+  :: list of string 10 1
+    + string 10 1
+      name dir string 0 0
+      * string 10 1
+        * ref Sys->Dir 10 1
+          indx big 10 1
+            name d array of ref Sys->Dir 0 0
+            name i int 0 0
+    name files list of string 0 0
+ecom: 
+:: list of string 10 1
+  + string 10 1
+    name dir string 0 0
+    * string 10 1
+      * ref Sys->Dir 10 1
+        indx big 10 1
+          name d array of ref Sys->Dir 0 0
+          name i int 0 0
+  name files list of string 0 0
+ecom to: 
+name files list of string 0 0
+eacom: 
++ string 10 1
+  name dir string 0 0
+  * string 10 1
+    * ref Sys->Dir 10 1
+      indx big 10 1
+        name d array of ref Sys->Dir 0 0
+        name i int 0 0
+ecom: 
++ string 10 1
+  name dir string 0 0
+  * string 10 1
+    * ref Sys->Dir 10 1
+      indx big 10 1
+        name d array of ref Sys->Dir 0 0
+        name i int 0 0
+ecom to: 
+name .t8 string 0 0
+eacom: 
+* string 10 1
+  * ref Sys->Dir 10 1
+    indx big 10 1
+      name d array of ref Sys->Dir 0 0
+      name i int 0 0
+ecom: 
+* ref Sys->Dir 10 1
+  indx big 10 1
+    name d array of ref Sys->Dir 0 0
+    name i int 0 0
+ecom to: 
+name .t8 ref Sys->Dir 0 0
+eacom: 
+* ref Sys->Dir 10 1
+  indx big 10 1
+    name d array of ref Sys->Dir 0 0
+    name i int 0 0
+generate desc for big
+ecom: 
+indx big 10 1
+  name d array of ref Sys->Dir 0 0
+  name i int 0 0
+ecom to: 
+name .b11 big 0 0
+ecom: 
+= string 10 1
+  name .t8 string 0 0
+  name nil string 1 0
+ecom: 
+name nil string 1 0
+ecom to: 
+name .t8 string 0 0
+ecom: 
+= list of string 10 2
+  name files list of string 0 0
+  :: list of string 10 2
+    + string 10 2
+      + string 10 1
+        name dir string 0 0
+        const / string 1 0
+      * string 10 1
+        * ref Sys->Dir 10 1
+          indx big 10 1
+            name d array of ref Sys->Dir 0 0
+            name i int 0 0
+    name files list of string 0 0
+ecom: 
+:: list of string 10 2
+  + string 10 2
+    + string 10 1
+      name dir string 0 0
+      const / string 1 0
+    * string 10 1
+      * ref Sys->Dir 10 1
+        indx big 10 1
+          name d array of ref Sys->Dir 0 0
+          name i int 0 0
+  name files list of string 0 0
+ecom to: 
+name files list of string 0 0
+eacom: 
++ string 10 2
+  + string 10 1
+    name dir string 0 0
+    const / string 1 0
+  * string 10 1
+    * ref Sys->Dir 10 1
+      indx big 10 1
+        name d array of ref Sys->Dir 0 0
+        name i int 0 0
+ecom: 
++ string 10 2
+  + string 10 1
+    name dir string 0 0
+    const / string 1 0
+  * string 10 1
+    * ref Sys->Dir 10 1
+      indx big 10 1
+        name d array of ref Sys->Dir 0 0
+        name i int 0 0
+ecom to: 
+name .t8 string 0 0
+ecom: 
++ string 10 1
+  name dir string 0 0
+  const / string 1 0
+ecom to: 
+name .t8 string 0 0
+eacom: 
+* string 10 1
+  * ref Sys->Dir 10 1
+    indx big 10 1
+      name d array of ref Sys->Dir 0 0
+      name i int 0 0
+ecom: 
+* ref Sys->Dir 10 1
+  indx big 10 1
+    name d array of ref Sys->Dir 0 0
+    name i int 0 0
+ecom to: 
+name .t6 ref Sys->Dir 0 0
+eacom: 
+* ref Sys->Dir 10 1
+  indx big 10 1
+    name d array of ref Sys->Dir 0 0
+    name i int 0 0
+generate desc for big
+ecom: 
+indx big 10 1
+  name d array of ref Sys->Dir 0 0
+  name i int 0 0
+ecom to: 
+name .b11 big 0 0
+ecom: 
+= ref Sys->Dir 10 1
+  name .t6 ref Sys->Dir 0 0
+  name nil ref Sys->Dir 1 0
+ecom: 
+name nil ref Sys->Dir 1 0
+ecom to: 
+name .t6 ref Sys->Dir 0 0
+ecom: 
+= string 10 1
+  name .t8 string 0 0
+  name nil string 1 0
+ecom: 
+name nil string 1 0
+ecom to: 
+name .t8 string 0 0
+ecom: 
+++ int 10 1
+  name i int 0 0
+  const (1) int 6 0
+ecom: 
+name files list of string 0 0
+ecom to: 
+* list of string 8 0
+  name .ret int 0 0
+fn: filepatdir
+64: argument pat string ref 5
+72: argument dir string ref 10
+80: argument files list of string ref 11
+88: argument mustbedir int ref 1
+92: local i int ref 15
+96: local .t10 int ref 1
+100: local .t9 int ref 1
+104: local d array of ref Sys->Dir ref 10
+112: local n int ref 4
+120: local .b11 big ref 4
+128: local .b7 big ref 4
+136: local dirname string ref 3
+144: local .t6 string ref 1
+152: local .t8 ref Sys->Dir ref 1
+generate desc for filepatdir
+descmap offset 0
+descmap pat type string offset 64 (d->offset=64 start=0) returns 64
+descmap dir type string offset 72 (d->offset=72 start=0) returns 72
+descmap files type list of string offset 80 (d->offset=80 start=0) returns 80
+descmap mustbedir type int offset 88 (d->offset=88 start=0) returns -1
+descmap i type int offset 92 (d->offset=92 start=0) returns -1
+descmap .t10 type int offset 96 (d->offset=96 start=0) returns -1
+descmap .t9 type int offset 100 (d->offset=100 start=0) returns -1
+descmap d type array of ref Sys->Dir offset 104 (d->offset=104 start=0) returns 104
+descmap n type int offset 112 (d->offset=112 start=0) returns -1
+descmap .b11 type big offset 120 (d->offset=120 start=0) returns -1
+descmap .b7 type big offset 128 (d->offset=128 start=0) returns -1
+descmap dirname type string offset 136 (d->offset=136 start=0) returns 136
+descmap .t6 type string offset 144 (d->offset=144 start=0) returns 144
+descmap .t8 type ref Sys->Dir offset 152 (d->offset=152 start=0) returns 152
+fncom: match 4 44b4b8
+ecom: 
+= int 10 1
+  name n int 0 0
+  const (0) int 6 0
+ecom: 
+const (0) int 6 0
+ecom to: 
+name n int 0 0
+ecom: 
+= int 10 1
+  name p int 0 0
+  const (0) int 6 0
+ecom: 
+const (0) int 6 0
+ecom to: 
+name p int 0 0
+eacom: 
+len int 10 1
+  name pat string 0 0
+ecom: 
+len int 10 1
+  name pat string 0 0
+ecom to: 
+name .t12 int 0 0
+ecom: 
+= int 10 1
+  name r int 0 0
+  inds int 10 1
+    name pat string 0 0
+    ++ int 10 1
+      name p int 0 0
+      const (1) int 6 0
+ecom: 
+inds int 10 1
+  name pat string 0 0
+  ++ int 10 1
+    name p int 0 0
+    const (1) int 6 0
+ecom to: 
+name r int 0 0
+ecom: 
+++ int 10 1
+  name p int 0 0
+  const (1) int 6 0
+ecom to: 
+name .t12 int 0 0
+ecom: 
+= string 10 1
+  name pat string 0 0
+  slice string 10 1
+    name pat string 0 0
+    seq no type 10 1
+      name p int 0 0
+      nothing no type 10 1
+ecom: 
+slice string 10 1
+  name pat string 0 0
+  seq no type 10 1
+    name p int 0 0
+    nothing no type 10 1
+ecom to: 
+name pat string 0 0
+ecom: 
+len int 10 1
+  name pat string 0 0
+ecom to: 
+name .t12 int 0 0
+eacom: 
+len int 10 1
+  name pat string 0 0
+ecom: 
+len int 10 1
+  name pat string 0 0
+ecom to: 
+name .t12 int 0 0
+ecom: 
+const (1) int 6 0
+ecom to: 
+* int 8 0
+  name .ret int 0 0
+eacom: 
+len int 10 1
+  name name string 0 0
+ecom: 
+len int 10 1
+  name name string 0 0
+ecom to: 
+name .t12 int 0 0
+eacom: 
+call int 10 2
+  name match fn(pat: string, name: string): int 11 1
+  seq no type 10 1
+    name pat string 0 0
+    seq no type 10 1
+      slice string 10 1
+        name name string 0 0
+        seq no type 10 1
+          name n int 0 0
+          nothing no type 10 1
+ecom: 
+call int 10 2
+  name match fn(pat: string, name: string): int 11 1
+  seq no type 10 1
+    name pat string 0 0
+    seq no type 10 1
+      slice string 10 1
+        name name string 0 0
+        seq no type 10 1
+          name n int 0 0
+          nothing no type 10 1
+ecom to: 
+name .t12 int 0 0
+generate desc for big
+ecom: 
+name pat string 0 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b13 big 0 0
+    const (64) int 6 0
+ecom: 
+slice string 10 1
+  name name string 0 0
+  seq no type 10 1
+    name n int 0 0
+    nothing no type 10 1
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b13 big 0 0
+    const (72) int 6 0
+ecom: 
+len int 10 1
+  name name string 0 0
+ecom to: 
+name .t14 int 0 0
+ecom: 
+name name string 0 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b13 big 0 0
+    const (72) int 6 0
+ecom: 
+const (1) int 6 0
+ecom to: 
+* int 8 0
+  name .ret int 0 0
+ecom: 
+++ int 10 1
+  name n int 0 0
+  const (1) int 6 0
+ecom: 
+const (0) int 6 0
+ecom to: 
+* int 8 0
+  name .ret int 0 0
+eacom: 
+len int 10 1
+  name name string 0 0
+ecom: 
+len int 10 1
+  name name string 0 0
+ecom to: 
+name .t14 int 0 0
+ecom: 
+const (0) int 6 0
+ecom to: 
+* int 8 0
+  name .ret int 0 0
+ecom: 
+= int 10 1
+  name s int 0 0
+  inds int 10 1
+    name name string 0 0
+    ++ int 10 1
+      name n int 0 0
+      const (1) int 6 0
+ecom: 
+inds int 10 1
+  name name string 0 0
+  ++ int 10 1
+    name n int 0 0
+    const (1) int 6 0
+ecom to: 
+name s int 0 0
+ecom: 
+++ int 10 1
+  name n int 0 0
+  const (1) int 6 0
+ecom to: 
+name .t14 int 0 0
+ecom: 
+= int 10 1
+  name matched int 0 0
+  const (0) int 6 0
+ecom: 
+const (0) int 6 0
+ecom to: 
+name matched int 0 0
+ecom: 
+= int 10 1
+  name invert int 0 0
+  const (0) int 6 0
+ecom: 
+const (0) int 6 0
+ecom to: 
+name invert int 0 0
+ecom: 
+= int 10 1
+  name first int 0 0
+  const (1) int 6 0
+ecom: 
+const (1) int 6 0
+ecom to: 
+name first int 0 0
+eacom: 
+len int 10 1
+  name pat string 0 0
+ecom: 
+len int 10 1
+  name pat string 0 0
+ecom to: 
+name .t14 int 0 0
+ecom: 
+= (int, int, int) 10 2
+  tuple (int, int, int) 10 1
+    seq no type 10 1
+      name p int 0 0
+      seq no type 10 1
+        name r int 0 0
+        seq no type 10 1
+          name esc int 0 0
+  call (int, int, int) 10 2
+    name char fn(pat: string, p: int): (int, int, int) 11 1
+    seq no type 10 1
+      name pat string 0 0
+      seq no type 10 1
+        name p int 0 0
+generate desc for (int, int, int)
+descmap adt offset 0
+descmap offset 0
+descmap t0 type int offset 0 (d->offset=0 start=0) returns -1
+descmap t1 type int offset 4 (d->offset=4 start=0) returns -1
+descmap t2 type int offset 8 (d->offset=8 start=0) returns -1
+generate desc for (int, int, int)
+	desc	$-1,12,""
+ecom: 
+call (int, int, int) 10 2
+  name char fn(pat: string, p: int): (int, int, int) 11 1
+  seq no type 10 1
+    name pat string 0 0
+    seq no type 10 1
+      name p int 0 0
+ecom to: 
+name .b15 (int, int, int) 0 0
+generate desc for big
+ecom: 
+name pat string 0 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b13 big 0 0
+    const (64) int 6 0
+ecom: 
+name p int 0 0
+ecom to: 
+* int 8 0
+  + int 15 0
+    name .b13 big 0 0
+    const (72) int 6 0
+ecom: 
+= int 10 1
+  name invert int 0 0
+  const (1) int 6 0
+ecom: 
+const (1) int 6 0
+ecom to: 
+name invert int 0 0
+ecom: 
+= int 10 1
+  name first int 0 0
+  const (0) int 6 0
+ecom: 
+const (0) int 6 0
+ecom to: 
+name first int 0 0
+ecom: 
+= int 10 1
+  name first int 0 0
+  const (0) int 6 0
+ecom: 
+const (0) int 6 0
+ecom to: 
+name first int 0 0
+ecom: 
+= (int, int, int) 10 2
+  tuple (int, int, int) 10 1
+    seq no type 10 1
+      name p int 0 0
+      seq no type 10 1
+        name lo int 0 0
+        seq no type 10 1
+          name hi int 0 0
+  call (int, int, int) 10 2
+    name range fn(pat: string, p: int): (int, int, int) 11 1
+    seq no type 10 1
+      name pat string 0 0
+      seq no type 10 1
+        - int 10 1
+          name p int 0 0
+          const (1) int 6 0
+generate desc for (int, int, int)
+descmap adt offset 0
+descmap offset 0
+descmap t0 type int offset 0 (d->offset=0 start=0) returns -1
+descmap t1 type int offset 4 (d->offset=4 start=0) returns -1
+descmap t2 type int offset 8 (d->offset=8 start=0) returns -1
+generate desc for (int, int, int)
+	desc	$-1,12,""
+ecom: 
+call (int, int, int) 10 2
+  name range fn(pat: string, p: int): (int, int, int) 11 1
+  seq no type 10 1
+    name pat string 0 0
+    seq no type 10 1
+      - int 10 1
+        name p int 0 0
+        const (1) int 6 0
+ecom to: 
+name .b15 (int, int, int) 0 0
+generate desc for big
+ecom: 
+name pat string 0 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b13 big 0 0
+    const (64) int 6 0
+ecom: 
+- int 10 1
+  name p int 0 0
+  const (1) int 6 0
+ecom to: 
+* int 8 0
+  + int 15 0
+    name .b13 big 0 0
+    const (72) int 6 0
+ecom: 
+= int 10 1
+  name matched int 0 0
+  const (1) int 6 0
+ecom: 
+const (1) int 6 0
+ecom to: 
+name matched int 0 0
+ecom: 
+const (0) int 6 0
+ecom to: 
+* int 8 0
+  name .ret int 0 0
+eacom: 
+len int 10 1
+  name name string 0 0
+ecom: 
+len int 10 1
+  name name string 0 0
+ecom to: 
+name .t14 int 0 0
+ecom: 
+const (0) int 6 0
+ecom to: 
+* int 8 0
+  name .ret int 0 0
+ecom: 
+++ int 10 1
+  name n int 0 0
+  const (1) int 6 0
+eacom: 
+len int 10 1
+  name name string 0 0
+ecom: 
+len int 10 1
+  name name string 0 0
+ecom to: 
+name .t14 int 0 0
+eacom: 
+len int 10 1
+  name pat string 0 0
+ecom: 
+len int 10 1
+  name pat string 0 0
+ecom to: 
+name .t14 int 0 0
+ecom: 
+inds int 10 1
+  name name string 0 0
+  ++ int 10 1
+    name n int 0 0
+    const (1) int 6 0
+ecom to: 
+name .t14 int 0 0
+ecom: 
+++ int 10 1
+  name n int 0 0
+  const (1) int 6 0
+ecom to: 
+name .t12 int 0 0
+eacom: 
+inds int 10 1
+  name pat string 0 0
+  ++ int 10 1
+    name p int 0 0
+    const (1) int 6 0
+ecom: 
+inds int 10 1
+  name pat string 0 0
+  ++ int 10 1
+    name p int 0 0
+    const (1) int 6 0
+ecom to: 
+name .t12 int 0 0
+ecom: 
+++ int 10 1
+  name p int 0 0
+  const (1) int 6 0
+ecom to: 
+name .t16 int 0 0
+ecom: 
+const (0) int 6 0
+ecom to: 
+* int 8 0
+  name .ret int 0 0
+eacom: 
+len int 10 1
+  name name string 0 0
+ecom: 
+len int 10 1
+  name name string 0 0
+ecom to: 
+name .t16 int 0 0
+eacom: 
+inds int 10 1
+  name name string 0 0
+  ++ int 10 1
+    name n int 0 0
+    const (1) int 6 0
+ecom: 
+inds int 10 1
+  name name string 0 0
+  ++ int 10 1
+    name n int 0 0
+    const (1) int 6 0
+ecom to: 
+name .t16 int 0 0
+ecom: 
+++ int 10 1
+  name n int 0 0
+  const (1) int 6 0
+ecom to: 
+name .t14 int 0 0
+ecom: 
+const (0) int 6 0
+ecom to: 
+* int 8 0
+  name .ret int 0 0
+ecom: 
+== int 10 1
+  name n int 0 0
+  len int 10 1
+    name name string 0 0
+ecom to: 
+* int 8 0
+  name .ret int 0 0
+eacom: 
+len int 10 1
+  name name string 0 0
+ecom: 
+len int 10 1
+  name name string 0 0
+ecom to: 
+name .t16 int 0 0
+fn: match
+64: argument pat string ref 11
+72: argument name string ref 10
+80: local n int ref 13
+84: local p int ref 11
+88: local r int ref 7
+92: local esc int ref 4
+96: local first int ref 4
+100: local invert int ref 3
+104: local matched int ref 3
+108: local s int ref 3
+112: local hi int ref 2
+116: local lo int ref 2
+120: local .t12 int ref 1
+124: local .t14 int ref 1
+128: local .t16 int ref 1
+136: local .b13 big ref 3
+144: local .b15 (int, int, int) ref 2
+generate desc for match
+descmap offset 0
+descmap pat type string offset 64 (d->offset=64 start=0) returns 64
+descmap name type string offset 72 (d->offset=72 start=0) returns 72
+descmap n type int offset 80 (d->offset=80 start=0) returns -1
+descmap p type int offset 84 (d->offset=84 start=0) returns -1
+descmap r type int offset 88 (d->offset=88 start=0) returns -1
+descmap esc type int offset 92 (d->offset=92 start=0) returns -1
+descmap first type int offset 96 (d->offset=96 start=0) returns -1
+descmap invert type int offset 100 (d->offset=100 start=0) returns -1
+descmap matched type int offset 104 (d->offset=104 start=0) returns -1
+descmap s type int offset 108 (d->offset=108 start=0) returns -1
+descmap hi type int offset 112 (d->offset=112 start=0) returns -1
+descmap lo type int offset 116 (d->offset=116 start=0) returns -1
+descmap .t12 type int offset 120 (d->offset=120 start=0) returns -1
+descmap .t14 type int offset 124 (d->offset=124 start=0) returns -1
+descmap .t16 type int offset 128 (d->offset=128 start=0) returns -1
+descmap .b13 type big offset 136 (d->offset=136 start=0) returns -1
+descmap adt offset 144
+descmap offset 144
+descmap t0 type int offset 144 (d->offset=0 start=144) returns -1
+descmap t1 type int offset 148 (d->offset=4 start=144) returns -1
+descmap t2 type int offset 152 (d->offset=8 start=144) returns -1
+descmap .b15 type (int, int, int) offset 144 (d->offset=144 start=0) returns -1
+fncom: range 2 4643d8
+ecom: 
+= (int, int, int) 10 2
+  tuple (int, int, int) 10 1
+    seq nothing 10 1
+      name q int 0 0
+      seq nothing 10 1
+        name lo int 0 0
+        seq nothing 10 1
+          name nil polymorphic type 1 0
+  call (int, int, int) 10 2
+    name char fn(pat: string, p: int): (int, int, int) 11 1
+    seq no type 10 1
+      name pat string 0 0
+      seq no type 10 1
+        name p int 0 0
+generate desc for (int, int, int)
+ecom: 
+call (int, int, int) 10 2
+  name char fn(pat: string, p: int): (int, int, int) 11 1
+  seq no type 10 1
+    name pat string 0 0
+    seq no type 10 1
+      name p int 0 0
+ecom to: 
+name .b17 (int, int, int) 0 0
+generate desc for big
+ecom: 
+name pat string 0 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b18 big 0 0
+    const (64) int 6 0
+ecom: 
+name p int 0 0
+ecom to: 
+* int 8 0
+  + int 15 0
+    name .b18 big 0 0
+    const (72) int 6 0
+ecom: 
+= (int, int, int) 10 2
+  tuple (int, int, int) 10 1
+    seq nothing 10 1
+      name q1 int 0 0
+      seq nothing 10 1
+        name hi int 0 0
+        seq nothing 10 1
+          name esc int 0 0
+  call (int, int, int) 10 2
+    name char fn(pat: string, p: int): (int, int, int) 11 1
+    seq no type 10 1
+      name pat string 0 0
+      seq no type 10 1
+        name q int 0 0
+ecom: 
+call (int, int, int) 10 2
+  name char fn(pat: string, p: int): (int, int, int) 11 1
+  seq no type 10 1
+    name pat string 0 0
+    seq no type 10 1
+      name q int 0 0
+ecom to: 
+name q1 (int, int, int) 0 0
+generate desc for big
+ecom: 
+name pat string 0 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b18 big 0 0
+    const (64) int 6 0
+ecom: 
+name q int 0 0
+ecom to: 
+* int 8 0
+  + int 15 0
+    name .b18 big 0 0
+    const (72) int 6 0
+ecom: 
+= (int, int, int) 10 2
+  tuple (int, int, int) 10 1
+    seq no type 10 1
+      name q1 int 0 0
+      seq no type 10 1
+        name hi int 0 0
+        seq no type 10 1
+          name nil polymorphic type 1 0
+  call (int, int, int) 10 2
+    name char fn(pat: string, p: int): (int, int, int) 11 1
+    seq no type 10 1
+      name pat string 0 0
+      seq no type 10 1
+        name q1 int 0 0
+generate desc for (int, int, int)
+ecom: 
+call (int, int, int) 10 2
+  name char fn(pat: string, p: int): (int, int, int) 11 1
+  seq no type 10 1
+    name pat string 0 0
+    seq no type 10 1
+      name q1 int 0 0
+ecom to: 
+name .b17 (int, int, int) 0 0
+generate desc for big
+ecom: 
+name pat string 0 0
+ecom to: 
+* string 8 0
+  + int 15 0
+    name .b18 big 0 0
+    const (64) int 6 0
+ecom: 
+name q1 int 0 0
+ecom to: 
+* int 8 0
+  + int 15 0
+    name .b18 big 0 0
+    const (72) int 6 0
+ecom: 
+tuple (int, int, int) 10 1
+  seq no type 10 1
+    name q1 int 0 0
+    seq no type 10 1
+      name lo int 0 0
+      seq no type 10 1
+        name hi int 0 0
+ecom to: 
+* (int, int, int) 8 0
+  name .ret int 0 0
+ecom: 
+name q1 int 0 0
+ecom to: 
+* int 8 0
+  + int 15 1
+    adr int 15 1
+      * (int, int, int) 8 0
+        name .ret int 0 0
+    const (0) int 6 0
+ecom: 
+name lo int 0 0
+ecom to: 
+* int 8 0
+  + int 15 1
+    adr int 15 1
+      * (int, int, int) 8 0
+        name .ret int 0 0
+    const (4) int 6 0
+ecom: 
+name hi int 0 0
+ecom to: 
+* int 8 0
+  + int 15 1
+    adr int 15 1
+      * (int, int, int) 8 0
+        name .ret int 0 0
+    const (8) int 6 0
+ecom: 
+tuple (int, int, int) 10 1
+  seq no type 10 1
+    name q int 0 0
+    seq no type 10 1
+      name lo int 0 0
+      seq no type 10 1
+        name lo int 0 0
+ecom to: 
+* (int, int, int) 8 0
+  name .ret int 0 0
+ecom: 
+name q int 0 0
+ecom to: 
+* int 8 0
+  + int 15 1
+    adr int 15 1
+      * (int, int, int) 8 0
+        name .ret int 0 0
+    const (0) int 6 0
+ecom: 
+name lo int 0 0
+ecom to: 
+* int 8 0
+  + int 15 1
+    adr int 15 1
+      * (int, int, int) 8 0
+        name .ret int 0 0
+    const (4) int 6 0
+ecom: 
+name lo int 0 0
+ecom to: 
+* int 8 0
+  + int 15 1
+    adr int 15 1
+      * (int, int, int) 8 0
+        name .ret int 0 0
+    const (8) int 6 0
+fn: range
+64: argument pat string ref 3
+72: argument p int ref 1
+76: local lo int ref 4
+80: local q1 int ref 4
+84: local hi int ref 4
+88: local esc int ref 2
+92: local q int ref 3
+96: local .b18 big ref 3
+104: local .b17 (int, int, int) ref 2
+generate desc for range
+descmap offset 0
+descmap pat type string offset 64 (d->offset=64 start=0) returns 64
+descmap p type int offset 72 (d->offset=72 start=0) returns -1
+descmap lo type int offset 76 (d->offset=76 start=0) returns -1
+descmap q1 type int offset 80 (d->offset=80 start=0) returns -1
+descmap hi type int offset 84 (d->offset=84 start=0) returns -1
+descmap esc type int offset 88 (d->offset=88 start=0) returns -1
+descmap q type int offset 92 (d->offset=92 start=0) returns -1
+descmap .b18 type big offset 96 (d->offset=96 start=0) returns -1
+descmap adt offset 104
+descmap offset 104
+descmap t0 type int offset 104 (d->offset=0 start=104) returns -1
+descmap t1 type int offset 108 (d->offset=4 start=104) returns -1
+descmap t2 type int offset 112 (d->offset=8 start=104) returns -1
+descmap .b17 type (int, int, int) offset 104 (d->offset=104 start=0) returns -1
+fncom: char 5 464498
+eacom: 
+len int 10 1
+  name pat string 0 0
+ecom: 
+len int 10 1
+  name pat string 0 0
+ecom to: 
+name .t19 int 0 0
+ecom: 
+tuple (int, int, int) 10 1
+  seq no type 10 1
+    name p int 0 0
+    seq no type 10 1
+      const (0) int 6 0
+      seq no type 10 1
+        const (-1) int 6 0
+ecom to: 
+* (int, int, int) 8 0
+  name .ret int 0 0
+ecom: 
+name p int 0 0
+ecom to: 
+* int 8 0
+  + int 15 1
+    adr int 15 1
+      * (int, int, int) 8 0
+        name .ret int 0 0
+    const (0) int 6 0
+ecom: 
+const (0) int 6 0
+ecom to: 
+* int 8 0
+  + int 15 1
+    adr int 15 1
+      * (int, int, int) 8 0
+        name .ret int 0 0
+    const (4) int 6 0
+ecom: 
+const (-1) int 6 0
+ecom to: 
+* int 8 0
+  + int 15 1
+    adr int 15 1
+      * (int, int, int) 8 0
+        name .ret int 0 0
+    const (8) int 6 0
+ecom: 
+= int 10 1
+  name r int 0 0
+  inds int 10 1
+    name pat string 0 0
+    ++ int 10 1
+      name p int 0 0
+      const (1) int 6 0
+ecom: 
+inds int 10 1
+  name pat string 0 0
+  ++ int 10 1
+    name p int 0 0
+    const (1) int 6 0
+ecom to: 
+name r int 0 0
+ecom: 
+++ int 10 1
+  name p int 0 0
+  const (1) int 6 0
+ecom to: 
+name .t19 int 0 0
+eacom: 
+len int 10 1
+  name pat string 0 0
+ecom: 
+len int 10 1
+  name pat string 0 0
+ecom to: 
+name .t19 int 0 0
+ecom: 
+tuple (int, int, int) 10 1
+  seq no type 10 1
+    name p int 0 0
+    seq no type 10 1
+      name r int 0 0
+      seq no type 10 1
+        const (0) int 6 0
+ecom to: 
+* (int, int, int) 8 0
+  name .ret int 0 0
+ecom: 
+name p int 0 0
+ecom to: 
+* int 8 0
+  + int 15 1
+    adr int 15 1
+      * (int, int, int) 8 0
+        name .ret int 0 0
+    const (0) int 6 0
+ecom: 
+name r int 0 0
+ecom to: 
+* int 8 0
+  + int 15 1
+    adr int 15 1
+      * (int, int, int) 8 0
+        name .ret int 0 0
+    const (4) int 6 0
+ecom: 
+const (0) int 6 0
+ecom to: 
+* int 8 0
+  + int 15 1
+    adr int 15 1
+      * (int, int, int) 8 0
+        name .ret int 0 0
+    const (8) int 6 0
+ecom: 
+tuple (int, int, int) 10 2
+  seq no type 10 2
+    + int 15 1
+      name p int 0 0
+      const (1) int 6 0
+    seq no type 10 2
+      inds int 10 1
+        name pat string 0 0
+        name p int 0 0
+      seq no type 10 1
+        const (1) int 6 0
+ecom to: 
+* (int, int, int) 8 0
+  name .ret int 0 0
+ecom: 
++ int 15 1
+  name p int 0 0
+  const (1) int 6 0
+ecom to: 
+* int 8 0
+  + int 15 1
+    adr int 15 1
+      * (int, int, int) 8 0
+        name .ret int 0 0
+    const (0) int 6 0
+ecom: 
+inds int 10 1
+  name pat string 0 0
+  name p int 0 0
+ecom to: 
+* int 8 0
+  + int 15 1
+    adr int 15 1
+      * (int, int, int) 8 0
+        name .ret int 0 0
+    const (4) int 6 0
+ecom: 
+const (1) int 6 0
+ecom to: 
+* int 8 0
+  + int 15 1
+    adr int 15 1
+      * (int, int, int) 8 0
+        name .ret int 0 0
+    const (8) int 6 0
+fn: char
+64: argument pat string ref 4
+72: argument p int ref 7
+76: local r int ref 3
+80: local .t19 int ref 1
+generate desc for char
+descmap offset 0
+descmap pat type string offset 64 (d->offset=64 start=0) returns 64
+descmap p type int offset 72 (d->offset=72 start=0) returns -1
+descmap r type int offset 76 (d->offset=76 start=0) returns -1
+descmap .t19 type int offset 80 (d->offset=80 start=0) returns -1
+nil 'nil' ref 39
+nil '' ref 4
+variable '$Sys' val '"$Sys"'
+variable '.' val '"."'
+variable '..' val '".."'
+variable '.c0' val '.c0'
+variable '.i.80000000' val '.i.80000000'
+variable '.m.Readdir' val ''
+variable '.m.Sys' val ''
+variable '/' val '"/"'
+variable '/dis/lib/readdir.dis' val '"/dis/lib/r..."'
+variable 'nil' val ''
+variable 'rdir' val ''
+variable 'sys' val ''
+nil 'nil' ref 39
+nil '' ref 4
+generate desc for Filepat
+descmap offset 0
+descmap $Sys type string offset 0 (d->offset=0 start=0) returns 0
+descmap . type string offset 8 (d->offset=8 start=0) returns 8
+descmap .. type string offset 16 (d->offset=16 start=0) returns 16
+descmap .c0 type case int labels offset 24 (d->offset=24 start=0) returns -1
+descmap .i.80000000 type int offset 80 (d->offset=80 start=0) returns -1
+descmap / type string offset 88 (d->offset=88 start=0) returns 88
+descmap /dis/lib/readdir.dis type string offset 96 (d->offset=96 start=0) returns 96
+descmap nil type polymorphic type offset 104 (d->offset=104 start=0) returns 104
+descmap rdir type Readdir offset 112 (d->offset=112 start=0) returns 112
+descmap sys type Sys offset 120 (d->offset=120 start=0) returns 120
+R1: expand 44aeb8 46e488 46e928
+R1: match 44b4b8 46e548 471948
+R3: expand 46e488 44aeb8 46e928
+R3: match 46e548 44b4b8 471948
+313 instructions
+10 data elements
+7 type descriptors
+2 functions exported
+1600 stack size
+signed expand type fn(pat: string): list of string len 6 sig 0xaf4c19dd
+signed match type fn(pat: string, name: string): int len 7 sig 0x21e337e3
+signed Readdir->init type fn(path: string, sortkey: int): (array of ref Sys->Dir, int) len 116 sig 0x156cb1b
+signed Sys->tokenize type fn(s: string, delim: string): (int, list of string) len 13 sig 0x57338f20

@@ -1,0 +1,19 @@
+<../mkconfig
+
+TARG=fmttest gfmttest strtodtest fmttest3 sizes # testintptr 
+
+# limbo test programs
+DISTARG=1 2 3 4 5 adt array array1 array2 array3 arraybig arraysimple arraysimpleint byte case case1 casec excpt if list parent print print1 printsimple printvarargs real return retval sample string tuple unquote  drawexample drawexample1 # alt alt1 drawcontext exceptions
+
+
+LIBS=	bio\
+	math\
+	sec\
+	mp\
+	9\
+	interp\
+
+
+BIN=$ROOT/$OBJDIR/bin
+
+<$ROOT/mkfiles/mkmany-$SHELLTYPE
