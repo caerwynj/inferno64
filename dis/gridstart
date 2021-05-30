@@ -1,5 +1,5 @@
 #!/dis/sh
-# Connect to mycroftiv's public grid services
+# Connect to public grid services
 load std
 
 run /dis/engridden

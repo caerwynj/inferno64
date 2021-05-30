@@ -1,10 +1,10 @@
 #!/dis/sh
 # If used with `run /dis/engridden`, will load public grid resources into the current namespace
+# Tailored to 9p.zone 
+# In loving memory of Mycroftiv's Public Grid Project
 load std
 
-mount -Ac tcp!registry.9gridchan.org!6675 /mnt/registry
-
-grep 'service /bin/exportfs' /mnt/registry/index | getlines {
-	(srv is srvname mountpoint mpath rest) := ${split ' ' $line}
-	mount -Ac $srv $mpath
-}
+# Pending a better registry method or otherwise
+mount -Ac tcp!registry.9p.zone!registry /mnt/registry
+mount -Ac tcp!chat.9p.zone!9990 /n/chat
+mount -Ac tcp!9p.zone!9991 /n/griddisk

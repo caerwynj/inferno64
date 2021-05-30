@@ -1,9 +1,9 @@
 #!/dis/sh
-# Connect to mycroftiv's public grid chat
+# Connect to public grid chat
 load std
 
 cat /n/chat/chat &
-echo JOIN $user from Inferno! >>/n/chat/chat
+echo JOIN $user from Purgatorio! >>/n/chat/chat
 # echo -n '> ' >[1=2]
 getlines{
 	echo $user → $line
