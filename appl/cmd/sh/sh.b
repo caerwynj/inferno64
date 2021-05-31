@@ -768,7 +768,9 @@ pathexpand(ctxt: ref Context, progname: string): string
 		}
 
 		if (!disfile) {
-			fd = sys->open(npath += ".dis", sys->OREAD);
+			npath += ".dis";
+			sys->print("trying ⇒ %s\n", npath);
+			fd = sys->open(npath, sys->OREAD);
 			if(fd != nil){
 				return npath;
 			}
@@ -1940,8 +1942,8 @@ builtin_run(ctxt: ref Context, args: list of ref Listnode, nil: int): string
 	ctxt.push();
 	{
 		ctxt.setoptions(ctxt.INTERACTIVE, 0);
-		#path := pathexpand(ctxt, (hd tl args).word);
-		runscript(ctxt, (hd tl args).word, tl tl args, 1);
+		path := pathexpand(ctxt, (hd tl args).word);
+		runscript(ctxt, path, tl tl args, 1);
 		ctxt.pop();
 		return nil;
 	} exception e {
