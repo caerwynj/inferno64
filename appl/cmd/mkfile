@@ -80,6 +80,7 @@ TARG=\
 	grep.dis\
 	gunzip.dis\
 	gzip.dis\
+	hd.dis\
 	idea.dis\
 	import.dis\
 	iostats.dis\
@@ -156,6 +157,7 @@ TARG=\
 	time.dis\
 	timestamp.dis\
 	tkcmd.dis\
+	tl.dis\
 	touch.dis\
 	touchcal.dis\
 	tokenize.dis\
