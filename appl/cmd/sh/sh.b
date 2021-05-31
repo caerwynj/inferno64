@@ -751,7 +751,7 @@ pathexpand(ctxt: ref Context, progname: string): string
 		disfile = 1;
 
 	if (absolute(progname))
-		pathlist = list of {""};
+		pathlist = nil;
 
 	else if ((pl := ctxt.get("path")) != nil)
 		pathlist = list2stringlist(pl);
@@ -1940,8 +1940,8 @@ builtin_run(ctxt: ref Context, args: list of ref Listnode, nil: int): string
 	ctxt.push();
 	{
 		ctxt.setoptions(ctxt.INTERACTIVE, 0);
-		path := pathexpand(ctxt, (hd tl args).word);
-		runscript(ctxt, path, tl tl args, 1);
+		#path := pathexpand(ctxt, (hd tl args).word);
+		runscript(ctxt, (hd tl args).word, tl tl args, 1);
 		ctxt.pop();
 		return nil;
 	} exception e {
