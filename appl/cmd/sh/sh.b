@@ -769,7 +769,6 @@ pathexpand(ctxt: ref Context, progname: string): string
 
 		if (!disfile) {
 			npath += ".dis";
-			sys->print("trying ⇒ %s\n", npath);
 			fd = sys->open(npath, sys->OREAD);
 			if(fd != nil){
 				return npath;

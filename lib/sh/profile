@@ -24,4 +24,4 @@ mount {mntgen} /mnt
 cd
 and {ftest -e namespace}	{nsbuild}
 and {ftest -d tmp}		{bind -c tmp /tmp}
-and {ftest -e lib/profile}	{run lib/profile}
+and {ftest -e lib/profile}	{run ./lib/profile}
