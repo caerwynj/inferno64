@@ -741,6 +741,43 @@ absolute(p: string): int
 	return 0;
 }
 
+# Expand a program name to the full path
+pathexpand(ctxt: ref Context, progname: string): string 
+{
+	disfile := 0;
+	pathlist: list of string;
+
+	if (len progname >= 4 && progname[len progname-4:] == ".dis")
+		disfile = 1;
+
+	if (absolute(progname))
+		pathlist = list of {""};
+
+	else if ((pl := ctxt.get("path")) != nil)
+		pathlist = list2stringlist(pl);
+	else
+		pathlist = list of {"/dis", "."};
+
+	for(; pathlist != nil; pathlist = tl pathlist)
+	{
+		npath := hd pathlist + "/" + progname;
+
+		fd := sys->open(npath, sys->OREAD);
+		if(fd != nil){
+			return npath;
+		}
+
+		if (!disfile) {
+			fd = sys->open(npath += ".dis", sys->OREAD);
+			if(fd != nil){
+				return npath;
+			}
+		}
+	}
+
+	return progname;
+}
+
 runexternal(ctxt: ref Context, args: list of ref Listnode, last: int): string
 {
 	progname := (hd args).word;
@@ -1903,7 +1940,8 @@ builtin_run(ctxt: ref Context, args: list of ref Listnode, nil: int): string
 	ctxt.push();
 	{
 		ctxt.setoptions(ctxt.INTERACTIVE, 0);
-		runscript(ctxt, (hd tl args).word, tl tl args, 1);
+		path := pathexpand(ctxt, (hd tl args).word);
+		runscript(ctxt, path, tl tl args, 1);
 		ctxt.pop();
 		return nil;
 	} exception e {
