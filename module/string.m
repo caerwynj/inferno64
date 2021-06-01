@@ -39,4 +39,5 @@ String: module
 	quoted:		fn(argv: list of string): string;
 	quotedc:		fn(argv: list of string, cl: string): string;
 	unquoted:		fn(args: string): list of string;
+	fields:		fn(s: string): list of string;
 };

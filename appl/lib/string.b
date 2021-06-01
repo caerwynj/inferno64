@@ -1,5 +1,6 @@
 implement String;
 
+include "sys.m";
 include "string.m";
 
 splitl(s: string, cl: string): (string, string)
@@ -496,7 +497,7 @@ replace(in, s, with: string, max: int): string {
 	return in;
 }
 
-# Returns >0 if s∈in and <=0 if s∋in
+# Returns >0 if s∈in and ≤0 if s∋in
 contains(in, s: string): int {
 	if(in == "" || s == "") {
 		# Can't do anything
@@ -527,3 +528,27 @@ contains(in, s: string): int {
 	
 	return 0;
 }
+
+# Return whitespace-delimited elements
+fields(s: string): list of string {
+	sys := load Sys Sys->PATH;
+	out: list of string;
+	
+	word := "";
+	for(i := 0; i < len s; i++) {
+		case s[i] {
+		' ' or '	' or '\n' =>
+			if(word != ""){
+				out = append(word, out);
+				word = "";
+			}
+		* =>
+			word += sys->sprint("%c", s[i]);
+		}
+	}
+	if(word != ""){
+		out = append(word, out);
+	}
+	return out;
+}
+
