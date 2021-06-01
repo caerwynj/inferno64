@@ -1,8 +1,11 @@
 implement Names;
 
 include "sys.m";
+	sys: Sys;
 
 include "names.m";
+include "env.m";
+include "string.m";
 
 # return name rewritten to compress /+, eliminate ., and interpret ..
 
@@ -133,7 +136,8 @@ isprefix(a: string, b: string): int
 
 elements(name: string): list of string
 {
-	sys := load Sys Sys->PATH;
+	if(sys == nil)
+		sys = load Sys Sys->PATH;
 	(nil, fld) := sys->tokenize(name, "/");
 	if(name != nil && name[0] == '/')
 		fld = "/" :: fld;
@@ -152,3 +156,63 @@ pathname(els: list of string): string
 	}
 	return name;
 }
+
+# Is a given path an absolute path?
+absolute(p: string): int
+{
+	if (len p < 2)
+		return 0;
+	if (p[0] == '/' || p[0] == '#')
+		return 1;
+	if (len p < 3 || p[0] != '.')
+		return 0;
+	if (p[1] == '/')
+		return 1;
+	if (p[1] == '.' && p[2] == '/')
+		return 1;
+	return 0;
+}
+
+# Search for name in $path or use sane default
+# Return the full path found or the same name
+searchname(progname: string): string
+{
+	if(sys == nil)
+		sys = load Sys Sys->PATH;
+	env := load Env Env->PATH;
+	str := load String String->PATH;
+	disfile := 0;
+	pathlist: list of string;
+
+	if (len progname >= 4 && progname[len progname-4:] == ".dis")
+		disfile = 1;
+
+	if (absolute(progname))
+		pathlist = nil;
+
+	else if ((pl := env->getenv("path")) != nil)
+		pathlist = str->unquoted(pl);
+	else
+		pathlist = list of {"/dis", "."};
+
+	for(; pathlist != nil; pathlist = tl pathlist)
+	{
+		npath := hd pathlist + "/" + progname;
+
+		fd := sys->open(npath, sys->OREAD);
+		if(fd != nil){
+			return npath;
+		}
+
+		if (!disfile) {
+			npath += ".dis";
+			fd = sys->open(npath, sys->OREAD);
+			if(fd != nil){
+				return npath;
+			}
+		}
+	}
+
+	return progname;
+}
+
