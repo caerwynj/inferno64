@@ -3,6 +3,8 @@ implement String;
 include "sys.m";
 include "string.m";
 
+wscl: con "\t\n\v\f\r\u0085\u00A0";
+
 splitl(s: string, cl: string): (string, string)
 {
 	n := len s;
@@ -41,6 +43,19 @@ take(s: string, cl: string): string
 			return (s[0:j]);
 	}
 	return s;
+}
+
+# Does 's' contain whitespace?
+hasws(s: string): int {
+	return containscl(s, wscl);
+}
+
+# Does 's' contain any characters in class 'cl'
+containscl(s: string, cl: string): int {
+	for(i := 0; i < len s; i++)
+		if(in(s[i], cl))
+			return 1;
+	return 0;
 }
 
 in(c: int, s: string): int

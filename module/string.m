@@ -15,7 +15,8 @@ String: module
 	splitr:		fn(s, cl: string): (string, string);
 	drop:		fn(s, cl: string): string;
 	take:		fn(s, cl: string): string;
-	in:		fn(c: int, cl: string): int;
+	in:			fn(c: int, cl: string): int;
+	containscl:	fn(s, cl: string): int;
 
 	# in these, the second string is a string to match, not a class
 	splitstrl:	fn(s, t: string): (string, string);
@@ -28,6 +29,7 @@ String: module
 
 	tolower:	fn(s: string): string;
 	toupper:	fn(s: string): string;
+	hasws:		fn(s: string): int;
 
 	# string to int returning value, remainder
 	toint:		fn(s: string, base: int): (int, string);
