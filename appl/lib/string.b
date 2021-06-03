@@ -602,7 +602,7 @@ qtokenize(s: string): (list of string, string) {
 		' ' or '\t' or '\n' =>
 			if(word == nil)
 				continue;
-			out = word :: out;
+			out = append(word, out);
 			word = nil;
 
 		* =>
@@ -613,7 +613,7 @@ qtokenize(s: string): (list of string, string) {
 		return (nil, "missing quote");
 
 	if(word != nil)
-		out = word :: out;
+		out = append(word, out);
 
 	return (out, nil); 
 }
