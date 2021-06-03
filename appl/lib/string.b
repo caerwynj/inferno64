@@ -50,12 +50,20 @@ hasws(s: string): int {
 	return containscl(s, wscl);
 }
 
-# Does 's' contain any characters in class 'cl'
+# Does 's' contain any characters in class 'cl'?
 containscl(s: string, cl: string): int {
 	for(i := 0; i < len s; i++)
 		if(in(s[i], cl))
 			return 1;
 	return 0;
+}
+
+countcl(s: string, cl: string): int {
+	count := 0;
+	for(i := 0; i < len s; i++)
+		if(in(s[i], cl))
+			count++;
+	return count;
 }
 
 in(c: int, s: string): int
@@ -567,3 +575,45 @@ fields(s: string): list of string {
 	return out;
 }
 
+# Quote and whitespace tokenize input
+# Similar to sh(2) conventions, but permitting double quotes
+qtokenize(s: string): (list of string, string) {
+	out: list of string;
+	quote := 0;
+	word := "";
+
+	for(i := 0; i < len s; i++) {
+		if(quote) {
+			if(s[i] == quote) {
+				if(i+1 >= len s || s[i+1] != quote){
+					quote = 0;
+					continue;
+				}
+				i++;
+			}
+			word[len word] = s[i];
+			continue;
+		}
+
+		case s[i] {
+		'\'' or '\"' =>
+			quote = s[i];
+
+		' ' or '\t' or '\n' =>
+			if(word == nil)
+				continue;
+			out = word :: out;
+			word = nil;
+
+		* =>
+			word[len word] = s[i];
+		}
+	}
+	if(quote)
+		return (nil, "missing quote");
+
+	if(word != nil)
+		out = word :: out;
+
+	return (out, nil); 
+}

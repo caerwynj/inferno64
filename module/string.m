@@ -17,6 +17,7 @@ String: module
 	take:		fn(s, cl: string): string;
 	in:			fn(c: int, cl: string): int;
 	containscl:	fn(s, cl: string): int;
+	countcl:	fn(s: string, cl: string): int;
 
 	# in these, the second string is a string to match, not a class
 	splitstrl:	fn(s, t: string): (string, string);
@@ -42,4 +43,5 @@ String: module
 	quotedc:		fn(argv: list of string, cl: string): string;
 	unquoted:		fn(args: string): list of string;
 	fields:		fn(s: string): list of string;
+	qtokenize:	fn(s: string): (list of string, string);
 };
