@@ -3,6 +3,7 @@ load std
 
 user = `{cat /dev/user}
 home = /usr/^$user
+pubgridreg = tcp!registry.9p.zone!registry
 
 bind /locale/US_Central /locale/timezone
 

@@ -2,7 +2,7 @@
 # Connect to public grid services
 load std
 
-run /dis/engridden
+engridden
 
 echo '/n/griddisk
 /fonts/vga/unicode.font

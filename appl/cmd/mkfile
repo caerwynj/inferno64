@@ -64,6 +64,7 @@ TARG=\
 	echo.dis\
 	ed.dis\
 	emuinit.dis\
+	engridden.dis\
 	env.dis\
 	export.dis\
 	fc.dis\

@@ -25,7 +25,10 @@ init(nil: ref Draw->Context, argv: list of string)
 
 	argv = tl argv;
 
-	out := str->quoted(hd str->unquoted(str->quoted(argv)) :: nil);
+	out := hd argv;
+	(toks, err) := str->qtokenize(out);
+	if(err != "" || len toks > 1)
+		out = str->quoted(out :: nil);
 	sys->print("%s\n", out);
 
 	exit;
