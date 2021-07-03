@@ -370,8 +370,10 @@ dopoolalloc(Pool *p, ulong asize, uintptr pc)
 			}
 
 			unlock(&p->l);
-			print("arena %s too large: size %d cursize %lud arenasize %lud maxsize %lud\n",
-			 p->name, size, p->cursize, p->arenasize, p->maxsize);
+			print("arena %s too large: size %d maxsize %lud ressize %lud"
+				" cursize %lud arenasize %lud\n",
+				 p->name, size, p->maxsize, p->ressize,
+				 p->cursize, p->arenasize);
 			return nil;
 		}
 		alloc = ns+ldr+ldr;
