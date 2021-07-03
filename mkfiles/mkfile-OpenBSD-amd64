@@ -1,0 +1,30 @@
+TARGMODEL=	Posix
+TARGSHTYPE=	sh
+CPUS=		amd64
+
+O=		o
+OS=		o
+
+AR=		ar
+ARFLAGS=	ruvs
+
+AS=		cc -c
+ASFLAGS=
+
+CC=		cc -c
+CFLAGS=	-g\
+		-O\
+		-Wno-deprecated-declarations -Wuninitialized -Wunused -Wreturn-type -Wimplicit\
+		-I$ROOT/OpenBSD/amd64/include\
+		-I$ROOT/include\
+ 		-I/usr/X11R6/include\
+		-DOPENBSD_amd64 -fno-stack-protector
+
+ANSICPP=
+LD=		cc
+LDFLAGS=	-L/usr/X11R6/lib
+
+SYSLIBS=
+
+YACC=		iyacc
+YFLAGS=		-d
