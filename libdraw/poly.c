@@ -49,14 +49,14 @@ dopoly(int cmd, Image *dst, Point *pp, int np, int end0, int end1, int radius, I
 		return;
 	}
 	a[0] = cmd;
-	BPLONG(a+1, dst->id);
-	BPSHORT(a+5, np-1);
-	BPLONG(a+7, end0);
-	BPLONG(a+11, end1);
-	BPLONG(a+15, radius);
-	BPLONG(a+19, src->id);
-	BPLONG(a+23, sp->x);
-	BPLONG(a+27, sp->y);
+	BP32INT(a+1, dst->id);
+	BP16INT(a+5, np-1);
+	BP32INT(a+7, end0);
+	BP32INT(a+11, end1);
+	BP32INT(a+15, radius);
+	BP32INT(a+19, src->id);
+	BP32INT(a+23, sp->x);
+	BP32INT(a+27, sp->y);
 	memmove(a+31, t, u-t);
 	free(t);
 }

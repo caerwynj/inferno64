@@ -301,15 +301,15 @@ loadchar(Font *f, Rune r, Cacheinfo *c, int h, int noflush, char **subfontname)
 	if(b == 0)
 		return 0;
 	b[0] = 'l';
-	BPLONG(b+1, f->cacheimage->id);
-	BPLONG(b+5, subf->f->bits->id);
-	BPSHORT(b+9, c-f->cache);
-	BPLONG(b+11, c->x);
-	BPLONG(b+15, top);
-	BPLONG(b+19, c->x+((fi+1)->x-fi->x));
-	BPLONG(b+23, bottom);
-	BPLONG(b+27, fi->x);
-	BPLONG(b+31, fi->top);
+	BP32INT(b+1, f->cacheimage->id);
+	BP32INT(b+5, subf->f->bits->id);
+	BP16INT(b+9, c-f->cache);
+	BP32INT(b+11, c->x);
+	BP32INT(b+15, top);
+	BP32INT(b+19, c->x+((fi+1)->x-fi->x));
+	BP32INT(b+23, bottom);
+	BP32INT(b+27, fi->x);
+	BP32INT(b+31, fi->top);
 	b[35] = fi->left;
 	b[36] = fi->width;
 	return 1;
@@ -369,8 +369,8 @@ fontresize(Font *f, int wid, int ncache, int depth)
 		goto Return;
 	}
 	b[0] = 'i';
-	BPLONG(b+1, new->id);
-	BPLONG(b+5, ncache);
+	BP32INT(b+1, new->id);
+	BP32INT(b+5, ncache);
 	b[9] = f->ascent;
 	if(flushimage(d, 0) < 0){
 		_drawprint(2, "resize: init failed: %r\n");

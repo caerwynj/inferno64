@@ -32,9 +32,9 @@ allocscreen(Image *image, Image *fill, int public)
 		}
 		id = ++screenid;
 		a[0] = 'A';
-		BPLONG(a+1, id);
-		BPLONG(a+5, image->id);
-		BPLONG(a+9, fill->id);
+		BP32INT(a+1, id);
+		BP32INT(a+5, image->id);
+		BP32INT(a+9, fill->id);
 		a[13] = public;
 		if(flushimage(d, 0) != -1)
 			break;
@@ -49,7 +49,7 @@ allocscreen(Image *image, Image *fill, int public)
 }
 
 Screen*
-publicscreen(Display *d, int id, ulong chan)
+publicscreen(Display *d, int id, u32int chan)
 {
 	uchar *a;
 	Screen *s;
@@ -64,8 +64,8 @@ publicscreen(Display *d, int id, ulong chan)
 		return 0;
 	}
 	a[0] = 'S';
-	BPLONG(a+1, id);
-	BPLONG(a+5, chan);
+	BP32INT(a+1, id);
+	BP32INT(a+5, chan);
 	if(flushimage(d, 0) < 0)
 		goto Error;
 
@@ -89,7 +89,7 @@ freescreen(Screen *s)
 	if(a == 0)
 		return -1;
 	a[0] = 'F';
-	BPLONG(a+1, s->id);
+	BP32INT(a+1, s->id);
 	/*
 	 * flush(1) because screen is likely holding last reference to
 	 * window, and want it to disappear visually.
@@ -101,13 +101,13 @@ freescreen(Screen *s)
 }
 
 Image*
-allocwindow(Screen *s, Rectangle r, int ref, ulong val)
+allocwindow(Screen *s, Rectangle r, int ref, u32int val)
 {
 	return _allocwindow(nil, s, r, ref, val);
 }
 
 Image*
-_allocwindow(Image *i, Screen *s, Rectangle r, int ref, ulong val)
+_allocwindow(Image *i, Screen *s, Rectangle r, int ref, u32int val)
 {
 	Display *d;
 
@@ -149,9 +149,9 @@ topbottom(Image **w, int n, int top)
 	}
 	b[0] = 't';
 	b[1] = top;
-	BPSHORT(b+2, n);
+	BP16INT(b+2, n);
 	for(i=0; i<n; i++)
-		BPLONG(b+4+4*i, w[i]->id);
+		BP32INT(b+4+4*i, w[i]->id);
 }
 
 void
@@ -189,11 +189,11 @@ originwindow(Image *w, Point log, Point scr)
 	if(b == nil)
 		return 0;
 	b[0] = 'o';
-	BPLONG(b+1, w->id);
-	BPLONG(b+5, log.x);
-	BPLONG(b+9, log.y);
-	BPLONG(b+13, scr.x);
-	BPLONG(b+17, scr.y);
+	BP32INT(b+1, w->id);
+	BP32INT(b+5, log.x);
+	BP32INT(b+9, log.y);
+	BP32INT(b+13, scr.x);
+	BP32INT(b+17, scr.y);
 	if(flushimage(w->display, 1) < 0)
 		return -1;
 	delta = subpt(log, w->r.min);

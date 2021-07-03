@@ -95,28 +95,28 @@ _string(Image *dst, Point pt, Image *src, Point sp, Font *f, char *s, Rune *r, i
 				b[0] = 'x';
 			else
 				b[0] = 's';
-			BPLONG(b+1, dst->id);
-			BPLONG(b+5, src->id);
-			BPLONG(b+9, f->cacheimage->id);
-			BPLONG(b+13, pt.x);
-			BPLONG(b+17, pt.y+f->ascent);
-			BPLONG(b+21, clipr.min.x);
-			BPLONG(b+25, clipr.min.y);
-			BPLONG(b+29, clipr.max.x);
-			BPLONG(b+33, clipr.max.y);
-			BPLONG(b+37, sp.x);
-			BPLONG(b+41, sp.y);
-			BPSHORT(b+45, n);
+			BP32INT(b+1, dst->id);
+			BP32INT(b+5, src->id);
+			BP32INT(b+9, f->cacheimage->id);
+			BP32INT(b+13, pt.x);
+			BP32INT(b+17, pt.y+f->ascent);
+			BP32INT(b+21, clipr.min.x);
+			BP32INT(b+25, clipr.min.y);
+			BP32INT(b+29, clipr.max.x);
+			BP32INT(b+33, clipr.max.y);
+			BP32INT(b+37, sp.x);
+			BP32INT(b+41, sp.y);
+			BP16INT(b+45, n);
 			b += 47;
 			if(bg){
-				BPLONG(b, bg->id);
-				BPLONG(b+4, bgp.x);
-				BPLONG(b+8, bgp.y);
+				BP32INT(b, bg->id);
+				BP32INT(b+4, bgp.x);
+				BP32INT(b+8, bgp.y);
 				b += 12;
 			}
 			ec = &cbuf[n];
 			for(c=cbuf; c<ec; c++, b+=2)
-				BPSHORT(b, *c);
+				BP16INT(b, *c);
 			pt.x += wid;
 			bgp.x += wid;
 			agefont(f);
