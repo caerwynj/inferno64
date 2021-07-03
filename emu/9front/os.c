@@ -2,6 +2,7 @@
 #include	"fns.h"
 #include	"error.h"
 
+#define DP if(1){}else print
 enum
 {
 	KSTACK	= 16*1024,
@@ -17,7 +18,7 @@ extern	int	usenewwin;
 
 int	*ustack;	/* address on unshared stack: see vstack in asm*.s */
 extern	int	dflag;
-char *hosttype = "Plan9";
+char *hosttype = "9front";
 char *cputype;
 
 void
@@ -294,8 +295,10 @@ oslongjmp(void *regs, osjmpbuf env, int val)
 {
 	if(regs != nil)
 		notejmp(regs, env, val);
-	else
+	else{
+		DP("oslongjmp env %p longjmp %d\n", env, val);
 		longjmp(env, val);
+	}
 }
 
 void
