@@ -369,9 +369,9 @@ Const: adt
 
 PARENS: con	1;
 TEMP: con	2;
-FNPTRA: con	4;	# argument
-FNPTR2: con	8;	# 2nd parameter
-FNPTRN: con	16;	# use -ve offset
+FNPTRA: con	8;	# argument 4->8
+FNPTR2: con	16;	# 2nd parameter 8->16
+FNPTRN: con	32;	# use -ve offset 16->32
 FNPTR: con	FNPTRA|FNPTR2|FNPTRN;
 
 Node: adt

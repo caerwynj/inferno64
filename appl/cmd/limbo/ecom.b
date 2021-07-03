@@ -1236,8 +1236,8 @@ ecom(src: Src, nto, n: ref Node): ref Node
 			op = IINDL;
 			if(left.ty.tof == treal)
 				op = IINDF;
-		IBY2WD =>
-			op = IINDW;
+		#IBY2WD =>
+		#	op = IINDW;
 		1 =>
 			op = IINDB;
 		}

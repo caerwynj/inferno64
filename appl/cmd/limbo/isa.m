@@ -216,7 +216,7 @@ REGTYP:		con 3;
 REGRET:		con 4;
 NREG:		con 5;
 
-IBY2WD:		con 4;
+IBY2WD:		con 8;		# changed from 4
 IBY2FT:		con 8;
 IBY2LG:		con 8;
 
