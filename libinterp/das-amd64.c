@@ -1620,7 +1620,7 @@ das(uchar *x, int n)
 	pc = 0;
 	while(n > 0) {
 		i386das(pc, buf, sizeof(buf));
-		print("%.8lux %2x %-20s ", (ulong)(dasdata+pc), pc, buf);
+		print("%.8zx %2x %-20s ", (uintptr)(dasdata+pc), pc, buf);
 		l = i386inst(pc, 'i', buf, sizeof(buf));
 		print("\t%s\n", buf);
 

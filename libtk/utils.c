@@ -1029,7 +1029,7 @@ tkdeliver(Tk *tk, int event, void *data)
 {
 	Tk *dest;
 
-	if(tk != nil && ((ulong)tk->type >= TKwidgets || (ulong)tk->name < 4096 && tk->name != nil)){
+	if(tk != nil && ((ulong)tk->type >= TKwidgets || (uintptr)tk->name < 4096 && tk->name != nil)){
 		print("invalid Tk: type %d name %p\n", tk->type, tk->name);
 		abort();
 	}
@@ -1394,7 +1394,7 @@ TKF2I(int f)
  * Parse a floating point number into a decimal fixed point representation
  */
 char*
-tkfrac(char **arg, int *f, TkEnv *env)
+tkfrac(char **arg, s32int *f, TkEnv *env)
 {
 	int c, minus, i, fscale, seendigit;
 	char *p, *e;
@@ -1446,7 +1446,7 @@ tkfrac(char **arg, int *f, TkEnv *env)
 }
 
 char*
-tkfracword(TkTop *t, char **arg, int *f, TkEnv *env)
+tkfracword(TkTop *t, char **arg, s32int *f, TkEnv *env)
 {
 	char *p;
 	char buf[Tkminitem];
@@ -1953,7 +1953,7 @@ tkhaskeyfocus(Tk *tk)
 static int
 rptactive(void *v)
 {
-	int id = (int)v;
+	intptr id = (intptr)v;
 	if (id == rptid)
 		return 1;
 	return 0;
@@ -1962,7 +1962,7 @@ rptactive(void *v)
 static int
 ckrpt(void *v, int interval)
 {
-	int id = (int)v;
+	intptr id = (intptr)v;
 	if (id != rptid)
 		return -1;
 	if (interval < rptto)
@@ -1973,7 +1973,7 @@ ckrpt(void *v, int interval)
 static void
 dorpt(void *v)
 {
-	int id = (int)v;
+	intptr id = (intptr)v;
 
 	if (id == rptid) {
 		rptto = rptint;
@@ -2085,7 +2085,7 @@ tkdump(Tk *tk)
 		print("%s", tkmethod[tk->type]->name);
 	else
 		print("TYPE#%#ux", tk->type);
-	if(tk->name == nil || (ulong)tk->name < 512)
+	if(tk->name == nil || (uintptr)tk->name < 512)
 		print(" NAME %p", tk->name);
 	else
 		print(" %s", tkname(tk));

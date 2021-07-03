@@ -37,9 +37,9 @@ aconv(Fmt *f)
 	if(a == nil)
 		return fmtstrcpy(f, "AZ");
 	switch(a->mode & AMASK) {
-	case AFP:	sprint(buf, "%d(fp)", a->a.ind);	break;
-	case AMP:	sprint(buf, "%d(mp)", a->a.ind);	break;
-	case AIMM:	sprint(buf, "$%d", a->a.imm);		break;
+	case AFP:	sprint(buf, "%zd(fp)", a->a.ind);	break;
+	case AMP:	sprint(buf, "%zd(mp)", a->a.ind);	break;
+	case AIMM:	sprint(buf, "$%zd", a->a.imm);		break;
 	case AIND|AFP:	sprint(buf, "%d(%d(fp))", a->a.i.s, a->a.i.f); break;
 	case AIND|AMP:	sprint(buf, "%d(%d(mp))", a->a.i.s, a->a.i.f); break;
 	}

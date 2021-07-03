@@ -15,10 +15,10 @@ getdefont(Display *d)
 	/*
 	 * make sure data is word-aligned.  this is true with Plan 9 compilers
 	 * but not in general.  the byte order is right because the data is
-	 * declared as char*, not ulong*.
+	 * declared as char*, not u32int*.
 	 */
 	p = (char*)defontdata;
-	n = (ulong)p & 3;
+	n = (uintptr)p & 3;
 	if(n != 0){
 		memmove(p+(4-n), p, sizeofdefont-n);
 		p += 4-n;

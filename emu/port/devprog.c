@@ -523,10 +523,10 @@ progfds(Osenv *o, char *va, int count, long offset)
 Inst *
 pc2dispc(Inst *pc, Module *mod)
 {
-	ulong l, u, m, v;
-	ulong *tab = mod->pctab;
+	uintptr l, u, m, v;
+	uintptr *tab = mod->pctab;
 
-	v = (ulong)pc - (ulong)mod->prog;
+	v = (uintptr)pc - (uintptr)mod->prog;
 	l = 0;
 	u = mod->nprog-1;
 	while(l < u){
@@ -568,11 +568,11 @@ progstack(REG *reg, int state, char *va, int count, long offset)
 
 	while(fp != nil) {
 		f = (Frame*)fp;
-		n += snprint(va+n, count-n, "%.8lux %.8lux %.8lux %.8lux %d %s\n",
-				(ulong)f,		/* FP */
-				(ulong)(pc - m->prog),	/* PC in dis instructions */
-				(ulong)m->MP,		/* MP */
-				(ulong)m->prog,	/* Code for module */
+		n += snprint(va+n, count-n, "%.8zx %.8zx %.8zx %.8zx %d %s\n",
+				(uintptr)f,		/* FP */
+				(uintptr)(pc - m->prog),	/* PC in dis instructions */
+				(uintptr)m->MP,		/* MP */
+				(uintptr)m->prog,	/* Code for module */
 				m->compiled && m->m->pctab == nil,	/* True if native assembler: fool stack utility for now */
 				m->m->path);	/* File system path */
 
@@ -636,7 +636,7 @@ progheap(Heapqry *hq, char *va, int count, ulong offset)
 		case 'W':
 			if(addr & 3)
 				return -1;
-			n += snprint(va+n, count-n, "%d\n", *(WORD*)addr);
+			n += snprint(va+n, count-n, "%zd\n", *(WORD*)addr);
 			s = sizeof(WORD);
 			break;
 		case 'B':
@@ -669,7 +669,7 @@ progheap(Heapqry *hq, char *va, int count, ulong offset)
 					break;
 			if(m == nil)
 				error(Ebadctl);
-			addr = (ulong)(m->prog+addr);
+			addr = (uintptr)(m->prog+addr);
 			n += snprint(va+n, count-n, "%D\n", (Inst*)addr);
 			s = sizeof(Inst);
 			break;
@@ -689,7 +689,7 @@ progheap(Heapqry *hq, char *va, int count, ulong offset)
 			hd = *(List**)addr;
 			if(hd == H || D2H(hd)->t != &Tlist)
 				return -1;
-			n += snprint(va+n, count-n, "%lux.%lux\n", (ulong)&hd->tail, (ulong)hd->data);
+			n += snprint(va+n, count-n, "%zx.%zx\n", (uintptr)&hd->tail, (uintptr)hd->data);
 			s = sizeof(WORD);
 			break;
 		case 'A':
@@ -701,7 +701,7 @@ progheap(Heapqry *hq, char *va, int count, ulong offset)
 			else {
 				if(D2H(a)->t != &Tarray)
 					return -1;
-				n += snprint(va+n, count-n, "%d.%lux\n", a->len, (ulong)a->data);
+				n += snprint(va+n, count-n, "%zd.%zx\n", a->len, (uintptr)a->data);
 			}
 			s = sizeof(WORD);
 			break;
@@ -743,9 +743,9 @@ progheap(Heapqry *hq, char *va, int count, ulong offset)
 				if(t != &Tchannel && t != Trdchan && t != Twrchan)
 					return -1;
 				if(c->buf == H)
-					n += snprint(va+n, count-n, "0.%lux\n", (ulong)c);
+					n += snprint(va+n, count-n, "0.%zx\n", (uintptr)c);
 				else
-					n += snprint(va+n, count-n, "%d.%lux.%d.%d\n", c->buf->len, (ulong)c->buf->data, c->front, c->size);
+					n += snprint(va+n, count-n, "%zd.%zx.%d.%d\n", c->buf->len, (uintptr)c->buf->data, c->front, c->size);
 			}
 			break;
 			
@@ -1414,8 +1414,8 @@ dbgxec(Prog *p)
 
 	while(R.IC != 0) {
 		if(0)
-			print("step: %lux: %s %4ld %D\n",
-				(ulong)p, R.M->m->name, R.PC-R.M->prog, R.PC);
+			print("step: %zx: %s %4zd %D\n",
+				(uintptr)p, R.M->m->name, R.PC-R.M->prog, R.PC);
 
 		dec[R.PC->add]();
 		op = R.PC->op;

@@ -290,7 +290,8 @@ tkgencget(TkOptab *ft, char *arg, char **val, TkTop *t)
 	TkEnv *e;
 	TkStab *s;
 	TkOption *o;
-	int wh, con, i, n, flag, *v;
+	int wh, con, flag, *v;
+	intptr i, n;
 	char *r, *buf, *fmt, *out;
 
 	buf = mallocz(Tkmaxitem, 0);
@@ -413,7 +414,7 @@ tkgencget(TkOptab *ft, char *arg, char **val, TkTop *t)
 	case OPTfrac:
 	case OPTnnfrac:
 		v = &OPTION(ft->ptr, int, o->offset);
-		n = (int)o->aux;
+		n = (intptr)o->aux;
 		if(n == 0)
 			n = 1;
 		fmt = "%s";
@@ -466,7 +467,7 @@ pignore(TkTop *t, TkOption *o, void *place, char **str, char *buf, char *ebuf)
 static char*
 pdist(TkTop *t, TkOption *o, void *place, char **str, char *buf, char *ebuf)
 {
-	int d;
+	s32int d;
 	char *e;
 	TkEnv *env;
 
@@ -512,7 +513,7 @@ psize(TkTop *t, TkOption *o, void *place, char **str, char *buf, char *ebuf)
 {
 	Tk *tk;
 	char *e;
-	int d, off;
+	s32int d, off;
 
 	USED(ebuf);
 	e = tkfracword(t, str, &d, OPTION(place, TkEnv*, AUXI(o->aux)));
@@ -830,7 +831,8 @@ tkparsecolor(char *buf, ulong *rgba)
 {
 	char *p, *q, *e;
 	int R, G, B, A;
-	int i, alpha, len, alen;
+	int i, len, alen;
+	s32int alpha;
 	/*
 	 * look for alpha modifier in *#AA or *0.5 format
 	 */
@@ -1002,12 +1004,13 @@ static char*
 pfrac(TkTop *t, TkOption *o, void *place, char **str, char *buf, char *ebuf)
 {
 	char *p, *e;
-	int i, n, d, *v;
+	int i, *v;
+	s32int n, d;
 
 	*str = tkword(t, *str, buf, ebuf, nil);
 
 	v = &OPTION(place, int, o->offset);
-	n = (int)o->aux;
+	n = (intptr)o->aux;
 	if(n == 0)
 		n = 1;
 	p = buf;

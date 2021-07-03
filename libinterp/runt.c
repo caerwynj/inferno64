@@ -71,7 +71,7 @@ xprint(Prog *xp, void *vfp, void *vva, String *s1, char *buf, int n)
 			case '*':
 				i = *(WORD*)va;
 				f--;
-				f += snprint(f, sizeof(fmt)-(f-fmt), "%d", i);
+				f += snprint(f, sizeof(fmt)-(f-fmt), "%zd", i);
 				va += IBY2WD;
 				continue;
 			case 'b':
@@ -151,7 +151,7 @@ xprint(Prog *xp, void *vfp, void *vva, String *s1, char *buf, int n)
 					c = D2H(ptr)->ref;
 					t = D2H(ptr)->t;
 				}
-				b += snprint(b, eb-b, "%d.%.8lux", c, (ulong)t);
+				b += snprint(b, eb-b, "%d.%.8zx", c, (uintptr)t);
 				va += IBY2WD;
 				break;
 			}

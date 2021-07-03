@@ -4,6 +4,7 @@
 #include "raise.h"
 #include "pool.h"
 
+#define DP if(1){}else print
 #define OP(fn)	void fn(void)
 #define B(r)	*((BYTE*)(R.r))
 #define W(r)	*((WORD*)(R.r))
@@ -19,7 +20,7 @@
 OP(indc)
 {
 	int l;
-	ulong v;
+	WORD v;
 	String *ss;
 
 	v = W(m);
@@ -29,6 +30,7 @@ OP(indc)
 		error(exNilref);
 
 	l = ss->len;
+	DP("indc string %s len %d v %zd\n", string2c(ss), l, v);
 	if(l < 0) {
 		if(v >= -l)
 e:			error(exBounds);
@@ -345,7 +347,7 @@ OP(cvtwc)
 	String *ds, **dp;
 
 	ds = newstring(16);
-	ds->len = sprint(ds->Sascii, "%d", W(s));
+	ds->len = sprint(ds->Sascii, "%zd", W(s));
 
 	dp = R.d;
 	destroy(*dp);
