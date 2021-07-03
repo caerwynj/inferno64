@@ -114,7 +114,7 @@ look3(t : ref Text, q0 : int, q1 : int, external : int)
 		r = nil;
 		return;
 	}
-	if(0 && dat->plumbed){	# don't do yet : 2 acmes running => only 1 receives msg
+	if(1 && dat->plumbed){	# don't do yet : 2 acmes running => only 1 receives msg
 		m := ref Msg;
 		m.src = "acme";
 		m.dst = nil;
