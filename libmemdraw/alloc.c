@@ -22,14 +22,14 @@ memimagemove(void *from, void *to)
 }
 
 Memimage*
-allocmemimaged(Rectangle r, ulong chan, Memdata *md)
+allocmemimaged(Rectangle r, u32int chan, Memdata *md)
 {
-	int d;
-	ulong l;
+	s32int d;
+	u32int l;
 	Memimage *i;
 
 	if((d = chantodepth(chan)) == 0) {
-		werrstr("bad channel descriptor %.8lux", chan);
+		werrstr("bad channel descriptor %.8ux", chan);
 		return nil;
 	}
 
@@ -40,7 +40,7 @@ allocmemimaged(Rectangle r, ulong chan, Memdata *md)
 		return nil;
 
 	i->data = md;
-	i->zero = sizeof(ulong)*l*r.min.y;
+	i->zero = sizeof(u32int)*l*r.min.y;
 	
 	if(r.min.x >= 0)
 		i->zero += (r.min.x*d)/8;
@@ -61,15 +61,15 @@ allocmemimaged(Rectangle r, ulong chan, Memdata *md)
 }
 
 Memimage*
-allocmemimage(Rectangle r, ulong chan)
+allocmemimage(Rectangle r, u32int chan)
 {
-	int d;
-	ulong l, nw;
+	s32int d;
+	u32int l, nw;
 	Memdata *md;
 	Memimage *i;
 
 	if((d = chantodepth(chan)) == 0) {
-		werrstr("bad channel descriptor %.8lux", chan);
+		werrstr("bad channel descriptor %.8ux", chan);
 		return nil;
 	}
 
@@ -80,14 +80,14 @@ allocmemimage(Rectangle r, ulong chan)
 		return nil;
 
 	md->ref = 1;
-	md->base = poolalloc(imagmem, (2+nw)*sizeof(ulong));
+	md->base = poolalloc(imagmem, 2*sizeof(intptr)+nw*sizeof(u32int));
 	if(md->base == nil){
 		free(md);
 		return nil;
 	}
 
-	md->base[0] = (ulong)md;
-	/* md->base[1] = getcallerpc(&r); */
+	md->base[0] = (uintptr)md;
+	md->base[1] = getcallerpc(&r);
 
 	/* if this changes, memimagemove must change too */
 	md->bdata = (uchar*)&md->base[2];
@@ -120,10 +120,10 @@ freememimage(Memimage *i)
 /*
  * Wordaddr is deprecated.
  */
-ulong*
-wordaddr(Memimage *i, Point p)
+u32int*
+u32addr(Memimage *i, Point p)
 {
-	return (ulong*) ((ulong)byteaddr(i, p) & ~(sizeof(ulong)-1));
+	return (u32int*) ((uintptr)byteaddr(i, p) & ~(sizeof(uintptr)-1));
 }
 
 uchar*
@@ -131,14 +131,14 @@ byteaddr(Memimage *i, Point p)
 {
 	uchar *a;
 
-	a = i->data->bdata+i->zero+sizeof(ulong)*p.y*i->width;
+	a = i->data->bdata+i->zero+(s32int)(sizeof(u32int)*p.y*i->width);
 
 	if(i->depth < 8){
 		/*
 		 * We need to always round down,
 		 * but C rounds toward zero.
 		 */
-		int np;
+		s32int np;
 		np = 8/i->depth;
 		if(p.x < 0)
 			return a+(p.x-np+1)/np;
@@ -150,12 +150,12 @@ byteaddr(Memimage *i, Point p)
 }
 
 int
-memsetchan(Memimage *i, ulong chan)
+memsetchan(Memimage *i, u32int chan)
 {
-	int d;
-	int t, j, k;
-	ulong cc;
-	int bytes;
+	s32int d;
+	s32int t, j, k;
+	u32int cc;
+	s32int bytes;
 
 	if((d = chantodepth(chan)) == 0) {
 		werrstr("bad channel descriptor");

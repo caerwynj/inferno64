@@ -306,9 +306,9 @@ checkone(Point p, Point sp, Point mp)
 void
 checkline(Rectangle r, Point sp, Point mp, int y, Memimage *stmp, Memimage *mtmp)
 {
-	ulong *dp;
+	u32int *dp;
 	int nb;
-	ulong *saved;
+	u32int *saved;
 
 	dp = wordaddr(dst, Pt(0, y));
 	saved = savedstbits + y*dst->width;

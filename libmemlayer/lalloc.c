@@ -4,7 +4,7 @@
 #include "memlayer.h"
 
 Memimage*
-memlalloc(Memscreen *s, Rectangle screenr, Refreshfn refreshfn, void *refreshptr, ulong val)
+memlalloc(Memscreen *s, Rectangle screenr, Refreshfn refreshfn, void *refreshptr, u32int val)
 {
 	Memlayer *l;
 	Memimage *n;
