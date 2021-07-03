@@ -2458,10 +2458,10 @@ globalfconst(Node *n)
 	Decl *d;
 	Sym *s;
 	char buf[32];
-	ulong dv[2];
+	u32int dv[2];
 
 	dtocanon(n->rval, dv);
-	seprint(buf, buf+sizeof(buf), ".f.%.8lux.%8lux", dv[0], dv[1]);
+	seprint(buf, buf+sizeof(buf), ".f.%.8ux.%8ux", dv[0], dv[1]);
 	s = enter(buf, 0);
 	d = s->decl;
 	if(d == nil){

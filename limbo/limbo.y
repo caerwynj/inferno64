@@ -1604,7 +1604,7 @@ static	void	usage(void);
 
 static	int	dosym;
 static	int	toterrors;
-static	ulong	canonnanbits[] = { 0x7fffffff, 0xffffffff};
+static	u32int	canonnanbits[] = { 0x7fffffff, 0xffffffff};
 static	char*	infile;
 
 #define SLASHMOD	"/module"
