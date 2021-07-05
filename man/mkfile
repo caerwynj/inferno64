@@ -121,6 +121,120 @@ print.out:V:
 			cat `{grep -l '^\.TH.*\.8' *}
 			builtin cd ..
 		} | troff -$MAN
+	} > print.out
+
+print.man:V:
+	{
+		{echo -n $FONTS; cat $LIB/title} | troff
+		{echo -n $FONTS; cat $LIB/trademarks} | troff -ms
+		{echo -n $FONTS; echo ' '} | troff
+		{echo -n $FONTS; cat $LIB/preface} | troff -ms
+		{echo -n $FONTS; echo ' '} | troff
+		{
+			for (i in [0-9]){
+				builtin cd $i
+				for(j in [a-z0-9]*)
+					switch($i/$j){
+					case 1/tbl
+						tbl $j
+					case 1/eqn 6/auth
+						eqn $j
+					case 1/pic
+						pic $j
+					case 1/grap
+						grap $j | pic
+					case *
+						cat $j
+					}
+				builtin cd ..
+			}
+			# section 10 is in a special order
+			builtin cd 10
+			cat 0intro
+			cat `{grep -l '^\.TH.*\.1' *}
+			cat `{grep -l '^\.TH.*\.2' *}
+			cat `{grep -l '^\.TH.*\.6' *}
+			cat `{grep -l '^\.TH.*\.8' *}
+			builtin cd ..
+		}
+	} > print.man
+
+print10.man:V:
+	{
+		{echo -n $FONTS; cat $LIB/title} | troff
+		{echo -n $FONTS; cat $LIB/trademarks} | troff -ms
+		{echo -n $FONTS; echo ' '} | troff
+		{echo -n $FONTS; cat $LIB/preface} | troff -ms
+		{echo -n $FONTS; echo ' '} | troff
+		{
+			# section 10 is in a special order
+			builtin cd 10
+			cat 0intro
+			cat `{grep -l '^\.TH.*\.1' *}
+			cat `{grep -l '^\.TH.*\.2' *}
+			cat `{grep -l '^\.TH.*\.6' *}
+			cat `{grep -l '^\.TH.*\.8' *}
+			builtin cd ..
+		}
+	} > print10.man
+
+print10.out:V:
+	{
+		{echo -n $FONTS; cat $LIB/title} | troff
+		{echo -n $FONTS; cat $LIB/trademarks} | troff -ms
+		{echo -n $FONTS; echo ' '} | troff
+		{echo -n $FONTS; cat $LIB/preface} | troff -ms
+		{echo -n $FONTS; echo ' '} | troff
+		{
+			# section 10 is in a special order
+			builtin cd 10
+			cat 0intro
+			cat `{grep -l '^\.TH.*\.1' *}
+			cat `{grep -l '^\.TH.*\.2' *}
+			cat `{grep -l '^\.TH.*\.6' *}
+			cat `{grep -l '^\.TH.*\.8' *}
+			builtin cd ..
+		} | troff -$MAN
+	} > print10.out
+
+clean:V:
+	rm -f man.out
+
+
+original.print.out:V: permind
+	{
+		{echo -n $FONTS; cat $LIB/title} | troff
+		{echo -n $FONTS; cat $LIB/trademarks} | troff -ms
+		{echo -n $FONTS; echo ' '} | troff
+		{echo -n $FONTS; cat $LIB/preface} | troff -ms
+		{echo -n $FONTS; echo ' '} | troff
+		{
+			for (i in [0-9]){
+				builtin cd $i
+				for(j in [a-z0-9]*)
+					switch($i/$j){
+					case 1/tbl
+						tbl $j
+					case 1/eqn 6/auth
+						eqn $j
+					case 1/pic
+						pic $j
+					case 1/grap
+						grap $j | pic
+					case *
+						cat $j
+					}
+				builtin cd ..
+			}
+			# section 10 is in a special order
+			builtin cd 10
+			cat 0intro
+			cat `{grep -l '^\.TH.*\.1' *}
+			cat `{grep -l '^\.TH.*\.2' *}
+			cat `{grep -l '^\.TH.*\.6' *}
+			cat `{grep -l '^\.TH.*\.8' *}
+			builtin cd ..
+		} | troff -$MAN
 		{echo -n $FONTS; echo ' '} | troff
 		{echo -n $FONTS; echo ' '} | troff
 		cat $LIB/permind/out
@@ -128,6 +242,3 @@ print.out:V:
 		{echo -n $FONTS; echo ' '} | troff
 		{echo -n $FONTS; cat $LIB/colophon} | troff
 	} > print.out
-
-clean:V:
-	rm -f man.out
