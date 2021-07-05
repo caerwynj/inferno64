@@ -165,11 +165,11 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 	Array *ary;
 	u32 ul[2];
 	WORD lo, hi;
-	int lsize, id, v, tnp, tsz, siglen;
-	int de, i, n, isize, dsize, hsize, dasp;
+	int lsize, id, tnp, tsz, siglen;
+	int de, isize, dsize, hsize, dasp;
 	uchar *mod, sm, *istream, **isp, *si, *addr, *dastack[DADEPTH], *e, *b;
 	Link *l;
-	intptr pc, entry, entryt;
+	intptr i, n, v, pc, entry, entryt;
 
 	DP("\tsource\t\"%s\"\n", path);
 	istream = code;
@@ -226,8 +226,8 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 	}
 
 	DP("parsemod before instructions isize %d dsize %d hsize %d"
-		" lsize %d entry 0x%zx entryt 0x%zx\n",
-		isize, dsize, hsize, lsize, entry, entryt);
+		" lsize %d entry 0x%zx entryt 0x%zx sizeof(Inst) %d\n",
+		isize, dsize, hsize, lsize, entry, entryt, sizeof(Inst));
 	m->nprog = isize;
 	m->prog = mallocz(isize*sizeof(Inst), 0);
 	if(m->prog == nil) {
