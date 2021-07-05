@@ -14,7 +14,6 @@ typedef	struct	FPU	FPU;
  */
 struct FPU
 {
-	/* TODO check this 28 bytes. 28 -> 56? */
 	uchar	env[28];
 };
 
