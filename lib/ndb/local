@@ -7,14 +7,24 @@ database=
 #
 # default site-wide resources
 #
+#infernosite=
+#	#dnsdomain=your.domain.com
+#	#dns=1.2.3.4	# resolver
+#	SIGNER=your_signer_here
+#	FILESERVER=your_fileserver_here
+#	smtp=your_smtpserver_here
+#	pop3=your_pop3server_here
+#	PROXY=your_httpproxy_here
+#	GAMES=your_games_server
+#	registry=your_registry_server
+#	gridsched=your_inferno_grid_scheduler
+
 infernosite=
-	#dnsdomain=your.domain.com
-	#dns=1.2.3.4	# resolver
-	SIGNER=your_signer_here
-	FILESERVER=your_fileserver_here
-	smtp=your_smtpserver_here
-	pop3=your_pop3server_here
-	PROXY=your_httpproxy_here
-	GAMES=your_games_server
-	registry=your_registry_server
-	gridsched=your_inferno_grid_scheduler
+	SIGNER=master
+	FILESERVER=master
+	smtp=master
+	pop3=master
+	PROXY=master
+	GAMES=master
+	registry=master
+	gridsched=master

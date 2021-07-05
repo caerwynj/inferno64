@@ -27,7 +27,7 @@ fn cd {
 	} >[2] /dev/null
 }
 
-plumber >/chan/wmstdout >[2=1]
+plumber -v >/chan/wmstdout >[2=1]
 menu Shell			{wmrun wm/sh}
 menu Acme			{wmrun acme}
 menu Edit				{wmrun wm/edit}
