@@ -130,7 +130,7 @@ prtyp(Type *t, char *s, int nl)
 		return;
 	}
 	while(t != T){
-		print("%d(%d)[%x] ", t->etype, t->mark, (int)t);
+		print("%d(%d)[%zx] ", t->etype, t->mark, (intptr)t);
 		if(isadt(t))
 			break;
 		t = t->link;

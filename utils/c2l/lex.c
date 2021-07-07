@@ -1473,7 +1473,7 @@ alloc(long n)
 {
 	void *p;
 
-	while((ulong)hunk & MAXALIGN) {
+	while((uintptr)hunk & MAXALIGN) {
 		hunk++;
 		nhunk--;
 	}
