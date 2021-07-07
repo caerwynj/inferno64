@@ -770,9 +770,13 @@ sendinput(t: ref Tk->Toplevel)
 		r.rc <-= (nil, nil) =>
 			;
 		* =>
+			if(len rdreq > 0)
+				sendinput(t);
 			return;
 		}
 	* =>
+		if(len rdreq > 0)
+			sendinput(t);
 		return;	# requester has disappeared; ignore his request and try another
 	}
 	if(rawon)
