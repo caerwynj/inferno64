@@ -64,7 +64,7 @@ typedef unsigned short	ushort;
 typedef unsigned int Rune;
 typedef __int64		vlong;
 typedef unsigned __int64		uvlong;
-typedef unsigned int u32;
+typedef unsigned int u32int;
 typedef uvlong u64int;
 
 typedef unsigned int	mpdigit;	/* for /sys/include/mp.h */

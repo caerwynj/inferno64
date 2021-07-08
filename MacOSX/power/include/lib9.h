@@ -35,7 +35,7 @@ typedef	  signed char	schar;
 typedef	long long	vlong;
 typedef	unsigned long long	uvlong;
 typedef unsigned int Rune;
-typedef unsigned int	u32int;
+typedef unsigned int	u32;
 typedef uvlong u64int;
 
 typedef unsigned int	mpdigit;	/* for /sys/include/mp.h */

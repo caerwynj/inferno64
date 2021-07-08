@@ -32,7 +32,7 @@ typedef unsigned short	ushort;
 typedef unsigned int Rune;
 typedef long long int	vlong;
 typedef unsigned long long int	uvlong;
-typedef unsigned int u32;
+typedef unsigned int u32int;
 typedef uvlong u64int;
 
 typedef unsigned int	mpdigit;	/* for /sys/include/mp.h */

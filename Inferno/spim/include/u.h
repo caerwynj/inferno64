@@ -13,7 +13,7 @@ typedef long	jmp_buf[2];
 #define	JMPBUFPC	1
 #define	JMPBUFDPC	0
 typedef unsigned int	mpdigit;	/* for /sys/include/mp.h */
-typedef unsigned int	u32int;		/* for /sys/include/libsec.h */
+typedef unsigned int	u32;		/* for /sys/include/libsec.h */
 typedef unsigned char u8int;
 typedef unsigned short u16int;
 typedef unsigned long uintptr;
