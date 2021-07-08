@@ -14,6 +14,7 @@
 #include "dat.h"
 #include "fns.h"
 #include "io.h"
+#include "../port/pci.h"
 #include "../port/error.h"
 #include "../port/netif.h"
 
@@ -446,7 +447,7 @@ init905(Ctlr* ctlr)
 	 *	make sure each entry is 8-byte aligned.
 	 */
 	ctlr->upbase = malloc((ctlr->nup+1)*sizeof(Pd));
-	ctlr->upr = (Pd*)ROUNDUP((ulong)ctlr->upbase, 8);
+	ctlr->upr = (Pd*)ROUNDUP((uintptr)ctlr->upbase, 8);
 
 	prev = ctlr->upr;
 	for(pd = &ctlr->upr[ctlr->nup-1]; pd >= ctlr->upr; pd--){
@@ -465,7 +466,7 @@ init905(Ctlr* ctlr)
 	ctlr->uphead = ctlr->upr;
 
 	ctlr->dnbase = malloc((ctlr->ndn+1)*sizeof(Pd));
-	ctlr->dnr = (Pd*)ROUNDUP((ulong)ctlr->dnbase, 8);
+	ctlr->dnr = (Pd*)ROUNDUP((uintptr)ctlr->dnbase, 8);
 
 	prev = ctlr->dnr;
 	for(pd = &ctlr->dnr[ctlr->ndn-1]; pd >= ctlr->dnr; pd--){
@@ -488,7 +489,7 @@ rbpalloc(Block* (*f)(int))
 	 * boundary for EISA busmastering.
 	 */
 	if(bp = f(ROUNDUP(sizeof(Etherpkt), 4) + 31)){
-		addr = (ulong)bp->base;
+		addr = (uintptr)bp->base;
 		addr = ROUNDUP(addr, 32);
 		bp->rp = (uchar*)addr;
 	}
@@ -1158,8 +1159,8 @@ interrupt(Ureg*, void* arg)
 	iunlock(&ctlr->wlock);
 }
 
-static long
-ifstat(Ether* ether, void* a, long n, ulong offset)
+static s32
+ifstat(Ether* ether, void* a, s32 n, u32 offset)
 {
 	char *p;
 	int len;

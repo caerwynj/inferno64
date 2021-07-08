@@ -10,6 +10,7 @@
 #include "memdraw.h"
 #include "memlayer.h"
 
+#define DP if(1){}else print
 /*
  * When a Display is remote, it must be locked to synchronize the
  * outgoing message buffer with the refresh demon, which runs as a
@@ -552,16 +553,19 @@ imagedraw(void *fp, int op)
 
 	f = fp;
 	d = checkimage(f->dst);
-	if(f->src == H)
+	if(f->src == H){
 		s = d->display->black;
-	else
+	}else{
 		s = checkimage(f->src);
+	}
 	if(f->matte == H)
 		m = d->display->white;	/* ones */
 	else
 		m = checkimage(f->matte);
-	if(d->display!=s->display || d->display!=m->display)
+	if(d->display!=s->display || d->display!=m->display){
+		DP("imagedraw d->display!=s->display || d->display!=m->display\n");
 		return;
+	}
 	locked = lockdisplay(d->display);
 	drawop(d, IRECT(f->r), s, m, IPOINT(f->p), op);
 	checkflush(f->dst);
@@ -1815,7 +1819,7 @@ void
 Draw_icossin(void *fp)
 {
 	F_Draw_icossin *f;
-	int s, c;
+	s32int s, c;
 
 	f = fp;
 	icossin(f->deg, &s, &c);
@@ -1827,7 +1831,7 @@ void
 Draw_icossin2(void *fp)
 {
 	F_Draw_icossin2 *f;
-	int s, c;
+	s32int s, c;
 
 	f = fp;
 	icossin2(f->p.x, f->p.y, &s, &c);
@@ -2174,11 +2178,11 @@ refreshslave(Display *d)
 		locked = lockdisplay(d);
 		p = buf;
 		for(i=0; i<n; i+=5*4,p+=5*4){
-			id = BGLONG(p+0*4);
-			r.min.x = BGLONG(p+1*4);
-			r.min.y = BGLONG(p+2*4);
-			r.max.x = BGLONG(p+3*4);
-			r.max.y = BGLONG(p+4*4);
+			id = BG32INT(p+0*4);
+			r.min.x = BG32INT(p+1*4);
+			r.min.y = BG32INT(p+2*4);
+			r.max.x = BG32INT(p+3*4);
+			r.max.y = BG32INT(p+4*4);
 			for(im=d->windows; im; im=im->next)
 				if(im->id == id)
 					break;
@@ -2216,13 +2220,22 @@ doflush(Display *d)
 			acquire();
 		kgerrstr(err, sizeof err);
 		if(_drawdebug || strcmp(err, "screen id in use") != 0 && strcmp(err, exImage) != 0){
-			print("flushimage fail: (%d not %d) d=%lux: %s\nbuffer: ", m, n, (ulong)d, err);
+			print("flushimage fail: (%d not %d) d=%zx: %s\nbuffer: ", m, n, (uintptr)d, err);
 			for(tp = d->buf; tp < d->bufp; tp++)
 				print("%.2x ", (int)*tp);
 			print("\n");
 		}
 		d->bufp = d->buf;	/* might as well; chance of continuing */
 		return -1;
+	}
+	/* to debug what is being sent to memdraw() */
+	DP("doflush sending d->buf[0] = %c\n", d->buf[0]);
+	for(int i = 1; i < n; i+=4){
+		DP("\td->buf[%d] = ", i);
+		for(int j = 0; j < 4; j++){
+			DP(" %x", d->buf[i+j]);
+		}
+		DP("\n");
 	}
 	d->bufp = d->buf;
 	if(d->local == 0)
@@ -2325,7 +2338,7 @@ bufimage(Display *d, int n)
 	}
 	if(d->bufp+n > d->buf+Displaybufsize){
 		if(d->local==0 && currun()!=libqlowner(d->qlock)) {
-			print("bufimage: %lux %lux\n", (ulong)libqlowner(d->qlock), (ulong)currun());
+			print("bufimage: %zx %zx\n", (uintptr)libqlowner(d->qlock), (uintptr)currun());
 			abort();
 		}
 		if(doflush(d) < 0)

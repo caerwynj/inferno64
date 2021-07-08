@@ -112,7 +112,7 @@ syminit(int fd, Fhdr *fp)
 			svalsz = 4;
 			if(Bread(&b, &l, 4) != 4)
 				return symerrmsg(4, "symbol");
-			p->value = (u32int)beswal(l);
+			p->value = (u32)beswal(l);
 		}
 		if(Bread(&b, &p->type, sizeof(p->type)) != sizeof(p->type))
 			return symerrmsg(sizeof(p->value), "symbol");

@@ -14,7 +14,7 @@ enum
 struct
 {
 	Lock;
-	ulong	bytes;
+	u32	bytes;
 } ialloc;
 
 /*
@@ -23,10 +23,10 @@ struct
  *  for header.
  */
 Block*
-_allocb(int size)
+_allocb(s32 size)
 {
 	Block *b;
-	ulong addr;
+	uintptr addr;
 	int n;
 
 	b = mallocz(sizeof(Block)+size+Hdrspc+(BY2V-1), 0);
@@ -38,7 +38,7 @@ _allocb(int size)
 	b->free = nil;
 	b->flag = 0;
 
-	addr = (ulong)b;
+	addr = (uintptr)b;
 	addr = ROUND(addr + sizeof(Block), BY2V);
 	b->base = (uchar*)addr;
 	b->lim = ((uchar*)b) + msize(b);
@@ -56,7 +56,7 @@ allocb(int size)
 	Block *b;
 
 	if(0 && up == nil)
-		panic("allocb outside process: %8.8lux", getcallerpc(&size));
+		panic("allocb outside process: %8.8zux", getcallerpc(&size));
 	b = _allocb(size);
 	if(b == 0)
 		exhausted("Blocks");
@@ -155,5 +155,5 @@ checkb(Block *b, char *msg)
 void
 iallocsummary(void)
 {
-	print("ialloc %lud/%lud\n", ialloc.bytes, conf.ialloc);
+	print("ialloc %ud/%llud\n", ialloc.bytes, conf.ialloc);
 }

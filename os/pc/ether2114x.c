@@ -14,10 +14,10 @@
 #include "dat.h"
 #include "fns.h"
 #include "io.h"
+#include "../port/pci.h"
 #include "../port/error.h"
 #include "../port/netif.h"
-
-#include "etherif.h"
+#include "../port/etherif.h"
 
 #define DEBUG		(0)
 #define debug		if(DEBUG)print
@@ -478,7 +478,7 @@ interrupt(Ureg*, void* arg)
 				else if(bp = iallocb(Rbsz)){
 					len = ((des->status & Fl)>>16)-4;
 					des->bp->wp = des->bp->rp+len;
-					etheriq(ether, des->bp, 1);
+					etheriq(ether, des->bp);
 					des->bp = bp;
 					des->addr = PCIWADDR(bp->rp);
 				}
@@ -1811,13 +1811,15 @@ reset(Ether* ether)
 	 */
 	ether->attach = attach;
 	ether->transmit = transmit;
-	ether->interrupt = interrupt;
+	/* ether->interrupt = interrupt; removed in 9front */
 	ether->ifstat = ifstat;
 
 	ether->arg = ether;
 	ether->shutdown = shutdown;
 	ether->multicast = multicast;
 	ether->promiscuous = promiscuous;
+
+	intrenable(ether->irq, interrupt, ether, ether->tbdf, ether->name);
 
 	return 0;
 }

@@ -3,7 +3,6 @@
 %	mem
 *	indir
 /	root
-A	audio
 C	cmd
 D	ssl
 F	tinyfs
@@ -17,6 +16,7 @@ c	cons
 d	dup
 e	env
 i	draw
+k	ds
 m	pointer
 p	prog
 s	srv

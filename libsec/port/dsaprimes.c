@@ -12,7 +12,7 @@
 static void
 Hrand(uchar *s)
 {
-	ulong *u = (ulong*)s;
+	u32 *u = (u32*)s;
 	*u++ = fastrand();
 	*u++ = fastrand();
 	*u++ = fastrand();
@@ -48,7 +48,7 @@ DSAprimes(mpint *q, mpint *p, uchar seed[SHA1dlen])
 forever:
 	do{
 		Hrand(s);
-		memcpy(sj, s, 20);
+		memmove(sj, s, 20);
 		sha1(s, 20, Hs, 0);
 		Hincr(sj);
 		sha1(sj, 20, Hs1, 0);
@@ -65,7 +65,7 @@ forever:
 	Hincr(sj);
 	mpleft(q, 1, q2);
 	while(i<4096){
-		memcpy(sjk, sj, 20);
+		memmove(sjk, sj, 20);
 		for(k=0; k <= n; k++){
 			sha1(sjk, 20, Hs, 0);
 			letomp(Hs, 20, Vk);

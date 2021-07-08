@@ -11,7 +11,7 @@
 #define prev	u.s.bhv
 #define parent	u.s.bhp
 
-#define RESERVED	256*1024
+#define RESERVED	512*1024
 
 struct Pool
 {
@@ -35,6 +35,12 @@ struct Pool
 	void	(*move)(void*, void*);
 };
 
+/* keep the quanta above the size of 5 pointers and 2 longs else the next block
+	will be getting overwritten by the header -- starts a corruption hunt
+	when pointer size = 8 bytes, then 63 = 2^q -1
+		for 4 bytes, 31
+	TODO make this a macro?
+ */
 static
 struct
 {
@@ -44,9 +50,9 @@ struct
 } table = {
 	3,
 	{
-		{ "main",  0,	 4*1024*1024, 31,  128*1024, 15*256*1024 },
-		{ "heap",  1,	16*1024*1024, 31,  128*1024, 15*1024*1024 },
-		{ "image", 2,	 8*1024*1024, 31, 300*1024, 15*512*1024 },
+		{ "main",  0,	 4*1024*1024, 63,  128*1024, 15*256*1024 },
+		{ "heap",  1,	16*1024*1024, 63,  128*1024, 15*1024*1024 },
+		{ "image", 2,	 8*1024*1024, 63, 300*1024, 15*512*1024 },
 	}
 };
 
@@ -263,10 +269,14 @@ poolalloc(Pool *p, ulong asize)
 	int osize, size;
 	Prog *prog;
 
-	if(asize >= 1024*1024*1024)	/* for sanity and to avoid overflow */
+	// if(asize >= 1024*1024*1024)	/* for sanity and to avoid overflow */
+	//	return nil;
+	if(p->cursize > p->ressize &&
+		(prog = currun()) != nil &&
+		prog->flags&Prestricted){
+		print("poolalloc exception\n");
 		return nil;
-	if(p->cursize > p->ressize && (prog = currun()) != nil && prog->flags&Prestricted)
-		return nil;
+	}
 	size = asize;
 	osize = size;
 	size = (size + BHDRSIZE + p->quanta) & ~(p->quanta);
@@ -357,7 +367,7 @@ poolalloc(Pool *p, ulong asize)
 		return nil;
 	}
 	/* Double alignment */
-	t = (Bhdr *)(((ulong)t + 7) & ~7);
+	t = (Bhdr *)(((uintptr)t + 7) & ~7);
 
 	/* TBS xmerge */
 	if(0 && p->chain != nil && (char*)t-(char*)B2LIMIT(p->chain)-ldr == 0){
@@ -509,7 +519,7 @@ poolmax(Pool *p)
 }
 
 int
-poolread(char *va, int count, ulong offset)
+poolread(char *va, int count, u64 offset)
 {
 	Pool *p;
 	int n, i, signed_off;
@@ -547,10 +557,10 @@ malloc(ulong size)
 {
 	void *v;
 
-	v = poolalloc(mainmem, size+Npadlong*sizeof(ulong));
+	v = poolalloc(mainmem, size+Npadlong*sizeof(uintptr));
 	if(v != nil){
 		if(Npadlong){
-			v = (ulong*)v+Npadlong;
+			v = (uintptr*)v+Npadlong;
 			setmalloctag(v, getcallerpc(&size));
 			setrealloctag(v, 0);
 		}
@@ -565,13 +575,13 @@ smalloc(ulong size)
 	void *v;
 
 	for(;;) {
-		v = poolalloc(mainmem, size+Npadlong*sizeof(ulong));
+		v = poolalloc(mainmem, size+Npadlong*sizeof(uintptr));
 		if(v != nil)
 			break;
 		tsleep(&up->sleep, return0, 0, 100);
 	}
 	if(Npadlong){
-		v = (ulong*)v+Npadlong;
+		v = (uintptr*)v+Npadlong;
 		setmalloctag(v, getcallerpc(&size));
 		setrealloctag(v, 0);
 	}
@@ -584,16 +594,37 @@ mallocz(ulong size, int clr)
 {
 	void *v;
 
-	v = poolalloc(mainmem, size+Npadlong*sizeof(ulong));
+	v = poolalloc(mainmem, size+Npadlong*sizeof(uintptr));
 	if(v != nil){
 		if(Npadlong){
-			v = (ulong*)v+Npadlong;
+			v = (uintptr*)v+Npadlong;
 			setmalloctag(v, getcallerpc(&size));
 			setrealloctag(v, 0);
 		}
 		if(clr)
 			memset(v, 0, size);
 	}
+	return v;
+}
+
+/* TODO ignoring offset and span and hoping it will not be a bug
+ * need more testing
+ */
+void*
+mallocalign(u32 size, u32 align, s32 offset, u32 span)
+{
+	void *v;
+	uintptr a;;
+
+	USED(offset);
+	USED(span);
+	if(align <= 0)
+		align = 4;
+	if(a = size%align)
+		size += align -a;
+	v = mallocz(size, 1);
+	if(a = (uintptr)v%align)
+		v = (void *)((char *)v + align -a);
 	return v;
 }
 
@@ -604,7 +635,7 @@ free(void *v)
 
 	if(v != nil) {
 		if(Npadlong)
-			v = (ulong*)v-Npadlong;
+			v = (uintptr*)v-Npadlong;
 		D2B(b, v);
 		poolfree(mainmem, v);
 	}
@@ -618,12 +649,12 @@ realloc(void *v, ulong size)
 	if(size == 0)
 		return malloc(size);	/* temporary change until realloc calls can be checked */
 	if(v != nil)
-		v = (ulong*)v-Npadlong;
+		v = (uintptr*)v-Npadlong;
 	if(Npadlong!=0 && size!=0)
-		size += Npadlong*sizeof(ulong);
+		size += Npadlong*sizeof(uintptr);
 	nv = poolrealloc(mainmem, v, size);
 	if(nv != nil) {
-		nv = (ulong*)nv+Npadlong;
+		nv = (uintptr*)nv+Npadlong;
 		setrealloctag(nv, getcallerpc(&v));
 		if(v == nil)
 			setmalloctag(v, getcallerpc(&v));
@@ -632,9 +663,9 @@ realloc(void *v, ulong size)
 }
 
 void
-setmalloctag(void *v, ulong pc)
+setmalloctag(void *v, uintptr pc)
 {
-	ulong *u;
+	uintptr *u;
 
 	USED(v);
 	USED(pc);
@@ -644,17 +675,17 @@ setmalloctag(void *v, ulong pc)
 	u[-Npadlong+MallocOffset] = pc;
 }
 
-ulong
+uintptr
 getmalloctag(void *v)
 {
 	USED(v);
 	if(Npadlong <= MallocOffset)
 		return ~0;
-	return ((ulong*)v)[-Npadlong+MallocOffset];
+	return ((uintptr*)v)[-Npadlong+MallocOffset];
 }
 
 void
-setrealloctag(void *v, ulong pc)
+setrealloctag(void *v, uintptr pc)
 {
 	ulong *u;
 
@@ -666,12 +697,12 @@ setrealloctag(void *v, ulong pc)
 	u[-Npadlong+ReallocOffset] = pc;
 }
 
-ulong
+uintptr
 getrealloctag(void *v)
 {
 	USED(v);
 	if(Npadlong <= ReallocOffset)
-		return ((ulong*)v)[-Npadlong+ReallocOffset];
+		return ((uintptr*)v)[-Npadlong+ReallocOffset];
 	return ~0;
 }
 
@@ -680,7 +711,7 @@ msize(void *v)
 {
 	if(v == nil)
 		return 0;
-	return poolmsize(mainmem, (ulong*)v-Npadlong)-Npadlong*sizeof(ulong);
+	return poolmsize(mainmem, (uintptr*)v-Npadlong)-Npadlong*sizeof(uintptr);
 }
 
 void*
@@ -697,11 +728,11 @@ pooldump(Bhdr *b, int d, int c)
 	if(b == nil)
 		return;
 
-	print("%.8lux %.8lux %.8lux %c %4d %lud (f %.8lux p %.8lux)\n",
+	print("%.8p %.8p %.8p %c %4d %ud (f %.8p p %.8p)\n",
 		b, b->left, b->right, c, d, b->size, b->fwd, b->prev);
 	d++;
 	for(t = b->fwd; t != b; t = t->fwd)
-		print("\t%.8lux %.8lux %.8lux\n", t, t->prev, t->fwd);
+		print("\t%.8p %.8p %.8p\n", t, t->prev, t->fwd);
 	pooldump(b->left, d, 'l');
 	pooldump(b->right, d, 'r');
 }
@@ -712,7 +743,7 @@ poolshow(void)
 	int i;
 
 	for(i = 0; i < table.n; i++) {
-		print("Arena: %s root=%.8lux\n", table.pool[i].name, table.pool[i].root);
+		print("Arena: %s root=%.8p\n", table.pool[i].name, table.pool[i].root);
 		pooldump(table.pool[i].root, 0, 'R');
 	}
 }
@@ -774,10 +805,11 @@ poolcompact(Pool *pool)
 }
 
 void
-poolsize(Pool *p, int max, int contig)
+poolsize(Pool *p, u64 max, int contig)
 {
 	void *x;
 
+	print("poolsize max %llud contig %d\n", max, contig);
 	p->maxsize = max;
 	if(max == 0)
 		p->ressize = max;
@@ -800,11 +832,11 @@ _poolfault(void *v, char *msg, ulong c)
 {
 	setpanic();
 	auditmemloc(msg, v);
-	panic("%s %lux (from %lux/%lux)", msg, v, getcallerpc(&v), c);
+	panic("%s %p (from %p/%lux)", msg, v, getcallerpc(&v), c);
 }
 
 static void
-dumpvl(char *msg, ulong *v, int n)
+dumpvl(char *msg, uintptr *v, int n)
 {
 	int i, l;
 
@@ -814,7 +846,7 @@ dumpvl(char *msg, ulong *v, int n)
 			print("\n");
 			l = print("    %p: ", v);
 		}
-		l += print(" %lux", *v++);
+		l += print(" %zux", *v++);
 	}
 	print("\n");
 	USED(l);
@@ -823,9 +855,9 @@ dumpvl(char *msg, ulong *v, int n)
 static void
 corrupted(char *str, char *msg, Pool *p, Bhdr *b, void *v)
 {
-	print("%s(%p): pool %s CORRUPT: %s at %p'%lud(magic=%lux)\n",
+	print("%s(%p): pool %s CORRUPT: %s at %p'%ud(magic=%ux)\n",
 		str, v, p->name, msg, b, b->size, b->magic);
-	dumpvl("bad Bhdr", (ulong *)((ulong)b & ~3)-4, 10);
+	dumpvl("bad Bhdr", (uintptr *)((uintptr)b & ~3)-4, 10);
 }
 
 static void
@@ -899,12 +931,12 @@ found:
 	}
 badchunk:
 	if (fb != nil) {
-		print("%s: %lux in %s:", str, v, p->name);
+		print("%s: %zux in %s:", str, v, p->name);
 		if (fb == v)
 			print(" is %s '%lux\n", fmsg, fsz);
 		else
 			print(" in %s at %lux'%lux\n", fmsg, fb, fsz);
-		dumpvl("area", (ulong *)((ulong)v & ~3)-4, 20);
+		dumpvl("area", (uintptr *)((uintptr)v & ~3)-4, 20);
 	}
 }
 

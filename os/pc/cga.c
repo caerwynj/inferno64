@@ -50,6 +50,11 @@ cgaregw(int index, int data)
 	outb(0x3D4+1, data);
 }
 
+/* TODO BUG the cursor is 2 characters beyond
+ * could use pos = cgapos -2
+ * but skips a character when 'd' is pressed
+ * is it a bug in the shell prompt?
+ */
 static void
 movecursor(void)
 {
@@ -109,10 +114,15 @@ cgascreenputs(char* s, int n)
 	else
 		lock(&cgascreenlock);
 
-	while(n-- > 0)
+	while(n-- > 0){
+		outb(0x3D6, *s);
+		// outb(0x3D6, '-');
 		cgascreenputc(*s++);
+		// outb(0x3D6, '_');
+	}
 
 	unlock(&cgascreenlock);
+		// outb(0x3D6, ',');
 }
 
 void
@@ -122,6 +132,11 @@ screeninit(void)
 	cgapos = cgaregr(0x0E)<<8;
 	cgapos |= cgaregr(0x0F);
 	cgapos *= 2;
+
+	if(cgapos >= Width*Height){
+		cgapos = 0;
+		movecursor();
+	}
 
 	screenputs = cgascreenputs;
 }

@@ -574,7 +574,7 @@ poolmaxsize(void)
 }
 
 int
-poolread(char *va, int count, ulong offset)
+poolread(char *va, int count, uintptr offset)
 {
 	Pool *p;
 	int n, i, signed_off;
@@ -905,7 +905,7 @@ dumpvl(char *msg, uintptr *v, int n)
 static void
 corrupted(char *str, char *msg, Pool *p, Bhdr *b, void *v)
 {
-	print("%s(%p): pool %s CORRUPT: %s at %p'%lud(magic=%lux)\n",
+	print("%s(%p): pool %s CORRUPT: %s at %p'%ud(magic=%ux)\n",
 		str, v, p->name, msg, b, b->size, b->magic);
 	dumpvl("bad Bhdr", (uintptr *)((uintptr)b & ~3)-4, 10);
 }

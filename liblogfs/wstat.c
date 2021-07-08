@@ -4,14 +4,14 @@
 #include "local.h"
 
 char *
-logfsserverwstat(LogfsServer *server, u32int fid, uchar *stat, ushort nstat)
+logfsserverwstat(LogfsServer *server, u32 fid, uchar *stat, ushort nstat)
 {
 	Fid *f;
 	uchar *p;
 	ushort len;
 	uchar *mep;
 	Qid qid;
-	u32int perm, mtime;
+	u32 perm, mtime;
 	uvlong length;
 	char *name, *uname, *gname, *muname;
 	int qiddonttouch, permdonttouch, mtimedonttouch, lengthdonttouch;

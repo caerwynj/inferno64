@@ -169,7 +169,7 @@ modtab(Decl *globals)
 				print("\t\"");
 				if(id->dot != d)
 					print("%s.", id->dot->sym->name);
-				print("%s\",0x%lux,%s_%s,", id->sym->name, sign(id),
+				print("%s\",0x%ux,%s_%s,", id->sym->name, sign(id),
 					id->dot->sym->name, id->sym->name);
 				if(id->ty->varargs)
 					print("0,0,{0},");
@@ -536,7 +536,7 @@ pickadtstub(Type *t)
 	for(tg = t->tags; tg != nil; tg = tg->next)
 		print("#define %s_%s %ld\n", buf, tg->sym->name, offset++);
 	print("struct %s\n{\n", buf);
-	print("	int	pick;\n");
+	print("	WORD	pick;\n");
 	offset = IBY2WD;
 	for(id = t->ids; id != nil; id = id->next){
 		if(id->store == Dfield){

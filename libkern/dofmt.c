@@ -512,6 +512,11 @@ _flagfmt(Fmt *f)
 			f->flags |= FmtVLong;
 		f->flags |= FmtLong;
 		break;
+	case 'z':
+		f->flags |= FmtLong;
+		if(sizeof(intptr) == sizeof(vlong))
+			f->flags |= FmtVLong;
+		break;
 	}
 	return 1;
 }

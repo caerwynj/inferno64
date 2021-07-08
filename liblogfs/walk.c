@@ -4,7 +4,7 @@
 #include "local.h"
 
 char *
-logfsserverwalk(LogfsServer *server, u32int fid, u32int newfid, ushort nwname, char **wname, ushort *nwqid, Qid *wqid)
+logfsserverwalk(LogfsServer *server, u32 fid, u32 newfid, ushort nwname, char **wname, ushort *nwqid, Qid *wqid)
 {
 	ushort i;
 	Entry *e;

@@ -55,6 +55,7 @@ static Convfmt knownfmt[] = {
 	's',	_strfmt,
 	'u',	_flagfmt,
 	'x',	_ifmt,
+	'z',	_flagfmt,
 	0,	nil,
 };
 

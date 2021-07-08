@@ -815,8 +815,9 @@ rwrite(int fd, void *va, long n, vlong *offp)
 	vlong off;
 	long m;
 
-	if(waserror())
+	if(waserror()){
 		return -1;
+	}
 	c.c = fdtochan(up->env->fgrp, fd, OWRITE, 1, 1);
 	if(waserror()){
 		cclose(c.c);

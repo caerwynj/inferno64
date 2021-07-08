@@ -70,7 +70,7 @@ decref(Ref *r)
 	x = --r->ref;
 	unlock(&r->l);
 	if(x < 0)
-		panic("decref, pc=0x%lux", getcallerpc(&r));
+		panic("decref, pc=0x%zux", getcallerpc(&r));
 
 	return x;
 }
@@ -317,7 +317,7 @@ cclose(Chan *c)
 		return;
 
 	if(c->flag&CFREE)
-		panic("cclose %lux", getcallerpc(&c));
+		panic("cclose %zux", getcallerpc(&c));
 
 	if(decref(c))
 		return;

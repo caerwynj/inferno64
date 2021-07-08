@@ -34,11 +34,11 @@ cloadimage(Image *i, Rectangle r, uchar *data, int ndata)
 		if(a == nil)
 			return -1;
 		a[0] = 'Y';
-		BPLONG(a+1, i->id);
-		BPLONG(a+5, r.min.x);
-		BPLONG(a+9, miny);
-		BPLONG(a+13, r.max.x);
-		BPLONG(a+17, maxy);
+		BP32INT(a+1, i->id);
+		BP32INT(a+5, r.min.x);
+		BP32INT(a+9, miny);
+		BP32INT(a+13, r.max.x);
+		BP32INT(a+17, maxy);
 		memmove(a+21, data, nb);
 		miny = maxy;
 		data += nb;

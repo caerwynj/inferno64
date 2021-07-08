@@ -31,7 +31,7 @@ enum
 
 	/* STRUCTALIGN is the unit to which the compiler aligns structs. */
 	/* It really should be defined somewhere else */
-	STRUCTALIGN = sizeof(int)	/* must be >=2 because of Strings */
+	STRUCTALIGN = sizeof(intptr)	/* must be >=2 because of Strings */
 };
 
 enum
@@ -90,10 +90,10 @@ union Stkext
 {
 	uchar	stack[1];
 	struct {
-		Type*	TR;
-		uchar*	SP;
-		uchar*	TS;
-		uchar*	EX;
+		Type*	TR;	/* type register */
+		uchar*	SP;	/* nil or prior stack extent's pointer to next available space */
+		uchar*	TS;	/* nil or prior stack extent's pointer to the last space */
+		uchar*	EX;	/* nil or pointer to prior Stackext */
 		union {
 			uchar	fu[1];
 			Frame	fr[1];
@@ -193,8 +193,8 @@ struct Altc
 
 struct Alt
 {
-	int	nsend;
-	int	nrecv;
+	intptr	nsend;
+	intptr	nrecv;
 	Altc	ac[1];
 };
 
@@ -287,10 +287,13 @@ struct Module
 	char*	name;	/* Implements type */
 	char*	path;		/* File module loaded from */
 	Module*	link;		/* Links */
-	Link*	ext;		/* External dynamic links */
-	Import**	ldt;	/* Internal linkage descriptor tables */
+	Link*	ext;		/* External dynamic links, 
+				   list of functions exported by this module */
+	Import**	ldt;	/* Internal linkage descriptor tables,
+				   lists of functions imported by the current 
+				   module by module */
 	Handler*	htab;	/* Exception handler table */
-	ulong*	pctab;	/* dis pc to code pc when compiled */
+	uintptr*	pctab;	/* dis pc to code pc when compiled */
 	void*	dlm;		/* dynamic C module */
 };
 
@@ -298,6 +301,12 @@ struct Modl
 {
 	Linkpc	u;		/* PC of Dynamic link */
 	Type*	frame;		/* Frame type for this entry */
+	char	*name;		/* name from the Link structure for
+					debugging info. could end
+					up being a dangling pointer
+					if destroylinks() takes 
+					down the underlying Link
+					structure? */
 };
 
 struct Modlink
@@ -337,15 +346,15 @@ struct Import
 struct Except
 {
 	char*	s;
-	ulong	pc;
+	uintptr	pc;
 };
 
 struct Handler
 {
-	ulong	pc1;
-	ulong	pc2;
-	ulong	eoff;
-	ulong	ne;
+	uintptr	pc1;
+	uintptr	pc2;
+	uintptr	eoff;
+	uintptr	ne;
 	Type*	t;
 	Except*	etab;
 };
@@ -481,7 +490,7 @@ extern	Heap*		nheap(int);
 extern	void		noptrs(Type*, void*);
 extern	int		nprog(void);
 extern	void		opinit(void);
-extern	Module*		parsemod(char*, uchar*, ulong, Dir*);
+extern	Module*		parsemod(char*, uchar*, u32, Dir*);
 extern	Module*		parsedmod(char*, int, ulong, Qid);
 extern	void		prefabmodinit(void);
 extern	Prog*		progn(int);
@@ -498,7 +507,7 @@ extern	void		retstr(char*, String**);
 extern	void		rungc(Prog*);
 extern	void		runtime(Module*, Link*, char*, int, void(*)(void*), Type*);
 extern	void		safemem(void*, Type*, void (*)(void*));
-extern	int		segflush(void *, ulong);
+extern	s32		segflush(void *, u32);
 extern	void		isend(void);
 extern	void	setdbreg(uchar*);
 extern	uchar*	setdbloc(uchar*);
@@ -535,8 +544,8 @@ extern	String*		addstring(String*, String*, int);
 extern	int		brpatch(Inst*, Module*);
 extern	void		readimagemodinit(void);
 
-#define	O(t,e)		((long)(&((t*)0)->e))
-#define	OA(t,e)		((long)(((t*)0)->e))
+#define	O(t,e)		((intptr)(&((t*)0)->e))
+#define	OA(t,e)		((intptr)(((t*)0)->e))
 
 #pragma	varargck	type	"D"	Inst*
 #pragma varargck argpos errorf 1

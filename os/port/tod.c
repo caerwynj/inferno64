@@ -33,18 +33,20 @@
 #define TODFREQ	1000000000ULL
 
 struct {
-	int		init;		// true if initialized
-	ulong	cnt;
+	s32	init;		// true if initialized
+	u32	cnt;
 	Lock;
-	uvlong	multiplier;	// t = off + (multiplier*ticks)>>31
-	uvlong	divider;	// ticks = (divider*(ticks-off))>>31
-	vlong	hz;		// frequency of fast clock
-	vlong	last;		// last reading of fast clock
-	vlong	off;		// offset from epoch to last
-	vlong	lasttime;	// last return value from todget
-	vlong	delta;		// add 'delta' each slow clock tick from sstart to send
-	ulong	sstart;		// ...
-	ulong	send;		// ...
+	u64	multiplier;	// t = off + (multiplier*ticks)>>31
+	u64	divider;	// ticks = (divider*(ticks-off))>>31
+	u64	umultiplier;	/* µs = (µmultiplier*ticks)>>31 */
+	u64	udivider;	/* ticks = (µdivider*µs)>>31 */
+	s64	hz;		// frequency of fast clock
+	s64	last;		// last reading of fast clock
+	s64	off;		// offset from epoch to last
+	s64	lasttime;	// last return value from todget
+	s64	delta;		// add 'delta' each slow clock tick from sstart to send
+	u32	sstart;		// ...
+	u32	send;		// ...
 } tod;
 
 void
@@ -211,6 +213,28 @@ tseconds(void)
 	x = x/TODFREQ;
 	i = x;
 	return i;
+}
+
+u64
+fastticks2us(u64 ticks)
+{
+	u64 res;
+
+	if(!tod.init)
+		todinit();
+	mul64fract(&res, ticks, tod.umultiplier);
+	return res;
+}
+
+u64
+us2fastticks(u64 us)
+{
+	u64 res;
+
+	if(!tod.init)
+		todinit();
+	mul64fract(&res, us, tod.udivider);
+	return res;
 }
 
 //  convert milliseconds to fast ticks

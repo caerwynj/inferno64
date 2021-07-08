@@ -85,66 +85,66 @@ init()
 	bind("#I", "/net", sys->MAFTER);
 	bind("#c", "/dev", sys->MAFTER);
 	bind("#H", "/dev", sys->MAFTER);
-	nvramfd := sys->open("#H/hd0nvram", sys->ORDWR);
-	if(nvramfd != nil){
-		spec = "#Fhd0nvram";
-		if(bind(spec, "/nvfs", sys->MAFTER) < 0)
-			print("init: bind %s: %r\n", spec);
-	}
+#	nvramfd := sys->open("#H/hd0nvram", sys->ORDWR);
+#	if(nvramfd != nil){
+#		spec = "#Fhd0nvram";
+#		if(bind(spec, "/nvfs", sys->MAFTER) < 0)
+#			print("init: bind %s: %r\n", spec);
+#	}
 
 	setsysname();
 
-	sys->print("bootp...");
-
-	fd := open("/net/ipifc/clone", sys->OWRITE);
-	if(fd == nil) {
-		print("init: open /net/ipifc/clone: %r\n");
-		exit;
-	}
-	cfg := array of byte "bind ether ether0";
-	if(sys->write(fd, cfg, len cfg) != len cfg) {
-		sys->print("could not bind interface: %r\n");
-		exit;
-	}
-	cfg = array of byte "bootp";
-	if(sys->write(fd, cfg, len cfg) != len cfg) {
-		sys->print("could not bootp: %r\n");
-		exit;
-	}
-
-	fd = open("/net/bootp", sys->OREAD);
-	if(fd == nil) {
-		print("init: open /net/bootp: %r");
-		exit;
-	}
-
-	buf := array[Bootpreadlen] of byte;
-	nr := read(fd, buf, len buf);
-	fd = nil;
-	if(nr <= 0) {
-		print("init: read /net/bootp: %r");
-		exit;
-	}
-
-	(ntok, ls) := sys->tokenize(string buf, " \t\n");
-	while(ls != nil) {
-		if(hd ls == "fsip"){
-			ls = tl ls;
-			break;
-		}
-		ls = tl ls;
-	}
-	if(ls == nil) {
-		print("init: server address not in bootp read");
-		exit;
-	}
-
-	srv := hd ls;
-	sys->print("server %s\nConnect ...\n", srv);
-
-	retrycount := 0;
-	while(rootfs(srv) < 0 && retrycount++ < 5)
-		sleep(1000);
+#	sys->print("bootp...");
+#
+#	fd := open("/net/ipifc/clone", sys->OWRITE);
+#	if(fd == nil) {
+#		print("init: open /net/ipifc/clone: %r\n");
+#		exit;
+#	}
+#	cfg := array of byte "bind ether ether0";
+#	if(sys->write(fd, cfg, len cfg) != len cfg) {
+#		sys->print("could not bind interface: %r\n");
+#		exit;
+#	}
+#	cfg = array of byte "bootp";
+#	if(sys->write(fd, cfg, len cfg) != len cfg) {
+#		sys->print("could not bootp: %r\n");
+#		exit;
+#	}
+#
+#	fd = open("/net/bootp", sys->OREAD);
+#	if(fd == nil) {
+#		print("init: open /net/bootp: %r");
+#		exit;
+#	}
+#
+#	buf := array[Bootpreadlen] of byte;
+#	nr := read(fd, buf, len buf);
+#	fd = nil;
+#	if(nr <= 0) {
+#		print("init: read /net/bootp: %r");
+#		exit;
+#	}
+#
+#	(ntok, ls) := sys->tokenize(string buf, " \t\n");
+#	while(ls != nil) {
+#		if(hd ls == "fsip"){
+#			ls = tl ls;
+#			break;
+#		}
+#		ls = tl ls;
+#	}
+#	if(ls == nil) {
+#		print("init: server address not in bootp read");
+#		exit;
+#	}
+#
+#	srv := hd ls;
+#	sys->print("server %s\nConnect ...\n", srv);
+#
+#	retrycount := 0;
+#	while(rootfs(srv) < 0 && retrycount++ < 5)
+#		sleep(1000);
 
 	cfd := sys->open("/dev/cons", Sys->OWRITE);
 	if (cfd != nil) {

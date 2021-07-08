@@ -105,7 +105,7 @@ static char	Emode[] = "open/create -- unknown mode";
 static char	Edupfid[]	= "fid in use";
 static char	Eaccess[] = "read/write -- not open in suitable mode";
 static char	Ecount[] = "read/write -- count too big";
-int	exdebug = 0;
+extern int	exdebug;
 
 int
 export(int fd, char *dir, int async)
@@ -257,7 +257,7 @@ exportproc(void *a)
 			if(q != nil || n > 6000)
 				break;
 			if(n%600 == 0)
-				print("exportproc %ld: waiting for memory (%d) for request\n", up->pid, msize);
+				print("exportproc %d: waiting for memory (%d) for request\n", up->pid, msize);
 			osenter();
 			osmillisleep(100);
 			osleave();

@@ -26,8 +26,8 @@ enum {
 };
 
 typedef struct {
-	int	size;
-	ulong	addr;
+	u32	size;
+	uintptr	addr;
 } Map;
 
 typedef struct {
@@ -80,13 +80,13 @@ mapprint(RMap *rmap)
 
 	print("%s\n", rmap->name);	
 	for(mp = rmap->map; mp->size; mp++)
-		print("\t%8.8luX %8.8uX %8.8luX\n", mp->addr, mp->size, mp->addr+mp->size);
+		print("\t%8.8zuX %8.8uX %8.8zuX\n", mp->addr, mp->size, mp->addr+mp->size);
 }
 
 void
 memdebug(void)
 {
-	ulong maxpa, maxpa1, maxpa2;
+	uintptr maxpa, maxpa1, maxpa2;
 
 	if(MEMDEBUG == 0)
 		return;
@@ -94,7 +94,7 @@ memdebug(void)
 	maxpa = (nvramread(0x18)<<8)|nvramread(0x17);
 	maxpa1 = (nvramread(0x31)<<8)|nvramread(0x30);
 	maxpa2 = (nvramread(0x16)<<8)|nvramread(0x15);
-	print("maxpa = %luX -> %luX, maxpa1 = %luX maxpa2 = %luX\n",
+	print("maxpa = %zuX -> %zuX, maxpa1 = %zuX maxpa2 = %zuX\n",
 		maxpa, MB+maxpa*KB, maxpa1, maxpa2);
 
 	mapprint(&rmapram);
@@ -104,10 +104,10 @@ memdebug(void)
 }
 
 void
-mapfree(RMap* rmap, ulong addr, ulong size)
+mapfree(RMap* rmap, uintptr addr, ulong size)
 {
 	Map *mp;
-	ulong t;
+	uintptr t;
 
 	if(size <= 0)
 		return;
@@ -134,7 +134,7 @@ mapfree(RMap* rmap, ulong addr, ulong size)
 		}
 		else do{
 			if(mp >= rmap->mapend){
-				print("mapfree: %s: losing 0x%luX, %ld\n",
+				print("mapfree: %s: losing 0x%zuX, %ld\n",
 					rmap->name, addr, size);
 				break;
 			}
@@ -149,11 +149,11 @@ mapfree(RMap* rmap, ulong addr, ulong size)
 	unlock(rmap);
 }
 
-ulong
-mapalloc(RMap* rmap, ulong addr, int size, int align)
+uintptr
+mapalloc(RMap* rmap, uintptr addr, int size, int align)
 {
 	Map *mp;
-	ulong maddr, oaddr;
+	uintptr maddr, oaddr;
 
 	lock(rmap);
 	for(mp = rmap->map; mp->size; mp++){
@@ -267,9 +267,9 @@ umbscan(void)
 
 
 static void
-ramscan(ulong maxmem)
+ramscan(uintptr maxmem)
 {
-	ulong *k0, kzero, map, maxpa, pa, *pte, *table, *va, x, n;
+	uintptr *k0, kzero, map, maxpa, pa, *pte, *table, *va, x, n;
 	int nvalid[NMemType];
 	uchar *bda;
 
@@ -291,7 +291,7 @@ ramscan(ulong maxmem)
 	mapfree(&rmapram, x, n);
 //	memset(KADDR(x), 0, n);			/* keep us honest */
 
-	x = PADDR(PGROUND((ulong)end));
+	x = PADDR(PGROUND((uintptr)end));
 	pa = MemMinMB*MB;
 	mapfree(&rmapram, x, pa-x);
 //	memset(KADDR(x), 0, pa-x);		/* keep us honest */
@@ -323,7 +323,7 @@ ramscan(ulong maxmem)
 	 * be written and read correctly. The page tables are created here
 	 * on the fly, allocating from low memory as necessary.
 	 */
-	k0 = (ulong*)KADDR(0);
+	k0 = (uintptr*)KADDR(0);
 	kzero = *k0;
 	map = 0;
 	x = 0x12345678;
@@ -368,7 +368,7 @@ ramscan(ulong maxmem)
 				*pte++ = pa|PTEWRITE|PTEVALID;
 				pa += BY2PG;
 			}while(pa % MB);
-			mmuflushtlb(PADDR(m->pdb));
+			// TODO mmuflushtlb(PADDR(m->pdb));
 			/* memset(va, 0, MB); so damn slow to memset all of memory */
 		}
 		else if(pa < 16*MB){
@@ -409,7 +409,7 @@ ramscan(ulong maxmem)
 				map = 0;
 		}
 
-		mmuflushtlb(PADDR(m->pdb));
+		// TODO mmuflushtlb(PADDR(m->pdb));
 		x += 0x3141526;
 	}
 
@@ -427,15 +427,15 @@ ramscan(ulong maxmem)
 	if(maxmem < 0xFFE00000)
 		mapfree(&rmapupa, maxmem, 0x00000000-maxmem);
 	if(MEMDEBUG)
-		print("maxmem %luX %luX\n", maxmem, 0x00000000-maxmem);
+		print("maxmem %zuX %zuX\n", maxmem, 0x00000000-maxmem);
 	*k0 = kzero;
 }
 
 void
-meminit(ulong maxmem)
+meminit(uintptr maxmem)
 {
 	Map *mp, *xmp;
-	ulong pa, *pte;
+	uintptr pa, *pte;
 
 	/*
 	 * Set special attributes for memory between 640KB and 1MB:
@@ -444,11 +444,11 @@ meminit(ulong maxmem)
 	 * then scan for useful memory.
 	 */
 	for(pa = 0xA0000; pa < 0xC0000; pa += BY2PG){
-		pte = mmuwalk(m->pdb, (ulong)KADDR(pa), 2, 0);
+		pte = mmuwalk(m->pdb, (uintptr)KADDR(pa), 2, 0);
 		*pte |= PTEWT;
 	}
 	for(pa = 0xC0000; pa < 0x100000; pa += BY2PG){
-		pte = mmuwalk(m->pdb, (ulong)KADDR(pa), 2, 0);
+		pte = mmuwalk(m->pdb, (uintptr)KADDR(pa), 2, 0);
 		*pte |= PTEUNCACHED;
 	}
 	mmuflushtlb(PADDR(m->pdb));
@@ -479,31 +479,31 @@ meminit(ulong maxmem)
 		memdebug();
 }
 
-ulong
-umbmalloc(ulong addr, int size, int align)
+uintptr
+umbmalloc(uintptr addr, int size, int align)
 {
-	ulong a;
+	uintptr a;
 
 	if(a = mapalloc(&rmapumb, addr, size, align))
-		return (ulong)KADDR(a);
+		return (uintptr)KADDR(a);
 
 	return 0;
 }
 
 void
-umbfree(ulong addr, int size)
+umbfree(uintptr addr, int size)
 {
 	mapfree(&rmapumb, PADDR(addr), size);
 }
 
-ulong
-umbrwmalloc(ulong addr, int size, int align)
+uintptr
+umbrwmalloc(uintptr addr, int size, int align)
 {
-	ulong a;
+	uintptr a;
 	uchar *p;
 
 	if(a = mapalloc(&rmapumbrw, addr, size, align))
-		return(ulong)KADDR(a);
+		return(uintptr)KADDR(a);
 
 	/*
 	 * Perhaps the memory wasn't visible before
@@ -522,15 +522,15 @@ umbrwmalloc(ulong addr, int size, int align)
 }
 
 void
-umbrwfree(ulong addr, int size)
+umbrwfree(uintptr addr, int size)
 {
 	mapfree(&rmapumbrw, PADDR(addr), size);
 }
 
-ulong
-upamalloc(ulong pa, int size, int align)
+uintptr
+upamalloc(uintptr pa, int size, int align)
 {
-	ulong a, ae;
+	uintptr a, ae;
 
 	if(a = mapalloc(&xrmapupa, pa, size, align))
 		return a;
@@ -564,15 +564,15 @@ upamalloc(ulong pa, int size, int align)
 }
 
 void
-upafree(ulong pa, int size)
+upafree(uintptr pa, int size)
 {
 	mapfree(&xrmapupa, pa, size);
 }
 
 void
-upareserve(ulong pa, int size)
+upareserve(uintptr pa, int size)
 {
-	ulong a;
+	uintptr a;
 	
 	a = mapalloc(&rmapupa, pa, size, 0);
 	if(a != pa){

@@ -58,7 +58,7 @@ dupstat(Chan *c, uchar *db, int n)
 }
 
 static Chan*
-dupopen(Chan *c, int omode)
+dupopen(Chan *c, u32 omode)
 {
 	Chan *f;
 	int fd, twicefd;
@@ -96,8 +96,8 @@ dupclose(Chan*)
 {
 }
 
-static long
-dupread(Chan *c, void *va, long n, vlong offset)
+static s32
+dupread(Chan *c, void *va, s32 n, s64 offset)
 {
 	char *a = va;
 	char buf[256];
@@ -122,8 +122,8 @@ dupread(Chan *c, void *va, long n, vlong offset)
 	return 0;
 }
 
-static long
-dupwrite(Chan*, void*, long, vlong)
+static s32
+dupwrite(Chan*, void*, s32, s64)
 {
 	panic("dupwrite");
 	return 0;		/* not reached */

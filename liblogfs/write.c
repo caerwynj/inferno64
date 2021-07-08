@@ -104,14 +104,14 @@ bitcount(Pageset mask)
 }
 
 static char *
-allocdatapages(LogfsServer *server, u32int count, int *countp, long *blockindexp, int *pagep, u32int *flashaddr, AllocState *state)
+allocdatapages(LogfsServer *server, u32 count, int *countp, long *blockindexp, int *pagep, u32 *flashaddr, AllocState *state)
 {
 	LogfsLowLevel *ll = server->ll;
 	long b, blockindex;
 	DataBlock *db;
 	int pagebase;
-	u32int pages = (count + (1 << ll->l2pagesize) - 1) >> ll->l2pagesize;
-	u32int gapmask;
+	u32 pages = (count + (1 << ll->l2pagesize) - 1) >> ll->l2pagesize;
+	u32 gapmask;
 	long bestfreeblockindex;
 	int bestfree;
 	int pagesperblock = 1 << ll->l2pagesperblock;
@@ -255,7 +255,7 @@ done:
 }
 
 typedef struct Page {
-	u32int pageaddr;
+	u32 pageaddr;
 	int ref;
 } Page;
 
@@ -267,7 +267,7 @@ typedef struct DataStructure {
 } DataStructure;
 
 static int
-deltapage(DataStructure *ds, u32int pageaddr, int add, int delta)
+deltapage(DataStructure *ds, u32 pageaddr, int add, int delta)
 {
 	int i;
 	for(i = 0; i < ds->nentries; i++)
@@ -299,12 +299,12 @@ deltapage(DataStructure *ds, u32int pageaddr, int add, int delta)
  * only called for data addresses
  */
 static int
-deltapages(DataStructure *ds, LogfsLowLevel *ll, u32int baseflashaddr, int range, int add, int delta)
+deltapages(DataStructure *ds, LogfsLowLevel *ll, u32 baseflashaddr, int range, int add, int delta)
 {
 	long seq;
 	int page, offset;
 	int pages;
-	u32int pageaddr;
+	u32 pageaddr;
 	int x;
 
 //print("deltapages(%ud, %ud, %d, %d)\n", baseflashaddr, limitflashaddr, add, delta);
@@ -318,13 +318,13 @@ deltapages(DataStructure *ds, LogfsLowLevel *ll, u32int baseflashaddr, int range
 }
 
 static int
-findpageset(void *magic, u32int baseoffset, u32int limitoffset, Extent *e, u32int extentoffset)
+findpageset(void *magic, u32 baseoffset, u32 limitoffset, Extent *e, u32 extentoffset)
 {
 	DataStructure *ds = magic;
 	LogfsLowLevel *ll;
-	u32int flashaddr;
-	u32int range;
-	u32int residue;
+	u32 flashaddr;
+	u32 range;
+	u32 residue;
 
 	if(e == nil || (e->flashaddr & LogAddr) != 0)
 		return 1;
@@ -357,7 +357,7 @@ addpagereferences(void *magic, Extent *e, int hole)
 }
 
 static char *
-zappages(LogfsServer *server, Entry *e, u32int min, u32int max)
+zappages(LogfsServer *server, Entry *e, u32 min, u32 max)
 {
 	DataStructure ds;
 	long seq;
@@ -433,11 +433,11 @@ disposeofoldblock(LogfsServer *server, AllocState *state)
 }
 
 char *
-logfsserverwrite(LogfsServer *server, u32int fid, u32int offset, u32int count, uchar *buf, u32int *rcount)
+logfsserverwrite(LogfsServer *server, u32 fid, u32 offset, u32 count, uchar *buf, u32 *rcount)
 {
 	Fid *f;
 	Entry *e;
-	u32int now;
+	u32 now;
 	char *muid;
 	int muidlen;
 	LogfsLowLevel *ll = server->ll;
@@ -469,7 +469,7 @@ logfsserverwrite(LogfsServer *server, u32int fid, u32int offset, u32int count, u
 		thistime = lognicesizeforwrite(server, 1, count, muidlen);
 		if(thistime == 0) {
 			int p;
-			u32int n;
+			u32 n;
 			long blockindex;
 			int pagebase;
 			AllocState state;
@@ -481,7 +481,7 @@ logfsserverwrite(LogfsServer *server, u32int fid, u32int offset, u32int count, u
 			if(thistime == 0)
 				return logfselogfull;
 			for(p = pagebase, n = 0; n < thistime; p++, n += pagesize) {
-				u32int mask;
+				u32 mask;
 				DataBlock *db = server->datablock + blockindex;
 				errmsg = (*ll->writepage)(ll, buf + n, db->block, p);
 				if(errmsg) {

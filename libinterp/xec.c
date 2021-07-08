@@ -7,6 +7,7 @@
 REG	R;			/* Virtual Machine registers */
 String	snil;			/* String known to be zero length */
 
+#define DP	if(1){}else print
 #define Stmp	*((WORD*)(R.FP+NREG*IBY2WD))
 #define Dtmp	*((WORD*)(R.FP+(NREG+2)*IBY2WD))
 
@@ -219,6 +220,7 @@ OP(indx)
 
 	a = A(s);
 	i = W(d);
+	DP("indx a %p a->len %lld i %ld\n", a, a->len, i);
 	if(a == H || i >= a->len)
 		error(exBounds);
 	W(m) = (WORD)(a->data+i*a->t->size);
@@ -230,6 +232,7 @@ OP(indw)
 
 	a = A(s);
 	i = W(d);
+	DP("indw a %p a->len %lld i %ld\n", a, a->len, i);
 	if(a == H || i >= a->len)
 		error(exBounds);
 	W(m) = (WORD)(a->data+i*sizeof(WORD));
@@ -241,6 +244,7 @@ OP(indf)
 
 	a = A(s);
 	i = W(d);
+	DP("indf a %p a->len %lld i %ld\n", a, a->len, i);
 	if(a == H || i >= a->len)
 		error(exBounds);
 	W(m) = (WORD)(a->data+i*sizeof(REAL));
@@ -252,6 +256,7 @@ OP(indl)
 
 	a = A(s);
 	i = W(d);
+	DP("indl a %p a->len %lld i %ld\n", a, a->len, i);
 	if(a == H || i >= a->len)
 		error(exBounds);
 	W(m) = (WORD)(a->data+i*sizeof(LONG));
@@ -263,6 +268,7 @@ OP(indb)
 
 	a = A(s);
 	i = W(d);
+	DP("indb a %p a->len %lld i %ld\n", a, a->len, i);
 	if(a == H || i >= a->len)
 		error(exBounds);
 	W(m) = (WORD)(a->data+i*sizeof(BYTE));
@@ -348,10 +354,15 @@ OP(frame)
 	R.SP  = nsp;
 	f->t  = t;
 	f->mr = nil;
+	DP("frame frame 0x%p t 0x%p t->size %d R.SP 0x%p\n",
+		f, t, t->size, R.SP);
 	if (t->np)
 		initmem(t, f);
 	T(d) = f;
 }
+/* from the module link loaded at src1 using the index src2
+   build the frame at dst
+ */
 OP(mframe)
 {
 	Type *t;
@@ -377,15 +388,20 @@ OP(mframe)
 		R.s = t;
 		extend();
 		T(d) = R.s;
+		DP("\t\textended frame at *R.d 0x%p\n", *(intptr**)R.d);
 		return;
 	}
 	f = (Frame*)R.SP;
 	R.SP = nsp;
 	f->t = t;
 	f->mr = nil;
+	DP("\t\tmframe frame 0x%p t 0x%p t->size %d R.SP 0x%p\n",
+		f, t, t->size, R.SP);
 	if (t->np)
 		initmem(t, f);
 	T(d) = f;
+	DP("\t\tframe at *R.d 0x%p is\n", *(intptr**)R.d);
+	if(0) showframe((void *)f, t);
 }
 void
 acheck(int tsz, int sz)
@@ -686,12 +702,26 @@ OP(mspawn)
 	newstack(p);
 	unframe();
 }
+void
+showREG(void)
+{
+	DP("REG PC 0x%p MP 0x%p FP 0x%p SP 0x%p\n"
+		"\tTS 0x%p EX 0x%p M 0x%p IC %d\n"
+		"\txpc 0x%p s 0x%p d 0x%p m 0x%p\n",
+		R.PC, R.MP, R.FP, R.SP,
+		R.TS, R.EX, R.M, R.IC,
+		R.xpc, R.s, R.d, R.m);
+}
 OP(ret)
 {
 	Frame *f;
 	Modlink *m;
 
+	showREG();
 	f = (Frame*)R.FP;
+	DP("Frame at 0x%p lr 0x%p fp 0x%p mr 0x%p t 0x%p\n",
+		f, f->lr, f->fp, f->mr, f->t);
+	/* showframe((void*)f, f->t); */
 	R.FP = f->fp;
 	if(R.FP == nil) {
 		R.FP = (uchar*)f;
@@ -716,6 +746,11 @@ OP(ret)
 		R.MP = m->MP;
 	}
 }
+/* load src1, src2, dst
+   src1 pathname to the file containing the object code for a module
+   src2 address of linkage descriptor table, list of functions used from that module
+   dst  Modlink, mechanism to call those functions
+ */
 OP(iload)
 {
 	char *n;
@@ -733,6 +768,7 @@ OP(iload)
 		error("obsolete dis");
 	}
 
+	DP("\t\tiload module %s for the ldt index %zd\n", n, W(m));
 	if(strcmp(n, "$self") == 0) {
 		m->ref++;
 		ml = linkmod(m, ldt, 0);
@@ -775,11 +811,21 @@ OP(mcall)
 	h = D2H(ml);
 	h->ref++;
 
+	DP("\t\tmcall frame at *R.s 0x%p is\n", f);
+	if(0 && f->t != nil)
+		showframe((void *)f, f->t);
 	o = W(m);
-	if(o >= 0)
+	if(o >= 0){
 		l = &ml->links[o].u;
-	else
+		DP("\t\tlink o %d %s\n",
+			o, ml->links[o].name);
+		DP("\t\text o %d %s sig 0x%x\n",
+			o, ml->m->ext[o].name, ml->m->ext[o].sig);
+	}else{
 		l = &ml->m->ext[-o-1].u;
+		DP("\t\text o %d %s sig 0x%x\n",
+			-o-1, ml->m->ext[-o-1].name, ml->m->ext[-o-1].sig);
+	}
 	if(ml->prog == nil) {
 		l->runt(f);
 		h->ref--;
@@ -1320,10 +1366,11 @@ OP(iraise)
 	p->exval = v;
 	h = D2H(v);
 	h->ref++;
-	if(h->t == &Tstring)
-		error(string2c((String*)v));
-	else
+	if(h->t == &Tstring){
+		 error(string2c((String*)v));
+	}else{
 		error(string2c(*(String**)v));
+	}
 }
 OP(mulx)
 {
@@ -1668,6 +1715,37 @@ opinit(void)
 }
 
 void
+showprog(Prog *p)
+{
+	Type *t;
+	Frame *f;
+	Stkext *sx;
+	uchar *fp, *sp, *ex;
+
+	DP("Prog state %d pid %d ticks %lud\n",
+		p->state, p->pid, p->ticks);
+	DP("\tpc 0x%p module %s %s\n",
+		p->R.PC, p->R.M->m->name, p->R.M->m->path);
+	sp = p->R.SP;
+	ex = p->R.EX;
+	while(ex != nil) {
+		sx = (Stkext*)ex;
+		fp = sx->reg.tos.fu;
+		while(fp != sp) {
+			f = (Frame*)fp;
+			t = f->t;
+			if(t == nil)
+				t = sx->reg.TR;
+			fp += t->size;
+			DP("\tFrame 0x%p type 0x%p type size %d\n",
+				f, t, t->size);
+		}
+		ex = sx->reg.EX;
+		sp = sx->reg.SP;
+	}
+}
+
+void
 xec(Prog *p)
 {
 	int op;
@@ -1683,15 +1761,26 @@ xec(Prog *p)
 		error(m);
 	}
 
-// print("%lux %lux %lux %lux %lux\n", (ulong)&R, R.xpc, R.FP, R.MP, R.PC);
-
+	// print("%lux %lux %lux %lux %lux\n", (uintptr)&R, R.xpc, R.FP, R.MP, R.PC);
+	showprog(p);
 	if(R.M->compiled)
 		comvec();
 	else do {
+		DP("step: %p: %s pid %d state %d %4zd %D:\tR.PC->op=0x%x R.PC->add=0x%x\n",
+			p, R.M->m->name, p->pid, p->state, R.PC-R.M->prog, R.PC, R.PC->op,
+			R.PC->add);
 		dec[R.PC->add]();
 		op = R.PC->op;
 		R.PC++;
 		optab[op]();
+		DP(" end: %p: ", p);
+		DP("%s ", R.M->m->name);
+		DP("pid %d ", p->pid);
+		DP("state %d", p->state);
+		DP(" %4zd", R.PC-R.M->prog);
+		DP(" %D:\t", R.PC);
+		DP("R.PC->op=0x%x ", R.PC->op, R.PC->add);
+		DP("R.PC->add=0x%x\n", R.PC->add);
 	} while(--R.IC != 0);
 
 	p->R = R;

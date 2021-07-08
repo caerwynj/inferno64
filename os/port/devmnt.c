@@ -30,9 +30,9 @@ struct Mntrpc
 	uint		rpclen;	/* len of buffer */
 	Block	*b;		/* reply blocks */
 	char	done;		/* Rpc completed */
-	uvlong	stime;		/* start time for mnt statistics */
-	ulong	reqlen;		/* request length for mnt statistics */
-	ulong	replen;		/* reply length for mnt statistics */
+	u64	stime;		/* start time for mnt statistics */
+	u32	reqlen;		/* request length for mnt statistics */
+	u32	replen;		/* reply length for mnt statistics */
 	Mntrpc*	flushed;	/* message this one flushes */
 };
 
@@ -51,8 +51,8 @@ struct Mntalloc
 	Mntrpc*	rpcfree;
 	int	nrpcfree;
 	int	nrpcused;
-	ulong	id;
-	ulong	tagmask[NMASK];
+	u32	id;
+	u32	tagmask[NMASK];
 }mntalloc;
 
 void	mattach(Mnt*, Chan*, char*);
@@ -65,8 +65,8 @@ void	mntgate(Mnt*);
 void	mntpntfree(Mnt*);
 void	mntqrm(Mnt*, Mntrpc*);
 Mntrpc*	mntralloc(Chan*, ulong);
-long	mntrdwr(int, Chan*, void*, long, vlong);
-int	mntrpcread(Mnt*, Mntrpc*);
+s32	mntrdwr(int, Chan*, void*, s32, s64);
+s32	mntrpcread(Mnt*, Mntrpc*);
 void	mountio(Mnt*, Mntrpc*);
 void	mountmux(Mnt*, Mntrpc*);
 void	mountrpc(Mnt*, Mntrpc*);
@@ -380,7 +380,7 @@ mntchan(void)
 }
 
 static Walkqid*
-mntwalk(Chan *c, Chan *nc, char **name, int nname)
+mntwalk(Chan *c, Chan *nc, char **name, s32 nname)
 {
 	int i, alloc;
 	Mnt *m;
@@ -494,7 +494,7 @@ mntstat(Chan *c, uchar *dp, int n)
 }
 
 static Chan*
-mntopencreate(int type, Chan *c, char *name, int omode, ulong perm)
+mntopencreate(int type, Chan *c, char *name, s32 omode, u32 perm)
 {
 	Mnt *m;
 	Mntrpc *r;
@@ -531,13 +531,13 @@ mntopencreate(int type, Chan *c, char *name, int omode, ulong perm)
 }
 
 static Chan*
-mntopen(Chan *c, int omode)
+mntopen(Chan *c, u32 omode)
 {
 	return mntopencreate(Topen, c, nil, omode, 0);
 }
 
 static void
-mntcreate(Chan *c, char *name, int omode, ulong perm)
+mntcreate(Chan *c, char *name, u32 omode, u32 perm)
 {
 	mntopencreate(Tcreate, c, name, omode, perm);
 }
@@ -612,8 +612,8 @@ mntremove(Chan *c)
 	mntclunk(c, Tremove);
 }
 
-static int
-mntwstat(Chan *c, uchar *dp, int n)
+static s32
+mntwstat(Chan *c, uchar *dp, s32 n)
 {
 	Mnt *m;
 	Mntrpc *r;
@@ -634,8 +634,8 @@ mntwstat(Chan *c, uchar *dp, int n)
 	return n;
 }
 
-static long
-mntread(Chan *c, void *buf, long n, vlong off)
+static s32
+mntread(Chan *c, void *buf, s32 n, s64 off)
 {
 	uchar *p, *e;
 	int nc, cache, isdir, dirlen;
@@ -677,14 +677,14 @@ mntread(Chan *c, void *buf, long n, vlong off)
 	return n;
 }
 
-static long
-mntwrite(Chan *c, void *buf, long n, vlong off)
+static s32
+mntwrite(Chan *c, void *buf, s32 n, s64 off)
 {
 	return mntrdwr(Twrite, c, buf, n, off);
 }
 
-long
-mntrdwr(int type, Chan *c, void *buf, long n, vlong off)
+s32
+mntrdwr(int type, Chan *c, void *buf, s32 n, s64 off)
 {
 	Mnt *m;
  	Mntrpc *r;
@@ -761,7 +761,7 @@ mountrpc(Mnt *m, Mntrpc *r)
 		cn = "?";
 		if(r->c != nil && r->c->name != nil)
 			cn = r->c->name->s;
-		print("mnt: proc %s %lud: mismatch from %s %s rep 0x%lux tag %d fid %d T%d R%d rp %d\n",
+		print("mnt: proc %s %ud: mismatch from %s %s rep 0x%lux tag %d fid %ld T%d R%d rp %d\n",
 			up->text, up->pid, sn, cn,
 			r, r->request.tag, r->request.fid, r->request.type,
 			r->reply.type, r->reply.tag);

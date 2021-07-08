@@ -316,8 +316,8 @@ osmillisleep(ulong milsec)
 	return 0;
 }
 
-int
-segflush(void *p, ulong n)
+s32
+segflush(void *p, u32 n)
 {
 	return mprotect(p, n, PROT_EXEC|PROT_READ|PROT_WRITE);
 }

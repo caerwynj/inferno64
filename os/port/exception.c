@@ -92,8 +92,8 @@ handler(char *estr)
 	Prog *p;
 	Modlink *m, *mr;
 	int str, ne;
-	ulong pc, newpc;
-	long eoff;
+	uintptr pc, newpc;
+	intptr eoff;
 	uchar *fp, **eadr;
 	Frame *f;
 	Type *t, *zt;
@@ -107,7 +107,7 @@ handler(char *estr)
 	str = p->exval == H || D2H(p->exval)->t == &Tstring;
 	m = R.M;
 	if(m->compiled)
-		pc = (ulong)R.PC-(ulong)m->prog;
+		pc = (uintptr)R.PC-(uintptr)m->prog;
 	else
 		pc = R.PC-m->prog;
 	pc--;
@@ -142,7 +142,7 @@ handler(char *estr)
 		if(f->mr != nil)
 			m = f->mr;
 		if(m->compiled)
-			pc = (ulong)f->lr-(ulong)m->prog;
+			pc = (uintptr)f->lr-(uintptr)m->prog;
 		else
 			pc = f->lr-m->prog;
 		pc--;
@@ -160,7 +160,7 @@ found:
 		n = 10+1+strlen(name)+1+strlen(estr)+1;
 		p->exstr = realloc(p->exstr, n);
 		if(p->exstr != nil)
-			snprint(p->exstr, n, "%lud %s %s", pc, name, estr);
+			snprint(p->exstr, n, "%zud %s %s", pc, name, estr);
 	}
 
 	/*
@@ -205,7 +205,7 @@ found:
 		*eadr = p->exval;
 	}
 	if(m->compiled)
-		R.PC = (Inst*)((ulong)m->prog+newpc);
+		R.PC = (Inst*)((uintptr)m->prog+newpc);
 	else
 		R.PC = m->prog+newpc;
 	memmove(&p->R, &R, sizeof(R));

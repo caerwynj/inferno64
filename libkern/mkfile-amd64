@@ -1,0 +1,10 @@
+#
+#	amd64-specific files
+#
+TARGFILES=\
+	frexp-386.$O\
+	getfcr-amd64.$O\
+	memmove-amd64.$O\
+	memset-amd64.$O\
+	nan-386.$O\
+	strchr-amd64.$O\

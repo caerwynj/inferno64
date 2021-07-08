@@ -1,12 +1,12 @@
 #include "os.h"
 
 void
-_sha1block(uchar *p, ulong len, u32int *s)
+_sha1block(uchar *p, u32 len, u32 *s)
 {
-	u32int a, b, c, d, e, x;
+	u32 a, b, c, d, e, x;
 	uchar *end;
-	u32int *wp, *wend;
-	u32int w[80];
+	u32 *wp, *wend;
+	u32 w[80];
 
 	/* at this point, we have a multiple of 64 bytes */
 	for(end = p+len; p < end;){

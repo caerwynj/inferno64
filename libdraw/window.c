@@ -49,7 +49,7 @@ allocscreen(Image *image, Image *fill, int public)
 }
 
 Screen*
-publicscreen(Display *d, int id, u32int chan)
+publicscreen(Display *d, int id, u32 chan)
 {
 	uchar *a;
 	Screen *s;
@@ -101,13 +101,13 @@ freescreen(Screen *s)
 }
 
 Image*
-allocwindow(Screen *s, Rectangle r, int ref, u32int val)
+allocwindow(Screen *s, Rectangle r, int ref, u32 val)
 {
 	return _allocwindow(nil, s, r, ref, val);
 }
 
 Image*
-_allocwindow(Image *i, Screen *s, Rectangle r, int ref, u32int val)
+_allocwindow(Image *i, Screen *s, Rectangle r, int ref, u32 val)
 {
 	Display *d;
 

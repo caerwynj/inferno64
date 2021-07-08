@@ -21,6 +21,7 @@
 #include "dat.h"
 #include "fns.h"
 #include "io.h"
+#include "../port/pci.h"
 #include "../port/error.h"
 #include "../port/netif.h"
 
@@ -337,8 +338,8 @@ attach(Ether* ether)
 	iunlock(&ctlr->lock);
 }
 
-static long
-ifstat(Ether* ether, void* a, long n, ulong offset)
+static s32
+ifstat(Ether* ether, void* a, s32 n, u32 offset)
 {
 	Ctlr *ctlr;
 	char *buf, *p;

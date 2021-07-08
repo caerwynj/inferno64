@@ -6,6 +6,8 @@
 #include "mem.h"
 #include "dat.h"
 #include "fns.h"
+#include "io.h"
+#include "ureg.h"
 #include "../port/error.h"
 
 #define	Image	IMAGE
@@ -17,8 +19,8 @@
 typedef struct Vgaseg Vgaseg;
 struct Vgaseg {
 	QLock;
-	ulong	pa;
-	ulong	len;
+	uintptr	pa;
+	u32	len;
 	void*	va;
 };
 
@@ -90,12 +92,12 @@ vgareset(void)
 }
 
 void
-addvgaseg(char *name, ulong pa, ulong size)
+addvgaseg(char *name, u32 pa, u32 size)
 {
 	int i;
 	Dirtab d;
 	Vgaseg *s;
-	ulong va;
+	uintptr va;
 
 	va = mmukmap(pa, 0, size);
 	if(va == 0)
@@ -126,12 +128,12 @@ addvgaseg(char *name, ulong pa, ulong size)
 	unlock(&vgadirlock);
 }
 
-static long
-vgasegrd(Vgaseg *s, uchar *buf, long n, ulong offset)
+static s32
+vgasegrd(Vgaseg *s, uchar *buf, s32 n, u32 offset)
 {
 	int i;
 	uchar *a, *d;
-	ulong v;
+	uintptr v;
 
 	if(offset >= s->len)
 		return 0;
@@ -145,7 +147,7 @@ vgasegrd(Vgaseg *s, uchar *buf, long n, ulong offset)
 	}
 	a = buf;
 	while(n > 0){
-		i = 4 - ((ulong)d & 3);
+		i = 4 - ((uintptr)d & 3);
 		if(i > n)
 			i = n;
 		if(i == 3)
@@ -172,12 +174,12 @@ vgasegrd(Vgaseg *s, uchar *buf, long n, ulong offset)
 	return a-buf;
 }
 
-static long
-vgasegwr(Vgaseg *s, uchar *buf, long n, ulong offset)
+static s32
+vgasegwr(Vgaseg *s, uchar *buf, s32 n, u32 offset)
 {
 	int i;
 	uchar *a, *r;
-	ulong v;
+	uintptr v;
 
 	if(offset >= s->len)
 		return 0;
@@ -191,7 +193,7 @@ vgasegwr(Vgaseg *s, uchar *buf, long n, ulong offset)
 	}
 	a = buf;
 	while(n > 0){
-		i = 4 - ((ulong)r & 3);
+		i = 4 - ((uintptr)r & 3);
 		if(i > n)
 			i = n;
 		if(i == 3)
@@ -231,19 +233,19 @@ vgaattach(char* spec)
 }
 
 Walkqid*
-vgawalk(Chan* c, Chan *nc, char** name, int nname)
+vgawalk(Chan* c, Chan *nc, char** name, s32 nname)
 {
 	return devwalk(c, nc, name, nname, vgadir, nvgadir, devgen);
 }
 
 static int
-vgastat(Chan* c, uchar* dp, int n)
+vgastat(Chan* c, uchar* dp, s32 n)
 {
 	return devstat(c, dp, n, vgadir, nvgadir, devgen);
 }
 
 static Chan*
-vgaopen(Chan* c, int omode)
+vgaopen(Chan* c, u32 omode)
 {
 	VGAscr *scr;
 	static char *openctl = "openctl\n";
@@ -290,16 +292,16 @@ checkport(int start, int end)
 	error(Eperm);
 }
 
-static long
-vgaread(Chan* c, void* a, long n, vlong off)
+static s32
+vgaread(Chan* c, void* a, s32 n, s64 off)
 {
 	int len;
 	char *p, *s;
 	VGAscr *scr;
-	ulong offset = off;
+	u32 offset = off;
 	char chbuf[30];
 
-	switch((ulong)c->qid.path){
+	switch((u32)c->qid.path){
 
 	case Qdir:
 		return devdirread(c, a, n, vgadir, nvgadir, devgen);
@@ -332,12 +334,12 @@ vgaread(Chan* c, void* a, long n, vlong off)
 					physgscreenr.max.x, physgscreenr.max.y);
 		}
 
-		len += snprint(p+len, READSTR-len, "blank time %lud idle %d state %s\n",
+		len += snprint(p+len, READSTR-len, "blank time %ud idle %d state %s\n",
 			blanktime, drawidletime(), scr->isblank ? "off" : "on");
 		len += snprint(p+len, READSTR-len, "hwaccel %s\n", hwaccel ? "on" : "off");
 		len += snprint(p+len, READSTR-len, "hwblank %s\n", hwblank ? "on" : "off");
 		len += snprint(p+len, READSTR-len, "panning %s\n", panning ? "on" : "off");
-		snprint(p+len, READSTR-len, "addr 0x%lux\n", scr->aperture);
+		snprint(p+len, READSTR-len, "addr 0x%zux\n", scr->aperture);
 		n = readstr(offset, a, n, p);
 		poperror();
 		free(p);
@@ -366,7 +368,7 @@ vgactl(Cmdbuf *cb)
 {
 	int align, i, size, x, y, z;
 	char *chanstr, *p;
-	ulong chan;
+	u32 chan;
 	Cmdtab *ct;
 	VGAscr *scr;
 	extern VGAdev *vgadev[];
@@ -415,8 +417,8 @@ vgactl(Cmdbuf *cb)
 		break;
 
 	case CMsize:
-		if(drawhasclients())
-			error(Ebusy);
+		/*TODO if(drawhasclients())
+			error(Ebusy);*/
 
 		x = strtoul(cb->f[1], &p, 0);
 		if(x == 0 || x > 2048)
@@ -439,12 +441,12 @@ vgactl(Cmdbuf *cb)
 		if(chantodepth(chan) != z)
 			error("depth, channel do not match");
 
-		cursoroff(1);
+		cursoroff();
 		deletescreenimage();
-		if(screensize(x, y, z, chan))
-			error(Egreg);
+		/* TODO if(screensize(x, y, z, chan))
+			error(Egreg); */
 		vgascreenwin(scr);
-		cursoron(1);
+		cursoron();
 		return;
 
 	case CMactualsize:
@@ -490,7 +492,7 @@ vgactl(Cmdbuf *cb)
 			align = 0;
 		else
 			align = strtoul(cb->f[2], 0, 0);
-		if(screenaperture(size, align))
+		if(screenaperture(scr, size, align))
 			error("not enough free address space");
 		return;
 
@@ -546,14 +548,14 @@ vgactl(Cmdbuf *cb)
 
 char Enooverlay[] = "No overlay support";
 
-static long
-vgawrite(Chan* c, void* a, long n, vlong off)
+static s32
+vgawrite(Chan* c, void* a, s32 n, s64 off)
 {
-	ulong offset = off;
+	uintptr offset = off;
 	Cmdbuf *cb;
 	VGAscr *scr;
 
-	switch((ulong)c->qid.path){
+	switch((u32)c->qid.path){
 
 	case Qdir:
 		error(Eperm);

@@ -3,10 +3,10 @@
 
 #define Maxrand	((1UL<<31)-1)
 
-ulong
-nfastrand(ulong n)
+u32
+nfastrand(u32 n)
 {
-	ulong m, r;
+	u32 m, r;
 	
 	/*
 	 * set m to the maximum multiple of n <= 2^31-1

@@ -37,11 +37,11 @@ unloadimage(Image *i, Rectangle r, uchar *data, int ndata)
 		if(dy > Dy(r))
 			dy = Dy(r);
 		a[0] = 'r';
-		BPLONG(a+1, i->id);
-		BPLONG(a+5, r.min.x);
-		BPLONG(a+9, r.min.y);
-		BPLONG(a+13, r.max.x);
-		BPLONG(a+17, r.min.y+dy);
+		BP32INT(a+1, i->id);
+		BP32INT(a+5, r.min.x);
+		BP32INT(a+9, r.min.y);
+		BP32INT(a+13, r.max.x);
+		BP32INT(a+17, r.min.y+dy);
 		if(flushimage(d, 0) < 0)
 			return -1;
 		if(d->local == 0)

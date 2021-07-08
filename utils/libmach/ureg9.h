@@ -5,8 +5,8 @@ struct Ureg
 /* 16*/	u64int	pc;	/* SRR0 */
 /* 24*/	u64int	unused;
 /* 32*/	u64int	lr;
-/* 36*/	u32int	pad;
-/* 40*/	u32int	cr;
+/* 36*/	u32	pad;
+/* 40*/	u32	cr;
 /* 48*/	u64int	xer;
 /* 56*/	u64int	ctr;
 /* 64*/	u64int	r0;

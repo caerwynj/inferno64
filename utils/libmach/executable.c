@@ -13,7 +13,7 @@ typedef struct {
 	union{
 		Exec	exec;
 		struct {
-			u32int	ohdr[8];	/* Exec */
+			u32	ohdr[8];	/* Exec */
 			uvlong hdr[1];
 		} exechdr64;
 		Ehdr elfhdr32;			/* elf.h */
@@ -22,7 +22,7 @@ typedef struct {
 		struct sparcexec sparc;	/* bootexec.h */
 		struct nextexec next;	/* bootexec.h */
 	} e;
-	u32int dummy;			/* padding to ensure extra u32int */
+	u32 dummy;			/* padding to ensure extra u32 */
 } ExecHdr;
 
 static	int	nextboot(int, Fhdr*, ExecHdr*);
@@ -335,19 +335,19 @@ commonboot(Fhdr *fp)
 		break;
 	case FI386:
 		fp->type = FI386B;
-		fp->txtaddr = (u32int)fp->entry;
+		fp->txtaddr = (u32)fp->entry;
 		fp->name = "386 plan 9 boot image";
 		fp->dataddr = _round(fp->txtaddr+fp->txtsz, mach->pgsize);
 		break;
 	case FARM:
 		fp->type = FARMB;
-		fp->txtaddr = (u32int)fp->entry;
+		fp->txtaddr = (u32)fp->entry;
 		fp->name = "ARM plan 9 boot image";
 		fp->dataddr = _round(fp->txtaddr+fp->txtsz, mach->pgsize);
 		return;
 	case FPOWER:
 		fp->type = FPOWERB;
-		fp->txtaddr = (u32int)fp->entry;
+		fp->txtaddr = (u32)fp->entry;
 		fp->name = "power plan 9 boot image";
 		fp->dataddr = fp->txtaddr+fp->txtsz;
 		break;
@@ -456,15 +456,15 @@ mips4kboot(int fd, Fhdr *fp, ExecHdr *hp)
 	switch(hp->e.mips4k.h.amagic) {
 	default:
 	case 0407:	/* some kind of mips */
-		settext(fp, (u32int)hp->e.mips4k.h.mentry, (u32int)hp->e.mips4k.h.text_start,
+		settext(fp, (u32)hp->e.mips4k.h.mentry, (u32)hp->e.mips4k.h.text_start,
 			hp->e.mips4k.h.tsize, sizeof(struct mips4kexec));
-		setdata(fp, (u32int)hp->e.mips4k.h.data_start, hp->e.mips4k.h.dsize,
+		setdata(fp, (u32)hp->e.mips4k.h.data_start, hp->e.mips4k.h.dsize,
 			fp->txtoff+hp->e.mips4k.h.tsize, hp->e.mips4k.h.bsize);
 		break;
 	case 0413:	/* some kind of mips */
-		settext(fp, (u32int)hp->e.mips4k.h.mentry, (u32int)hp->e.mips4k.h.text_start,
+		settext(fp, (u32)hp->e.mips4k.h.mentry, (u32)hp->e.mips4k.h.text_start,
 			hp->e.mips4k.h.tsize, 0);
-		setdata(fp, (u32int)hp->e.mips4k.h.data_start, hp->e.mips4k.h.dsize,
+		setdata(fp, (u32)hp->e.mips4k.h.data_start, hp->e.mips4k.h.dsize,
 			hp->e.mips4k.h.tsize, hp->e.mips4k.h.bsize);
 		break;
 	}

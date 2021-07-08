@@ -20,15 +20,15 @@ lineop(Image *dst, Point p0, Point p1, int end0, int end1, int radius, Image *sr
 		return;
 	}
 	a[0] = 'L';
-	BPLONG(a+1, dst->id);
-	BPLONG(a+5, p0.x);
-	BPLONG(a+9, p0.y);
-	BPLONG(a+13, p1.x);
-	BPLONG(a+17, p1.y);
-	BPLONG(a+21, end0);
-	BPLONG(a+25, end1);
-	BPLONG(a+29, radius);
-	BPLONG(a+33, src->id);
-	BPLONG(a+37, sp.x);
-	BPLONG(a+41, sp.y);
+	BP32INT(a+1, dst->id);
+	BP32INT(a+5, p0.x);
+	BP32INT(a+9, p0.y);
+	BP32INT(a+13, p1.x);
+	BP32INT(a+17, p1.y);
+	BP32INT(a+21, end0);
+	BP32INT(a+25, end1);
+	BP32INT(a+29, radius);
+	BP32INT(a+33, src->id);
+	BP32INT(a+37, sp.x);
+	BP32INT(a+41, sp.y);
 }

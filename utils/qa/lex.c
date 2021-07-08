@@ -3,6 +3,18 @@
 #include "y.tab.h"
 #include <ctype.h>
 
+struct
+{
+	char*	p;
+	int	c;
+} fi;
+
+struct
+{
+	Sym*	sym;
+	short	type;
+} h[NSYM];
+
 void
 main(int argc, char *argv[])
 {

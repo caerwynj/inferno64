@@ -2,6 +2,8 @@
 #include	"fns.h"
 #include	"error.h"
 
+extern void	(*coherence)(void);
+
 void
 lock(Lock *l)
 {

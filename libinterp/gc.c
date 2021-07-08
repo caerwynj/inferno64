@@ -2,6 +2,8 @@
 #include "interp.h"
 #include "pool.h"
 
+#define DP if(1){}else print
+
 enum
 {
 	Quanta		= 50,		/* Allocated blocks to sweep each time slice usually */
@@ -43,7 +45,7 @@ extern	Pool*	heapmem;
 static	Ptrhash	*ptrtab[PTRHASH];
 static	Ptrhash	*ptrfree;
 
-#define	HASHPTR(p)	(((ulong)(p) >> 6) & (PTRHASH - 1))
+#define	HASHPTR(p)	(((uintptr)(p) >> 6) & (PTRHASH - 1))
 
 void
 ptradd(Heap *v)
@@ -211,6 +213,38 @@ rootset(Prog *root)
 	marker = (gccolor-1)%3;
 	sweeper = (gccolor-2)%3;
 
+/* for debugging
+	DP("rootset root=0x%p\n", root);
+	while(root != nil) {
+		DP("Prog state %d pid %d ticks %ld\n",
+			root->state, root->pid, root->ticks);
+		DP("\tpc 0x%p module %s %s\n",
+			root->R.PC, root->R.M->m->name, root->R.M->m->path);
+		sp = root->R.SP;
+		ex = root->R.EX;
+		while(ex != nil) {
+			sx = (Stkext*)ex;
+			fp = sx->reg.tos.fu;
+			DP("Stkext stack extent 0x%p sp stack pointer 0x%p TR type register 0x%p \n"
+				"\tEX previous stack extent 0x%p\n"
+				"\tSP 0x%p TS top of stack 0x%p fp 0x%p\n",
+				sx, sp, sx->reg.TR, sx->reg.EX,
+				sx->reg.SP, sx->reg.TS, fp);
+			while(fp != sp) {
+				f = (Frame*)fp;
+				t = f->t;
+				if(t == nil){
+					DP("t == nil\n");
+					t = sx->reg.TR;
+				}
+				fp += t->size;
+				showframe((void*)f, t);
+			}
+			ex = sx->reg.EX;
+			sp = sx->reg.SP;
+		}
+		root = root->next;
+	}*/
 	while(root != nil) {
 		ml = root->R.M;
 		h = D2H(ml);
@@ -229,8 +263,9 @@ rootset(Prog *root)
 			while(fp != sp) {
 				f = (Frame*)fp;
 				t = f->t;
-				if(t == nil)
+				if(t == nil){
 					t = sx->reg.TR;
+				}
 				fp += t->size;
 				t->mark(t, f);
 				ml = f->mr;
@@ -282,7 +317,7 @@ domflag(Heap *h)
 	int i;
 	Module *m;
 
-	print("sweep h=0x%lux t=0x%lux c=%d", (ulong)h, (ulong)h->t, h->color);
+	print("sweep h=0x%zx t=0x%zx c=%d", (uintptr)h, (uintptr)h->t, h->color);
 	for(m = modules; m != nil; m = m->link) {
 		for(i = 0; i < m->ntype; i++) {
 			if(m->type[i] == h->t) {
@@ -369,8 +404,9 @@ rungc(Prog *p)
 	if(quanta > MaxQuanta)
 		quanta = MaxQuanta;
 
-	if(base != nil)		/* Completed this iteration ? */
+	if(base != nil){		/* Completed this iteration ? */
 		return;
+	}
 	if(nprop == 0) {	/* Completed the epoch ? */
 		gcepochs++;
 		gccolor++;

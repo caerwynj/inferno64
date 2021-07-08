@@ -4,7 +4,7 @@
 #include "local.h"
 
 char *
-logfsserverclunk(LogfsServer *server, u32int fid)
+logfsserverclunk(LogfsServer *server, u32 fid)
 {
 	Fid *f;
 	if(server->trace > 1)

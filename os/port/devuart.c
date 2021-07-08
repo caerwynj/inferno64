@@ -5,10 +5,7 @@
 #include	"fns.h"
 #include	"io.h"
 #include	"../port/error.h"
-
 #include	"../port/netif.h"
-
-#include	"../port/uart.h"
 
 enum
 {
@@ -114,9 +111,26 @@ uartdisable(Uart *p)
 	unlock(&uartalloc);
 }
 
-void
-uartmouse(Uart* p, int (*putc)(Queue*, int), int setb1200)
+static Uart*
+uartport(char *which)
 {
+	int port;
+	char *p;
+
+	port = strtol(which, &p, 0);
+	if(p == which)
+		error(Ebadarg);
+	if(port < 0 || port >= uartnuart || uart[port] == nil)
+		error(Enodev);
+	return uart[port];
+}
+
+void
+uartmouse(char *which, int (*putc)(Queue*, int), int setb1200)
+{
+	Uart *p;
+
+	p = uartport(which);
 	qlock(p);
 	if(p->opens++ == 0 && uartenable(p) == nil){
 		qunlock(p);
@@ -130,8 +144,11 @@ uartmouse(Uart* p, int (*putc)(Queue*, int), int setb1200)
 }
 
 void
-uartsetmouseputc(Uart* p, int (*putc)(Queue*, int))
+uartsetmouseputc(char *which, int (*putc)(Queue*, int))
 {
+	Uart *p;
+
+	p = uartport(which);
 	qlock(p);
 	if(p->opens == 0 || p->special == 0){
 		qunlock(p);
@@ -255,7 +272,7 @@ uartstat(Chan *c, uchar *dp, int n)
 }
 
 static Chan*
-uartopen(Chan *c, int omode)
+uartopen(Chan *c, u32 omode)
 {
 	Uart *p;
 
@@ -337,8 +354,8 @@ uartclose(Chan *c)
 	}
 }
 
-static long
-uartread(Chan *c, void *buf, long n, vlong off)
+static s32
+uartread(Chan *c, void *buf, s32 n, s64 off)
 {
 	Uart *p;
 	ulong offset = off;
@@ -463,6 +480,7 @@ uartctl(Uart *p, char *cmd)
 			break;
 		case 'W':
 		case 'w':
+			/* TODO 9front manages the timer here */
 			/* obsolete */
 			break;
 		case 'X':
@@ -478,8 +496,8 @@ uartctl(Uart *p, char *cmd)
 	return 0;
 }
 
-static long
-uartwrite(Chan *c, void *buf, long n, vlong)
+static s32
+uartwrite(Chan *c, void *buf, s32 n, s64)
 {
 	Uart *p;
 	char *cmd;

@@ -86,11 +86,6 @@ struct	Optab
 	char	size;
 	char	param;
 };
-struct
-{
-	Optab*	start;
-	Optab*	stop;
-} oprange[ALAST];
 
 enum
 {

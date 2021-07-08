@@ -18,7 +18,7 @@ static uint dumpsome(char*, char*, char*, long);
 static void fdirconv(char*, char*, Dir*);
 static char *qidtype(char*, uchar);
 
-#define	QIDFMT	"(%.16llux %lud %s)"
+#define	QIDFMT	"(%.16llux %ud %s)"
 
 int
 fcallfmt(Fmt *fmt)
@@ -191,8 +191,8 @@ fdirconv(char *buf, char *e, Dir *d)
 	char tmp[16];
 
 	seprint(buf, e, "'%s' '%s' '%s' '%s' "
-		"q " QIDFMT " m %#luo "
-		"at %ld mt %ld l %lld "
+		"q " QIDFMT " m %#uo "
+		"at %d mt %d l %lld "
 		"t %d d %d",
 			d->name, d->uid, d->gid, d->muid,
 			d->qid.path, d->qid.vers, qidtype(tmp, d->qid.type), d->mode,

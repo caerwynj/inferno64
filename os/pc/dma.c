@@ -124,11 +124,11 @@ dmainit(int chan, int maxtransfer)
  *  return the updated transfer length (we can't transfer across 64k
  *  boundaries)
  */
-long
-dmasetup(int chan, void *va, long len, int isread)
+s32
+dmasetup(int chan, void *va, s32 len, s32 isread)
 {
 	DMA *dp;
-	ulong pa;
+	uintptr pa;
 	uchar mode;
 	DMAxfer *xp;
 
@@ -141,7 +141,7 @@ dmasetup(int chan, void *va, long len, int isread)
 	 *  use the bounce buffer.
 	 */
 	pa = PADDR(va);
-	if((((ulong)va)&0xF0000000) != KZERO
+	if((((uintptr)va)&0xF0000000) != KZERO
 	|| (pa&0xFFFF0000) != ((pa+len)&0xFFFF0000)
 	|| pa >= 16*MB) {
 		if(xp->bva == nil)

@@ -64,7 +64,7 @@ field in the
 message should be set to
 .BR NOFID ,
 defined as
-.B (u32int)~0
+.B (u32)~0
 in
 .BR <fcall.h> .
 If the client does wish to authenticate, it must acquire and validate an

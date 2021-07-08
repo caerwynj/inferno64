@@ -1,3 +1,4 @@
+#undef MIN
 #define MIN(a, b) ((a) <= (b) ? (a) : (b))
 
 /* rfc 3513 defines the address prefices */

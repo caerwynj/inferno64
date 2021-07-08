@@ -168,7 +168,6 @@ scsirio(SDreq* r)
 		default:
 			return -1;
 		}
-		return -1;
 	case SDok:
 		return 0;
 	}

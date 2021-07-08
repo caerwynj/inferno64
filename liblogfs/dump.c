@@ -4,8 +4,8 @@
 #include "fcall.h"
 
 typedef struct WalkState {
-	u32int *flashaddrp;
-	u32int *lengthp;
+	u32 *flashaddrp;
+	u32 *lengthp;
 	int i;
 	int nth;
 } WalkState;
@@ -25,7 +25,7 @@ walk(void *magic, Extent *e, int hole)
 }
 
 char *
-logfsserverreadpathextent(LogfsServer *server, u32int path, int nth, u32int *flashaddrp, u32int *lengthp,
+logfsserverreadpathextent(LogfsServer *server, u32 path, int nth, u32 *flashaddrp, u32 *lengthp,
 	long *blockp, int *pagep, int *offsetp)
 {
 	Entry *e;

@@ -11,7 +11,7 @@ struct Draw
 	Memlayer		*dstlayer;
 	Memimage	*src;
 	Memimage	*mask;
-	s32int	op;
+	s32	op;
 };
 
 static

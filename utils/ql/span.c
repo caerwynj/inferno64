@@ -1,6 +1,12 @@
 #include	"l.h"
 #define	r0iszero	1
 
+struct
+{
+	Optab*	start;
+	Optab*	stop;
+} oprange[ALAST];
+
 void
 span(void)
 {

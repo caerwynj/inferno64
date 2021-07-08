@@ -167,7 +167,7 @@ struct Fmt{
 	int	r;			/* % format Rune */
 	int	width;
 	int	prec;
-	u32int	flags;
+	u32	flags;
 };
 
 enum{
@@ -308,8 +308,8 @@ extern	int	encodefmt(Fmt*);
  */
 typedef
 struct Lock {
-	u32int	val;
-	u32int	pid;
+	u32	val;
+	u32	pid;
 } Lock;
 
 extern int	_tas(int*);
@@ -330,7 +330,7 @@ struct QLock
 extern	void	qlock(QLock*);
 extern	void	qunlock(QLock*);
 extern	int	canqlock(QLock*);
-extern	void	_qlockinit(u32int (*)(u32int, u32int));	/* called only by the thread library */
+extern	void	_qlockinit(u32 (*)(u32, u32));	/* called only by the thread library */
 
 typedef
 struct RWLock
@@ -405,7 +405,7 @@ typedef
 struct Qid
 {
 	u64int	path;
-	u32int	vers;
+	u32	vers;
 	uchar	type;
 } Qid;
 
@@ -416,9 +416,9 @@ struct Dir {
 	uint	dev;	/* server subtype */
 	/* file data */
 	Qid	qid;	/* unique id from server */
-	u32int	mode;	/* permissions */
-	u32int	atime;	/* last read time */
-	u32int	mtime;	/* last write time */
+	u32	mode;	/* permissions */
+	u32	atime;	/* last read time */
+	u32	mtime;	/* last write time */
 	s64int	length;	/* file length */
 	char	*name;	/* last element of path */
 	char	*uid;	/* owner name */
@@ -430,15 +430,15 @@ extern	Dir*	dirstat(char*);
 extern	Dir*	dirfstat(int);
 extern	int	dirwstat(char*, Dir*);
 extern	int	dirfwstat(int, Dir*);
-extern	s32int	dirread(int, Dir**);
+extern	s32	dirread(int, Dir**);
 extern	void	nulldir(Dir*);
-extern	s32int	dirreadall(int, Dir**);
+extern	s32	dirreadall(int, Dir**);
 
 typedef
 struct Waitmsg
 {
 	int pid;	/* of loved one */
-	u32int time[3];	/* of loved one & descendants */
+	u32 time[3];	/* of loved one & descendants */
 	char	*msg;
 } Waitmsg;
 
@@ -505,7 +505,7 @@ extern char *argv0;
 #define FPAZDIV FPZDIV
 #define FPAINVAL        FPINVAL
 
-extern  void    setfcr(u32int);
-extern  void    setfsr(u32int);
-extern  u32int   getfcr(void);
-extern  u32int   getfsr(void);
+extern  void    setfcr(u32);
+extern  void    setfsr(u32);
+extern  u32   getfcr(void);
+extern  u32   getfsr(void);

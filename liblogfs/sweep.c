@@ -94,7 +94,7 @@ sweepwrite(LogfsServer *server, LogMessage *s, int readoffset, Entry **ep, int *
 typedef struct FixupState {
 	LogfsServer *server;
 	int oldoffset;
-	u32int newflashaddr;
+	u32 newflashaddr;
 } FixupState;
 
 static int

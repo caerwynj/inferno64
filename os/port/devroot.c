@@ -69,9 +69,9 @@ rootgen(Chan *c, char *name, Dirtab *tab, int nd, int s, Dir *dp)
 }
 
 static Walkqid*
-rootwalk(Chan *c, Chan *nc, char **name, int nname)
+rootwalk(Chan *c, Chan *nc, char **name, s32 nname)
 {
-	ulong p;
+	u32 p;
 
 	p = c->qid.path;
 	if(nname == 0)
@@ -79,8 +79,8 @@ rootwalk(Chan *c, Chan *nc, char **name, int nname)
 	return devwalk(c, nc, name, nname, rootdata[p].ptr, rootdata[p].size, rootgen);
 }
 
-static int
-rootstat(Chan *c, uchar *dp, int n)
+static s32
+rootstat(Chan *c, uchar *dp, s32 n)
 {
 	int p;
 
@@ -89,7 +89,7 @@ rootstat(Chan *c, uchar *dp, int n)
 }
 
 static Chan*
-rootopen(Chan *c, int omode)
+rootopen(Chan *c, u32 omode)
 {
 	int p;
 
@@ -105,10 +105,10 @@ rootclose(Chan*)
 {
 }
 
-static long	 
-rootread(Chan *c, void *buf, long n, vlong offset)
+static s32
+rootread(Chan *c, void *buf, s32 n, s64 offset)
 {
-	ulong p, len;
+	u32 p, len;
 	uchar *data;
 
 	p = c->qid.path;
@@ -124,8 +124,8 @@ rootread(Chan *c, void *buf, long n, vlong offset)
 	return n;
 }
 
-static long	 
-rootwrite(Chan*, void*, long, vlong)
+static s32
+rootwrite(Chan*, void*, s32, s64)
 {
 	error(Eperm);
 	return 0;

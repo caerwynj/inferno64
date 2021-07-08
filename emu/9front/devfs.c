@@ -122,7 +122,7 @@ fswalk(Chan *c, Chan *nc, char **name, int nname)
 		}
 		n = name[j];
 		if(strcmp(n, ".") != 0 && !(isdotdot(n) && nc->qid.path == rootqid.path)){	/* TO DO: underlying qids aliased */
-			//print("** ufs walk '%s' -> %s\n", current->s, n);
+			// print("** ufs walk '%s' -> %s\n", current->s, n);
 			next = current;
 			incref(&next->r);
 			next = addelem(current, n);
@@ -141,7 +141,7 @@ fswalk(Chan *c, Chan *nc, char **name, int nname)
 		}
 		wq->qid[wq->nqid++] = nc->qid;
 	}
-//	print("** ufs walk '%s'\n", current->s);
+	// print("** ufs walk '%s'\n", current->s);
 
 	poperror();
 	if(wq->nqid < nname){

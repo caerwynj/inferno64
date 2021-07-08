@@ -27,6 +27,7 @@ EMUDIRS=\
 	utils/ndate\
 	emu\
 
+
 KERNEL_DIRS=\
 	os\
 	os/boot/pc\
@@ -205,3 +206,68 @@ mkdirs-sh:V:
 
 mkdirs-nt:V:
 	mkdir -p `{cmd /c type lib\emptydirs}
+
+# build iso using 9front's 9bootfat
+#	details in 9front's
+#		/sys/lib/dist/mkfile
+#		/sys/src/boot/{pc,efi}/mkfile
+# TODO
+#	inferno manual talks about plan9.ini being in / and not cfg/
+%inferno.amd64.iso:D: /root/386/9bootiso /root/386/mbr /root/386/pbs
+	ROOT=/mnt/term/home/j/local/plan9/custom/inferno-os
+	rm -fr $target 386 amd64 cfg
+	@{rfork n
+		mkdir 386
+		mkdir cfg
+		mkdir amd64
+		cp /root/386/^(9bootiso mbr pbs) 386
+		cp /root/386/9pc 386
+		cp /root/amd64/9pc64 amd64
+		cp $ROOT/Inferno/amd64/bin/ipc64 amd64
+		cp /sys/lib/dist/cfg/plan9.ini cfg/plan9.ini
+		echo '-----' cfg/plan9.ini '-----'
+		echo 'console=0 b115200' >>cfg/plan9.ini
+		echo 'bootfile=/amd64/ipc64' >>cfg/plan9.ini
+		# echo 'bootfile=/amd64/9pc64' >>cfg/plan9.ini
+		# echo wait >>cfg/plan9.ini
+		cat cfg/plan9.ini
+		echo '        ' '-----'
+		disk/mk9660 -c9j -B 386/9bootiso -p <{echo +} -s $ROOT -v 'Inferno amd64' $target
+		rm -fr 386 amd64 cfg
+	}
+	test -d /mnt/term/tmp && cp -x $target /mnt/term/$target
+
+%inferno.amd64.hybrid.iso:D: /root/386/9bootiso /root/386/9boothyb /root/386/9bootfat /root/386/9bootpxe /root/386/mbr /root/386/pbs /root/386/efiboot.fat /root/386/bootia32.efi /root/386/bootx64.efi
+	ROOT=/mnt/term/home/j/local/plan9/custom/inferno-os
+	rm -fr 386 cfg efi $target
+	@{rfork n
+		mkdir 386
+		mkdir cfg
+		mkdir efi
+		mkdir efi/boot
+		cp /root/386/^(9bootiso 9boothyb 9bootfat 9bootpxe mbr pbs efiboot.fat bootia32.efi bootx64.efi) 386
+		cp /root/386/^(bootia32.efi bootx64.efi) efi/boot
+		cp /root/386/9pc 386
+		cp /sys/lib/dist/cfg/plan9.ini cfg/plan9.ini
+		echo cfg/plan9.ini '-----'
+		echo 'console=0 b115200' >>cfg/plan9.ini
+		echo 'bootfile=Inferno/amd64/bin/ipc64' >>cfg/plan9.ini
+		echo wait >>cfg/plan9.ini
+		cat cfg/plan9.ini
+		echo '           ' '-----'
+		disk/mk9660 -c9j -B 386/9bootiso -E 386/efiboot.fat -p <{echo +} -s $ROOT -v 'Inferno amd64' $target
+		@{rfork n
+			bind /root/386/9boothyb /root/386/9bootfat
+			dd -if /dev/zero -bs 512 -count 4096 >> $target
+			disk/partfs -m /n/partfs $target
+			disk=/n/partfs/sdXX
+			disk/mbr -m /root/386/mbr $disk/data
+			@{echo a p1 '$-1' '$'
+				echo t p1 FAT16
+				echo A p1
+				echo w
+				echo q} | disk/fdisk -b $disk/data
+			disk/format -b /root/386/pbs -d -r 1 $disk/dos /root/386/9bootfat
+		}
+		rm -fr 386 cfg efi
+	}

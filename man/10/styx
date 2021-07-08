@@ -56,11 +56,11 @@ typedef
 struct Fcall
 {
 	uchar	type;
-	u32int	fid;
+	u32	fid;
 	ushort	tag;
 	union {
 		struct {
-			u32int	msize;	/* Tversion, Rversion */
+			u32	msize;	/* Tversion, Rversion */
 			char	*version;	/* Tversion, Rversion */
 		};
 		struct {
@@ -71,23 +71,23 @@ struct Fcall
 		};
 		struct {
 			Qid	qid;	/* Rattach, Ropen, Rcreate */
-			u32int	iounit;	/* Ropen, Rcreate */
+			u32	iounit;	/* Ropen, Rcreate */
 		};
 		struct {
 			Qid	aqid;	/* Rauth */
 		};
 		struct {
-			u32int	afid;	/* Tauth, Tattach */
+			u32	afid;	/* Tauth, Tattach */
 			char	*uname;	/* Tauth, Tattach */
 			char	*aname;	/* Tauth, Tattach */
 		};
 		struct {
-			u32int	perm;	/* Tcreate */ 
+			u32	perm;	/* Tcreate */ 
 			char	*name;	/* Tcreate */
 			uchar	mode;	/* Tcreate, Topen */
 		};
 		struct {
-			u32int	newfid;	/* Twalk */
+			u32	newfid;	/* Twalk */
 			ushort	nwname;	/* Twalk */
 			char	*wname[MAXWELEM];	/* Twalk */
 		};
@@ -97,7 +97,7 @@ struct Fcall
 		};
 		struct {
 			vlong	offset;	/* Tread, Twrite */
-			u32int	count;	/* Tread, Twrite, Rread */
+			u32	count;	/* Tread, Twrite, Rread */
 			char	*data;	/* Twrite, Rread */
 		};
 		struct {

@@ -3,7 +3,7 @@
 #include "local.h"
 
 char *
-logfsserveropen(LogfsServer *server, u32int fid, uchar mode, Qid *qid)
+logfsserveropen(LogfsServer *server, u32 fid, uchar mode, Qid *qid)
 {
 	Fid *f;
 	Entry *e;

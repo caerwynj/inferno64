@@ -197,3 +197,101 @@ i8259disable(int irq)
 	iunlock(&i8259lock);
 	return 0;
 }
+
+static int
+irqenable(Vctl *v, int shared)
+{
+	if(shared)
+		return 0;
+	ilock(&i8259lock);
+	i8259mask &= ~(1<<v->irq);
+	if(v->irq < 8)
+		outb(Int0aux, i8259mask & 0xFF);
+	else
+		outb(Int1aux, (i8259mask>>8) & 0xFF);
+	iunlock(&i8259lock);
+	return 0;
+}
+
+static int
+irqdisable(Vctl *v, int shared)
+{
+	if(shared)
+		return 0;
+	ilock(&i8259lock);
+	i8259mask |= 1<<v->irq;
+	if(v->irq < 8)
+		outb(Int0aux, i8259mask & 0xFF);
+	else
+		outb(Int1aux, (i8259mask>>8) & 0xFF);
+	iunlock(&i8259lock);
+	return 0;
+}
+
+int
+i8259assign(Vctl *v)
+{
+	int irq, irqbit;
+
+	/*
+	 * Given an IRQ, enable the corresponding interrupt in the i8259
+	 * and return the vector to be used. The i8259 is set to use a fixed
+	 * range of vectors starting at VectorPIC.
+	 */
+	irq = v->irq;
+	if(irq < 0 || irq > MaxIrqPIC){
+		print("i8259enable: irq %d out of range\n", irq);
+		return -1;
+	}
+	irqbit = 1<<irq;
+
+	ilock(&i8259lock);
+	if(!(i8259mask & irqbit) && !(i8259elcr & irqbit)){
+		print("i8259enable: irq %d shared but not level\n", irq);
+		iunlock(&i8259lock);
+		return -1;
+	}
+	iunlock(&i8259lock);
+
+	if(i8259elcr & irqbit)
+		v->eoi = i8259isr;
+	else
+		v->isr = i8259isr;
+
+	v->enable = irqenable;
+	v->disable = irqdisable;
+
+	return VectorPIC+irq;
+}
+
+int
+i8259irqno(int irq, int tbdf)
+{
+	if(tbdf != BUSUNKNOWN && (irq == 0xff || irq == 0))
+		return -1;
+
+	/*
+	 * IRQ2 doesn't really exist, it's used to gang the interrupt
+	 * controllers together. A device set to IRQ2 will appear on
+	 * the second interrupt controller as IRQ9.
+	 */
+	if(irq == 2)
+		irq = 9;
+
+	return irq;
+}
+
+void
+i8259on(void)
+{
+	outb(Int0aux, i8259mask&0xFF);
+	outb(Int1aux, (i8259mask>>8)&0xFF);
+}
+
+void
+i8259off(void)
+{
+	outb(Int0aux, 0xFF);
+	outb(Int1aux, 0xFF);
+}
+

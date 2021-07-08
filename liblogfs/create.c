@@ -3,7 +3,7 @@
 #include "local.h"
 
 char *
-logfsservercreate(LogfsServer *server, u32int fid, char *name, u32int perm, uchar mode, Qid *qid)
+logfsservercreate(LogfsServer *server, u32 fid, char *name, u32 perm, uchar mode, Qid *qid)
 {
 	Fid *f;
 	char *uid;

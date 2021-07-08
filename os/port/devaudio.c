@@ -53,7 +53,7 @@ Dirtab audiodir[] =
 struct	Buf
 {
 	uchar*	virt;
-	ulong	phys;
+	uintptr	phys;
 	Buf*	next;
 };
 struct	AQueue
@@ -465,7 +465,7 @@ sbbufinit(void)
 		p = xspanalloc(Bufsize, CACHELINESZ, 64*1024);
 		dcflush(p, Bufsize);
 		audio.buf[i].virt = UNCACHED(uchar, p);
-		audio.buf[i].phys = (ulong)PADDR(p);
+		audio.buf[i].phys = PADDR(p);
 	}
 }
 
@@ -519,7 +519,7 @@ audioinit(void)
 	case 0x280:
 		break;
 	default:
-		print("#A: bad port 0x%lx\n", sbconf.port);
+		print("#A: bad port 0x%x\n", sbconf.port);
 		return;
 	}
 	switch(sbconf.irq){
@@ -607,7 +607,7 @@ audiostat(Chan *c, uchar *db, int n)
 }
 
 static Chan*
-audioopen(Chan *c, int omode)
+audioopen(Chan *c, u32 omode)
 {
 	int amode;
 
@@ -682,8 +682,8 @@ audioclose(Chan *c)
 	}
 }
 
-static long
-audioread(Chan *c, void *vp, long n, vlong offset)
+static s32
+audioread(Chan *c, void *vp, s32 n, s64 offset)
 {
 	int liv, riv, lov, rov;
 	long m, n0;
@@ -778,8 +778,8 @@ audioread(Chan *c, void *vp, long n, vlong offset)
 	return n0-n;
 }
 
-static long
-audiowrite(Chan *c, void *vp, long n, vlong)
+static s32
+audiowrite(Chan *c, void *vp, s32 n, s64)
 {
 	long m, n0;
 	int i, nf, v, left, right, in, out;

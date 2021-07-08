@@ -16,7 +16,7 @@ struct Pending
 {
 	Pending*	next;
 	Pending*	prev;
-	int fid;
+	s32 fid;
 	Channel*	rc;
 	Channel*	wc;
 };
@@ -25,9 +25,9 @@ struct SrvFile
 {
 	char*	name;
 	char*	user;
-	ulong		perm;
+	u32		perm;
 	Qid		qid;
-	int		ref;
+	s32		ref;
 
 	/* root directory */
 	char*	spec;
@@ -35,9 +35,9 @@ struct SrvFile
 	SrvFile*	entry;
 
 	/* file */
-	int		opens;
-	int		flags;
-	vlong	length;
+	s32		opens;
+	s32		flags;
+	s64	length;
 	Channel*	read;
 	Channel*	write;
 	SrvFile*	dir;		/* parent directory */
@@ -58,7 +58,7 @@ struct SrvDev
 	Type*	Rread;
 	Type*	Rwrite;
 	QLock	l;
-	ulong	pathgen;
+	u32	pathgen;
 	SrvFile*	devices;
 };
 
@@ -170,7 +170,7 @@ srvattach(char *spec)
 	d->ref = 1;
 	kstrdup(&d->spec, spec);
 	kstrdup(&d->user, up->env->user);
-	snprint(srvname, sizeof(srvname), "srv%ld", up->env->pgrp->pgrpid);
+	snprint(srvname, sizeof(srvname), "srv%d", up->env->pgrp->pgrpid);
 	kstrdup(&d->name, srvname);
 	d->perm = DMDIR|0770;
 	mkqid(&d->qid, dev.pathgen++, 0, QTDIR);
@@ -189,7 +189,7 @@ srvattach(char *spec)
 }
 
 static Walkqid*
-srvwalk(Chan *c, Chan *nc, char **name, int nname)
+srvwalk(Chan *c, Chan *nc, char **name, s32 nname)
 {
 	SrvFile *d, *pd;
 	Walkqid *w;
@@ -222,8 +222,8 @@ srvwalk(Chan *c, Chan *nc, char **name, int nname)
 	return w;
 }
 
-static int
-srvstat(Chan *c, uchar *db, int n)
+static s32
+srvstat(Chan *c, uchar *db, s32 n)
 {
 	qlock(&dev.l);
 	if(waserror()){
@@ -237,7 +237,7 @@ srvstat(Chan *c, uchar *db, int n)
 }
 
 static Chan*
-srvopen(Chan *c, int omode)
+srvopen(Chan *c, u32 omode)
 {
 	SrvFile *sf;
 
@@ -276,8 +276,8 @@ srvopen(Chan *c, int omode)
 	return c;
 }
 
-static int
-srvwstat(Chan *c, uchar *dp, int n)
+static s32
+srvwstat(Chan *c, uchar *dp, s32 n)
 {
 	Dir *d;
 	SrvFile *sf, *f;
@@ -546,8 +546,8 @@ delwaiting(Pending *w)
 	w->prev->next = w->next;
 }
 
-static long
-srvread(Chan *c, void *va, long count, vlong offset)
+static s32
+srvread(Chan *c, void *va, s32 count, s64 offset)
 {
 	int l;
 	Heap * volatile h;
@@ -644,8 +644,8 @@ srvread(Chan *c, void *va, long count, vlong offset)
 	return l;
 }
 
-static long
-srvwrite(Chan *c, void *va, long count, vlong offset)
+static s32
+srvwrite(Chan *c, void *va, s32 count, s64 offset)
 {
 	long l;
 	Heap * volatile h;

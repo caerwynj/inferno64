@@ -3,7 +3,7 @@
  * functions (possibly) linked in, complete, from libc.
  */
 #define nelem(x)	(sizeof(x)/sizeof((x)[0]))
-#define offsetof(s, m)	(ulong)(&(((s*)0)->m))
+#define offsetof(s, m)	(u32)(&(((s*)0)->m))
 #define assert(x)	if(x){}else _assert("x")
 
 /*
@@ -53,6 +53,7 @@ extern	int	runetochar(char*, Rune*);
 extern	int	chartorune(Rune*, char*);
 extern	char*	utfrune(char*, long);
 extern	int	utflen(char*);
+extern	int	utfnlen(char*, long);
 extern	int	runelen(long);
 
 extern	int	abs(int);
@@ -117,8 +118,8 @@ extern	ulong	getcallerpc(void*);
 
 extern	long	strtol(char*, char**, int);
 extern	ulong	strtoul(char*, char**, int);
-extern	vlong	strtoll(char*, char**, int);
-extern	uvlong	strtoull(char*, char**, int);
+extern	s64	strtoll(char*, char**, int);
+extern	u64	strtoull(char*, char**, int);
 extern	char	etext[];
 extern	char	edata[];
 extern	char	end[];
@@ -189,21 +190,21 @@ typedef struct Waitmsg	Waitmsg;
 
 struct Qid
 {
-	uvlong	path;
-	ulong	vers;
+	u64	path;
+	u32	vers;
 	uchar	type;
 };
 
 struct Dir {
 	/* system-modified data */
-	ushort	type;	/* server type */
-	uint	dev;	/* server subtype */
+	u16	type;	/* server type */
+	u32	dev;	/* server subtype */
 	/* file data */
 	Qid	qid;	/* unique id from server */
-	ulong	mode;	/* permissions */
-	ulong	atime;	/* last read time */
-	ulong	mtime;	/* last write time */
-	vlong	length;	/* file length: see <u.h> */
+	u32	mode;	/* permissions */
+	u32	atime;	/* last read time */
+	u32	mtime;	/* last write time */
+	s64	length;	/* file length: see <u.h> */
 	char	*name;	/* last element of path */
 	char	*uid;	/* owner name */
 	char	*gid;	/* group name */
@@ -213,6 +214,6 @@ struct Dir {
 struct Waitmsg
 {
 	int	pid;	/* of loved one */
-	ulong	time[3];	/* of loved one and descendants */
+	u32	time[3];	/* of loved one and descendants */
 	char	msg[ERRMAX];	/* actually variable-size in user mode */
 };

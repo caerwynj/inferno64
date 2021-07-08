@@ -11,7 +11,7 @@
 extern Dynobj* dynld(int);
 extern char*	enverror(void);
 
-typedef struct{char *name; long sig; void (*fn)(void*); int size; int np; uchar map[16];} Runtab;
+typedef struct{char *name; s32 sig; void (*fn)(void*); int size; int np; uchar map[16];} Runtab;
 
 static void*
 addr(char *pre, char *suf, Dynobj *o, ulong sig)

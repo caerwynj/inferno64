@@ -5,13 +5,13 @@
 #define DP if(1){}else print
 
 Image*
-allocimage(Display *d, Rectangle r, u32int chan, int repl, u32int val)
+allocimage(Display *d, Rectangle r, u32 chan, int repl, u32 val)
 {
 	return _allocimage(nil, d, r, chan, repl, val, 0, 0);
 }
 
 Image*
-_allocimage(Image *ai, Display *d, Rectangle r, u32int chan, int repl, u32int val, int screenid, int refresh)
+_allocimage(Image *ai, Display *d, Rectangle r, u32 chan, int repl, u32 val, int screenid, int refresh)
 {
 	uchar *a;
 	char *err;
@@ -104,7 +104,7 @@ namedimage(Display *d, char *name)
 	char *err, buf[12*12+1];
 	Image *i;
 	int id, n;
-	u32int chan;
+	u32 chan;
 
 	err = 0;
 	i = 0;

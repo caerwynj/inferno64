@@ -251,7 +251,7 @@ i8253read(uvlong *hz)
 	uvlong ticks;
 
 	if(hz)
-		*hz = i8253.hz;
+		*hz = Freq<<Tickshift;
 
 	ilock(&i8253);
 	outb(Tmode, Latch2);
@@ -276,39 +276,4 @@ i8253read(uvlong *hz)
 	iunlock(&i8253);
 
 	return ticks<<Tickshift;
-}
-
-void
-delay(int millisecs)
-{
-	millisecs *= m->loopconst;
-	if(millisecs <= 0)
-		millisecs = 1;
-	aamloop(millisecs);
-}
-
-void
-microdelay(int microsecs)
-{
-	microsecs *= m->loopconst;
-	microsecs /= 1000;
-	if(microsecs <= 0)
-		microsecs = 1;
-	aamloop(microsecs);
-}
-
-/*  
- *  performance measurement ticks.  must be low overhead.
- *  doesn't have to count over a second.
- */
-ulong
-perfticks(void)
-{
-	uvlong x;
-
-	if(m->havetsc)
-		cycles(&x);
-	else
-		x = 0;
-	return x;
 }

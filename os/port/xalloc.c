@@ -4,7 +4,7 @@
 #include "dat.h"
 #include "fns.h"
 
-#define datoff		((ulong)((Xhdr*)0)->data)
+#define datoff		((uintptr)((Xhdr*)0)->data)
 
 enum
 {
@@ -19,16 +19,16 @@ typedef struct Xhdr Xhdr;
 
 struct Hole
 {
-	ulong	addr;
-	ulong	size;
-	ulong	top;
+	uintptr	addr;
+	u64	size;
+	uintptr	top;
 	Hole*	link;
 };
 
 struct Xhdr
 {
-	ulong	size;
-	ulong	magix;
+	u64	size;
+	u32	magix;
 	char	data[1];
 };
 
@@ -53,6 +53,8 @@ void
 xinit(void)
 {
 	Hole *h, *eh;
+	Confmem *cm;
+	int i;
 
 	eh = &xlists.hole[Nhole-1];
 	for(h = xlists.hole; h < eh; h++)
@@ -60,31 +62,23 @@ xinit(void)
 
 	xlists.flist = xlists.hole;
 
-	if(conf.npage1)
-		xhole(conf.base1, conf.npage1*BY2PG);
-	conf.npage1 = conf.base1+(conf.npage1*BY2PG);
-
-	if(conf.npage0)
-		xhole(conf.base0, conf.npage0*BY2PG);
-	conf.npage0 = conf.base0+(conf.npage0*BY2PG);
-
-	/* Save the bounds of kernel alloc memory for kernel mmu mapping */
-	conf.base0 = (ulong)KADDR(conf.base0);
-	conf.base1 = (ulong)KADDR(conf.base1);
-	conf.npage0 = (ulong)KADDR(conf.npage0);
-	conf.npage1 = (ulong)KADDR(conf.npage1);
+	for(i=0; i<nelem(conf.mem); i++){
+		cm = &conf.mem[i];
+		xhole(cm->base, cm->npage*BY2PG);
+	}
 
 	debugkey('x', "xalloc/ialloc", ixprt, 0);
+	xsummary();
 }
 
 void*
-xspanalloc(ulong size, int align, ulong span)
+xspanalloc(uintptr size, s32 align, uintptr span)
 {
-	ulong a, v, t;
+	uintptr a, v, t;
 
-	a = (ulong)xalloc(size+align+span);
+	a = (uintptr)xalloc(size+align+span);
 	if(a == 0)
-		panic("xspanalloc: %lud %d %lux\n", size, align, span);
+		panic("xspanalloc: %zud %d %zux\n", size, align, span);
 
 	if(span > 2) {
 		v = (a + span) & ~(span-1);
@@ -105,7 +99,7 @@ xspanalloc(ulong size, int align, ulong span)
 }
 
 void*
-xallocz(ulong size, int zero)
+xallocz(uintptr size, s32 zero)
 {
 	Xhdr *p;
 	Hole *h, **l;
@@ -140,7 +134,7 @@ xallocz(ulong size, int zero)
 }
 
 void*
-xalloc(ulong size)
+xalloc(uintptr size)
 {
 	return xallocz(size, 1);
 }
@@ -150,10 +144,10 @@ xfree(void *p)
 {
 	Xhdr *x;
 
-	x = (Xhdr*)((ulong)p - datoff);
+	x = (Xhdr*)((uintptr)p - datoff);
 	if(x->magix != Magichole) {
 		xsummary();
-		panic("xfree(0x%lux) 0x%lux!=0x%lux", p, (ulong)Magichole, x->magix);
+		panic("xfree(0x%p) 0x%ux!=0x%ux", p, (u32)Magichole, x->magix);
 	}
 	xhole(PADDR(x), x->size);
 }
@@ -163,11 +157,11 @@ xmerge(void *vp, void *vq)
 {
 	Xhdr *p, *q;
 
-	p = (Xhdr*)(((ulong)vp - offsetof(Xhdr, data[0])));
-	q = (Xhdr*)(((ulong)vq - offsetof(Xhdr, data[0])));
+	p = (Xhdr*)(((uintptr)vp - offsetof(Xhdr, data[0])));
+	q = (Xhdr*)(((uintptr)vq - offsetof(Xhdr, data[0])));
 	if(p->magix != Magichole || q->magix != Magichole) {
 		xsummary();
-		panic("xmerge(%#p, %#p) bad magic %#lux, %#lux\n",
+		panic("xmerge(%#p, %#p) bad magic %#ux, %#ux\n",
 			vp, vq, p->magix, q->magix);
 	}
 	if((uchar*)p+p->size == (uchar*)q) {
@@ -178,9 +172,9 @@ xmerge(void *vp, void *vq)
 }
 
 void
-xhole(ulong addr, ulong size)
+xhole(uintptr addr, uintptr size)
 {
-	ulong top;
+	uintptr top;
 	Hole *h, *c, **l;
 
 	if(size == 0)
@@ -217,7 +211,7 @@ xhole(ulong addr, ulong size)
 
 	if(xlists.flist == nil) {
 		iunlock(&xlists);
-		print("xfree: no free holes, leaked %lud bytes\n", size);
+		print("xfree: no free holes, leaked %zud bytes\n", size);
 		return;
 	}
 
@@ -234,18 +228,18 @@ xhole(ulong addr, ulong size)
 void
 xsummary(void)
 {
-	int i;
+	s64 i;
 	Hole *h;
 
 	i = 0;
 	for(h = xlists.flist; h; h = h->link)
 		i++;
 
-	print("%d holes free\n", i);
+	print("%lld holes free\n", i);
 	i = 0;
 	for(h = xlists.table; h; h = h->link) {
-		print("%.8lux %.8lux %lud\n", h->addr, h->top, h->size);
+		print("%.8zux %.8zux %zud\n", h->addr, h->top, h->size);
 		i += h->size;
 	}
-	print("%d bytes free\n", i);
+	print("%lld bytes free\n", i);
 }

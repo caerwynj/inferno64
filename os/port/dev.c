@@ -297,9 +297,9 @@ devdirread(Chan *c, char *d, long n, Dirtab *tab, int ntab, Devgen *gen)
  * error(Eperm) if open permission not granted for up->env->user.
  */
 void
-devpermcheck(char *fileuid, ulong perm, int omode)
+devpermcheck(char *fileuid, u32 perm, s32 omode)
 {
-	ulong t;
+	u32 t;
 	static int access[] = { 0400, 0200, 0600, 0100 };
 
 	if(strcmp(up->env->user, fileuid) == 0)
@@ -345,13 +345,13 @@ Return:
 }
 
 void
-devcreate(Chan*, char*, int, ulong)
+devcreate(Chan*, char*, u32, u32)
 {
 	error(Eperm);
 }
 
 Block*
-devbread(Chan *c, long n, ulong offset)
+devbread(Chan *c, s32 n, u32 offset)
 {
 	Block *bp;
 
@@ -367,10 +367,10 @@ devbread(Chan *c, long n, ulong offset)
 	return bp;
 }
 
-long
-devbwrite(Chan *c, Block *bp, ulong offset)
+s32
+devbwrite(Chan *c, Block *bp, u32 offset)
 {
-	long n;
+	s32 n;
 
 	if(waserror()) {
 		freeb(bp);

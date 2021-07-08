@@ -141,3 +141,5 @@ root
 	/dis/lib/ssl.dis
 	/dis/lib/arg.dis
 	/dis/lib/filepat.dis
+	/dis/lib/arg.dis
+	/dis/lib/filepat.dis

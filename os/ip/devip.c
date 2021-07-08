@@ -45,9 +45,9 @@ enum
 
 	Nfs=		32,
 };
-#define TYPE(x) 	( ((ulong)(x).path) & Masktype )
-#define CONV(x) 	( (((ulong)(x).path) >> Shiftconv) & Maskconv )
-#define PROTO(x) 	( (((ulong)(x).path) >> Shiftproto) & Maskproto )
+#define TYPE(x) 	( ((u32)(x).path) & Masktype )
+#define CONV(x) 	( (((u32)(x).path) >> Shiftconv) & Maskconv )
+#define PROTO(x) 	( (((u32)(x).path) >> Shiftproto) & Maskproto )
 #define QID(p, c, y) 	( ((p)<<(Shiftproto)) | ((c)<<Shiftconv) | (y) )
 
 static char network[] = "network";
@@ -188,7 +188,7 @@ ipgen(Chan *c, char*, Dirtab*, int, int s, Dir *dp)
 	case Qtopdir:
 		if(s == DEVDOTDOT){
 			mkqid(&q, QID(0, 0, Qtopdir), 0, QTDIR);
-			sprint(up->genbuf, "#I%lud", c->dev);
+			sprint(up->genbuf, "#I%ud", c->dev);
 			devdir(c, q, up->genbuf, 0, network, 0555, dp);
 			return 1;
 		}
@@ -212,7 +212,7 @@ ipgen(Chan *c, char*, Dirtab*, int, int s, Dir *dp)
 	case Qprotodir:
 		if(s == DEVDOTDOT){
 			mkqid(&q, QID(0, 0, Qtopdir), 0, QTDIR);
-			sprint(up->genbuf, "#I%lud", c->dev);
+			sprint(up->genbuf, "#I%ud", c->dev);
 			devdir(c, q, up->genbuf, 0, network, 0555, dp);
 			return 1;
 		}
@@ -327,7 +327,7 @@ ipattach(char* spec)
 }
 
 static Walkqid*
-ipwalk(Chan* c, Chan *nc, char **name, int nname)
+ipwalk(Chan* c, Chan *nc, char **name, s32 nname)
 {
 	IPaux *a = c->aux;
 	Walkqid* w;
@@ -338,8 +338,8 @@ ipwalk(Chan* c, Chan *nc, char **name, int nname)
 	return w;
 }
 
-static int
-ipstat(Chan* c, uchar* db, int n)
+static s32
+ipstat(Chan* c, uchar* db, s32 n)
 {
 	return devstat(c, db, n, nil, 0, ipgen);
 }
@@ -360,7 +360,7 @@ static int m2p[] = {
 };
 
 static Chan*
-ipopen(Chan* c, int omode)
+ipopen(Chan* c, u32 omode)
 {
 	Conv *cv, *nc;
 	Proto *p;
@@ -511,8 +511,8 @@ ipopen(Chan* c, int omode)
 	return c;
 }
 
-static int
-ipwstat(Chan *c, uchar *dp, int n)
+static s32
+ipwstat(Chan *c, uchar *dp, s32 n)
 {
 	Dir *d;
 	Conv *cv;
@@ -620,13 +620,13 @@ enum
 	Statelen=	32*1024,
 };
 
-static long
-ipread(Chan *ch, void *a, long n, vlong off)
+static s32
+ipread(Chan *ch, void *a, s32 n, s64 off)
 {
 	Conv *c;
 	Proto *x;
 	char *buf, *p;
-	long rv;
+	s32 rv;
 	Fs *f;
 	ulong offset = off;
 
@@ -655,7 +655,7 @@ ipread(Chan *ch, void *a, long n, vlong off)
 	case Qlog:
 		return netlogread(f, a, offset, n);
 	case Qctl:
-		sprint(up->genbuf, "%lud", CONV(ch->qid));
+		sprint(up->genbuf, "%ud", CONV(ch->qid));
 		return readstr(offset, p, n, up->genbuf);
 	case Qremote:
 		buf = smalloc(Statelen);
@@ -711,7 +711,7 @@ ipread(Chan *ch, void *a, long n, vlong off)
 }
 
 static Block*
-ipbread(Chan* ch, long n, ulong offset)
+ipbread(Chan* ch, s32 n, u32 offset)
 {
 	Conv *c;
 	Proto *x;
@@ -1065,8 +1065,8 @@ ttlctlmsg(Conv *c, Cmdbuf *cb)
 		c->ttl = atoi(cb->f[1]);
 }
 
-static long
-ipwrite(Chan* ch, void *v, long n, vlong off)
+static s32
+ipwrite(Chan* ch, void *v, s32 n, s64 off)
 {
 	Conv *c;
 	Proto *x;
@@ -1160,8 +1160,8 @@ ipwrite(Chan* ch, void *v, long n, vlong off)
 	return n;
 }
 
-static long
-ipbwrite(Chan* ch, Block* bp, ulong offset)
+static s32
+ipbwrite(Chan* ch, Block* bp, u32 offset)
 {
 	Conv *c;
 	Proto *x;

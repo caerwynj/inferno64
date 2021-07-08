@@ -30,12 +30,12 @@ enum {
 typedef struct Rtc	Rtc;
 struct Rtc
 {
-	int	sec;
-	int	min;
-	int	hour;
-	int	mday;
-	int	mon;
-	int	year;
+	s32	sec;
+	s32	min;
+	s32	hour;
+	s32	mday;
+	s32	mon;
+	s32	year;
 };
 
 
@@ -51,8 +51,8 @@ Dirtab rtcdir[]={
 	"rtc",		{Qrtc, 0},	0,	0664,
 };
 
-static ulong rtc2sec(Rtc*);
-static void sec2rtc(ulong, Rtc*);
+static u32 rtc2sec(Rtc*);
+static void sec2rtc(u32, Rtc*);
 
 void
 rtcinit(void)
@@ -73,14 +73,14 @@ rtcwalk(Chan* c, Chan *nc, char** name, int nname)
 	return devwalk(c, nc, name, nname, rtcdir, nelem(rtcdir), devgen);
 }
 
-static int	 
-rtcstat(Chan* c, uchar* dp, int n)
+static s32	 
+rtcstat(Chan* c, uchar* dp, s32 n)
 {
 	return devstat(c, dp, n, rtcdir, nelem(rtcdir), devgen);
 }
 
 static Chan*
-rtcopen(Chan* c, int omode)
+rtcopen(Chan* c, u32 omode)
 {
 	omode = openmode(omode);
 	switch((ulong)c->qid.path){
@@ -102,7 +102,7 @@ rtcclose(Chan*)
 
 #define GETBCD(o) ((bcdclock[o]&0xf) + 10*(bcdclock[o]>>4))
 
-static long	 
+static s32	 
 _rtctime(void)
 {
 	uchar bcdclock[Nbcd];
@@ -150,7 +150,7 @@ _rtctime(void)
 
 static Lock nvrtlock;
 
-long
+s32
 rtctime(void)
 {
 	int i;
@@ -173,8 +173,8 @@ rtctime(void)
 	return t;
 }
 
-static long	 
-rtcread(Chan* c, void* buf, long n, vlong off)
+static s32	 
+rtcread(Chan* c, void* buf, s32 n, s64 off)
 {
 	ulong t;
 	char *a, *start;
@@ -220,8 +220,8 @@ rtcread(Chan* c, void* buf, long n, vlong off)
 
 #define PUTBCD(n,o) bcdclock[o] = (n % 10) | (((n / 10) % 10)<<4)
 
-static long	 
-rtcwrite(Chan* c, void* buf, long n, vlong off)
+static s32	 
+rtcwrite(Chan* c, void* buf, s32 n, s64 off)
 {
 	int t;
 	char *a, *start;
@@ -330,11 +330,11 @@ Dev rtcdevtab = {
 /*
  *  days per month plus days/year
  */
-static	int	dmsize[] =
+static	s32	dmsize[] =
 {
 	365, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
-static	int	ldmsize[] =
+static	s32	ldmsize[] =
 {
 	366, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
@@ -342,8 +342,8 @@ static	int	ldmsize[] =
 /*
  *  return the days/month for the given year
  */
-static int*
-yrsize(int y)
+static s32*
+yrsize(s32 y)
 {
 	if((y%4) == 0 && ((y%100) != 0 || (y%400) == 0))
 		return ldmsize;
@@ -354,10 +354,10 @@ yrsize(int y)
 /*
  *  compute seconds since Jan 1 1970
  */
-static ulong
+static u32
 rtc2sec(Rtc *rtc)
 {
-	ulong secs;
+	u32 secs;
 	int i;
 	int *d2m;
 
@@ -390,7 +390,7 @@ rtc2sec(Rtc *rtc)
  *  compute rtc from seconds since Jan 1 1970
  */
 static void
-sec2rtc(ulong secs, Rtc *rtc)
+sec2rtc(u32 secs, Rtc *rtc)
 {
 	int d;
 	long hms, day;
@@ -439,7 +439,7 @@ sec2rtc(ulong secs, Rtc *rtc)
 }
 
 uchar
-nvramread(int addr)
+nvramread(intptr addr)
 {
 	uchar data;
 
@@ -452,7 +452,7 @@ nvramread(int addr)
 }
 
 void
-nvramwrite(int addr, uchar data)
+nvramwrite(intptr addr, uchar data)
 {
 	ilock(&nvrtlock);
 	outb(Paddr, addr);

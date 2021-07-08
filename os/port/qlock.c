@@ -5,6 +5,33 @@
 #include "fns.h"
 
 void
+eqlock(QLock *q)
+{
+	Proc *p;
+
+	lock(&q->use);
+	if(!q->locked) {
+		q->locked = 1;
+		unlock(&q->use);
+		return;
+	}
+	if(up == nil)
+		panic("eqlock");
+	p = q->tail;
+	if(p == nil)
+		q->head = up;
+	else
+		p->qnext = up;
+	q->tail = up;
+	up->qnext = nil;
+	up->qpc = getcallerpc(&q);
+	up->state = Queueing;
+	unlock(&q->use);
+	sched();
+	/* up->eql = nil; */
+}
+
+void
 qlock(QLock *q)
 {
 	Proc *p, *mp;

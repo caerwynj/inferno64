@@ -3,6 +3,8 @@
 #include "mem.h"
 #include "dat.h"
 #include "fns.h"
+#include "io.h"
+#include "ureg.h"
 #include "../port/error.h"
 
 #define	Image	IMAGE
@@ -18,7 +20,7 @@ static Point curpos;
 static Rectangle window;
 static int *xp;
 static int xbuf[256];
-static Lock vgascreenlock;
+Lock vgascreenlock;
 int drawdebug;
 
 void

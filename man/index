@@ -62787,8 +62787,8 @@ tzoff	/man/2/daytime
 u'ffff	/man/2/json
 u.h	/man/10/0intro
 u.s	/man/9/1copyright
-u32int	/man/10/styx
-u32int	/man/5/attach
+u32	/man/10/styx
+u32	/man/5/attach
 uart	/man/10/plan9.ini
 uart0	/man/10/intrenable
 uarts	/man/10/plan9.ini

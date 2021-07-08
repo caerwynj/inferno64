@@ -56,8 +56,9 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
-static int displaydepth;
-extern ulong displaychan;
+extern void	(*coherence)(void);
+static int	displaydepth;
+extern ulong	displaychan;
 
 enum
 {
@@ -118,7 +119,7 @@ static XImage 		*img;
 static int              is_shm;
 
 static int putsnarf, assertsnarf;
-char *gkscanid = "emu_x11";
+extern char gkscanid[];
 
 /*
  * The documentation for the XSHM extension implies that if the server
@@ -294,13 +295,13 @@ copy32to32(Rectangle r)
 {
 	int dx, width;
 	uchar *p, *ep, *cp;
-	u32int v, w, *dp, *wp, *edp, *lp;
+	u32 v, w, *dp, *wp, *edp, *lp;
 
 	width = Dx(r);
 	dx = Xsize - width;
-	dp = (u32int*)(gscreendata + (r.min.y * Xsize + r.min.x) * 4);
-	wp = (u32int*)(xscreendata + (r.min.y * Xsize + r.min.x) * 4);
-	edp = (u32int*)(gscreendata + (r.max.y * Xsize + r.max.x) * 4);
+	dp = (u32*)(gscreendata + (r.min.y * Xsize + r.min.x) * 4);
+	wp = (u32*)(xscreendata + (r.min.y * Xsize + r.min.x) * 4);
+	edp = (u32*)(gscreendata + (r.max.y * Xsize + r.max.x) * 4);
 	while(dp < edp) {
 		lp = dp + width;
 		while(dp < lp){
@@ -345,12 +346,12 @@ copy8to32(Rectangle r)
 {
 	int dx, width;
 	uchar *p, *ep, *lp;
-	u32int *wp;
+	u32 *wp;
 
 	width = Dx(r);
 	dx = Xsize - width;
 	p = gscreendata + r.min.y * Xsize + r.min.x;
-	wp = (u32int *)(xscreendata + (r.min.y * Xsize + r.min.x) * 4);
+	wp = (u32 *)(xscreendata + (r.min.y * Xsize + r.min.x) * 4);
 	ep = gscreendata + r.max.y * Xsize + r.max.x;
 	while(p < ep) {
 		lp = p + width;
@@ -862,6 +863,7 @@ xinitscreen(int xsize, int ysize, ulong reqchan, ulong *chan, int *d)
 
 	xdrawable = 0;
 
+	strncpy(gkscanid, "emu_x11", 32);
 	dispname = getenv("DISPLAY");
 	if(dispname == nil)
 		dispname = "not set";

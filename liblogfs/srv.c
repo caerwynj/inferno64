@@ -50,8 +50,8 @@ logfsentryfree(Entry *e)
 }
 
 char *
-logfsentrynew(LogfsServer *server, int inuse, u32int path, Entry *parent, char *name, char *uid, char *gid,
-u32int mtime, char *muid, u32int perm, ulong cvers, ulong length, Entry **ep)
+logfsentrynew(LogfsServer *server, int inuse, u32 path, Entry *parent, char *name, char *uid, char *gid,
+u32 mtime, char *muid, u32 perm, ulong cvers, ulong length, Entry **ep)
 {
 	Entry *e;
 	char *errmsg;
@@ -187,7 +187,7 @@ logfsserverfree(LogfsServer **serverp)
 }
 
 char *
-logfsserverattach(LogfsServer *server, u32int fid, char *uname, Qid *qid)
+logfsserverattach(LogfsServer *server, u32 fid, char *uname, Qid *qid)
 {
 	char *errmsg;
 	Fid *f;
@@ -224,8 +224,8 @@ id2name(LogfsIdentityStore *is, char *id, char **namep, int *badp, int *lenp)
 	*namep = name;
 }
 
-u32int
-logfsflattenentry(LogfsIdentityStore *is, uchar *buf, u32int limit, Entry *e)
+u32
+logfsflattenentry(LogfsIdentityStore *is, uchar *buf, u32 limit, Entry *e)
 {
 	int unamelen, gnamelen, munamelen, namelen;
 	uint len;
@@ -284,7 +284,7 @@ logfsflattenentry(LogfsIdentityStore *is, uchar *buf, u32int limit, Entry *e)
 }
 
 char *
-logfsserverstat(LogfsServer *server, u32int fid, uchar *buf, u32int bufsize, ushort *nstat)
+logfsserverstat(LogfsServer *server, u32 fid, uchar *buf, u32 bufsize, ushort *nstat)
 {
 	Fid *f;
 	if(server->trace > 1)

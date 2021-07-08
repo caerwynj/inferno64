@@ -34,8 +34,8 @@ enum {
 };
 
 struct Extent {
-	u32int min, max;
-	u32int flashaddr;		/* encode block index, page number, and offset within page to min */
+	u32 min, max;
+	u32 flashaddr;		/* encode block index, page number, and offset within page to min */
 };
 
 char *logfsextentlistnew(ExtentList **);
@@ -44,8 +44,8 @@ char *logfsextentlistinsert(ExtentList *, Extent *, Extent **);
 int logfsextentlistwalk(ExtentList *, int (*)(void *, Extent *, int),void *);
 Extent *logfsextentlistmatch(ExtentList *, Extent *);
 int logfsextentlistwalkrange(ExtentList *,
-	int (*)(void *, u32int, u32int, Extent *, u32int),
-	void *, u32int, u32int);
+	int (*)(void *, u32, u32, Extent *, u32),
+	void *, u32, u32);
 int logfsextentlistmatchall(ExtentList *, int (*)(void *, Extent *), void *, Extent *);
 void logfsextentlistreset(ExtentList *);
 
@@ -59,7 +59,7 @@ struct Entry {
 	char *gid;
 	ulong mtime;
 	char *muid;
-	u32int perm;
+	u32 perm;
 	struct Entry *next;
 	struct {
 		struct {
@@ -73,9 +73,9 @@ struct Entry {
 	} u;
 };
 
-char *logfsentrynew(LogfsServer *, int, u32int, Entry *,
+char *logfsentrynew(LogfsServer *, int, u32, Entry *,
 	char *, char *, char *,
-	u32int, char *, u32int, ulong, ulong, Entry **);
+	u32, char *, u32, ulong, ulong, Entry **);
 void logfsentryclunk(Entry *);
 
 void logfsdrsfree(DirReadState **);
@@ -158,44 +158,44 @@ extern char *logfsisgroupnonename;
 
 struct LogMessage {
 	uchar type;
-	u32int path;
+	u32 path;
 	union {
 		struct {
-			u32int nerase;
+			u32 nerase;
 		} start;
 		struct {
-			u32int perm;
-			u32int newpath;
-			u32int mtime;
-			u32int cvers;
+			u32 perm;
+			u32 newpath;
+			u32 mtime;
+			u32 cvers;
 			char *name;
 			char *uid;
 			char *gid;
 		} create;
 		struct {
-			u32int mtime;
+			u32 mtime;
 			char *muid;
 		} remove;
 		struct {
-			u32int mtime;
-			u32int cvers;
+			u32 mtime;
+			u32 cvers;
 			char *muid;
 		} trunc;
 		struct {
-			u32int offset;
-			u32int count;
-			u32int mtime;
-			u32int cvers;
+			u32 offset;
+			u32 count;
+			u32 mtime;
+			u32 cvers;
 			char *muid;
-			u32int flashaddr;
+			u32 flashaddr;
 			uchar *data;
 		} write;
 		struct {
 			char *name;
-			u32int perm;
+			u32 perm;
 			char *uid;
 			char *gid;
-			u32int mtime;
+			u32 mtime;
 			char *muid;
 		} wstat;
 	} u;
@@ -221,10 +221,10 @@ char *logfslogsegmentnew(LogfsServer *, int, LogSegment **);
 void logfslogsegmentfree(LogSegment **);
 char *logfslogbytes(LogfsServer *, int, uchar *, uint);
 char *logfslog(LogfsServer *, int, LogMessage *);
-char *logfslogwrite(LogfsServer *, int, u32int, u32int, int, u32int,
-	u32int, char *, uchar *, u32int *);
+char *logfslogwrite(LogfsServer *, int, u32, u32, int, u32,
+	u32, char *, uchar *, u32 *);
 char *logfslogsegmentflush(LogfsServer *, int);
-int lognicesizeforwrite(LogfsServer *, int, u32int, int);
+int lognicesizeforwrite(LogfsServer *, int, u32, int);
 char *logfsscan(LogfsServer *);
 
 struct DataBlock {
@@ -272,7 +272,7 @@ struct LogfsServer {
 int logfshashulong(void *, int);
 
 int logfsuserpermcheck(LogfsServer *, Entry *, Fid *, ulong);
-u32int logfsflattenentry(LogfsIdentityStore *, uchar *, u32int, Entry *);
+u32 logfsflattenentry(LogfsIdentityStore *, uchar *, u32, Entry *);
 char *logfsreplay(LogfsServer *, LogSegment *, int);
 void logfsreplayfinddata(LogfsServer *);
 
@@ -287,11 +287,11 @@ void logfsreplayfinddata(LogfsServer *);
 #define loggensucc(g) gensucc((g), L2LogSweeps)
 
 int logfsunconditionallymarkfreeanddirty(void *, Extent *, int);
-void logfsflashaddr2spo(LogfsServer *, u32int, long *, int *, int *);
+void logfsflashaddr2spo(LogfsServer *, u32, long *, int *, int *);
 int logfsgn(uchar **, uchar *, char **);
-u32int logfsspo2flashaddr(LogfsServer *, long, int, int);
+u32 logfsspo2flashaddr(LogfsServer *, long, int, int);
 int logfsgn(uchar **, uchar *, char **);
-void logfsflashaddr2o(LogfsServer *, u32int, int *);
+void logfsflashaddr2o(LogfsServer *, u32, int *);
 void logfsfreedatapages(LogfsServer *, long, Pageset);
 void logfsfreeanddirtydatablockcheck(LogfsServer *, long);
 

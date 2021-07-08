@@ -16,8 +16,8 @@ enum
 
 struct Bhdr
 {
-	ulong	magic;
-	ulong	size;
+	u32	magic;
+	u32	size;
 	union {
 		uchar data[1];
 		struct {
@@ -52,7 +52,7 @@ struct Btail
 
 #define B2LIMIT(b)	((Bhdr*)((uchar*)b + b->csize))
 
-#define BHDRSIZE	((int)(((Bhdr*)0)->u.data)+sizeof(Btail))
+#define BHDRSIZE	((u32)(((Bhdr*)0)->u.data)+sizeof(Btail))
 
 extern	void	(*poolfault)(void *, char *, ulong);
 extern	void	poolinit(void);
@@ -64,10 +64,11 @@ extern	void	poolimmutable(void*);
 extern	ulong	poolmsize(Pool*, void*);
 extern	void	poolmutable(void*);
 extern	char*	poolname(Pool*);
-extern	int	poolread(char*, int, ulong);
+extern	int	poolread(char*, int, uintptr);
 extern	void*	poolrealloc(Pool*, void*, ulong);
 extern	int	poolsetsize(char*, int);
 extern	void	poolsetcompact(Pool*, void (*)(void*, void*));
 extern	char*	poolaudit(char*(*)(int, Bhdr *));
 
 extern	void	(*poolmonitor)(int, ulong, Bhdr*, ulong);
+extern	void	showframe(void *f, void *t);

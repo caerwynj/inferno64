@@ -144,7 +144,7 @@ pipegen(Chan *c, char *, Dirtab *tab, int ntab, int i, Dir *dp)
 
 
 static Walkqid*
-pipewalk(Chan *c, Chan *nc, char **name, int nname)
+pipewalk(Chan *c, Chan *nc, char **name, s32 nname)
 {
 	Walkqid *wq;
 	Pipe *p;
@@ -169,8 +169,8 @@ pipewalk(Chan *c, Chan *nc, char **name, int nname)
 	return wq;
 }
 
-static int
-pipestat(Chan *c, uchar *db, int n)
+static s32
+pipestat(Chan *c, uchar *db, s32 n)
 {
 	Pipe *p;
 	Dir dir;
@@ -202,7 +202,7 @@ pipestat(Chan *c, uchar *db, int n)
  *  if the stream doesn't exist, create it
  */
 static Chan*
-pipeopen(Chan *c, int omode)
+pipeopen(Chan *c, u32 omode)
 {
 	Pipe *p;
 
@@ -293,8 +293,8 @@ pipeclose(Chan *c)
 		qunlock(p);
 }
 
-static long
-piperead(Chan *c, void *va, long n, vlong)
+static s32
+piperead(Chan *c, void *va, s32 n, s64)
 {
 	Pipe *p;
 
@@ -314,7 +314,7 @@ piperead(Chan *c, void *va, long n, vlong)
 }
 
 static Block*
-pipebread(Chan *c, long n, ulong offset)
+pipebread(Chan *c, s32 n, u32 offset)
 {
 	Pipe *p;
 
@@ -334,8 +334,8 @@ pipebread(Chan *c, long n, ulong offset)
  *  a write to a closed pipe causes an exception to be sent to
  *  the prog.
  */
-static long
-pipewrite(Chan *c, void *va, long n, vlong)
+static s32
+pipewrite(Chan *c, void *va, s32 n, s64)
 {
 	Pipe *p;
 	Prog *r;
@@ -369,8 +369,8 @@ pipewrite(Chan *c, void *va, long n, vlong)
 	return n;
 }
 
-static long
-pipebwrite(Chan *c, Block *bp, ulong junk)
+static s32
+pipebwrite(Chan *c, Block *bp, u32 junk)
 {
 	long n;
 	Pipe *p;
@@ -406,8 +406,8 @@ pipebwrite(Chan *c, Block *bp, ulong junk)
 	return n;
 }
 
-static int
-pipewstat(Chan *c, uchar *dp, int n)
+static s32
+pipewstat(Chan *c, uchar *dp, s32 n)
 {
 	Dir *d;
 	Pipe *p;

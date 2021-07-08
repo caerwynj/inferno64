@@ -30,17 +30,17 @@ draw1(Image *dst, Rectangle *r, Image *src, Point *p0, Image *mask, Point *p1, D
 	if(mask == nil)
 		mask = dst->display->opaque;
 	a[0] = 'd';
-	BPLONG(a+1, dst->id);
-	BPLONG(a+5, src->id);
-	BPLONG(a+9, mask->id);
-	BPLONG(a+13, r->min.x);
-	BPLONG(a+17, r->min.y);
-	BPLONG(a+21, r->max.x);
-	BPLONG(a+25, r->max.y);
-	BPLONG(a+29, p0->x);
-	BPLONG(a+33, p0->y);
-	BPLONG(a+37, p1->x);
-	BPLONG(a+41, p1->y);
+	BP32INT(a+1, dst->id);
+	BP32INT(a+5, src->id);
+	BP32INT(a+9, mask->id);
+	BP32INT(a+13, r->min.x);
+	BP32INT(a+17, r->min.y);
+	BP32INT(a+21, r->max.x);
+	BP32INT(a+25, r->max.y);
+	BP32INT(a+29, p0->x);
+	BP32INT(a+33, p0->y);
+	BP32INT(a+37, p1->x);
+	BP32INT(a+41, p1->y);
 }
 
 void

@@ -22,10 +22,10 @@ memimagemove(void *from, void *to)
 }
 
 Memimage*
-allocmemimaged(Rectangle r, u32int chan, Memdata *md)
+allocmemimaged(Rectangle r, u32 chan, Memdata *md)
 {
-	s32int d;
-	u32int l;
+	s32 d;
+	u32 l;
 	Memimage *i;
 
 	if((d = chantodepth(chan)) == 0) {
@@ -40,7 +40,7 @@ allocmemimaged(Rectangle r, u32int chan, Memdata *md)
 		return nil;
 
 	i->data = md;
-	i->zero = sizeof(u32int)*l*r.min.y;
+	i->zero = sizeof(u32)*l*r.min.y;
 	
 	if(r.min.x >= 0)
 		i->zero += (r.min.x*d)/8;
@@ -61,10 +61,10 @@ allocmemimaged(Rectangle r, u32int chan, Memdata *md)
 }
 
 Memimage*
-allocmemimage(Rectangle r, u32int chan)
+allocmemimage(Rectangle r, u32 chan)
 {
-	s32int d;
-	u32int l, nw;
+	s32 d;
+	u32 l, nw;
 	Memdata *md;
 	Memimage *i;
 
@@ -80,7 +80,7 @@ allocmemimage(Rectangle r, u32int chan)
 		return nil;
 
 	md->ref = 1;
-	md->base = poolalloc(imagmem, 2*sizeof(intptr)+nw*sizeof(u32int));
+	md->base = poolalloc(imagmem, 2*sizeof(intptr)+nw*sizeof(u32));
 	if(md->base == nil){
 		free(md);
 		return nil;
@@ -120,10 +120,10 @@ freememimage(Memimage *i)
 /*
  * Wordaddr is deprecated.
  */
-u32int*
+u32*
 u32addr(Memimage *i, Point p)
 {
-	return (u32int*) ((uintptr)byteaddr(i, p) & ~(sizeof(uintptr)-1));
+	return (u32*) ((uintptr)byteaddr(i, p) & ~(sizeof(uintptr)-1));
 }
 
 uchar*
@@ -131,14 +131,14 @@ byteaddr(Memimage *i, Point p)
 {
 	uchar *a;
 
-	a = i->data->bdata+i->zero+(s32int)(sizeof(u32int)*p.y*i->width);
+	a = i->data->bdata+i->zero+(s32)(sizeof(u32)*p.y*i->width);
 
 	if(i->depth < 8){
 		/*
 		 * We need to always round down,
 		 * but C rounds toward zero.
 		 */
-		s32int np;
+		s32 np;
 		np = 8/i->depth;
 		if(p.x < 0)
 			return a+(p.x-np+1)/np;
@@ -150,12 +150,12 @@ byteaddr(Memimage *i, Point p)
 }
 
 int
-memsetchan(Memimage *i, u32int chan)
+memsetchan(Memimage *i, u32 chan)
 {
-	s32int d;
-	s32int t, j, k;
-	u32int cc;
-	s32int bytes;
+	s32 d;
+	s32 t, j, k;
+	u32 cc;
+	s32 bytes;
 
 	if((d = chantodepth(chan)) == 0) {
 		werrstr("bad channel descriptor");

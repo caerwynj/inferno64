@@ -23,9 +23,9 @@ indices:V:
 
 
 permind:V:
-	rm -f $LIB/permind/toc
+	test -f $LIB/permind/toc && rm -f $LIB/permind/toc
 	{
-		echo -n $FONTS
+		echo -n $"FONTS
 		echo .am TH
 		echo .tm '\\$1' '\\$2' '\\n%'
 		echo ..
@@ -87,7 +87,7 @@ lookindex:V:
 	mkindex
 
 
-print.out:V: permind
+print.out:V:
 	{
 		{echo -n $FONTS; cat $LIB/title} | troff
 		{echo -n $FONTS; cat $LIB/trademarks} | troff -ms

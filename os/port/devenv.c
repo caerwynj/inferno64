@@ -15,6 +15,8 @@ enum
 	Maxenvsize = 16300,
 };
 
+static Egrp	confegrp;	/* global environment group containing the kernel configuration */
+
 static int
 envgen(Chan *c, char*, Dirtab*, int, int s, Dir *dp)
 {
@@ -63,7 +65,7 @@ envstat(Chan *c, uchar *db, int n)
 }
 
 static Chan *
-envopen(Chan *c, int mode)
+envopen(Chan *c, u32 mode)
 {
 	Egrp *eg;
 	Evalue *e;
@@ -99,7 +101,7 @@ envopen(Chan *c, int mode)
 }
 
 static void
-envcreate(Chan *c, char *name, int mode, ulong)
+envcreate(Chan *c, char *name, u32 mode, u32)
 {
 	Egrp *eg;
 	Evalue *e, **le;
@@ -143,8 +145,8 @@ envclose(Chan *c)
 		envremove(c);
 }
 
-static long
-envread(Chan *c, void *a, long n, vlong offset)
+static s32
+envread(Chan *c, void *a, s32 n, s64 offset)
 {
 	Egrp *eg;
 	Evalue *e;
@@ -175,8 +177,8 @@ envread(Chan *c, void *a, long n, vlong offset)
 	return n;
 }
 
-static long
-envwrite(Chan *c, void *a, long n, vlong offset)
+static s32
+envwrite(Chan *c, void *a, s32 n, s64 offset)
 {
 	char *s;
 	ulong ve;
@@ -335,4 +337,49 @@ ksetenv(char *var, char *val, int)
 		poperror();
 	}
 	cclose(c);
+}
+
+/*
+ * Return a copy of configuration environment as a sequence of strings.
+ * The strings alternate between name and value.  A zero length name string
+ * indicates the end of the list
+ */
+char *
+getconfenv(void)
+{
+	Egrp *eg = &confegrp;
+	Evalue *e, *ee;
+	char *p, *q;
+	int n;
+
+	qlock(eg);
+	if(waserror()) {
+		qunlock(eg);
+		nexterror();
+	}
+	
+	/* determine size */
+	n = 0;
+	e = eg->ent;
+	for(ee = e + eg->nent; e < ee; e++)
+		n += strlen(e->name) + e->len + 2;
+
+	p = malloc(n + 1);
+	if(p == nil)
+		error(Enomem);
+	q = p;
+	e = eg->ent;
+	for(ee = e + eg->nent; e < ee; e++){
+		strcpy(q, e->name);
+		q += strlen(q) + 1;
+		memmove(q, e->value, e->len);
+		q[e->len] = 0;
+		/* move up to the first null */
+		q += strlen(q) + 1;
+	}
+	*q = '\0';
+	
+	qunlock(eg);
+	poperror();
+	return p;
 }

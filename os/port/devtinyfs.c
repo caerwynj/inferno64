@@ -88,7 +88,7 @@ static struct {
 #define PUTL(x, v) {PUTS(x, v);PUTS(x+2, (v)>>16)};
 
 static uchar
-checksum(uchar *p)
+tchecksum(uchar *p)
 {
 	uchar *e;
 	uchar s;
@@ -144,7 +144,7 @@ validdir(Tfs *fs, uchar *p)
 	Mdir *md;
 	ulong x;
 
-	if(checksum(p) != 0)
+	if(tchecksum(p) != 0)
 		return 0;
 	if(p[0] != Tagdir)
 		return 0;
@@ -161,7 +161,7 @@ validdata(Tfs *fs, uchar *p, int *lenp)
 	Mdata *md;
 	ulong x;
 
-	if(checksum(p) != 0)
+	if(tchecksum(p) != 0)
 		return 0;
 	md = (Mdata*)p;
 	switch(md->type){
@@ -215,7 +215,7 @@ writedata(Tfs *fs, ulong bno, ulong next, uchar *buf, int len, int last)
 		PUTS(md.bno, next);
 	}
 	memmove(md.data, buf, len);
-	md.sum = 0 - checksum((uchar*)&md);
+	md.sum = 0 - tchecksum((uchar*)&md);
 	
 	if(devtab[fs->c->type]->write(fs->c, &md, Blen, Blen*bno) != Blen)
 		error(Eio);
@@ -236,7 +236,7 @@ writedir(Tfs *fs, Tfile *f)
 	strncpy(md->name, f->name, sizeof(md->name)-1);
 	PUTS(md->bno, f->dbno);
 	PUTS(md->pin, f->pin);
-	md->sum = 0 - checksum(buf);
+	md->sum = 0 - tchecksum(buf);
 	
 	if(devtab[fs->c->type]->write(fs->c, buf, Blen, Blen*f->bno) != Blen)
 		error(Eio);
@@ -576,7 +576,7 @@ tinyfsstat(Chan *c, uchar *db, int n)
 }
 
 static Chan*
-tinyfsopen(Chan *c, int omode)
+tinyfsopen(Chan *c, u32 omode)
 {
 	Tfile *f;
 	volatile struct { Tfs *fs; } rock;
@@ -612,7 +612,7 @@ tinyfsopen(Chan *c, int omode)
 }
 
 static void
-tinyfscreate(Chan *c, char *name, int omode, ulong perm)
+tinyfscreate(Chan *c, char *name, u32 omode, u32 perm)
 {
 	volatile struct { Tfs *fs; } rock;
 	Tfile *f;
@@ -706,8 +706,8 @@ tinyfsclose(Chan *c)
 	qunlock(&rock.fs->ql);
 }
 
-static long
-tinyfsread(Chan *c, void *a, long n, vlong offset)
+static s32
+tinyfsread(Chan *c, void *a, s32 n, s64 offset)
 {
 	volatile struct { Tfs *fs; } rock;
 	Tfile *f;
@@ -780,8 +780,8 @@ tinyfsread(Chan *c, void *a, long n, vlong offset)
  *  if we get a write error in this routine, blocks will
  *  be lost.  They should be recovered next fsinit.
  */
-static long
-tinyfswrite(Chan *c, void *a, long n, vlong offset)
+static s32
+tinyfswrite(Chan *c, void *a, s32 n, s64 offset)
 {
 	Tfile *f;
 	int last, next, i, finger, off, used;

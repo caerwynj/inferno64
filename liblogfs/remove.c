@@ -69,7 +69,7 @@ logfsunconditionallymarkfreeanddirty(void *magic, Extent *e, int hole)
 }
 
 char *
-logfsserverremove(LogfsServer *server, u32int fid)
+logfsserverremove(LogfsServer *server, u32 fid)
 {
 	Fid *f;
 	char *errmsg;

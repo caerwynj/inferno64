@@ -18,7 +18,7 @@ struct Memlayer
 	Memscreen	*screen;	/* screen this layer belongs to */
 	Memimage	*front;	/* window in front of this one */
 	Memimage	*rear;	/* window behind this one*/
-	s32int		clear;	/* layer is fully visible */
+	s32		clear;	/* layer is fully visible */
 	Memimage	*save;	/* save area for obscured parts */
 	Refreshfn	refreshfn;		/* function to call to refresh obscured parts if save==nil */
 	void		*refreshptr;	/* argument to refreshfn */
@@ -34,7 +34,7 @@ int			memunload(Memimage*, Rectangle, uchar*, int);
  * All these functions accept screen coordinates, not local ones.
  */
 void			_memlayerop(void (*fn)(Memimage*, Rectangle, Rectangle, void*, int), Memimage*, Rectangle, Rectangle, void*);
-Memimage*	memlalloc(Memscreen*, Rectangle, Refreshfn, void*, u32int);
+Memimage*	memlalloc(Memscreen*, Rectangle, Refreshfn, void*, u32);
 void			memldelete(Memimage*);
 void			memlfree(Memimage*);
 void			memltofront(Memimage*);

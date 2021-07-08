@@ -4,11 +4,11 @@
 extern void _sha256block(SHA256state*, uchar*);
 extern void _sha512block(SHA512state*, uchar*);
 
-u32int sha224h0[] = {
+u32 sha224h0[] = {
 0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939,
 0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4,
 };
-u32int sha256h0[] = {
+u32 sha256h0[] = {
 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
 };
@@ -40,7 +40,7 @@ sha256init(void)
 }
 
 static void
-p32(u32int v, uchar *p)
+p32(u32 v, uchar *p)
 {
 	p[0] = v>>24;
 	p[1] = v>>16;
@@ -83,9 +83,9 @@ uvvmult8(u64int v[2])
 
 
 static void
-_sha256(uchar *p, ulong len, SHA256state *s)
+_sha256(uchar *p, u32 len, SHA256state *s)
 {
-	u32int take;
+	u32 take;
 
 	/* complete possible partial block from last time */
 	if(s->blen > 0 && s->blen+len >= SHA256bsize) {
@@ -117,7 +117,7 @@ sha256finish(SHA256state *s, uchar *digest, int smaller)
 {
 	int i;
 	uchar end[SHA256bsize+8];
-	u32int nzero, nb, nd;
+	u32 nzero, nb, nd;
 
 	nzero = (2*SHA256bsize - s->blen - 1 - 8) % SHA256bsize;
 	end[0] = 0x80;
@@ -134,7 +134,7 @@ sha256finish(SHA256state *s, uchar *digest, int smaller)
 }
 
 static SHA256state*
-sha256x(uchar *p, ulong len, uchar *digest, SHA256state *s, int smaller)
+sha256x(uchar *p, u32 len, uchar *digest, SHA256state *s, int smaller)
 {
 	if(s == nil) {
 		s = sha256init();
@@ -159,13 +159,13 @@ sha256x(uchar *p, ulong len, uchar *digest, SHA256state *s, int smaller)
 }
 
 SHA256state*
-sha224(uchar *p, ulong len, uchar *digest, SHA256state *s)
+sha224(uchar *p, u32 len, uchar *digest, SHA256state *s)
 {
 	return sha256x(p, len, digest, s, 1);
 }
 
 SHA256state*
-sha256(uchar *p, ulong len, uchar *digest, SHA256state *s)
+sha256(uchar *p, u32 len, uchar *digest, SHA256state *s)
 {
 	return sha256x(p, len, digest, s, 0);
 }
@@ -189,9 +189,9 @@ sha512init(void)
 }
 
 static void
-_sha512(uchar *p, ulong len, SHA512state *s)
+_sha512(uchar *p, u32 len, SHA512state *s)
 {
-	u32int take;
+	u32 take;
 
 	/* complete possible partial block from last time */
 	if(s->blen > 0 && s->blen+len >= SHA512bsize) {
@@ -223,7 +223,7 @@ sha512finish(SHA512state *s, uchar *digest, int smaller)
 {
 	int i;
 	uchar end[SHA512bsize+16];
-	u32int nzero, n;
+	u32 nzero, n;
 	u64int nb[2];
 
 	nzero = (2*SHA512bsize - s->blen - 1 - 16) % SHA512bsize;
@@ -244,7 +244,7 @@ sha512finish(SHA512state *s, uchar *digest, int smaller)
 }
 
 static SHA512state*
-sha512x(uchar *p, ulong len, uchar *digest, SHA512state *s, int smaller)
+sha512x(uchar *p, u32 len, uchar *digest, SHA512state *s, int smaller)
 {
 	if(s == nil) {
 		s = sha512init();
@@ -269,13 +269,13 @@ sha512x(uchar *p, ulong len, uchar *digest, SHA512state *s, int smaller)
 }
 
 SHA512state*
-sha384(uchar *p, ulong len, uchar *digest, SHA512state *s)
+sha384(uchar *p, u32 len, uchar *digest, SHA512state *s)
 {
 	return sha512x(p, len, digest, s, 1);
 }
 
 SHA512state*
-sha512(uchar *p, ulong len, uchar *digest, SHA512state *s)
+sha512(uchar *p, u32 len, uchar *digest, SHA512state *s)
 {
 	return sha512x(p, len, digest, s, 0);
 }

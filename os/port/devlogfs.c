@@ -975,7 +975,7 @@ extentdumpinit(Devlogfs *d, int argc, char **argv)
 {
 	int *p;
 	ulong path;
-	u32int flashaddr, length;
+	u32 flashaddr, length;
 	long block;
 	int page, offset;
 
@@ -992,7 +992,7 @@ static int
 extentdumpread(void *magic, Devlogfs *d, int line, char *buf, int buflen)
 {
 	ulong *p = magic;
-	u32int flashaddr, length;
+	u32 flashaddr, length;
 	long block;
 	int page, offset;
 	USED(d);

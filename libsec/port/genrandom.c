@@ -5,7 +5,7 @@
 
 typedef struct State{
 	int		seeded;
-	uvlong		seed;
+	u64		seed;
 	DES3state	des3;
 } State;
 static State x917state;
@@ -14,7 +14,7 @@ static void
 X917(uchar *rand, int nrand)
 {
 	int i, m, n8;
-	uvlong I, x;
+	u64 I, x;
 
 	/* 1. Compute intermediate value I = Ek(time). */
 	I = nsec();
@@ -26,7 +26,7 @@ X917(uchar *rand, int nrand)
 		x = I ^ x917state.seed;
 		triple_block_cipher(x917state.des3.expanded, (uchar*)&x, 0);
 		n8 = (nrand>8) ? 8 : nrand;
-		memcpy(rand, (uchar*)&x, n8);
+		memmove(rand, (uchar*)&x, n8);
 		rand += 8;
 		nrand -= 8;
 		x ^= I;
@@ -41,10 +41,10 @@ X917init(void)
 	int n;
 	uchar mix[128];
 	uchar key3[3][8];
-	ulong *ulp;
+	u32 *ulp;
 
-	ulp = (ulong*)key3;
-	for(n = 0; n < sizeof(key3)/sizeof(ulong); n++)
+	ulp = (u32*)key3;
+	for(n = 0; n < sizeof(key3)/sizeof(u32); n++)
 		ulp[n] = truerand();
 	setupDES3state(&x917state.des3, key3, nil);
 	X917(mix, sizeof mix);
@@ -59,4 +59,19 @@ genrandom(uchar *p, int n)
 		X917init();
 	X917(p, n);
 	_genrandomqunlock();
+}
+
+QLock grandomlk;
+
+void
+_genrandomqlock(void)
+{
+	qlock(&grandomlk);
+}
+
+
+void
+_genrandomqunlock(void)
+{
+	qunlock(&grandomlk);
 }

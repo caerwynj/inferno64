@@ -1,7 +1,7 @@
 typedef unsigned long size_t;
 
 #define	nelem(x)	(sizeof(x)/sizeof((x)[0]))
-#define	offsetof(s, m)	(ulong)(&(((s*)0)->m))
+#define	offsetof(s, m)	(u32)(&(((s*)0)->m))
 #define	assert(x)	if(x){}else _assert("x")
 
 /*
@@ -185,6 +185,12 @@ extern	Rune*	runefmtstrflush(Fmt*);
 #pragma	varargck	type	"lx"	long
 #pragma	varargck	type	"ld"	ulong
 #pragma	varargck	type	"lx"	ulong
+#pragma varargck	type	"zd"	intptr
+#pragma varargck	type	"zo"	intptr
+#pragma varargck	type	"zx"	intptr
+#pragma varargck	type	"zd"	uintptr
+#pragma varargck	type	"zo"	uintptr
+#pragma varargck	type	"zx"	uintptr
 #pragma	varargck	type	"d"	int
 #pragma	varargck	type	"x"	int
 #pragma	varargck	type	"c"	int
@@ -311,7 +317,7 @@ extern	char*	ctime(long);
 extern	double	cputime(void);
 extern	long	times(long*);
 extern	long	tm2sec(Tm*);
-extern	vlong	nsec(void);
+extern	s64	nsec(void);
 
 /*
  * one-of-a-kind
@@ -467,8 +473,8 @@ enum
 typedef
 struct Qid
 {
-	uvlong	path;
-	ulong	vers;
+	u64	path;
+	u32	vers;
 	uchar	type;
 } Qid;
 
@@ -476,14 +482,14 @@ typedef
 struct Dir {
 
 	/* system-modified data */
-	ushort	type;	/* server type */
-	uint	dev;	/* server subtype */
+	u16	type;	/* server type */
+	u32	dev;	/* server subtype */
 	/* file data */
 	Qid	qid;	/* unique id from server */
-	ulong	mode;	/* permissions */
-	ulong	atime;	/* last read time */
-	ulong	mtime;	/* last write time */
-	vlong	length;	/* file length */
+	u32	mode;	/* permissions */
+	u32	atime;	/* last read time */
+	u32	mtime;	/* last write time */
+	s64	length;	/* file length */
 	char	*name;	/* last element of path */
 	char	*uid;	/* owner name */
 	char	*gid;	/* group name */
@@ -494,9 +500,9 @@ extern	Dir*	dirstat(char*);
 extern	Dir*	dirfstat(int);
 extern	int	dirwstat(char*, Dir*);
 extern	int	dirfwstat(int, Dir*);
-extern	long	dirread(int, Dir**);
+extern	s32	dirread(int, Dir**);
 extern	void	nulldir(Dir*);
-extern	long	dirreadall(int, Dir**);
+extern	s32	dirreadall(int, Dir**);
 
 #define CHDIR		0x80000000	/* mode bit for directories */
 #define CHAPPEND	0x40000000	/* mode bit for append only files */
@@ -519,7 +525,7 @@ typedef
 struct IOchunk
 {
 	void	*addr;
-	ulong	len;
+	u32	len;
 } IOchunk;
 
 extern	void	_exits(char*);
@@ -561,7 +567,7 @@ extern	vlong	seek(int, vlong, int);
 extern	long	segattach(int, char*, void*, ulong);
 extern	int	segbrk(void*, void*);
 extern	int	segdetach(void*);
-extern	int	segflush(void*, ulong);
+extern	s32	segflush(void*, u32);
 extern	int	segfree(void*, ulong);
 extern	int	sleep(long);
 extern	int	stat(char*, uchar*, int);
@@ -572,8 +578,8 @@ extern	long	write9p(int, void*, long);
 extern	int	wstat(char*, char*);
 extern	ulong	rendezvous(ulong, ulong);
 
-extern	int	getpid(void);
-extern	int	getppid(void);
+extern	intptr	getpid(void);
+extern	intptr	getppid(void);
 extern	void	rerrstr(char*, uint);
 extern	char*	sysname(void);
 extern	void	werrstr(char*, ...);

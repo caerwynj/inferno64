@@ -4,25 +4,25 @@
 #include "fcall.h"
 
 struct DirReadState {
-	u32int offset;
-	u32int lastoffset;
-	u32int limit;
+	u32 offset;
+	u32 lastoffset;
+	u32 limit;
 	uchar *data;
 };
 
 typedef struct ReaderState {
 	uchar *buf;
-	u32int maxoffset;
+	u32 maxoffset;
 	LogfsServer *server;
 	char *errmsg;
 } ReaderState;
 
 static DirReadState *
-drsinit(LogfsIdentityStore *is, Entry *list, uchar *buf, u32int buflen, u32int *rcount)
+drsinit(LogfsIdentityStore *is, Entry *list, uchar *buf, u32 buflen, u32 *rcount)
 {
 	Entry *p, *q;
 	DirReadState *drs;
-	u32int k;
+	u32 k;
 	/*
 	 * stash as many entries as will fit in the read buffer
 	 */
@@ -44,7 +44,7 @@ drsinit(LogfsIdentityStore *is, Entry *list, uchar *buf, u32int buflen, u32int *
 	for(q = p; q; q = q->next)
 		k += logfsflattenentry(is, nil, 0, q);
 	if(k) {
-		u32int k2;
+		u32 k2;
 //		print("drsinit: %ud bytes extra\n", k);
 		drs->data = logfsrealloc(nil, k);
 		if(drs->data == nil) {
@@ -61,7 +61,7 @@ drsinit(LogfsIdentityStore *is, Entry *list, uchar *buf, u32int buflen, u32int *
 }
 
 static void
-drsread(DirReadState *drs, uchar *buf, u32int buflen, u32int *rcount)
+drsread(DirReadState *drs, uchar *buf, u32 buflen, u32 *rcount)
 {
 	uchar *p;
 	*rcount = 0;
@@ -98,7 +98,7 @@ logfsdrsfree(DirReadState **drsp)
 }
 
 static int
-reader(void *magic, u32int baseoffset, u32int limitoffset, Extent *e, u32int extentoffset)
+reader(void *magic, u32 baseoffset, u32 limitoffset, Extent *e, u32 extentoffset)
 {
 	ReaderState *s = magic;
 	LogfsServer *server;
@@ -175,7 +175,7 @@ reader(void *magic, u32int baseoffset, u32int limitoffset, Extent *e, u32int ext
 	pagesize = 1 << ll->l2pagesize;
 	replace = 0;
 	while(baseoffset < limitoffset) {
-		u32int thistime;
+		u32 thistime;
 		thistime = pagesize - offset;
 		if(thistime > (limitoffset - baseoffset))
 			thistime = limitoffset - baseoffset;
@@ -202,7 +202,7 @@ done:
 }
 
 char *
-logfsserverread(LogfsServer *server, u32int fid, u32int offset, u32int count, uchar *buf, u32int buflen, u32int *rcount)
+logfsserverread(LogfsServer *server, u32 fid, u32 offset, u32 count, uchar *buf, u32 buflen, u32 *rcount)
 {
 	Fid *f;
 	Entry *e;

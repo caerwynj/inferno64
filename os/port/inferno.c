@@ -9,6 +9,8 @@
 #include "runt.h"
 #include "kernel.h"
 
+#define DP if(1){}else print
+
 /*
  * here because Sys_FileIO is not public
  */
@@ -556,6 +558,7 @@ Sys_print(void *fp)
 		return;
 	p = currun();
 
+	DP("Sys_print\n");
 	release();
 	n = xprint(p, f, &f->vargs, f->s, buf, sizeof(buf));
 	if (n >= sizeof(buf)-UTFmax-2)

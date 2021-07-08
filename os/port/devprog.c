@@ -125,10 +125,10 @@ struct Progctl
 };
 
 #define	QSHIFT		4		/* location in qid of pid */
-#define	QID(q)		(((ulong)(q).path&0x0000000F)>>0)
+#define	QID(q)		(((u32)(q).path&0x0000000F)>>0)
 #define QPID(pid)	(((pid)<<QSHIFT))
 #define	PID(q)		((q).vers)
-#define PATH(q)		((ulong)(q).path&~((1<<QSHIFT)-1))
+#define PATH(q)		((u32)(q).path&~((1<<QSHIFT)-1))
 
 static char *progstate[] =			/* must correspond to include/interp.h */
 {
@@ -233,19 +233,19 @@ progattach(char *spec)
 }
 
 static Walkqid*
-progwalk(Chan *c, Chan *nc, char **name, int nname)
+progwalk(Chan *c, Chan *nc, char **name, s32 nname)
 {
 	return devwalk(c, nc, name, nname, 0, 0, proggen);
 }
 
-static int
-progstat(Chan *c, uchar *db, int n)
+static s32
+progstat(Chan *c, uchar *db, s32 n)
 {
 	return devstat(c, db, n, 0, 0, proggen);
 }
 
 static Chan*
-progopen(Chan *c, int omode)
+progopen(Chan *c, u32 omode)
 {
 	Prog *p;
 	Osenv *o;
@@ -328,8 +328,8 @@ progopen(Chan *c, int omode)
 	return c;
 }
 
-static int
-progwstat(Chan *c, uchar *db, int n)
+static s32
+progwstat(Chan *c, uchar *db, s32 n)
 {
 	Dir d;
 	Prog *p;
@@ -472,7 +472,7 @@ progqidwidth(Chan *c)
 {
 	char buf[32];
 
-	return sprint(buf, "%lud", c->qid.vers);
+	return sprint(buf, "%ud", c->qid.vers);
 }
 
 int
@@ -482,7 +482,7 @@ progfdprint(Chan *c, int fd, int w, char *s, int ns)
 
 	if(w == 0)
 		w = progqidwidth(c);
-	n = snprint(s, ns, "%3d %.2s %C %4ld (%.16llux %*lud %.2ux) %5ld %8lld %s\n",
+	n = snprint(s, ns, "%3d %.2s %C %4d (%.16llux %*ud %.2ux) %5d %8lld %s\n",
 		fd,
 		&"r w rw"[(c->mode&3)<<1],
 		devtab[c->type]->dc, c->dev,
@@ -525,10 +525,10 @@ progfds(Osenv *o, char *va, int count, long offset)
 Inst *
 pc2dispc(Inst *pc, Module *mod)
 {
-	ulong l, u, m, v;
-	ulong *tab = mod->pctab;
+	uintptr l, u, m, v;
+	uintptr *tab = mod->pctab;
 
-	v = (ulong)pc - (ulong)mod->prog;
+	v = (uintptr)pc - (uintptr)mod->prog;
 	l = 0;
 	u = mod->nprog-1;
 	while(l < u){
@@ -570,11 +570,11 @@ progstack(REG *reg, int state, char *va, int count, long offset)
 
 	while(fp != nil) {
 		f = (Frame*)fp;
-		n += snprint(va+n, count-n, "%.8lux %.8lux %.8lux %.8lux %d %s\n",
-				(ulong)f,		/* FP */
-				(ulong)(pc - m->prog),	/* PC in dis instructions */
-				(ulong)m->MP,		/* MP */
-				(ulong)m->prog,	/* Code for module */
+		n += snprint(va+n, count-n, "%.8zx %.8zx %.8zx %.8zx %d %s\n",
+				(uintptr)f,		/* FP */
+				(uintptr)(pc - m->prog),	/* PC in dis instructions */
+				(uintptr)m->MP,		/* MP */
+				(uintptr)m->prog,	/* Code for module */
 				m->compiled && m->m->pctab == nil,	/* True if native assembler: fool stack utility for now */
 				m->m->path);	/* File system path */
 
@@ -638,7 +638,7 @@ progheap(Heapqry *hq, char *va, int count, ulong offset)
 		case 'W':
 			if(addr & 3)
 				return -1;
-			n += snprint(va+n, count-n, "%d\n", *(WORD*)addr);
+			n += snprint(va+n, count-n, "%zd\n", *(WORD*)addr);
 			s = sizeof(WORD);
 			break;
 		case 'B':
@@ -671,7 +671,7 @@ progheap(Heapqry *hq, char *va, int count, ulong offset)
 					break;
 			if(m == nil)
 				error(Ebadctl);
-			addr = (ulong)(m->prog+addr);
+			addr = (uintptr)(m->prog+addr);
 			n += snprint(va+n, count-n, "%D\n", (Inst*)addr);
 			s = sizeof(Inst);
 			break;
@@ -691,7 +691,7 @@ progheap(Heapqry *hq, char *va, int count, ulong offset)
 			hd = *(List**)addr;
 			if(hd == H || D2H(hd)->t != &Tlist)
 				return -1;
-			n += snprint(va+n, count-n, "%lux.%lux\n", (ulong)&hd->tail, (ulong)hd->data);
+			n += snprint(va+n, count-n, "%zx.%zx\n", (uintptr)&hd->tail, (uintptr)hd->data);
 			s = sizeof(WORD);
 			break;
 		case 'A':
@@ -703,7 +703,7 @@ progheap(Heapqry *hq, char *va, int count, ulong offset)
 			else {
 				if(D2H(a)->t != &Tarray)
 					return -1;
-				n += snprint(va+n, count-n, "%d.%lux\n", a->len, (ulong)a->data);
+				n += snprint(va+n, count-n, "%zd.%zx\n", a->len, (uintptr)a->data);
 			}
 			s = sizeof(WORD);
 			break;
@@ -745,9 +745,9 @@ progheap(Heapqry *hq, char *va, int count, ulong offset)
 				if(t != &Tchannel && t != Trdchan && t != Twrchan)
 					return -1;
 				if(c->buf == H)
-					n += snprint(va+n, count-n, "0.%lux\n", (ulong)c);
+					n += snprint(va+n, count-n, "0.%zx\n", (uintptr)c);
 				else
-					n += snprint(va+n, count-n, "%d.%lux.%d.%d\n", c->buf->len, (ulong)c->buf->data, c->front, c->size);
+					n += snprint(va+n, count-n, "%zd.%zx.%d.%d\n", c->buf->len, (uintptr)c->buf->data, c->front, c->size);
 			}
 			break;
 			
@@ -819,8 +819,8 @@ progtime(ulong msec, char *buf, char *ebuf)
 	return buf;
 }
 
-static long
-progread(Chan *c, void *va, long n, vlong offset)
+static s32
+progread(Chan *c, void *va, s32 n, s64 offset)
 {
 	int i;
 	Prog *p;
@@ -844,7 +844,7 @@ progread(Chan *c, void *va, long n, vlong offset)
 		p = progpid(PID(c->qid));
 		if(p == nil || p->state == Pexiting || p->R.M == H) {
 			release();
-			snprint(up->genbuf, sizeof(up->genbuf), "%8lud %8d %10s %s %10s %5dK %s",
+			snprint(up->genbuf, sizeof(up->genbuf), "%8ud %8d %10s %s %10s %5dK %s",
 				PID(c->qid),
 				0,
 				eve,
@@ -1017,8 +1017,8 @@ mntscan(Mntwalk *mw, Pgrp *pg)
 	runlock(&pg->ns);
 }
 
-static long
-progwrite(Chan *c, void *va, long n, vlong offset)
+static s32
+progwrite(Chan *c, void *va, s32 n, s64 offset)
 {
 	Prog *p, *f;
 	Heapqry *hq;
@@ -1416,8 +1416,8 @@ dbgxec(Prog *p)
 
 	while(R.IC != 0) {
 		if(0)
-			print("step: %lux: %s %4ld %D\n",
-				(ulong)p, R.M->m->name, R.PC-R.M->prog, R.PC);
+			print("step: %zx: %s %4zd %D\n",
+				(uintptr)p, R.M->m->name, R.PC-R.M->prog, R.PC);
 
 		dec[R.PC->add]();
 		op = R.PC->op;

@@ -53,7 +53,7 @@ enum
 	S44=	21
 };
 
-static u32int md5tab[] =
+static u32 md5tab[] =
 {
 	/* round 1 */
 /*[0]*/	0xd76aa478,	
@@ -128,16 +128,16 @@ static u32int md5tab[] =
 	0xeb86d391,	
 };
 
-static void decode(u32int*, uchar*, ulong);
-extern void _md5block(uchar *p, ulong len, u32int *s);
+static void decode(u32*, uchar*, u32);
+extern void _md5block(uchar *p, u32 len, u32 *s);
 
 void
-_md5block(uchar *p, ulong len, u32int *s)
+_md5block(uchar *p, u32 len, u32 *s)
 {
-	u32int a, b, c, d, sh;
-	u32int *t;
+	u32 a, b, c, d, sh;
+	u32 *t;
 	uchar *end;
-	u32int x[16];
+	u32 x[16];
 
 	for(end = p+len; p < end; p += 64){
 		a = s[0];
@@ -253,11 +253,11 @@ _md5block(uchar *p, ulong len, u32int *s)
 }
 
 /*
- *	decodes input (uchar) into output (u32int). Assumes len is
+ *	decodes input (uchar) into output (u32). Assumes len is
  *	a multiple of 4.
  */
 static void
-decode(u32int *output, uchar *input, ulong len)
+decode(u32 *output, uchar *input, u32 len)
 {
 	uchar *e;
 

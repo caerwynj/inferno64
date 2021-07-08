@@ -213,7 +213,6 @@ have a name of the form tmp_<num>. In all cases <num> is a unique identifier.
 .B /appl/lib/libc.b
 .TP
 .B /appl/lib/libc0.b
-.TP
 .SH "SEE ALSO"
 .IR 2c (10.1),
 .IR limbo (1)

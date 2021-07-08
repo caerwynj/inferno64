@@ -6,10 +6,14 @@
 #include "../port/error.h"
 
 static void
-lockloop(Lock *l, ulong pc)
+lockloop(Lock *l, uintptr pc)
 {
+	extern int panicking;
+
+	if(panicking)
+		return;
 	setpanic();
-	print("lock loop 0x%lux key 0x%lux pc 0x%lux held by pc 0x%lux\n", l, l->key, pc, l->pc);
+	panic("lock loop 0x%p key 0x%ux pc 0x%zux held by pc 0x%zux\n", l, l->key, pc, l->pc);
 	panic("lockloop");
 }
 
@@ -17,13 +21,13 @@ void
 lock(Lock *l)
 {
 	int i;
-	ulong pc;
+	uintptr pc;
 
 	pc = getcallerpc(&l);
 	if(up == 0) {
-		if (_tas(&l->key) != 0) {
+		if (_tas((int*)&l->key) != 0) {
 			for(i=0; ; i++) {
-				if(_tas(&l->key) == 0)
+				if(_tas((int*)&l->key) == 0)
 					break;
 				if (i >= 1000000) {
 					lockloop(l, pc);
@@ -36,7 +40,7 @@ lock(Lock *l)
 	}
 
 	for(i=0; ; i++) {
-		if(_tas(&l->key) == 0)
+		if(_tas((int*)&l->key) == 0)
 			break;
 		if (i >= 1000) {
 			lockloop(l, pc);
@@ -55,19 +59,19 @@ lock(Lock *l)
 void
 ilock(Lock *l)
 {
-	ulong x, pc;
+	uintptr x, pc;
 	int i;
 
 	pc = getcallerpc(&l);
 	x = splhi();
 	for(;;) {
-		if(_tas(&l->key) == 0) {
+		if(_tas((int*)&l->key) == 0) {
 			l->sr = x;
 			l->pc = pc;
 			return;
 		}
 		if(conf.nmach < 2)
-			panic("ilock: no way out: pc 0x%lux: lock 0x%lux held by pc 0x%lux", pc, l, l->pc);
+			panic("ilock: no way out: pc 0x%zux: lock 0x%lux held by pc 0x%zux", pc, l, l->pc);
 		for(i=0; ; i++) {
 			if(l->key == 0)
 				break;
@@ -83,7 +87,7 @@ ilock(Lock *l)
 int
 canlock(Lock *l)
 {
-	if(_tas(&l->key))
+	if(_tas((int*)&l->key))
 		return 0;
 	if(up){
 		l->pri = up->pri;
@@ -99,7 +103,7 @@ unlock(Lock *l)
 	int p;
 
 	if(l->key == 0)
-		print("unlock: not locked: pc %lux\n", getcallerpc(&l));
+		print("unlock: not locked: pc %zux\n", getcallerpc(&l));
 	p = l->pri;
 	l->pc = 0;
 	l->key = 0;
@@ -117,10 +121,10 @@ iunlock(Lock *l)
 	ulong sr;
 
 	if(l->key == 0)
-		print("iunlock: not locked: pc %lux\n", getcallerpc(&l));
+		print("iunlock: not locked: pc %zux\n", getcallerpc(&l));
 	sr = l->sr;
 	l->pc = 0;
 	l->key = 0;
 	coherence();
-	splxpc(sr);
+	splx(sr);
 }

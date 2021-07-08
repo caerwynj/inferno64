@@ -7,7 +7,7 @@
 #include	"keyboard.h"
 
 extern int cflag;
-int	exdebug;
+extern int exdebug;
 extern int keepbroken;
 
 enum
@@ -61,7 +61,7 @@ Dirtab contab[] =
 };
 
 Queue*	gkscanq;		/* Graphics keyboard raw scancodes */
-char*	gkscanid;		/* name of raw scan format (if defined) */
+extern	char	gkscanid[];	/* name of raw scan format (if defined) */
 Queue*	gkbdq;			/* Graphics keyboard unprocessed input */
 Queue*	kbdq;			/* Console window unprocessed keyboard input */
 Queue*	lineq;			/* processed console input */
@@ -214,7 +214,7 @@ consopen(Chan *c, int omode)
 
 	case Qscancode:
 		qlock(&kbd.gq);
-		if(gkscanq != nil || gkscanid == nil) {
+		if(gkscanq != nil || gkscanid[0] == '\0') {
 			qunlock(&kbd.q);
 			c->flag &= ~COPEN;
 			if(gkscanq)
@@ -625,19 +625,4 @@ truerand(void)
 
 	randomread(&x, sizeof(x));
 	return x;
-}
-
-QLock grandomlk;
-
-void
-_genrandomqlock(void)
-{
-	qlock(&grandomlk);
-}
-
-
-void
-_genrandomqunlock(void)
-{
-	qunlock(&grandomlk);
 }

@@ -15,7 +15,7 @@ enum
 {
 	Nfidhash	= 32,
 	Nqidhash = 32,
-	QIDMASK = ((vlong)1<<48)-1,
+	QIDMASK = ((s64)1<<48)-1,
 	MAXFDATA	= 8192,
 	MAXRPCDEF		= IOHDRSZ+MAXFDATA,	/* initial/default */
 	MAXRPCMAX	= IOHDRSZ+64*1024,	/* most every allowed */
@@ -31,15 +31,15 @@ struct Export
 	Fid*	fid[Nfidhash];
 	QLock	qidlock;
 	Uqid*	qids[Nqidhash];
-	ulong	pathgen;
+	u32	pathgen;
 	Chan*	io;
 	Chan*	root;
 	Pgrp*	pgrp;
 	Egrp*	egrp;
 	Fgrp*	fgrp;
-	int	async;
-	int	readonly;
-	int	msize;
+	s32	async;
+	s32	readonly;
+	s32	msize;
 	char*	user;
 };
 
@@ -48,37 +48,37 @@ struct Fid
 	Fid*	next;
 	Fid**	last;
 	Chan*	chan;
-	int	fid;
-	int	ref;		/* fcalls using the fid; locked by Export.Lock */
-	vlong	offset;	/* last offset used (within directory) */
-	int	attached;	/* fid attached or cloned but not clunked */
+	s32	fid;
+	s32	ref;		/* fcalls using the fid; locked by Export.Lock */
+	s64	offset;	/* last offset used (within directory) */
+	s32	attached;	/* fid attached or cloned but not clunked */
 	Uqid*	qid;	/* generated qid */
 };
 
 struct Uqid
 {
 	Ref;
-	int	type;
-	int	dev;
-	vlong	oldpath;
-	vlong	newpath;
+	s32	type;
+	s32	dev;
+	s64	oldpath;
+	s64	newpath;
 	Uqid*	next;
 };
 
 struct Exq
 {
 	Lock;
-	int	busy;	/* fcall in progress */
-	int	finished;	/* will do no more work on this request or flushes */
+	s32	busy;	/* fcall in progress */
+	s32	finished;	/* will do no more work on this request or flushes */
 	Exq*	next;
-	int	shut;		/* has been noted for shutdown */
+	s32	shut;		/* has been noted for shutdown */
 	Exq*	flush;	/* queued flush requests */
 	Exq*	flusht;	/* tail of flush queue */
 	Export*	export;
 	Proc*	slave;
 	Fcall	in, out;
 	uchar*	buf;
-	int	bsize;
+	s32	bsize;
 };
 
 struct
@@ -274,7 +274,7 @@ exportproc(void *a)
 			if(q != nil || n > 6000)
 				break;
 			if(n%600 == 0)
-				print("exportproc %ld: waiting for memory (%d) for request\n", up->pid, msize);
+				print("exportproc %d: waiting for memory (%d) for request\n", up->pid, msize);
 			tsleep(&up->sleep, return0, nil, 100);
 		}
 		if(q == nil){
@@ -302,7 +302,7 @@ exportproc(void *a)
 		}
 
 		if(exdebug)
-			print("export %ld <- %F\n", up->pid, &q->in);
+			print("export %d <- %F\n", up->pid, &q->in);
 
 		q->out.type = type+1;
 		q->out.tag = q->in.tag;
@@ -354,9 +354,9 @@ exportproc(void *a)
 
 	if(exdebug){
 		if(n < 0)
-			print("exportproc %ld shut down: %s\n", up->pid, up->env->errstr);
+			print("exportproc %d shut down: %s\n", up->pid, up->env->errstr);
 		else
-			print("exportproc %ld shut down\n", up->pid);
+			print("exportproc %d shut down\n", up->pid);
 	}
 
 	free(q);
@@ -486,7 +486,7 @@ static void
 exfree(Export *fs)
 {
 	if(exdebug)
-		print("export p/s %ld free %p ref %ld\n", up->pid, fs, fs->r.ref);
+		print("export p/s %d free %p ref %d\n", up->pid, fs, fs->r.ref);
 	if(decref(&fs->r) != 0)
 		return;
 	closepgrp(fs->pgrp);
@@ -554,10 +554,10 @@ exslave(void*)
 		kstrdup(&up->env->user, q->export->user);
 
 		if(exdebug > 1)
-			print("exslave %ld dispatch %F\n", up->pid, &q->in);
+			print("exslave %d dispatch %F\n", up->pid, &q->in);
 
 		if(waserror()){
-			print("exslave %ld err %s\n", up->pid, up->env->errstr);	/* shouldn't happen */
+			print("exslave %d err %s\n", up->pid, up->env->errstr);	/* shouldn't happen */
 			err = up->env->errstr;
 		}else{
 			if(q->in.type >= Tmax || !fcalls[q->in.type]){
@@ -648,7 +648,7 @@ exreply(Exq *q, char *who)
 	}
 
 	if(exdebug)
-		print("%s %ld -> %F\n", who, up->pid, r);
+		print("%s %d -> %F\n", who, up->pid, r);
 
 	if(!waserror()){
 		devtab[fs->io->type]->write(fs->io, q->buf, n, 0);

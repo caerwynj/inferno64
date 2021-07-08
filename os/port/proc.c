@@ -8,19 +8,21 @@
 
 Ref	pidalloc;
 
+typedef struct Schedq Schedq;
+
 struct
 {
 	Lock;
 	Proc*	arena;
 	Proc*	free;
-}procalloc;
+} procalloc;
 
-typedef struct
+struct Schedq
 {
 	Lock;
 	Proc*	head;
 	Proc*	tail;
-}Schedq;
+};
 
 static Schedq	runq[Nrq];
 static ulong	occupied;
@@ -88,7 +90,7 @@ sched(void)
 		splhi();
 		procsave(up);
 		if(setlabel(&up->sched)) {
-			/* procrestore(up); */
+			/*procrestore(up);*/
 			spllo();
 			return;
 		}
@@ -165,6 +167,8 @@ runproc(void)
 
 	erq = runq + Nrq - 1;
 loop:
+	/* print("runproc\n");
+	procdump(); */
 	splhi();
 	for(rq = runq; rq->head == 0; rq++)
 		if(rq >= erq) {
@@ -204,7 +208,7 @@ loop:
 		goto loop;
 	}
 	if(p->state != Ready)
-		print("runproc %s %lud %s\n", p->text, p->pid, statename[p->state]);
+		print("runproc %s %ud %s\n", p->text, p->pid, statename[p->state]);
 	unlock(runq);
 	p->state = Scheding;
 	if(p->mp != MACHP(m->machno))
@@ -256,7 +260,7 @@ newproc(void)
 	p->psstate = "New";
 	p->mach = 0;
 	p->qnext = 0;
-	p->fpstate = FPINIT;
+	p->fpstate = FPinit;
 	p->kp = 0;
 	p->killed = 0;
 	p->swipend = 0;
@@ -287,6 +291,7 @@ procinit(void)
 	Proc *p;
 	int i;
 
+	print("procinit conf.nproc %d\n", conf.nproc);
 	procalloc.free = xalloc(conf.nproc*sizeof(Proc));
 	procalloc.arena = procalloc.free;
 
@@ -304,7 +309,7 @@ sleep(Rendez *r, int (*f)(void*), void *arg)
 	int s;
 
 	if(up == nil)
-		panic("sleep() not in process (%lux)", getcallerpc(&r));
+		panic("sleep() not in process (%zux)", getcallerpc(&r));
 	/*
 	 * spl is to allow lock to be called
 	 * at interrupt time. lock is mutual exclusion
@@ -326,7 +331,7 @@ sleep(Rendez *r, int (*f)(void*), void *arg)
 		 * change state and call scheduler
 		 */
 		if(r->p != nil) {
-			print("double sleep pc=0x%lux %lud %lud r=0x%lux\n", getcallerpc(&r), r->p->pid, up->pid, r);
+			print("double sleep pc=0x%zux %ud %ud r=0x%lux\n", getcallerpc(&r), r->p->pid, up->pid, r);
 			dumpstack();
 			panic("sleep");
 		}
@@ -368,7 +373,7 @@ tsleep(Rendez *r, int (*fn)(void*), void *arg, int ms)
 	Proc *f, **l;
 
 	if(up == nil)
-		panic("tsleep() not in process (0x%lux)", getcallerpc(&r));
+		panic("tsleep() not in process (0x%zux)", getcallerpc(&r));
 
 	when = MS2TK(ms)+MACHP(0)->ticks;
 	lock(&talarm);
@@ -513,7 +518,7 @@ procdump(void)
 			snprint(tmp, sizeof(tmp), " /%.8lux", p->r);
 		else
 			*tmp = '\0';
-		print("%lux:%3lud:%14s pc %.8lux %s/%s qpc %.8lux pri %d%s\n",
+		print("%p:%3ud:%14s pc %.8zux %s/%s qpc %.8zux pri %d%s\n",
 			p, p->pid, p->text, p->pc, s, statename[p->state], p->qpc, p->pri, tmp);
 	}
 }

@@ -1,6 +1,6 @@
 #include	"l.h"
 
-#define JMPSZ	sizeof(u32int)		/* size of bootstrap jump section */
+#define JMPSZ	sizeof(u32)		/* size of bootstrap jump section */
 
 #define	LPUT(c)\
 	{\

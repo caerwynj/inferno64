@@ -15,17 +15,17 @@ doellipse(int cmd, Image *dst, Point *c, int xr, int yr, int thick, Image *src, 
 		return;
 	}
 	a[0] = cmd;
-	BPLONG(a+1, dst->id);
-	BPLONG(a+5, src->id);
-	BPLONG(a+9, c->x);
-	BPLONG(a+13, c->y);
-	BPLONG(a+17, xr);
-	BPLONG(a+21, yr);
-	BPLONG(a+25, thick);
-	BPLONG(a+29, sp->x);
-	BPLONG(a+33, sp->y);
-	BPLONG(a+37, alpha);
-	BPLONG(a+41, phi);
+	BP32INT(a+1, dst->id);
+	BP32INT(a+5, src->id);
+	BP32INT(a+9, c->x);
+	BP32INT(a+13, c->y);
+	BP32INT(a+17, xr);
+	BP32INT(a+21, yr);
+	BP32INT(a+25, thick);
+	BP32INT(a+29, sp->x);
+	BP32INT(a+33, sp->y);
+	BP32INT(a+37, alpha);
+	BP32INT(a+41, phi);
 }
 
 void

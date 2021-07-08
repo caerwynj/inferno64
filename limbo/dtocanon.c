@@ -1,9 +1,9 @@
 #include "limbo.h"
 
 void
-dtocanon(double f, ulong v[])
+dtocanon(double f, u32int v[])
 {
-	union { double d; ulong ul[2]; } a;
+	union { double d; u32int ul[2]; } a;
 
 	a.d = 1.;
 	if(a.ul[0]){
@@ -18,9 +18,9 @@ dtocanon(double f, ulong v[])
 }
 
 double
-canontod(ulong v[2])
+canontod(u32int v[2])
 {
-	union { double d; unsigned long ul[2]; } a;
+	union { double d; u32int ul[2]; } a;
 
 	a.d = 1.;
 	if(a.ul[0]) {

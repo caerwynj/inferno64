@@ -176,10 +176,10 @@ enum {					/* Cplusc */
 
 typedef struct D D;			/* Transmit/Receive Descriptor */
 struct D {
-	u32int	control;
-	u32int	vlan;
-	u32int	addrlo;
-	u32int	addrhi;
+	u32	control;
+	u32	vlan;
+	u32	addrlo;
+	u32	addrhi;
 };
 
 enum {					/* Transmit Descriptor control */
@@ -231,14 +231,14 @@ struct Dtcc {
 	u64int	txok;
 	u64int	rxok;
 	u64int	txer;
-	u32int	rxer;
+	u32	rxer;
 	u16int	misspkt;
 	u16int	fae;
-	u32int	tx1col;
-	u32int	txmcol;
+	u32	tx1col;
+	u32	txmcol;
 	u64int	rxokph;
 	u64int	rxokbrd;
-	u32int	rxokmu;
+	u32	rxokmu;
 	u16int	txabt;
 	u16int	txundrn;
 };
@@ -415,7 +415,7 @@ rtl8169halt(Ctlr* ctlr)
 static int
 rtl8169reset(Ctlr* ctlr)
 {
-	u32int r;
+	u32 r;
 	int timeo;
 
 	/*
@@ -471,7 +471,7 @@ rtl8169replenish(Ctlr* ctlr)
 static int
 rtl8169init(Ether* edev)
 {
-	u32int r;
+	u32 r;
 	Ctlr *ctlr;
 	u8int cplusc;
 
@@ -739,7 +739,7 @@ rtl8169receive(Ether* edev)
 	D *d;
 	int len, rdh;
 	Ctlr *ctlr;
-	u32int control;
+	u32 control;
 	RingBuf *ring;
 
 	ctlr = edev->ctlr;
@@ -784,7 +784,7 @@ rtl8169interrupt(Ureg*, void* arg)
 {
 	Ctlr *ctlr;
 	Ether *edev;
-	u32int isr;
+	u32 isr;
 
 	edev = arg;
 	ctlr = edev->ctlr;
@@ -831,7 +831,7 @@ rtl8169pci(void)
 	Pcidev *p;
 	Ctlr *ctlr;
 	int i, port;
-	u32int bar;
+	u32 bar;
 
 	p = nil;
 	while(p = pcimatch(p, 0, 0)){
@@ -901,7 +901,7 @@ rtl8169pci(void)
 int
 rtl8169pnp(Ether* edev)
 {
-	u32int r;
+	u32 r;
 	Ctlr *ctlr;
 
 	if(rtl8169ctlrhead == nil)

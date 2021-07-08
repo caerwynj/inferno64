@@ -25,6 +25,7 @@ typedef struct Mntwalk	Mntwalk;
 typedef struct Mnt	Mnt;
 typedef struct Mhead	Mhead;
 typedef struct Osenv	Osenv;
+typedef struct Perf	Perf;
 typedef struct Pgrp	Pgrp;
 typedef struct Proc	Proc;
 typedef struct QLock	QLock;
@@ -39,8 +40,11 @@ typedef struct Skeyset	Skeyset;
 typedef struct Talarm	Talarm;
 typedef struct Timer	Timer;
 typedef struct Timers	Timers;
-typedef struct Uart	Uart;
+typedef struct PhysUart PhysUart;
+typedef struct Uart Uart;
 typedef struct Walkqid	Walkqid;
+typedef struct Watchpt	Watchpt;
+typedef struct Watchdog	Watchdog;
 typedef int    Devgen(Chan*, char*, Dirtab*, int, int, Dir*);
 
 #pragma incomplete DevConf
@@ -56,7 +60,7 @@ typedef int    Devgen(Chan*, char*, Dirtab*, int, int, Dir*);
 struct Ref
 {
 	Lock	l;
-	long	ref;
+	s32	ref;
 };
 
 struct Rendez
@@ -70,9 +74,9 @@ struct Rept
 	Lock	l;
 	Rendez	r;
 	void	*o;
-	int	t;
-	int	(*active)(void*);
-	int	(*ck)(void*, int);
+	s32	t;
+	s32	(*active)(void*);
+	s32	(*ck)(void*, int);
 	void	(*f)(void*);	/* called with VM acquire()'d */
 };
 
@@ -90,10 +94,10 @@ struct Osenv
 	Queue*	waitq;		/* Info about dead children */
 	Queue*	childq;		/* Info about children for debuggers */
 	void*	debug;		/* Debugging master */
-	int	uid;		/* Numeric user id for system */
-	int	gid;		/* Numeric group id for system */
+	s32	uid;		/* Numeric user id for system */
+	s32	gid;		/* Numeric group id for system */
 	char*	user;		/* Inferno user name */
-	FPenv	fpu;		/* Floating point thread state */
+	int	fpuostate;
 };
 
 enum
@@ -106,7 +110,7 @@ struct QLock
 	Lock	use;			/* to access Qlock structure */
 	Proc	*head;			/* next process waiting for object */
 	Proc	*tail;			/* last process waiting for object */
-	int	locked;			/* flag */
+	s32	locked;			/* flag */
 };
 
 struct RWlock
@@ -114,7 +118,7 @@ struct RWlock
 	Lock;				/* Lock modify lock */
 	QLock	x;			/* Mutual exclusion lock */
 	QLock	k;			/* Lock for waiting writers */
-	int	readers;		/* Count of readers in lock */
+	s32	readers;		/* Count of readers in lock */
 };
 
 struct Talarm
@@ -131,10 +135,10 @@ struct Alarms
 
 struct Rootdata
 {
-	int	dotdot;
+	s32	dotdot;
 	void	*ptr;
-	int	size;
-	int	*sizep;
+	s32	size;
+	s32	*sizep;
 };
 
 /*
@@ -177,8 +181,8 @@ struct Block
 	uchar*	lim;			/* 1 past the end of the buffer */
 	uchar*	base;			/* start of the buffer */
 	void	(*free)(Block*);
-	ushort	flag;
-	ushort	checksum;		/* IP checksum of complete packet (minus media header) */
+	u16	flag;
+	u16	checksum;		/* IP checksum of complete packet (minus media header) */
 };
 #define BLEN(s)	((s)->wp - (s)->rp)
 #define BALLOC(s) ((s)->lim - (s)->base)
@@ -189,20 +193,20 @@ struct Chan
 	Ref;
 	Chan*	next;			/* allocation */
 	Chan*	link;
-	vlong	offset;			/* in file */
-	ushort	type;
-	ulong	dev;
-	ushort	mode;			/* read/write */
-	ushort	flag;
+	s64	offset;			/* in file */
+	u16	type;
+	u32	dev;
+	u16	mode;			/* read/write */
+	u16	flag;
 	Qid	qid;
-	int	fid;			/* for devmnt */
-	ulong	iounit;	/* chunk size for i/o; 0==default */
+	s32	fid;			/* for devmnt */
+	u32	iounit;	/* chunk size for i/o; 0==default */
 	Mhead*	umh;			/* mount point that derived Chan; used in unionread */
 	Chan*	umc;			/* channel in union; held for union read */
 	QLock	umqlock;		/* serialize unionreads */
-	int	uri;			/* union read index */
-	int	dri;			/* devdirread index */
-	ulong	mountid;
+	s32	uri;			/* union read index */
+	s32	dri;			/* devdirread index */
+	u32	mountid;
 	Mntcache *mcp;			/* Mount cache pointer */
 	Mnt		*mux;		/* Mnt for clients using me for messages */
 	union {
@@ -217,47 +221,47 @@ struct Chan
 struct Cname
 {
 	Ref;
-	int	alen;			/* allocated length */
-	int	len;			/* strlen(s) */
+	s32	alen;			/* allocated length */
+	s32	len;			/* strlen(s) */
 	char	*s;
 };
 
 struct Dev
 {
-	int	dc;
+	s32	dc;
 	char*	name;
 
 	void	(*reset)(void);
 	void	(*init)(void);
 	void	(*shutdown)(void);
 	Chan*	(*attach)(char*);
-	Walkqid*	(*walk)(Chan*, Chan*, char**, int);
-	int	(*stat)(Chan*, uchar*, int);
-	Chan*	(*open)(Chan*, int);
-	void	(*create)(Chan*, char*, int, ulong);
+	Walkqid*	(*walk)(Chan*, Chan*, char**, s32);
+	s32	(*stat)(Chan*, uchar*, s32);
+	Chan*	(*open)(Chan*, u32);
+	void	(*create)(Chan*, char*, u32, u32);
 	void	(*close)(Chan*);
-	long	(*read)(Chan*, void*, long, vlong);
-	Block*	(*bread)(Chan*, long, ulong);
-	long	(*write)(Chan*, void*, long, vlong);
-	long	(*bwrite)(Chan*, Block*, ulong);
+	s32	(*read)(Chan*, void*, s32, s64);
+	Block*	(*bread)(Chan*, s32, u32);
+	s32	(*write)(Chan*, void*, s32, s64);
+	s32	(*bwrite)(Chan*, Block*, u32);
 	void	(*remove)(Chan*);
-	int	(*wstat)(Chan*, uchar*, int);
-	void	(*power)(int);	/* power mgt: power(1) → on, power (0) → off */
-	int	(*config)(int, char*, DevConf*);
+	s32	(*wstat)(Chan*, uchar*, s32);
+	void	(*power)(s32);	/* power mgt: power(1) → on, power (0) → off */
+	s32	(*config)(s32, char*, DevConf*);
 };
 
 struct Dirtab
 {
 	char	name[KNAMELEN];
 	Qid	qid;
-	vlong	length;
-	long	perm;
+	s64	length;
+	s32	perm;
 };
 
 struct Walkqid
 {
 	Chan	*clone;
-	int	nqid;
+	s32	nqid;
 	Qid	qid[1];
 };
 
@@ -270,21 +274,21 @@ enum
 
 struct Mntwalk				/* state for /proc/#/ns */
 {
-	int		cddone;
-	ulong	id;
+	s32		cddone;
+	u32	id;
 	Mhead*	mh;
 	Mount*	cm;
 };
 
 struct Mount
 {
-	ulong	mountid;
+	u32	mountid;
 	Mount*	next;
 	Mhead*	head;
 	Mount*	copy;
 	Mount*	order;
 	Chan*	to;			/* channel replacing channel */
-	int	mflag;
+	s32	mflag;
 	char	*spec;
 };
 
@@ -304,10 +308,10 @@ struct Mnt
 	Chan	*c;		/* Channel to file service */
 	Proc	*rip;		/* Reader in progress */
 	Mntrpc	*queue;		/* Queue of pending requests on this channel */
-	ulong	id;		/* Multiplexer id for channel check */
+	u32	id;		/* Multiplexer id for channel check */
 	Mnt	*list;		/* Free list */
-	int	flags;		/* cache */
-	int	msize;		/* data + IOHDRSZ */
+	s32	flags;		/* cache */
+	s32	msize;		/* data + IOHDRSZ */
 	char	*version;			/* 9P version */
 	Queue	*q;		/* input queue */
 };
@@ -328,39 +332,47 @@ struct Mntparam {
 	Chan*	chan;
 	Chan*	authchan;
 	char*	spec;
-	int	flags;
+	s32	flags;
 };
 
 struct Pgrp
 {
 	Ref;				/* also used as a lock when mounting */
-	ulong	pgrpid;
+	u32	pgrpid;
 	QLock	debug;			/* single access via devproc.c */
 	RWlock	ns;			/* Namespace n read/one write lock */
 	QLock	nsh;
 	Mhead*	mnthash[MNTHASH];
-	int	progmode;
+	s32	progmode;
 	Chan*	dot;
 	Chan*	slash;
-	int	nodevs;
-	int	pin;
+	s32	nodevs;
+	s32	pin;
 };
 
 struct Fgrp
 {
-	Lock;
 	Ref;
-	Chan**	fd;
-	int	nfd;			/* number of fd slots */
-	int	maxfd;			/* highest fd in use */
-	int	minfd;			/* lower bound on free fd */
+	Lock;
+	Chan	**fd;
+	uchar	*flag;			/* per file-descriptor flags (CCEXEC) */
+	s32	nfd;			/* number allocated */
+	s32	maxfd;			/* highest fd in use */
+	s32	minfd;			/* lower bound on free fd */
+	s32	exceed;			/* debugging */
 };
 
 struct Evalue
 {
-	char	*var;
-	char	*val;
-	int	len;
+	union {
+		char	*name;
+		char	*var;
+	};
+	union {
+		char	*value;
+		char	*val;
+	};
+	s32	len;
 	Qid	qid;
 	Evalue	*next;
 };
@@ -369,7 +381,12 @@ struct Egrp
 {
 	Ref;
 	QLock;
-	Evalue	*entries;
+	union{
+		Evalue	*entries;
+		Evalue	*ent;
+	};
+	int	nent;
+	int	ment;
 	ulong	path;	/* qid.path of next Evalue to be allocated */
 	ulong	vers;	/* of Egrp */
 };
@@ -378,8 +395,8 @@ struct Signerkey
 {
 	Ref;
 	char*	owner;
-	ushort	footprint;
-	ulong	expires;
+	u16	footprint;
+	u32	expires;
 	void*	alg;
 	void*	pk;
 	void	(*pkfree)(void*);
@@ -389,9 +406,9 @@ struct Skeyset
 {
 	Ref;
 	QLock;
-	ulong	flags;
+	u32	flags;
 	char*	devs;
-	int	nkey;
+	s32	nkey;
 	Signerkey	*keys[MAXKEY];
 };
 
@@ -408,14 +425,14 @@ enum {
 struct Timer
 {
 	/* Public interface */
-	int	tmode;		/* See above */
-	vlong	tns;		/* meaning defined by mode */
+	s32	tmode;		/* See above */
+	s64	tns;		/* meaning defined by mode */
 	void	(*tf)(Ureg*, Timer*);
 	void	*ta;
 	/* Internal */
 	Lock;
 	Timers	*tt;		/* Timers queue this timer runs on */
-	vlong	twhen;		/* ns represented in fastticks */
+	s64	twhen;		/* ns represented in fastticks */
 	Timer	*tnext;
 };
 
@@ -468,46 +485,47 @@ struct Proc
 	Proc*		rnext;		/* next process in run queue */
 	Proc*		qnext;		/* next process on queue for a QLock */
 	QLock*		qlock;		/* addrof qlock being queued for DEBUG */
-	int		state;
-	int		type;
+	s32		state;
+	s32		type;
 	void*		prog;		/* Dummy Prog for interp release */
 	void*		iprog;
 	Osenv*		env;
 	Osenv		defenv;
-	int		swipend;	/* software interrupt pending for Prog */
+	s32		swipend;	/* software interrupt pending for Prog */
 	Lock		sysio;		/* note handler lock */
 	char*		psstate;	/* What /proc/#/status reports */
-	ulong		pid;
-	int		fpstate;
-	int		procctl;	/* Control for /proc debugging */
-	ulong		pc;		/* DEBUG only */
+	u32		pid;
+	s32		procctl;	/* Control for /proc debugging */
+	uintptr		pc;		/* DEBUG only */
 	Lock	rlock;	/* sync between sleep/swiproc for r */
 	Rendez*		r;		/* rendezvous point slept on */
 	Rendez		sleep;		/* place for syssleep/debug */
-	int		killed;		/* by swiproc */
-	int		kp;		/* true if a kernel process */
-	ulong		alarm;		/* Time of call */
-	int		pri;		/* scheduler priority */
-	ulong		twhen;
+	s32		killed;		/* by swiproc */
+	s32		kp;		/* true if a kernel process */
+	u32		alarm;		/* Time of call */
+	s32		pri;		/* scheduler priority */
+	u32		twhen;
 	Rendez*		trend;
 	Proc*		tlink;
-	int		(*tfn)(void*);
+	s32		(*tfn)(void*);
 	void		(*kpfun)(void*);
 	void*		arg;
-	FPU		fpsave;
-	int		scallnr;
-	int		nerrlab;
+	PFPU;				/* machine specific fpu state */
+	s32		scallnr;
+	s32		nerrlab;
 	Label		errlab[NERR];
 	char	genbuf[128];	/* buffer used e.g. for last name element from namec */
 	Mach*		mp;		/* machine this process last ran on */
 	Mach*		wired;
-	ulong		movetime;	/* next time process should switch processors */
-	ulong		delaysched;
-	int			preempted;	/* process yielding in interrupt */
-	ulong		qpc;		/* last call that blocked in qlock */
+	u32		movetime;	/* next time process should switch processors */
+	u32		delaysched;
+	s32			preempted;	/* process yielding in interrupt */
+	uintptr		qpc;		/* last call that blocked in qlock */
 	void*		dbgreg;		/* User registers for devproc */
- 	int		dbgstop;		/* don't run this kproc */
+ 	s32		dbgstop;		/* don't run this kproc */
 	Edf*	edf;	/* if non-null, real-time proc, edf contains scheduling params */
+
+	PMMU;				/* TODO obsolete? machine specific mmu state */
 };
 
 enum
@@ -527,14 +545,14 @@ enum {
 struct BkptCond
 {
 	uchar op;
-	ulong val;
+	u32 val;
 	BkptCond *next;
 };
 
 struct Bkpt
 {
-	int id;
-	ulong addr;
+	s32 id;
+	u32 addr;
 	BkptCond *conditions;
 	Instr instr;
 	void (*handler)(Bkpt*);
@@ -557,7 +575,6 @@ extern	int	consoleprint;
 extern	Dev*	devtab[];
 extern	char*	eve;
 extern	int	hwcurs;
-extern	FPU	initfp;
 extern  Queue	*kbdq;
 extern  Queue	*kscanq;
 extern  Ref	noteidalloc;
@@ -572,15 +589,15 @@ extern	Talarm	talarm;
  */
 struct Log {
 	Lock;
-	int	opens;
+	s32	opens;
 	char*	buf;
 	char	*end;
 	char	*rptr;
-	int	len;
-	int	nlog;
-	int	minread;
+	s32	len;
+	s32	nlog;
+	s32	minread;
 
-	int	logmask;	/* mask of things to debug */
+	s32	logmask;	/* mask of things to debug */
 
 	QLock	readq;
 	Rendez	readr;
@@ -588,22 +605,113 @@ struct Log {
 
 struct Logflag {
 	char*	name;
-	int	mask;
+	s32	mask;
 };
 
 struct Cmdbuf
 {
 	char	*buf;
 	char	**f;
-	int	nf;
+	s32	nf;
 };
 
 struct Cmdtab
 {
-	int	index;	/* used by client to switch on result */
+	s32	index;	/* used by client to switch on result */
 	char	*cmd;	/* command name */
-	int	narg;	/* expected #args; 0 ==> variadic */
+	s32	narg;	/* expected #args; 0 ==> variadic */
 };
+
+/*
+ *  routines to access UART hardware
+ */
+struct PhysUart
+{
+	char*	name;
+	Uart*	(*pnp)(void);
+	void	(*enable)(Uart*, int);
+	void	(*disable)(Uart*);
+	void	(*kick)(Uart*);
+	void	(*dobreak)(Uart*, int);
+	int	(*baud)(Uart*, int);
+	int	(*bits)(Uart*, int);
+	int	(*stop)(Uart*, int);
+	int	(*parity)(Uart*, int);
+	void	(*modemctl)(Uart*, int);
+	void	(*rts)(Uart*, int);
+	void	(*dtr)(Uart*, int);
+	long	(*status)(Uart*, void*, long, long);
+	void	(*fifo)(Uart*, int);
+	void	(*power)(Uart*, int);
+	int	(*getc)(Uart*);	/* polling versions, for iprint, rdb */
+	void	(*putc)(Uart*, int);
+};
+
+enum {
+	Stagesize=	2048
+};
+
+/*
+ *  software UART
+ */
+struct Uart
+{
+	void*	regs;			/* hardware stuff */
+	void*	saveregs;		/* place to put registers on power down */
+	char*	name;			/* internal name */
+	ulong	freq;			/* clock frequency */
+	int	bits;			/* bits per character */
+	int	stop;			/* stop bits */
+	int	parity;			/* even, odd or no parity */
+	int	baud;			/* baud rate */
+	PhysUart*phys;
+	int	console;		/* used as a serial console */
+	int	special;		/* internal kernel device */
+	Uart*	next;			/* list of allocated uarts */
+
+	QLock;
+	int	type;			/* ?? */
+	int	dev;
+	int	opens;
+
+	int	enabled;
+	Uart	*elist;			/* next enabled interface */
+
+	int	perr;			/* parity errors */
+	int	ferr;			/* framing errors */
+	int	oerr;			/* rcvr overruns */
+	int	berr;			/* no input buffers */
+	int	serr;			/* input queue overflow */
+
+	/* buffers */
+	int	(*putc)(Queue*, int);
+	Queue	*iq;
+	Queue	*oq;
+
+	Lock	rlock;
+	uchar	istage[Stagesize];
+	uchar	*iw;
+	uchar	*ir;
+	uchar	*ie;
+
+	Lock	tlock;			/* transmit */
+	uchar	ostage[Stagesize];
+	uchar	*op;
+	uchar	*oe;
+	int	drain;
+
+	int	modem;			/* hardware flow control on */
+	int	xonoff;			/* software flow control on */
+	int	blocked;
+	int	cts, dsr, dcd, dcdts;	/* keep track of modem status */ 
+	int	ctsbackoff;
+	int	hup_dsr, hup_dcd;	/* send hangup upstream? */
+	int	dohup;
+
+	Rendez	r;
+};
+
+extern	Uart*	consuart;
 
 enum
 {
@@ -613,6 +721,38 @@ enum
 extern Pool*	mainmem;
 extern Pool*	heapmem;
 extern Pool*	imagmem;
+
+/*
+ *  performance timers, all units in perfticks
+ */
+struct Perf
+{
+	u32	intrts;		/* time of last interrupt */
+	u32	inintr;		/* time since last clock tick in interrupt handlers */
+	u32	avg_inintr;	/* avg time per clock tick in interrupt handlers */
+	u32	inidle;		/* time since last clock tick in idle loop */
+	u32	avg_inidle;	/* avg time per clock tick in idle loop */
+	u32	last;		/* value of perfticks() at last clock tick */
+	u32	period;		/* perfticks() per clock tick */
+};
+
+struct Watchdog
+{
+	void	(*enable)(void);	/* watchdog enable */
+	void	(*disable)(void);	/* watchdog disable */
+	void	(*restart)(void);	/* watchdog restart */
+	void	(*stat)(char*, char*);	/* watchdog statistics */
+};
+
+struct Watchpt
+{
+	enum {
+		WATCHRD = 1,
+		WATCHWR = 2,
+		WATCHEX = 4,
+	} type;
+	uintptr addr, len;
+};
 
 /* queue state bits,  Qmsg, Qcoalesce, and Qkick can be set in qopen */
 enum
@@ -647,6 +787,12 @@ enum
 #pragma	varargck	type	"lx"	long
 #pragma	varargck	type	"ld"	ulong
 #pragma	varargck	type	"lx"	ulong
+#pragma varargck	type	"zd"	intptr
+#pragma varargck	type	"zo"	intptr
+#pragma varargck	type	"zx"	intptr
+#pragma varargck	type	"zd"	uintptr
+#pragma varargck	type	"zo"	uintptr
+#pragma varargck	type	"zx"	uintptr
 #pragma	varargck	type	"d"	int
 #pragma	varargck	type	"x"	int
 #pragma	varargck	type	"c"	int
@@ -666,5 +812,16 @@ enum
 #pragma	varargck	type	"V"	uchar*
 #pragma	varargck	type	"E"	uchar*
 #pragma	varargck	type	"M"	uchar*
+#pragma	varargck	type	"p"	uintptr
 #pragma	varargck	type	"p"	void*
 #pragma	varargck	type	"q"	char*
+
+/*
+ * Log console output so it can be retrieved via /dev/kmesg.
+ * This is good for catching boot-time messages after the fact.
+ */
+struct {
+	Lock lk;
+	uint n;
+	char buf[16384];
+} kmesg;

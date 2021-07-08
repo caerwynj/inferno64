@@ -21,6 +21,7 @@ Queue*	lineq;			/* processed console input */
 Queue*	printq;			/* console output */
 Queue*	klogq;			/* kernel print (log) output */
 int	iprintscreenputs;
+int	panicking;
 
 static struct
 {
@@ -107,6 +108,35 @@ prflush(void)
 			break;
 }
 
+static void
+kmesgputs(char *str, int n)
+{
+	uint nn, d;
+
+	ilock(&kmesg.lk);
+	/* take the tail of huge writes */
+	if(n > sizeof kmesg.buf){
+		d = n - sizeof kmesg.buf;
+		str += d;
+		n -= d;
+	}
+
+	/* slide the buffer down to make room */
+	nn = kmesg.n;
+	if(nn + n >= sizeof kmesg.buf){
+		d = nn + n - sizeof kmesg.buf;
+		if(d)
+			memmove(kmesg.buf, kmesg.buf+d, sizeof kmesg.buf-d);
+		nn -= d;
+	}
+
+	/* copy the data in */
+	memmove(kmesg.buf+nn, str, n);
+	nn += n;
+	kmesg.n = nn;
+	iunlock(&kmesg.lk);
+}
+
 /*
  *   Print a string on the console.  Convert \n to \r\n for serial
  *   line consoles.  Locking of the queues is left up to the screen
@@ -119,6 +149,13 @@ putstrn0(char *str, int n, int usewrite)
 	int m;
 	char *t;
 	char buf[PRINTSIZE+2];
+	/* int i;
+	char pre[PRINTSIZE+2]; */
+
+	/*
+	 *  how many different output devices do we need?
+	 */
+	kmesgputs(str, n);
 
 	/*
 	 *  if kprint is open, put the message there, otherwise
@@ -141,8 +178,12 @@ putstrn0(char *str, int n, int usewrite)
 		}
 		runlock(&kprintq);
 	}
-	if(m && screenputs != nil)
+	if(m && screenputs != nil){
+		/*for debugging for(i = 0; i<n; i++)
+			pre[i] = '.';
+		screenputs(pre, i);*/
 		screenputs(str, n);
+	}
 
 	/*
 	 *  if there's a serial line being used as a console,
@@ -278,6 +319,12 @@ iprint(char *fmt, ...)
 }
 
 void
+setpanic(void)
+{
+	panicking = 1;
+}
+
+void
 panic(char *fmt, ...)
 {
 	int n;
@@ -328,7 +375,7 @@ pprint(char *fmt, ...)
 	va_list arg;
 	char buf[2*PRINTSIZE];
 
-	n = sprint(buf, "%s %ld: ", up->text, up->pid);
+	n = sprint(buf, "%s %d: ", up->text, up->pid);
 	va_start(arg, fmt);
 	n = vseprint(buf+n, buf+sizeof(buf), fmt, arg) - buf;
 	va_end(arg);
@@ -760,13 +807,13 @@ consattach(char *spec)
 }
 
 static Walkqid*
-conswalk(Chan *c, Chan *nc, char **name, int nname)
+conswalk(Chan *c, Chan *nc, char **name, s32 nname)
 {
 	return devwalk(c, nc, name, nname, consdir, nelem(consdir), devgen);
 }
 
-static int
-consstat(Chan *c, uchar *dp, int n)
+static s32
+consstat(Chan *c, uchar *dp, s32 n)
 {
 	return devstat(c, dp, n, consdir, nelem(consdir), devgen);
 }
@@ -781,7 +828,7 @@ flushkbdline(Queue *q)
 }
 
 static Chan*
-consopen(Chan *c, int omode)
+consopen(Chan *c, u32 omode)
 {
 	c->aux = 0;
 	switch((ulong)c->qid.path){
@@ -879,8 +926,8 @@ consclose(Chan *c)
 	}
 }
 
-static long
-consread(Chan *c, void *buf, long n, vlong offset)
+static s32
+consread(Chan *c, void *buf, s32 n, s64 offset)
 {
 	int l;
 	Osenv *o;
@@ -1026,10 +1073,10 @@ consread(Chan *c, void *buf, long n, vlong offset)
 	return -1;		/* never reached */
 }
 
-static long
-conswrite(Chan *c, void *va, long n, vlong offset)
+static s32
+conswrite(Chan *c, void *va, s32 n, s64 offset)
 {
-	vlong t;
+	s64 t;
 	long l, bp;
 	char *a = va;
 	Cmdbuf *cb;
@@ -1241,19 +1288,4 @@ truerand(void)
 
 	randomread(&x, sizeof(x));
 	return x;
-}
-
-QLock grandomlk;
-
-void
-_genrandomqlock(void)
-{
-	qlock(&grandomlk);
-}
-
-
-void
-_genrandomqunlock(void)
-{
-	qunlock(&grandomlk);
 }

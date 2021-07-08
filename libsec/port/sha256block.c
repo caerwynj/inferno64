@@ -5,7 +5,7 @@ enum {
 	SHA256rounds =  64,
 };
 
-u32int sha256const[] = {
+u32 sha256const[] = {
 0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
@@ -38,7 +38,7 @@ u32int sha256const[] = {
 #define G	v[6]
 #define H	v[7]
 
-static u32int
+static u32
 g32(uchar *p)
 {
 	return p[0]<<24|p[1]<<16|p[2]<<8|p[3]<<0;
@@ -47,10 +47,10 @@ g32(uchar *p)
 void
 _sha256block(SHA256state *s, uchar *buf)
 {
-	u32int w[2*SHA256bsize/4];
+	u32 w[2*SHA256bsize/4];
 	int i, t;
-	u32int t1, t2;
-	u32int v[8];
+	u32 t1, t2;
+	u32 v[8];
 
 	for(t = 0; t < nelem(w)/2; t++) {
 		if(t < 16) {

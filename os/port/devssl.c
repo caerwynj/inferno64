@@ -21,7 +21,7 @@ struct OneWay
 	void	*state;		/* encryption state */
 	int	slen;			/* secret data length */
 	uchar	*secret;		/* secret */
-	ulong	mid;		/* message id */
+	u32	mid;		/* message id */
 };
 
 enum
@@ -53,7 +53,7 @@ struct Dstate
 	ushort	blocklen;	/* blocking length */
 
 	ushort	diglen;		/* length of digest */
-	DigestState *(*hf)(uchar*, ulong, uchar*, DigestState*);	/* hash func */
+	DigestState *(*hf)(uchar*, u32, uchar*, DigestState*);	/* hash func */
 
 	/* for SSL format */
 	int	max;			/* maximum unpadded data per msg */
@@ -231,7 +231,7 @@ sslstat(Chan *c, uchar *db, int n)
 }
 
 static Chan*
-sslopen(Chan *c, int omode)
+sslopen(Chan *c, u32 omode)
 {
 	Dstate *s, **pp;
 	int perm;
@@ -472,7 +472,7 @@ qtake(Block **l, int n, int discard)
 }
 
 static Block*
-sslbread(Chan *c, long n, ulong offset)
+sslbread(Chan *c, s32 n, u32 offset)
 {
 	volatile struct { Dstate *s; } s;
 	Block *b;
@@ -560,8 +560,8 @@ sslbread(Chan *c, long n, ulong offset)
 	return b;
 }
 
-static long
-sslread(Chan *c, void *a, long n, vlong offset)
+static s32
+sslread(Chan *c, void *a, s32 n, s64 offset)
 {
 	volatile struct { Block *b; } b;
 	Block *nb;
@@ -614,8 +614,8 @@ randfill(uchar *buf, int len)
 /*
  *  use SSL record format, add in count and digest or encrypt
  */
-static long
-sslbwrite(Chan *c, Block *b, ulong offset)
+static s32
+sslbwrite(Chan *c, Block *b, u32 offset)
 {
 	volatile struct { Dstate *s; } s;
 	volatile struct { Block *b; } bb;
@@ -844,7 +844,7 @@ struct Hashalg
 {
 	char	*name;
 	int	diglen;
-	DigestState *(*hf)(uchar*, ulong, uchar*, DigestState*);
+	DigestState *(*hf)(uchar*, u32, uchar*, DigestState*);
 };
 
 Hashalg hashtab[] =
@@ -958,8 +958,8 @@ alglistinit(void)
 	hashalgs[n] = 0;
 }
 
-static long
-sslwrite(Chan *c, void *a, long n, vlong offset)
+static s32
+sslwrite(Chan *c, void *a, s32 n, s64 offset)
 {
 	volatile struct { Dstate *s; } s;
 	volatile struct { Block *b; } b;

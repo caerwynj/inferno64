@@ -20,7 +20,7 @@ Dir*		chandirstat(Chan*);
 void		cinit(void);
 char*	clipread(void);
 int		clipwrite(char*);
-void	(*coherence)(void);
+/*void	(*coherence)(void); moved this to port/main.c to avoid the duplicate symbols error */
 void		copen(Chan*);
 void		cmderror(Cmdbuf*, char*);
 Block*	concatblock(Block*);

@@ -18,7 +18,7 @@ static uint dumpsome(char*, char*, char*, long);
 static void fdirconv(char*, char*, Dir*);
 static char *qidtype(char*, uchar);
 
-#define	QIDFMT	"(%.16llux %lud %s)"
+#define	QIDFMT	"(%.16llux %ud %s)"
 
 int
 fcallfmt(Fmt *fmt)

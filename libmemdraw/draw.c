@@ -86,9 +86,9 @@ memimageinit(void)
 	return 0;
 }
 
-static u32int imgtorgba(Memimage*, u32int);
-static u32int rgbatoimg(Memimage*, u32int);
-static u32int pixelbits(Memimage*, Point);
+static u32 imgtorgba(Memimage*, u32);
+static u32 rgbatoimg(Memimage*, u32);
+static u32 pixelbits(Memimage*, Point);
 
 #define DBG if(drawdebug)
 void
@@ -388,7 +388,7 @@ struct Buffer {
 	uchar	*blu;
 	uchar	*alpha;
 	uchar	*grey;
-	u32int	*rgba;
+	u32	*rgba;
 	int	delta;	/* number of bytes to add to pointer to get next pixel to the right */
 
 	/* used by boolcalc* for mask data */
@@ -430,7 +430,7 @@ struct Param {
 
 	int	replcache;	/* if set, cache buffers */
 	Buffer	bcache[MAXBCACHE];
-	u32int	bfilled;
+	u32	bfilled;
 	uchar	*bufbase;
 	int	bufoff;
 	int	bufdelta;
@@ -533,7 +533,7 @@ getparam(Param *p, Memimage *img, Rectangle r, int convgrey, int needbuf, int *n
 	p->bytey0s = byteaddr(img, Pt(img->r.min.x, img->r.min.y));
 	p->bytermin = byteaddr(img, Pt(r.min.x, img->r.min.y));
 	p->bytey0e = byteaddr(img, Pt(img->r.max.x, img->r.min.y));
-	p->bwidth = sizeof(u32int)*img->width;
+	p->bwidth = sizeof(u32)*img->width;
 
 	assert(p->bytey0s <= p->bytermin && p->bytermin <= p->bytey0e);
 
@@ -824,7 +824,7 @@ alphacalc14(Buffer bdst, Buffer bsrc, Buffer bmask, int dx, int grey, int op)
 	Buffer obdst;
 	int fd, sadelta;
 	int i, sa, ma;
-	u32int s, t;
+	u32 s, t;
 
 	obdst = bdst;
 	sadelta = bsrc.alpha == &ones ? 0 : bsrc.delta;
@@ -875,7 +875,7 @@ alphacalc2810(Buffer bdst, Buffer bsrc, Buffer bmask, int dx, int grey, int op)
 	Buffer obdst;
 	int fs, sadelta;
 	int i, ma, da;
-	u32int s, t;
+	u32 s, t;
 
 	obdst = bdst;
 	sadelta = bsrc.alpha == &ones ? 0 : bsrc.delta;
@@ -928,7 +928,7 @@ alphacalc3679(Buffer bdst, Buffer bsrc, Buffer bmask, int dx, int grey, int op)
 	Buffer obdst;
 	int fs, fd, sadelta;
 	int i, sa, ma, da;
-	u32int s, t, q1, q2;
+	u32 s, t, q1, q2;
 
 	obdst = bdst;
 	sadelta = bsrc.alpha == &ones ? 0 : bsrc.delta;
@@ -1002,7 +1002,7 @@ alphacalc11(Buffer bdst, Buffer bsrc, Buffer bmask, int dx, int grey, int op)
 	Buffer obdst;
 	int fd, sadelta;
 	int i, sa, ma;
-	u32int s, t, q1, q2;
+	u32 s, t, q1, q2;
 
 	USED(op);
 	obdst = bdst;
@@ -1095,7 +1095,7 @@ alphacalcS(Buffer bdst, Buffer bsrc, Buffer bmask, int dx, int grey, int op)
 	Buffer obdst;
 	int fd;
 	int i, ma;
-	u32int s, t;
+	u32 s, t;
 
 	// iprint("\t\talphacalcS");
 	USED(op);
@@ -1181,7 +1181,7 @@ boolcalc236789(Buffer bdst, Buffer bsrc, Buffer bmask, int dx, int grey, int op)
 	Buffer obdst;
 	int fs, fd;
 	int i, ma, da, zero;
-	u32int s, t;
+	u32 s, t;
 
 	obdst = bdst;
 	zero = !(op&1);
@@ -1315,7 +1315,7 @@ readnbit(Param *p, uchar *buf, int y)
 	uchar *repl, *r, *w, *ow, bits;
 	int i, n, sh, depth, x, dx, npack, nbits;
 
-	b.rgba = (u32int*)buf;
+	b.rgba = (u32*)buf;
 	b.grey = w = buf;
 	b.red = b.blu = b.grn = w;
 	b.alpha = &ones;
@@ -1405,7 +1405,7 @@ static void
 writenbit(Param *p, uchar *w, Buffer src)
 {
 	uchar *r;
-	u32int bits;
+	u32 bits;
 	int i, sh, depth, npack, nbits, x, ex;
 
 	assert(src.grey != nil && src.delta == 1);
@@ -1493,7 +1493,7 @@ readcmap(Param *p, uchar *buf, int y)
 		}
 	}
 
-	b.rgba = (u32int*)(buf-copyalpha);
+	b.rgba = (u32*)(buf-copyalpha);
 
 	if(convgrey){
 		b.grey = buf;
@@ -1536,7 +1536,7 @@ readbyte(Param *p, uchar *buf, int y)
 	int dx, isgrey, convgrey, alphaonly, copyalpha, i, nb;
 	uchar *begin, *end, *r, *w, *rrepl, *grepl, *brepl, *arepl, *krepl;
 	uchar ured, ugrn, ublu;
-	u32int u;
+	u32 u;
 
 	img = p->img;
 	begin = p->bytey0s + y*p->bwidth;
@@ -1560,7 +1560,7 @@ DBG print("copyalpha %d alphaonly %d convgrey %d isgrey %d\n", copyalpha, alphao
 			memmove(buf, r, dx*nb);
 			r = buf;
 		}
-		b.rgba = (u32int*)r;
+		b.rgba = (u32*)r;
 		if(copyalpha)
 			b.alpha = r+img->shift[CAlpha]/8;
 		else
@@ -1613,7 +1613,7 @@ DBG print("%x\n", w[-1]);
 	}
 	
 	b.alpha = copyalpha ? buf : &ones;
-	b.rgba = (u32int*)buf;
+	b.rgba = (u32*)buf;
 	if(alphaonly){
 		b.red = b.grn = b.blu = b.grey = nil;
 		if(!copyalpha)
@@ -1642,7 +1642,7 @@ writebyte(Param *p, uchar *w, Buffer src)
 	Memimage *img;
 	int i, isalpha, isgrey, nb, delta, dx, adelta;
 	uchar ff, *red, *grn, *blu, *grey, *alpha;
-	u32int u, mask;
+	u32 u, mask;
 
 	img = p->img;
 
@@ -1748,7 +1748,7 @@ readptr(Param *p, uchar *s, int y)
 	q = p->bytermin + y*p->bwidth;
 	b.red = q;	/* ptr to data */
 	b.grn = b.blu = b.grey = b.alpha = nil;
-	b.rgba = (u32int*)q;
+	b.rgba = (u32*)q;
 	b.delta = p->img->depth/8;
 	return b;
 }
@@ -1827,13 +1827,13 @@ static Buffer
 boolcopy32(Buffer bdst, Buffer bsrc, Buffer bmask, int dx, int i, int o)
 {
 	uchar *m;
-	u32int *r, *w, *ew;
+	u32 *r, *w, *ew;
 
 	USED(i);
 	USED(o);
 	m = bmask.grey;
-	w = (u32int*)bdst.red;
-	r = (u32int*)bsrc.red;
+	w = (u32*)bdst.red;
+	r = (u32*)bsrc.red;
 	ew = w+dx;
 	for(; w < ew; w++,r++)
 		if(*m++)
@@ -1865,7 +1865,7 @@ genconv(Param *p, uchar *buf, int y)
 
 	b.red = buf;
 	b.blu = b.grn = b.grey = b.alpha = nil;
-	b.rgba = (u32int*)buf;
+	b.rgba = (u32*)buf;
 	b.delta = 0;
 	
 	return b;
@@ -1902,11 +1902,11 @@ convfn(Memimage *dst, Param *dpar, Memimage *src, Param *spar, int *ndrawbuf)
 	return genconv;
 }
 
-static u32int
+static u32
 pixelbits(Memimage *i, Point pt)
 {
 	uchar *p;
-	u32int val;
+	u32 val;
 	int off, bpp, npack;
 
 	val = 0;
@@ -1987,9 +1987,9 @@ memset16(void *vp, ushort val, int n)
 }
 
 static void
-memset32(void *vp, u32int val, int n)
+memset32(void *vp, u32 val, int n)
 {
-	u32int *p, *ep;
+	u32 *p, *ep;
 
 	p = vp;
 	ep = p+n;
@@ -1998,7 +1998,7 @@ memset32(void *vp, u32int val, int n)
 }
 
 static void
-memset24(void *vp, u32int val, int n)
+memset24(void *vp, u32 val, int n)
 {
 	uchar *p, *ep;
 	uchar a,b,c;
@@ -2015,12 +2015,12 @@ memset24(void *vp, u32int val, int n)
 	}
 }
 
-static u32int
-imgtorgba(Memimage *img, u32int val)
+static u32
+imgtorgba(Memimage *img, u32 val)
 {
 	uchar r, g, b, a;
 	int nb, ov, v;
-	u32int chan;
+	u32 chan;
 	uchar *p;
 
 	a = 0xFF;
@@ -2063,12 +2063,12 @@ imgtorgba(Memimage *img, u32int val)
 	return (r<<24)|(g<<16)|(b<<8)|a;	
 }
 
-static u32int
-rgbatoimg(Memimage *img, u32int rgba)
+static u32
+rgbatoimg(Memimage *img, u32 rgba)
 {
-	u32int chan;
+	u32 chan;
 	int d, nb;
-	u32int v;
+	u32 v;
 	uchar *p, r, g, b, a, m;
 
 	v = 0;
@@ -2112,8 +2112,8 @@ rgbatoimg(Memimage *img, u32int rgba)
 static int
 memoptdraw(Memdrawparam *par)
 {
-	s32int m, y, dy, dx, op;
-	u32int v;
+	s32 m, y, dy, dx, op;
+	u32 v;
 	Memimage *src;
 	Memimage *dst;
 
@@ -2131,12 +2131,12 @@ DBG print("state %ux mval %ux dd %d\n", par->state, par->mval, dst->depth);
 	m = Simplesrc|Simplemask|Fullmask;
 	if((par->state&m)==m && (par->srgba&0xFF) == 0xFF && (op ==S || op == SoverD)){
 		uchar *dp, p[4];
-		s32int d, dwid, ppb, np, nb;
+		s32 d, dwid, ppb, np, nb;
 		uchar lm, rm;
 
 DBG print("Simplesrc|Simplemask|Fullmask\n");
 DBG print("memopt, dst %p, dst->data->bdata %p\n", dst, dst->data->bdata);
-		dwid = dst->width*sizeof(u32int);
+		dwid = dst->width*sizeof(u32);
 		dp = byteaddr(dst, par->r.min);
 		v = par->sdval;
 DBG print("sdval %ud, depth %d\n", v, dst->depth);
@@ -2219,7 +2219,7 @@ DBG print("dp=%p; dx=%d; for(y=0; y<%d; y++, dp+=%d)\nmemsets(dp, v, dx);\n",
 			p[1] = v>>8;
 			p[2] = v>>16;
 			p[3] = v>>24;
-			v = *(u32int*)p;
+			v = *(u32*)p;
 			for(y=0; y<dy; y++, dp+=dwid)
 				memset32(dp, v, dx);
 			return 1;
@@ -2237,8 +2237,8 @@ DBG print("dp=%p; dx=%d; for(y=0; y<%d; y++, dp+=%d)\nmemsets(dp, v, dx);\n",
 	if((par->state&(m|Replsrc))==m && src->depth >= 8 
 	&& src->chan == dst->chan && (op == S || (op == SoverD && !(src->flags&Falpha)))){
 		uchar *sp, *dp;
-		s32int swid, dwid, nb;
-		u32int dir;
+		s32 swid, dwid, nb;
+		u32 dir;
 
 DBG print("Simplemask|Fullmask\n");
 		if(src->data == dst->data && byteaddr(dst, par->r.min) > byteaddr(src, par->sr.min))
@@ -2246,8 +2246,8 @@ DBG print("Simplemask|Fullmask\n");
 		else
 			dir = 1;
 
-		swid = src->width*sizeof(u32int);
-		dwid = dst->width*sizeof(u32int);
+		swid = src->width*sizeof(u32);
+		dwid = dst->width*sizeof(u32);
 		sp = byteaddr(src, par->sr.min);
 		dp = byteaddr(dst, par->r.min);
 		if(dir == -1){
@@ -2279,16 +2279,16 @@ DBG print("swid %d dwid %d sp %p dp %p dir %d nb %d\n"
 	&& (par->r.min.x&7)==(par->sr.min.x&7) && (par->r.min.x&7)==(par->mr.min.x&7)){
 		uchar *sp, *dp, *mp;
 		uchar lm, rm;
-		s32int swid, dwid, mwid;
-		s32int i, x, dir;
+		s32 swid, dwid, mwid;
+		s32 i, x, dir;
 
 DBG print("Simplemask|Simplesrc|Replmask|Replsrc");
 		sp = byteaddr(src, par->sr.min);
 		dp = byteaddr(dst, par->r.min);
 		mp = byteaddr(par->mask, par->mr.min);
-		swid = src->width*sizeof(u32int);
-		dwid = dst->width*sizeof(u32int);
-		mwid = par->mask->width*sizeof(u32int);
+		swid = src->width*sizeof(u32);
+		dwid = dst->width*sizeof(u32);
+		mwid = par->mask->width*sizeof(u32);
 
 		if(src->data == dst->data && byteaddr(dst, par->r.min) > byteaddr(src, par->sr.min)){
 			dir = -1;
@@ -2377,12 +2377,12 @@ DBG print("Simplemask|Simplesrc|Replmask|Replsrc");
 static int
 chardraw(Memdrawparam *par)
 {
-	u32int bits;
+	u32 bits;
 	int i, ddepth, dy, dx, x, bx, ex, y, npack, bsh, depth, op;
-	u32int v, maskwid, dstwid;
+	u32 v, maskwid, dstwid;
 	uchar *wp, *rp, *q, *wc;
 	ushort *ws;
-	u32int *wl;
+	u32 *wl;
 	uchar sp[4];
 	Rectangle r, mr;
 	Memimage *mask, *src, *dst;
@@ -2406,13 +2406,13 @@ if(0) if(drawdebug) iprint("chardraw? mf %ux md %d sf %ux dxs %d dys %d dd %d dd
 //if(drawdebug) iprint("chardraw...");
 
 	depth = mask->depth;
-	maskwid = mask->width*sizeof(u32int);
+	maskwid = mask->width*sizeof(u32);
 	rp = byteaddr(mask, mr.min);
 	npack = 8/depth;
 	bsh = (mr.min.x % npack) * depth;
 
 	wp = byteaddr(dst, r.min);
-	dstwid = dst->width*sizeof(u32int);
+	dstwid = dst->width*sizeof(u32);
 DBG print("bsh %d\n", bsh);
 	dy = Dy(r);
 	dx = Dx(r);
@@ -2484,8 +2484,8 @@ DBG print("bits %ux sh %d...", bits, i);
 			}
 			break;
 		case 32:
-			wl = (u32int*)wp;
-			v = *(u32int*)sp;
+			wl = (u32*)wp;
+			v = *(u32*)sp;
 			for(x=bx; x>ex; x--, wl++){
 				i = x&7;
 				if(i == 8-1)
@@ -2510,7 +2510,7 @@ DBG print("\n");
  *
  * This code is just plain wrong for >8bpp.
  *
-u32int
+u32
 membyteval(Memimage *src)
 {
 	int i, val, bpp;
@@ -2530,9 +2530,9 @@ membyteval(Memimage *src)
  */
 
 void
-memfillcolor(Memimage *i, u32int val)
+memfillcolor(Memimage *i, u32 val)
 {
-	u32int bits;
+	u32 bits;
 	int d, y;
 	uchar p[4];
 
@@ -2552,7 +2552,7 @@ memfillcolor(Memimage *i, u32int val)
 		p[1] = bits>>8;
 		p[2] = bits>>16;
 		p[3] = bits>>24;
-		bits = *(u32int*)p;
+		bits = *(u32*)p;
 		memset32(u32addr(i, i->r.min), bits, i->width*Dy(i->r));
 		break;
 	}

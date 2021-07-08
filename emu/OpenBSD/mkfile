@@ -4,7 +4,7 @@ CLEANCONFLIST=
 
 <../../mkconfig
 SYSTARG=OpenBSD
-OBJTYPE=386
+# OBJTYPE=386
 
 INSTALLDIR=$ROOT/$SYSTARG/$OBJTYPE/bin	#path of directory where kernel is installed
 

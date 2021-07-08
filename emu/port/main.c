@@ -6,15 +6,18 @@
 #include	"draw.h"
 #include	"version.h"
 
+#define DP if(1){}else print
+void	(*coherence)(void) = nil;	/* used by port/lock.c and port/win-x11a.c */
+int	exdebug = 0;
 int		rebootargc = 0;
 char**		rebootargv;
+char	gkscanid[32] = "";
 static	char	*imod = "/dis/emuinit.dis";
 extern	char*	hosttype;
-char*	tkfont;	/* for libtk/utils.c */
-int	tkstylus;	/* libinterp/tk.c */
+extern	char*	tkfont;	/* for libtk/utils.c */
+extern int	tkstylus;	/* libinterp/tk.c */
 extern	int	mflag;
 	int	dflag;
-	int vflag;
 	int	vflag;
 	Procs	procs;
 	char	*eve;
@@ -230,6 +233,8 @@ putenvqv(char *name, char **v, int n, int conf)
 void
 nofence(void)
 {
+	int i;
+	USED(i);
 }
 
 void
@@ -348,9 +353,16 @@ errorf(char *fmt, ...)
 void
 error(char *err)
 {
-	if(err != up->env->errstr && up->env->errstr != nil)
+	DP("error pid %d err %p %s up->nerr %d up->env->errstr %s getcallerpc %p\n",
+		up->pid, err, err, up->nerr, up->env->errstr, getcallerpc(&err));
+	DP("error pid %d err %p %s up->nerr %d getcallerpc %p\n",
+		up->pid, err, err, up->nerr, getcallerpc(&err));
+	if(err != up->env->errstr && up->env->errstr != nil){
 		kstrcpy(up->env->errstr, err, ERRMAX);
-//	ossetjmp(up->estack[NERR-1]);
+		DP("error after kstrcpy err %p %s up->nerr %d up->env->errstr %s\n",
+			err, err, up->nerr, up->env->errstr);
+	}
+	// ossetjmp(up->estack[NERR-1]);
 	nexterror();
 }
 
@@ -367,8 +379,24 @@ exhausted(char *resource)
 }
 
 void
+showjmpbuf(char *str)
+{
+	DP("%p called %s pid %d up->nerr %d\n",
+		getcallerpc(&str), str, up->pid, up->nerr);
+	for(int i = 0; i<up->nerr; i++){
+		DP("	i %d: %p has %p",
+			i, up->estack[i], *(uintptr*)(up->estack[i]));
+		/* below segfaults on OpenBSD */
+		/* DP("has %p", **(uintptr**)(up->estack[i])); */
+		DP("\n");
+	}
+
+}
+
+void
 nexterror(void)
 {
+	showjmpbuf("nexterror");
 	oslongjmp(nil, up->estack[--up->nerr], 1);
 }
 

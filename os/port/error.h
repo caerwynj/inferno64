@@ -37,6 +37,7 @@ extern char Eioload[];		/* i/o error in demand load */
 extern char Enovmem[];		/* out of memory: virtual memory */
 extern char Ebadld[];		/* illegal line discipline */
 extern char Ebadfd[];		/* fd out of range or not open */
+extern char Enofd[];		/* no free file descriptors */
 extern char Eisstream[];	/* seek on a stream */
 extern char Ebadexec[];		/* exec header invalid */
 extern char Etimedout[];	/* connection timed out */
@@ -55,7 +56,10 @@ extern char Egreg[];		/* jim'll fix it */
 extern char Ebadspec[];		/* bad attach specifier */
 extern char Enoattach[];	/* mount/attach disallowed */
 extern char Eshortstat[];	/* stat buffer too small */
-extern char Enegoff[];	/* negative i/o offset */
-extern char Ecmdargs[];		/* wrong #args in control message */
 extern char Ebadstat[];		/* malformed stat buffer */
-extern char	Enofd[];	/* no free file descriptors */
+extern char Enegoff[];		/* negative i/o offset */
+extern char Ecmdargs[];		/* wrong #args in control message */
+extern char Ebadip[];		/* bad ip address syntax */
+extern char Edirseek[];		/* seek in directory */
+extern char Etoolong[];		/* name too long */
+extern char Echange[];		/* media or partition has changed */

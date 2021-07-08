@@ -103,6 +103,7 @@ struct VGAcur {
 struct VGAscr {
 	Lock	devlock;
 	VGAdev*	dev;
+	Pcidev*	pci;
 
 	VGAcur*	cur;
 	ulong	storage;
@@ -110,9 +111,19 @@ struct VGAscr {
 
 	int	useflush;
 
-	ulong	aperture;			/* physical address */
+	union {			/* physical address */
+		uintptr	aperture;
+		uintptr	paddr;
+	};
+	void*	vaddr;
 	int	isupamem;
 	int	apsize;
+
+	int	bpp;
+	int	pitch;
+
+	int	width;
+	int	height;
 
 	ulong	io;				/* device specific registers */
 
@@ -128,11 +139,13 @@ struct VGAscr {
 	int	(*scroll)(VGAscr*, Rectangle, Rectangle);
 	void	(*blank)(VGAscr*, int);
 	ulong	id;	/* internal identifier for driver use */
+	u32	softscreen;
+	u32	tilt;
 	int isblank;
 	int overlayinit;
 };
 
-extern VGAscr vgascreen[];
+extern VGAscr vgascreen[1];
 
 enum {
 	Backgnd		= 0,	/* black */
@@ -145,29 +158,32 @@ extern void mousectl(Cmdbuf*);
 extern int		hwaccel;	/* use hw acceleration; default on */
 extern int		hwblank;	/* use hw blanking; default on */
 extern int		panning;	/* use virtual screen panning; default off */
-extern void addvgaseg(char*, ulong, ulong);
+extern void addvgaseg(char*, u32, u32);
 extern uchar* attachscreen(Rectangle*, ulong*, int*, int*, int*);
 extern void	flushmemscreen(Rectangle);
 extern int	cursoron(int);
-extern void	cursoroff(int);
+extern void	cursoroff(void);
 extern void	setcursor(Cursor*);
 extern int	screensize(int, int, int, ulong);
 extern int	screenaperture(int, int);
 extern Rectangle physgscreenr;	/* actual monitor size */
 extern void	blankscreen(int);
+extern void	bootscreeninit(void);
+extern void	bootscreenconf(VGAscr*);
 
 /* devdraw.c */
 extern void	deletescreenimage(void);
 extern int		drawhasclients(void);
-extern ulong	blanktime;
+extern u32	blanktime;
 extern void	setscreenimageclipr(Rectangle);
 extern void	drawflush(void);
 extern int drawidletime(void);
+extern QLock	drawlock;
 
 /* vga.c */
 extern void	vgascreenwin(VGAscr*);
 extern void	vgaimageinit(ulong);
 extern ulong	vgapcilinear(VGAscr*, int*, int*, int, int);
-
 extern void	drawblankscreen(int);
 extern void	vgablank(VGAscr*, int);
+extern Lock	vgascreenlock;

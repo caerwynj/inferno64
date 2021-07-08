@@ -51,7 +51,7 @@ Tattr tattr[Tend] =
 	/* Tchan */	{ 1,	0,	0,	0,	1, },
 	/* Treal */	{ 0,	0,	1,	1,	1, },
 	/* Tfn */	{ 0,	1,	0,	0,	1, },
-	/* Tint */	{ 0,	0,	1,	0,	1, },
+	/* Tint */	{ 0,	0,	1,	1,	1, },
 	/* Tlist */	{ 1,	0,	0,	0,	1, },
 	/* Tmodule */	{ 1,	0,	0,	0,	1, },
 	/* Tref */	{ 1,	0,	0,	0,	1, },
@@ -3537,7 +3537,7 @@ if(debug['w']) print("\texpanding\n");
  * sign the same information used
  * for testing type equality
  */
-ulong
+u32int
 sign(Decl *d)
 {
 	Type *t;
@@ -3579,7 +3579,7 @@ sign(Decl *d)
 	for(i = 0; i < MD5dlen; i += 4)
 		t->sig ^= md5sig[i+0] | (md5sig[i+1]<<8) | (md5sig[i+2]<<16) | (md5sig[i+3]<<24);
 	if(debug['S'])
-		print("signed %D type %T len %d sig %#lux\n", d, t, sigend, t->sig);
+		print("signed %D type %T len %d sig %#ux\n", d, t, sigend, t->sig);
 	free(sig);
 	return t->sig;
 }

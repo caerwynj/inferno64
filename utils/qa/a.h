@@ -55,12 +55,6 @@ struct	Sym
 };
 #define	S	((Sym*)0)
 
-struct
-{
-	char*	p;
-	int	c;
-} fi;
-
 struct	Io
 {
 	Io*	link;
@@ -70,12 +64,6 @@ struct	Io
 	short	f;
 };
 #define	I	((Io*)0)
-
-struct
-{
-	Sym*	sym;
-	short	type;
-} h[NSYM];
 
 struct	Gen
 {

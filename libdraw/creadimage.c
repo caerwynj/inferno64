@@ -10,7 +10,7 @@ creadimage(Display *d, int fd, int dolock)
 	int m, nb, miny, maxy, new, ldepth, ncblock;
 	uchar *buf, *a;
 	Image *i;
-	ulong chan;
+	u32int chan;
 	int font;
 
 	font = dolock&2;
@@ -99,11 +99,11 @@ creadimage(Display *d, int fd, int dolock)
 		if(a == nil)
 			goto Erroutlock;
 		a[0] = 'Y';
-		BPLONG(a+1, i->id);
-		BPLONG(a+5, r.min.x);
-		BPLONG(a+9, miny);
-		BPLONG(a+13, r.max.x);
-		BPLONG(a+17, maxy);
+		BP32INT(a+1, i->id);
+		BP32INT(a+5, r.min.x);
+		BP32INT(a+9, miny);
+		BP32INT(a+13, r.max.x);
+		BP32INT(a+17, maxy);
 		if(!font&&!new)	/* old image: flip the data bits */
 			_twiddlecompressed(buf, nb);
 		memmove(a+21, buf, nb);

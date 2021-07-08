@@ -2,7 +2,9 @@
  * Storage Device.
  */
 typedef struct SDev SDev;
+typedef struct SDfile SDfile;
 typedef struct SDifc SDifc;
+typedef struct SDio SDio;
 typedef struct SDpart SDpart;
 typedef struct SDperm SDperm;
 typedef struct SDreq SDreq;
@@ -22,10 +24,20 @@ struct SDpart {
 	ulong	vers;
 };
 
+typedef long SDrw(SDunit*, Chan*, void*, long, vlong);
+struct SDfile {
+	SDperm;
+	SDrw	*r;
+	SDrw	*w;
+};
+
 struct SDunit {
 	SDev*	dev;
 	int	subno;
 	uchar	inquiry[256];		/* format follows SCSI spec */
+	uchar	sense[18];		/* format follows SCSI spec */
+	uchar	rsense[18];		/* support seperate rq sense and inline return */
+	uchar	haversense;
 	SDperm;
 
 	QLock	ctl;
@@ -41,6 +53,8 @@ struct SDunit {
 	int	state;
 	SDreq*	req;
 	SDperm	rawperm;
+	SDfile	efile[5];
+	int	nefile;
 };
 
 /* 
@@ -79,16 +93,21 @@ struct SDifc {
 	int	(*rctl)(SDunit*, char*, int);
 	int	(*wctl)(SDunit*, Cmdbuf*);
 
-	long	(*bio)(SDunit*, int, int, void*, long, long);
+	long	(*bio)(SDunit*, int, int, void*, long, uvlong);
 	SDev*	(*probe)(DevConf*);
 	void	(*clear)(SDev*);
 	char*	(*stat)(SDev*, char*, char*);
+	char*	(*rtopctl)(SDev*, char*, char*);
+	int	(*wtopctl)(SDev*, Cmdbuf*);
+	int	(*ataio)(SDreq*);
 };
 
 struct SDreq {
 	SDunit*	unit;
 	int	lun;
 	int	write;
+	char	proto;
+	char	ataproto;
 	uchar	cmd[16];
 	int	clen;
 	void*	data;
@@ -120,10 +139,43 @@ enum {
 
 	SDmaxio		= 2048*1024,
 	SDnpart		= 16,
+
+	SDread	= 0,
+	SDwrite,
+
+	SData		= 1,
+	SDcdb		= 2,
 };
 
-#define sdmalloc(n)	malloc(n)
+/*
+ * Avoid extra copying by making sd buffers page-aligned for DMA.
+ */
+#define sdmalloc(n)	mallocalign(n, BY2PG, 0, 0)
 #define sdfree(p)	free(p)
+
+/*
+ * mmc/sd/sdio host controller interface
+ */
+
+struct SDio {
+	char	*name;
+	int	(*init)(void);
+	void	(*enable)(void);
+	int	(*inquiry)(char*, int);
+	int	(*cmd)(u32, u32, u32*);
+	void	(*iosetup)(int, void*, int, int);
+	void	(*io)(int, uchar*, int);
+	char	highspeed;
+};
+
+extern SDio sdio;
+
+/* devsd.c */
+extern void sdadddevs(SDev*);
+extern int sdsetsense(SDreq*, int, int, int, int);
+extern int sdfakescsi(SDreq*);
+extern int sdfakescsirw(SDreq*, uvlong*, int*, int*);
+extern int sdaddfile(SDunit*, char*, int, char*, SDrw*, SDrw*);
 
 /* sdscsi.c */
 extern int scsiverify(SDunit*);

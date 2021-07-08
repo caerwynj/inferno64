@@ -9,6 +9,8 @@
 #include <kernel.h>
 #include "raise.h"
 
+#define DP if(1){}else print
+
 	void	vmachine(void*);
 
 struct
@@ -93,6 +95,8 @@ accountant(void)
 {
 	Prog *p;
 
+	print("accountant isched 0x%p isched.runhd 0x%p\n",
+		isched, isched.runhd);
 	p = isched.runhd;
 	if(p != nil)
 		p->ticks++;
@@ -222,6 +226,10 @@ delprog(Prog *p, char *msg)
 	Osenv *o;
 	Prog **ph;
 
+	if(p->exstr != nil)
+		DP("delprog p->pid %d msg %s p->exstr %s\n", p->pid, msg, p->exstr);
+	else
+		DP("delprog p->pid %d msg --%s--\n", p->pid, msg);
 	tellsomeone(p, msg);	/* call before being removed from prog list */
 
 	o = p->osenv;
@@ -281,8 +289,10 @@ tellsomeone(Prog *p, char *buf)
 {
 	Osenv *o;
 
+	DP("tellsomeone pid %d buf %s\n", p->pid, buf);
 	if(waserror())
 		return;
+	DP("tellsomeone after waserror() pid %d buf %s\n", p->pid, buf);
 	o = p->osenv;
 	if(o->childq != nil)
 		qproduce(o->childq, buf, strlen(buf));
@@ -706,7 +716,7 @@ addrun(Prog *p)
 		return;
 	}
 	if(p->state == Pready && p != (Prog *)up->prog)
-		panic("addrun of ready prog %8.8p by %8.8lux\n", p, getcallerpc(&p));
+		panic("addrun of ready prog %8.8p by %8.8zux\n", p, getcallerpc(&p));
 	p->state = Pready;
 	p->link = nil;
 	if(isched.runhd == nil)
@@ -943,6 +953,7 @@ progexit(void)
 
 	estr = up->env->errstr;
 	broken = 0;
+	DP("progexit estr %s\n", estr);
 	if(estr[0] != '\0' && strcmp(estr, Eintr) != 0 && strncmp(estr, "fail:", 5) != 0)
 		broken = 1;
 
@@ -956,12 +967,30 @@ progexit(void)
 		estr = "killed";
 
 	m = R.M->m;
-	if(broken)
-		print("[%s] Broken: \"%s\"\n", m->name, estr);
+	if(broken){
+		if(cflag){	/* only works on Plan9 for now */
+			DP("progexit cflag set\n");
+			char *pc = strstr(estr, "pc=");
 
+			if(pc != nil)
+				R.PC = r->R.PC = (Inst*)strtol(pc+3, nil, 0);	/* for debugging */
+		}
+		print("[%s] Broken: \"%s\"\n", m->name, estr);
+	}
+
+	if(r->exstr != nil)
+		DP("progexit pid %d name %s estr %s exval %p exstr %s\n",
+			r->pid, m->name, estr, r->exval, r->exstr);
+	else
+		DP("progexit pid %d name %s estr %s exval %p\n",
+			r->pid, m->name, estr, r->exval);
+	// sh.b is matching on fail: not on "<pid> fail: "
 	snprint(msg, sizeof(msg), "%d \"%s\":%s", r->pid, m->name, estr);
+	// snprint(msg, sizeof(msg), "%s", estr);
+	DP("progexit msg %s\n", msg);
 
 	if(up->env->debug != nil) {
+		DP("progexit debug set\n");
 		dbgexit(r, broken, estr);
 		broken = 1;
 		/* must force it to break if in debug */
@@ -1046,9 +1075,9 @@ vmachine(void*)
 			o = r->osenv;
 			up->env = o;
 
-			FPrestore(&o->fpu);
+			fpurestore(up->env->fpuostate);
 			r->xec(r);
-			FPsave(&o->fpu);
+			up->env->fpuostate = fpusave();
 
 			if(isched.runhd != nil)
 			if(r == isched.runhd)
@@ -1068,6 +1097,9 @@ vmachine(void*)
 				delrunq(up->prog);
 			} else
 				print("up->iprog not nil (%lux)\n", up->iprog);
+		/*} else {
+			print("completed running the program - TODO\n");
+			for(;;){}*/
 		}
 	}
 }
@@ -1087,10 +1119,10 @@ disinit(void *a)
 
 	fmtinstall('D', Dconv);
 
-	addclock0link(accountant, MS2HZ);
+	// TODO addclock0link(accountant, MS2HZ);
 
-	FPinit();
-	FPsave(&up->env->fpu);
+	// TODO obsolete? cpuidentify calls fpuinit() fpinit();
+	// TODO obsolete? fpsave(&up->env->fpu);
 
 	opinit();
 	modinit();

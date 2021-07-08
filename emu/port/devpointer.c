@@ -258,12 +258,12 @@ pointerwrite(Chan* c, void* va, long n, vlong off)
 		}
 		if(n < 8)
 			error(Eshort);
-		cur.hotx = BGLONG((uchar*)va+0*4);
-		cur.hoty = BGLONG((uchar*)va+1*4);
+		cur.hotx = BG32INT((uchar*)va+0*4);
+		cur.hoty = BG32INT((uchar*)va+1*4);
 		cur.minx = 0;
 		cur.miny = 0;
-		cur.maxx = BGLONG((uchar*)va+2*4);
-		cur.maxy = BGLONG((uchar*)va+3*4);
+		cur.maxx = BG32INT((uchar*)va+2*4);
+		cur.maxy = BG32INT((uchar*)va+3*4);
 		if(cur.maxx%8 != 0 || cur.maxy%2 != 0 || n-4*4 != (cur.maxx/8 * cur.maxy))
 			error(Ebadarg);
 		cur.data = (uchar*)va + 4*4;

@@ -93,7 +93,7 @@ capstat(Chan *c, uchar *db, int n)
 }
 
 static Chan*
-capopen(Chan *c, int omode)
+capopen(Chan *c, u32 omode)
 {
 	if(c->qid.type & QTDIR) {
 		if(omode != OREAD)
@@ -119,8 +119,8 @@ capclose(Chan *c)
 	USED(c);
 }
 
-static long
-capread(Chan *c, void *va, long n, vlong vl)
+static s32
+capread(Chan *c, void *va, s32 n, s64 vl)
 {
 	USED(vl);
 	switch((ulong)c->qid.path){
@@ -200,8 +200,8 @@ capwriteuse(uchar *a, int len)
 	return -1;
 }
 
-static long	 
-capwrite(Chan* c, void* buf, long n, vlong offset)
+static s32
+capwrite(Chan* c, void* buf, s32 n, s64 offset)
 {
 	USED(offset);
 	switch((ulong)c->qid.path){

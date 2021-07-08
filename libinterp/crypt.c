@@ -11,6 +11,7 @@
 #include "ipint.h"
 
 #define	MPX(x)	checkIPint((void*)(x))
+#define DP if(1){}else print
 
 static Type*	TDigestState;
 static Type*	TAESstate;
@@ -190,7 +191,7 @@ DigestState_copy(void *fp)
 }
 
 static Crypt_DigestState*
-crypt_digest_x(Array *buf, int n, Array *digest, int dlen, Crypt_DigestState *state, DigestState* (*fn)(uchar*, ulong, uchar*, DigestState*))
+crypt_digest_x(Array *buf, u32 n, Array *digest, int dlen, Crypt_DigestState *state, DigestState* (*fn)(uchar*, u32, uchar*, DigestState*))
 {
 	Heap *h;
 	XDigestState *ds;
@@ -324,7 +325,7 @@ Crypt_md4(void *fp)
 }
 
 static Crypt_DigestState*
-crypt_hmac_x(Array *data, int n, Array *key, Array *digest, int dlen, Crypt_DigestState *state, DigestState* (*fn)(uchar*, ulong, uchar*, ulong, uchar*, DigestState*))
+crypt_hmac_x(Array *data, u32 n, Array *key, Array *digest, int dlen, Crypt_DigestState *state, DigestState* (*fn)(uchar*, u32, uchar*, u32, uchar*, DigestState*))
 {
 	Heap *h;
 	XDigestState *ds;
@@ -403,14 +404,26 @@ Crypt_dhparams(void *fp)
 	f->ret->t1 = H;
 	destroy(v);
 
+	DP("Crypt_dhparams\n");
 	p = mpnew(0);
 	alpha = mpnew(0);
+	DP("Crypt_dhparams p 0x%p sign %d size %d top %d p 0x%p flags 0x%x\n"
+		"	alpha 0x%p sign %d size %d top %d p 0x%p flags 0x%x\n",
+			p, p->sign, p->size, p->top, p->p, p->flags,
+			alpha, alpha->sign, alpha->size, alpha->top, alpha->p, alpha->flags);
 	release();
-	if(f->nbits == 1024)
+	if(f->nbits == 1024){
+		DP("DSAprimes\n");
 		DSAprimes(alpha, p, nil);
-	else
+	}else{
+		DP("gensafeprime\n");
 		gensafeprime(p, alpha, f->nbits, 0);
+	}
 	acquire();
+	DP("Crypt_dhparams p 0x%p sign %d size %d top %d p 0x%p flags 0x%x\n"
+		"	alpha 0x%p sign %d size %d top %d p 0x%p flags 0x%x\n",
+			p, p->sign, p->size, p->top, p->p, p->flags,
+			alpha, alpha->sign, alpha->size, alpha->top, alpha->p, alpha->flags);
 	f->ret->t0 = newIPint(alpha);
 	f->ret->t1 = newIPint(p);
 }

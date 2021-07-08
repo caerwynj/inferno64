@@ -65,7 +65,7 @@ killrefresh(void)
 	postnote(PNPROC, keybdpid, Eintr);
 }
 
-uchar*
+Memdata*
 attachscreen(Rectangle *r, ulong *chan, int *d, int *width, int *softscreen)
 {
 	int fd;
@@ -163,7 +163,7 @@ attachscreen(Rectangle *r, ulong *chan, int *d, int *width, int *softscreen)
 	}
 
 	*softscreen = 1;
-	return (uchar*)data;
+	return (Memdata*)data;
 }
 
 static ulong*
@@ -188,7 +188,7 @@ attachwindow(Rectangle *r, ulong *chan, int *d, int *width)
 	 */
 	if(imageid > 0){
 		ubuf[0] = 'f';
-		BPLONG(ubuf+1, imageid);
+		BP32INT(ubuf+1, imageid);
 		if(write(datafd, ubuf, 1+4) != 1+4)
 			fprint(2, "attachwindow: cannot free old window: %r\n");
 	}
@@ -197,7 +197,7 @@ attachwindow(Rectangle *r, ulong *chan, int *d, int *width)
 	 */
 	ubuf[0] = 'n';
 	++imageid;
-	BPLONG(ubuf+1, imageid);
+	BP32INT(ubuf+1, imageid);
 	ubuf[5] = n;
 	memmove(ubuf+6, winname, n);
 	if(write(datafd, ubuf, 6+n) != 6+n){
@@ -274,11 +274,11 @@ plan9loadimage(Rectangle r, uchar *data, int ndata)
 			dy = chunksize/bpl;
 		n = dy*bpl;
 		chunk[0] = 'y';
-		BPLONG(chunk+1, imageid);
-		BPLONG(chunk+5, r.min.x);
-		BPLONG(chunk+9, r.min.y);
-		BPLONG(chunk+13, r.max.x);
-		BPLONG(chunk+17, r.min.y+dy);
+		BP32INT(chunk+1, imageid);
+		BP32INT(chunk+5, r.min.x);
+		BP32INT(chunk+9, r.min.y);
+		BP32INT(chunk+13, r.max.x);
+		BP32INT(chunk+17, r.min.y+dy);
 		memmove(chunk+21, data, n);
 		ndata += n;
 		data += n;
@@ -345,8 +345,8 @@ drawcursor(Drawcursor *c)
 		return;
 	}
 
-	BPLONG(curs+0*4, c->hotx);
-	BPLONG(curs+1*4, c->hoty);
+	BP32INT(curs+0*4, c->hotx);
+	BP32INT(curs+1*4, c->hoty);
 
 	w = (c->maxx-c->minx);
 	h = (c->maxy-c->miny)/2;

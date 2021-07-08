@@ -4,7 +4,7 @@
 #include "fcall.h"
 
 void
-logfsflashaddr2spo(LogfsServer *server, u32int flashaddr, long *seq, int *page, int *offset)
+logfsflashaddr2spo(LogfsServer *server, u32 flashaddr, long *seq, int *page, int *offset)
 {
 	LogfsLowLevel *ll = server->ll;
 	flashaddr &= ~LogAddr;
@@ -15,7 +15,7 @@ logfsflashaddr2spo(LogfsServer *server, u32int flashaddr, long *seq, int *page, 
 	*seq = flashaddr;
 }
 
-u32int
+u32
 logfsspo2flashaddr(LogfsServer *server, long seq, int page, int offset)
 {
 //print("logfsspo2flashaddr(%ld, %d, %d)\n", seq, page, offset);
@@ -23,7 +23,7 @@ logfsspo2flashaddr(LogfsServer *server, long seq, int page, int offset)
 }
 
 void
-logfsflashaddr2o(LogfsServer *server, u32int flashaddr, int *offset)
+logfsflashaddr2o(LogfsServer *server, u32 flashaddr, int *offset)
 {
 	LogfsLowLevel *ll = server->ll;
 	flashaddr &= ~LogAddr;
@@ -95,7 +95,7 @@ logfslogsegmentflush(LogfsServer *server, int active)
 }
 
 static char *
-logspace(LogfsServer *server, int active, int takearisk, int nbytes, uchar **where, u32int *flashaddr)
+logspace(LogfsServer *server, int active, int takearisk, int nbytes, uchar **where, u32 *flashaddr)
 {
 	char *errmsg;
 	LogfsLowLevel *ll = server->ll;
@@ -213,7 +213,7 @@ logfslog(LogfsServer *server, int active, LogMessage *s)
 }
 
 int
-lognicesizeforwrite(LogfsServer *server, int active, u32int count, int muidlen)
+lognicesizeforwrite(LogfsServer *server, int active, u32 count, int muidlen)
 {
 	int rawspace;
 	LogSegment *seg;
@@ -229,15 +229,15 @@ lognicesizeforwrite(LogfsServer *server, int active, u32int count, int muidlen)
 }
 
 char *
-logfslogwrite(LogfsServer *server, int active, u32int path, u32int offset, int count, u32int mtime, u32int cvers,
-	char *muid, uchar *data, u32int *flashaddr)
+logfslogwrite(LogfsServer *server, int active, u32 path, u32 offset, int count, u32 mtime, u32 cvers,
+	char *muid, uchar *data, u32 *flashaddr)
 {
 	/* 'w' size[2] path[4] offset[4] count[2] mtime[4] cvers[4] muid[s] flashaddr[4] [data[n]] */
 	LogMessage s;
 	uint size;
 	char *errmsg;
 	uchar *p;
-	u32int faddr;
+	u32 faddr;
 	uint asize;
 
 	s.type = LogfsLogTwrite;

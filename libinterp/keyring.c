@@ -781,7 +781,7 @@ certtostr(Certificate *c, char *buf, int len)
 	int n;
 
 	sa = checkSigAlg(c->x.sa);
-	n = snprint(buf, len, "%s\n%s\n%s\n%d\n", string2c(sa->x.name),
+	n = snprint(buf, len, "%s\n%s\n%s\n%zd\n", string2c(sa->x.name),
 		string2c(c->x.ha), string2c(c->x.signer), c->x.exp);
 	return n + (*sa->vec->sig2str)(c->signa, buf+n, len - n);
 }
@@ -824,7 +824,7 @@ Keyring_certtoattr(void *fp)
 	if(strcmp(ha, "sha") == 0)
 		ha = "sha1";	/* normalise */
 	fmtstrinit(&o);
-	fmtprint(&o, "sigalg=%q-%q signer=%q expires=%ud", string2c(sa->x.name), ha,
+	fmtprint(&o, "sigalg=%q-%q signer=%q expires=%zd", string2c(sa->x.name), ha,
 		string2c(c->x.signer), c->x.exp);
 	val = bigs2attr(&o, buf, sa->vec->sigattr);
 	free(buf);
@@ -973,7 +973,7 @@ Keyring_sign(void *fp)
 	if(buf == nil)
 		return;
 	ds = (XDigestState*)f->state;
-	n = snprint(buf, Maxbuf, "%s %d", string2c(sk->x.owner), f->exp);
+	n = snprint(buf, Maxbuf, "%s %zd", string2c(sk->x.owner), f->exp);
 	if(strcmp(string2c(f->ha), "sha") == 0 || strcmp(string2c(f->ha), "sha1") == 0){
 		sha1((uchar*)buf, n, digest, &ds->state);
 		n = Keyring_SHA1dlen;
@@ -1052,7 +1052,7 @@ verify(PK *pk, Certificate *c, char *a, int len)
 	buf = malloc(Maxbuf);
 	if(buf == nil)
 		return 0;
-	n = snprint(buf, Maxbuf, "%s %d", string2c(c->x.signer), c->x.exp);
+	n = snprint(buf, Maxbuf, "%s %zd", string2c(c->x.signer), c->x.exp);
 	if(strcmp(string2c(c->x.ha), "sha") == 0 || strcmp(string2c(c->x.ha), "sha1") == 0){
 		ds = sha1((uchar*)a, len, 0, 0);
 		sha1((uchar*)buf, n, digest, ds);
@@ -1113,7 +1113,7 @@ Keyring_verify(void *fp)
 	buf = malloc(Maxbuf);
 	if(buf == nil)
 		return;
-	n = snprint(buf, Maxbuf, "%s %d", string2c(c->x.signer), c->x.exp);
+	n = snprint(buf, Maxbuf, "%s %zd", string2c(c->x.signer), c->x.exp);
 	ds = (XDigestState*)f->state;
 
 	if(strcmp(string2c(c->x.ha), "sha") == 0 || strcmp(string2c(c->x.ha), "sha1") == 0){
@@ -1196,7 +1196,7 @@ Keyring_DigestState_copy(void *fp)
 }
 
 static Keyring_DigestState*
-keyring_digest_x(Array *buf, int n, Array *digest, int dlen, Keyring_DigestState *state, DigestState* (*fn)(uchar*, ulong, uchar*, DigestState*))
+keyring_digest_x(Array *buf, u32 n, Array *digest, int dlen, Keyring_DigestState *state, DigestState* (*fn)(uchar*, u32, uchar*, DigestState*))
 {
 	Heap *h;
 	XDigestState *ds;
@@ -1330,7 +1330,7 @@ Keyring_md4(void *fp)
 }
 
 static Keyring_DigestState*
-keyring_hmac_x(Array *data, int n, Array *key, Array *digest, int dlen, Keyring_DigestState *state, DigestState* (*fn)(uchar*, ulong, uchar*, ulong, uchar*, DigestState*))
+keyring_hmac_x(Array *data, u32 n, Array *key, Array *digest, int dlen, Keyring_DigestState *state, DigestState* (*fn)(uchar*, u32, uchar*, u32, uchar*, DigestState*))
 {
 	Heap *h;
 	XDigestState *ds;

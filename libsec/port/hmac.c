@@ -3,8 +3,8 @@
 
 /* rfc2104 */
 static DigestState*
-hmac_x(uchar *p, ulong len, uchar *key, ulong klen, uchar *digest, DigestState *s,
-	DigestState*(*x)(uchar*, ulong, uchar*, DigestState*), int xlen)
+hmac_x(uchar *p, u32 len, uchar *key, u32 klen, uchar *digest, DigestState *s,
+	DigestState*(*x)(uchar*, u32, uchar*, DigestState*), int xlen)
 {
 	int i;
 	uchar pad[65], innerdigest[256];
@@ -44,13 +44,13 @@ hmac_x(uchar *p, ulong len, uchar *key, ulong klen, uchar *digest, DigestState *
 }
 
 DigestState*
-hmac_sha1(uchar *p, ulong len, uchar *key, ulong klen, uchar *digest, DigestState *s)
+hmac_sha1(uchar *p, u32 len, uchar *key, u32 klen, uchar *digest, DigestState *s)
 {
 	return hmac_x(p, len, key, klen, digest, s, sha1, SHA1dlen);
 }
 
 DigestState*
-hmac_md5(uchar *p, ulong len, uchar *key, ulong klen, uchar *digest, DigestState *s)
+hmac_md5(uchar *p, u32 len, uchar *key, u32 klen, uchar *digest, DigestState *s)
 {
 	return hmac_x(p, len, key, klen, digest, s, md5, MD5dlen);
 }

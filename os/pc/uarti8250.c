@@ -5,7 +5,6 @@
 #include "fns.h"
 #include "io.h"
 #include "../port/error.h"
-#include "../port/uart.h"
 
 /*
  * 8250 UART and compatibles.
@@ -713,7 +712,7 @@ i8250console(void)
 	consuart = uart;
 	uart->console = 1;
 }
-
+/* TODO these are not in 9front
 void
 i8250mouse(char* which, int (*putc)(Queue*, int), int setb1200)
 {
@@ -738,3 +737,4 @@ i8250setmouseputc(char* which, int (*putc)(Queue*, int))
 	uartsetmouseputc(&i8250uart[port], putc);
 
 }
+*/

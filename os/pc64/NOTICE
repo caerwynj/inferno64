@@ -1,0 +1,10 @@
+Most of these files are adapted from Plan 9
+	Copyright © 2002 Lucent Technologies Inc
+	Copyright © 2021 Plan 9 Foundation
+This software was originally authored by employees of Bell Laboratories,
+a unit of Nokia Corporation.
+
+devbench.c, fpi387.c, and flashzpc.c are
+	Copyright © 1999-2005 Vita Nuova Holdings Ltd
+
+All of them are covered by the MIT licence (see /NOTICE).

@@ -167,6 +167,7 @@ disldt(long size, Decl *ds)
 	Sym *s;
 	Node *n;
 
+	USED(size);
 	if(0){
 		discon(size);
 		disvar(size, ds);
@@ -439,7 +440,7 @@ disint(long off, long v)
 static void
 disbig(long off, Long v)
 {
-	ulong iv;
+	u32int iv;
 
 	disflush(DEFL, off, IBY2LG);
 	iv = v >> 32;
@@ -458,8 +459,8 @@ disbig(long off, Long v)
 static void
 disreal(long off, Real v)
 {
-	ulong bv[2];
-	ulong iv;
+	u32int bv[2];
+	u32int iv;
 
 	disflush(DEFF, off, IBY2LG);
 	dtocanon(v, bv);

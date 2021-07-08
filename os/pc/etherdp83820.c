@@ -277,13 +277,13 @@ enum {					/* Clockrun Control/Status */
 };
 
 typedef struct {
-	u32int	link;			/* Link to the next descriptor */
-	u32int	bufptr;			/* pointer to data Buffer */
+	u32	link;			/* Link to the next descriptor */
+	u32	bufptr;			/* pointer to data Buffer */
 	int	cmdsts;			/* Command/Status */
 	int	extsts;			/* optional Extended Status */
 
 	Block*	bp;			/* Block containing bufptr */
-	u32int	unused;			/* pad to 64-bit */
+	u32	unused;			/* pad to 64-bit */
 } Desc;
 
 enum {					/* Common cmdsts bits */

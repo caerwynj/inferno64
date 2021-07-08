@@ -163,7 +163,7 @@ Extent *
 logfsextentlistmatch(ExtentList *l, Extent *e)
 {
 	ExtentNode *m;
-	u32int flashmax;
+	u32 flashmax;
 
 	if(l == nil)
 		return nil;
@@ -171,7 +171,7 @@ logfsextentlistmatch(ExtentList *l, Extent *e)
 	flashmax = e->flashaddr + (e->max - e->min);
 
 	for(m = l->head; m; m = m->next) {
-		u32int l = m->e.max - m->e.min;
+		u32 l = m->e.max - m->e.min;
 		if(e->min < m->e.max && m->e.min < e->max	/* they intersect */
 			&& m->e.flashaddr < flashmax && e->flashaddr < m->e.flashaddr + l) /* the store intersects */
 			return &(m->e);
@@ -183,7 +183,7 @@ int
 logfsextentlistmatchall(ExtentList *l, int (*func)(void *magic, Extent *), void *magic, Extent *e)
 {
 	ExtentNode *m;
-	u32int flashmax;
+	u32 flashmax;
 
 	if(l == nil)
 		return 1;
@@ -191,7 +191,7 @@ logfsextentlistmatchall(ExtentList *l, int (*func)(void *magic, Extent *), void 
 	flashmax = e->flashaddr + (e->max - e->min);
 
 	for(m = l->head; m; m = m->next) {
-		u32int l;
+		u32 l;
 		if(m->e.min >= e->max)
 			return 1;
 		l = m->e.max - m->e.min;
@@ -210,7 +210,7 @@ int
 logfsextentlistwalk(ExtentList *l, int (*func)(void *magic, Extent *, int hole), void *magic)
 {
 	ExtentNode *n;
-	u32int last = 0;
+	u32 last = 0;
 	if(l == nil)
 		return 1;
 	for(n = l->head; n; n = n->next) {
@@ -233,10 +233,10 @@ logfsextentlistwalk(ExtentList *l, int (*func)(void *magic, Extent *, int hole),
 }
 
 int
-logfsextentlistwalkrange(ExtentList *l, int (*func)(void *magic, u32int baseoffset, u32int limitoffset, Extent *, u32int extentoffset), void *magic, u32int base, u32int limit)
+logfsextentlistwalkrange(ExtentList *l, int (*func)(void *magic, u32 baseoffset, u32 limitoffset, Extent *, u32 extentoffset), void *magic, u32 base, u32 limit)
 {
 	ExtentNode *n;
-	u32int last = 0;
+	u32 last = 0;
 	if(l == nil)
 		return 1;
 	for(n = l->head; n; n = n->next) {

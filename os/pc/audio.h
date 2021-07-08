@@ -9,7 +9,7 @@ enum
 
 #define seteisadma(a, b)	dmainit(a, Bufsize);
 #define CACHELINESZ		8
-#define UNCACHED(type, v)	(type*)((ulong)(v))
+#define UNCACHED(type, v)	(type*)((uintptr)(v))
 
 #define Int0vec
 #define setvec(v, f, a)		intrenable(v, f, a, BUSUNKNOWN, "audio")

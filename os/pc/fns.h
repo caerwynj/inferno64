@@ -25,10 +25,10 @@ void	fpoff(void);
 void	fprestore(FPU*);
 void	fpsave(FPU*);
 ulong	fpstatus(void);
-ulong	getcr0(void);
-ulong	getcr2(void);
-ulong	getcr3(void);
-ulong	getcr4(void);
+u32	getcr0(void);
+u32	getcr2(void);
+u32	getcr3(void);
+u32	getcr4(void);
 char*	getconf(char*);
 void	guesscpuhz(int);
 int	i8042auxcmd(int);
@@ -133,7 +133,7 @@ ulong rdtsc32(void);
 void	screeninit(void);
 int	screenprint(char*, ...);			/* debugging */
 void	(*screenputs)(char*, int);
-int	segflush(void*, ulong);
+s32	segflush(void*, u32);
 void	syncclock(void);
 uvlong	tscticks(uvlong*);
 void	trapenable(int, void (*)(Ureg*, void*), void*, char*);
@@ -155,9 +155,9 @@ void	nmiscreen(void);
 int	kbdinready(void);
 
 #define	waserror()	(up->nerrlab++, setlabel(&up->errlab[up->nerrlab-1]))
-#define getcallerpc(x)	(((ulong*)(x))[-1])
-#define KADDR(a)	((void*)((ulong)(a)|KZERO))
-#define PADDR(a)	((ulong)(a)&~KZERO)
+#define getcallerpc(x)	(((uintptr*)(x))[-1])
+#define KADDR(a)	((void*)((uintptr)(a)|KZERO))
+#define PADDR(a)	((uintptr)(a)&~KZERO)
 
 #define	dcflush(a, b)
 #define	clockcheck();

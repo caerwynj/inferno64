@@ -158,7 +158,7 @@ pointerstat(Chan* c, uchar *db, int n)
 }
 
 static Chan*
-pointeropen(Chan* c, int omode)
+pointeropen(Chan* c, u32 omode)
 {
 	c = devopen(c, omode, pointertab, nelem(pointertab), devgen);
 	if((ulong)c->qid.path == Qpointer){
@@ -172,7 +172,7 @@ pointeropen(Chan* c, int omode)
 			qunlock(&mouse.q);
 			error(Einuse);
 		}
-		cursorenable();
+		/* cursorenable(); */
 		qunlock(&mouse.q);
 		poperror();
 	}
@@ -187,15 +187,15 @@ pointerclose(Chan* c)
 	switch((ulong)c->qid.path){
 	case Qpointer:
 		qlock(&mouse.q);
-		if(decref(&mouse.ref) == 0)
-			cursordisable();
+		/* TODO if(decref(&mouse.ref) == 0)
+			cursordisable();*/
 		qunlock(&mouse.q);
 		break;
 	}
 }
 
-static long
-pointerread(Chan* c, void* a, long n, vlong)
+static s32
+pointerread(Chan* c, void* a, s32 n, s64)
 {
 	Pointer mt;
 	char tmp[128];
@@ -228,14 +228,14 @@ pointerread(Chan* c, void* a, long n, vlong)
 	return n;
 }
 
-static long
-pointerwrite(Chan* c, void* va, long n, vlong)
+static s32
+pointerwrite(Chan* c, void* va, s32 n, s64)
 {
 	char *a = va;
 	char buf[128];
 	int b, x, y;
 
-	switch((ulong)c->qid.path){
+	switch((u32)c->qid.path){
 	case Qpointer:
 		if(n > sizeof buf-1)
 			n = sizeof buf -1;

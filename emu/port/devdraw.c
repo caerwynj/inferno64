@@ -27,8 +27,8 @@ enum
  */
 #define	QSHIFT	4	/* location in qid of client # */
 
-#define	QID(q)		((((u32int)(q).path)&0x0000000F)>>0)
-#define	CLIENTPATH(q)	((((u32int)q)&0x7FFFFFF0)>>QSHIFT)
+#define	QID(q)		((((u32)(q).path)&0x0000000F)>>0)
+#define	CLIENTPATH(q)	((((u32)q)&0x7FFFFFF0)>>QSHIFT)
 #define	CLIENT(q)	CLIENTPATH((q).path)
 
 #define	NHASH		(1<<5)
@@ -45,21 +45,21 @@ typedef struct Refresh Refresh;
 typedef struct Refx Refx;
 typedef struct DName DName;
 
-u32int blanktime = 30;	/* in minutes; a half hour */
+u32 blanktime = 30;	/* in minutes; a half hour */
 
 struct Draw
 {
 	QLock	q;
-	s32int		clientid;
-	s32int		nclient;
+	s32		clientid;
+	s32		nclient;
 	Client**	client;
-	s32int		nname;
+	s32		nname;
 	DName*	name;
-	s32int		vers;
-	s32int		softscreen;
-	s32int		blanked;	/* screen turned off */
-	u32int		blanktime;	/* time of last operation */
-	u32int		savemap[3*256];
+	s32		vers;
+	s32		softscreen;
+	s32		blanked;	/* screen turned off */
+	u32		blanktime;	/* time of last operation */
+	u32		savemap[3*256];
 };
 
 struct Client
@@ -70,13 +70,13 @@ struct Client
 	Refresh*	refresh;
 	Rendez		refrend;
 	uchar*		readdata;
-	s32int		nreaddata;
-	s32int		busy;
-	s32int		clientid;
-	s32int		slot;
-	s32int		refreshme;
-	s32int		infoid;
-	s32int	op;	/* compositing operator - SoverD by default */
+	s32		nreaddata;
+	s32		busy;
+	s32		clientid;
+	s32		slot;
+	s32		refreshme;
+	s32		infoid;
+	s32	op;	/* compositing operator - SoverD by default */
 };
 
 struct Refresh
@@ -97,13 +97,13 @@ struct DName
 	char			*name;
 	Client	*client;
 	DImage*		dimage;
-	s32int			vers;
+	s32			vers;
 };
 
 struct FChar
 {
-	s32int		minx;	/* left edge of bits */
-	s32int		maxx;	/* right edge of bits */
+	s32		minx;	/* left edge of bits */
+	s32		maxx;	/* right edge of bits */
 	uchar		miny;	/* first non-zero scan-line */
 	uchar		maxy;	/* last non-zero scan-line + 1 */
 	schar		left;	/* offset of baseline */
@@ -118,13 +118,13 @@ struct FChar
  */
 struct DImage
 {
-	s32int		id;
-	s32int		ref;
+	s32		id;
+	s32		ref;
 	char		*name;
-	s32int		vers;
+	s32		vers;
 	Memimage*	image;
-	s32int		ascent;
-	s32int		nfchar;
+	s32		ascent;
+	s32		nfchar;
 	FChar*		fchar;
 	DScreen*	dscreen;	/* 0 if not a window */
 	DImage*	fromname;	/* image this one is derived from, by name */
@@ -139,9 +139,9 @@ struct CScreen
 
 struct DScreen
 {
-	s32int		id;
-	s32int		public;
-	s32int		ref;
+	s32		id;
+	s32		public;
+	s32		ref;
 	DImage	*dimage;
 	DImage	*dfill;
 	Memscreen*	screen;
@@ -1248,7 +1248,7 @@ drawwrite(Chan *c, void *a, long n, vlong off)
 }
 
 uchar*
-drawcoord(uchar *p, uchar *maxp, s32int oldx, s32int *newx)
+drawcoord(uchar *p, uchar *maxp, s32 oldx, s32 *newx)
 {
 	int b, x;
 
@@ -1325,10 +1325,10 @@ printmesg(char *fmt, uchar *a, int plsprnt)
 void
 drawmesg(Client *client, void *av, int n)
 {
-	s32int c, op, repl, m, y, dstid, scrnid, ni, ci, j, nw, e0, e1, ox, oy, esize, oesize, doflush;
+	s32 c, op, repl, m, y, dstid, scrnid, ni, ci, j, nw, e0, e1, ox, oy, esize, oesize, doflush;
 	uchar *u, *a, refresh;
 	char *fmt;
-	u32int value, chan;
+	u32 value, chan;
 	Rectangle r, clipr;
 	Point p, q, *pp, sp;
 	Memimage *i, *dst, *src, *mask;

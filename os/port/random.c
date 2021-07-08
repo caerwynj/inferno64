@@ -4,6 +4,9 @@
 #include	"dat.h"
 #include	"fns.h"
 
+/* machine specific hardware random number generator */
+void (*hwrandbuf)(void*, u32) = nil;
+
 static struct
 {
 	QLock;

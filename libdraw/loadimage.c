@@ -5,7 +5,7 @@
 int
 loadimage(Image *i, Rectangle r, uchar *data, int ndata)
 {
-	long dy;
+	s32int dy;
 	int n, bpl, roff, dstroff, lskip, llen, y;
 	uchar *a;
 	int chunk;
@@ -49,11 +49,11 @@ loadimage(Image *i, Rectangle r, uchar *data, int ndata)
 			return -1;
 		}
 		a[0] = 'y';
-		BPLONG(a+1, i->id);
-		BPLONG(a+5, dstr.min.x);
-		BPLONG(a+9, dstr.min.y);
-		BPLONG(a+13, dstr.max.x);
-		BPLONG(a+17, dstr.min.y+dy);
+		BP32INT(a+1, i->id);
+		BP32INT(a+5, dstr.min.x);
+		BP32INT(a+9, dstr.min.y);
+		BP32INT(a+13, dstr.max.x);
+		BP32INT(a+17, dstr.min.y+dy);
 		a += 21;
 		for (y = 0; y < dy; y++) {
 			memmove(a, data, llen);

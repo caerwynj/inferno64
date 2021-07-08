@@ -4,6 +4,8 @@
 #include "raise.h"
 #include <kernel.h>
 
+#define DP if(1){}else print
+
 static void
 newlink(Link *l, char *fn, int sig, Type *t)
 {
@@ -39,21 +41,25 @@ linkm(Module *m, Modlink *ml, int i, Import *ldt)
 
 	sig = ldt->sig;
 	for(l = m->ext; l->name; l++)
-		if(strcmp(ldt->name, l->name) == 0)
+		if(strcmp(ldt->name, l->name) == 0){
+			DP(" matched l->name %s l->sig 0x%ux\n", l->name, l->sig);
 			break;
+		}
 
 	if(l == nil) {
-		snprint(e, sizeof(e), "link failed fn %s->%s() not implemented", m->name, ldt->name);
+		snprint(e, sizeof(e), "link failed fn %s->%s() not implemented",
+			m->name, ldt->name);
 		goto bad;
 	}
 	if(l->sig != sig) {
 		snprint(e, sizeof(e), "link typecheck %s->%s() %ux/%ux",
-							m->name, ldt->name, l->sig, sig);
+			m->name, ldt->name, l->sig, sig);
 		goto bad;
 	}
 
 	ml->links[i].u = l->u;
 	ml->links[i].frame = l->frame;
+	ml->links[i].name = l->name;
 	return 0;
 bad:
 	kwerrstr(e);
@@ -81,7 +87,10 @@ mklinkmod(Module *m, int n)
 
 	return ml;
 }
-
+/* Create a Modlink which connects
+   the functions in the ldt with their code in Module m
+   Module m exports those functions through m->ext
+ */
 Modlink*
 linkmod(Module *m, Import *ldt, int mkmp)
 {
@@ -112,6 +121,8 @@ linkmod(Module *m, Import *ldt, int mkmp)
 	}
 
 	for(i = 0, l = ldt; l->name != nil; i++, l++) {
+		DP("linkmod connect i %d l->name %s l->sig 0x%ux",
+			i, l->name, l->sig);
 		if(linkm(m, ml, i, l) < 0){
 			destroy(ml);
 			return H;
