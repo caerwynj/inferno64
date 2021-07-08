@@ -5,7 +5,7 @@
 int
 loadimage(Image *i, Rectangle r, uchar *data, int ndata)
 {
-	s32int dy;
+	s32 dy;
 	int n, bpl, roff, dstroff, lskip, llen, y;
 	uchar *a;
 	int chunk;

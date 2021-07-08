@@ -2458,7 +2458,7 @@ globalfconst(Node *n)
 	Decl *d;
 	Sym *s;
 	char buf[32];
-	u32int dv[2];
+	u32 dv[2];
 
 	dtocanon(n->rval, dv);
 	seprint(buf, buf+sizeof(buf), ".f.%.8ux.%8ux", dv[0], dv[1]);

@@ -287,7 +287,7 @@ exportproc(void *a)
 		}
 
 		if(exdebug)
-			print("export %ld <- %F\n", up->pid, &q->in);
+			print("export %d <- %F\n", up->pid, &q->in);
 
 		q->out.type = type+1;
 		q->out.tag = q->in.tag;
@@ -339,9 +339,9 @@ exportproc(void *a)
 
 	if(exdebug){
 		if(n < 0)
-			print("exportproc %ld shut down: %s\n", up->pid, up->env->errstr);
+			print("exportproc %d shut down: %s\n", up->pid, up->env->errstr);
 		else
-			print("exportproc %ld shut down\n", up->pid);
+			print("exportproc %d shut down\n", up->pid);
 	}
 
 	free(q);
@@ -471,7 +471,7 @@ static void
 exfree(Export *fs)
 {
 	if(exdebug)
-		print("export p/s %ld free %p ref %ld\n", up->pid, fs, fs->r.ref);
+		print("export p/s %d free %p ref %ld\n", up->pid, fs, fs->r.ref);
 	if(decref(&fs->r) != 0)
 		return;
 	closepgrp(fs->pgrp);
@@ -543,10 +543,10 @@ exslave(void *a)
 		kstrdup(&up->env->user, q->export->user);
 
 		if(exdebug > 1)
-			print("exslave %ld dispatch %F\n", up->pid, &q->in);
+			print("exslave %d dispatch %F\n", up->pid, &q->in);
 
 		if(waserror()){
-			print("exslave %ld err %s\n", up->pid, up->env->errstr);	/* shouldn't happen */
+			print("exslave %d err %s\n", up->pid, up->env->errstr);	/* shouldn't happen */
 			err = up->env->errstr;
 		}else{
 			if(q->in.type >= Tmax || !fcalls[q->in.type]){
@@ -633,7 +633,7 @@ exreply(Exq *q, char *who)
 	}
 
 	if(exdebug)
-		print("%s %ld -> %F\n", who, up->pid, r);
+		print("%s %d -> %F\n", who, up->pid, r);
 
 	if(!waserror()){
 		devtab[fs->io->type]->write(fs->io, q->buf, n, 0);

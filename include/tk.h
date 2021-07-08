@@ -131,12 +131,12 @@ enum
 	TkBlinkinterval	= 500
 };
 
-#define TKSTRUCTALIGN	4
+#define TKSTRUCTALIGN	(sizeof(intptr)) /*4*/
 #define TKI2F(i)	((i)*Tkfpscalar)
 extern	int TKF2I(int);
 /*#define TKF2I(f)	(((f) + Tkfpscalar/2)/Tkfpscalar)*/
 #define IAUX(i)		((void*)i)
-#define AUXI(i)		((int)i)
+#define AUXI(i)		((intptr)i)
 #define TKKEY(i)	((i)&0xFFFF)
 
 typedef struct Tk Tk;
@@ -563,6 +563,10 @@ struct TkTop
 	void*	wreq;	/* really chan of string */
 	void*	di;		/* really Draw_Image* */
 	void*	wmctxt;	/* really Draw_Wmcontext */
+	intptr	screenr_min_x; /* for Draw_Rect fields due to the sleaze below */
+	intptr	screenr_min_y;
+	intptr	screenr_max_x;
+	intptr	screenr_max_y;
 	Rectangle	screenr;	/* XXX sleazy equiv to Draw_Rect, but what else? */
 
 	/* Private from here on */
@@ -756,8 +760,8 @@ extern	Point		tkposn(Tk*);
 extern	Point		tkscrn2local(Tk*, Point);
 extern	int		tkvisiblerect(Tk *tk, Rectangle *rr);
 extern	Point		tkanchorpoint(Rectangle, Point, int);
-extern	char*		tkfrac(char**, int*, TkEnv*);
-extern	char*		tkfracword(TkTop*, char**, int*, TkEnv*);
+extern	char*		tkfrac(char**, s32int*, TkEnv*);
+extern	char*		tkfracword(TkTop*, char**, s32int*, TkEnv*);
 extern	char*		tkfprint(char*, int);
 extern	char*		tkvalue(char**, char*, ...);
 extern	void		tkdirty(Tk *);

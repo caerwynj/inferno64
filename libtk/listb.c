@@ -716,7 +716,7 @@ tklistbcursel(Tk *tk, char *arg, char **val)
 static char*
 tklistbview(Tk *tk, char *arg, char **val, int nl, int *posn, int max)
 {
-	int top, bot, amount;
+	s32 top, bot, amount;
 	char buf[Tkmaxitem];
 	char *v, *e;
 

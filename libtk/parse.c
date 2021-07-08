@@ -467,7 +467,7 @@ pignore(TkTop *t, TkOption *o, void *place, char **str, char *buf, char *ebuf)
 static char*
 pdist(TkTop *t, TkOption *o, void *place, char **str, char *buf, char *ebuf)
 {
-	s32int d;
+	s32 d;
 	char *e;
 	TkEnv *env;
 
@@ -513,7 +513,7 @@ psize(TkTop *t, TkOption *o, void *place, char **str, char *buf, char *ebuf)
 {
 	Tk *tk;
 	char *e;
-	s32int d, off;
+	s32 d, off;
 
 	USED(ebuf);
 	e = tkfracword(t, str, &d, OPTION(place, TkEnv*, AUXI(o->aux)));
@@ -832,7 +832,7 @@ tkparsecolor(char *buf, ulong *rgba)
 	char *p, *q, *e;
 	int R, G, B, A;
 	int i, len, alen;
-	s32int alpha;
+	s32 alpha;
 	/*
 	 * look for alpha modifier in *#AA or *0.5 format
 	 */
@@ -1005,7 +1005,7 @@ pfrac(TkTop *t, TkOption *o, void *place, char **str, char *buf, char *ebuf)
 {
 	char *p, *e;
 	int i, *v;
-	s32int n, d;
+	s32 n, d;
 
 	*str = tkword(t, *str, buf, ebuf, nil);
 

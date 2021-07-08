@@ -23,8 +23,8 @@ writeimage(int fd, Image *i, int dolock)
 	int h;					/* hash value */
 	uchar *line, *eline;			/* input line, end pointer */
 	uchar *data, *edata;			/* input buffer, end pointer */
-	ulong n;				/* length of input buffer */
-	ulong nb;				/* # of bytes returned by unloadimage */
+	uintptr n;				/* length of input buffer */
+	u32 nb;				/* # of bytes returned by unloadimage */
 	int bpl;				/* input line length */
 	int offs, runlen;			/* offset, length of consumed data */
 	uchar dumpbuf[NDUMP];			/* dump accumulator */
@@ -172,7 +172,7 @@ writeimage(int fd, Image *i, int dolock)
 		if(loutp == outbuf)
 			goto ErrOut;
 		n = loutp-outbuf;
-		sprint(hdr, "%11d %11ld ", r.max.y, n);
+		sprint(hdr, "%11d %11lzd ", r.max.y, n);
 		libwrite(fd, hdr, 2*12);
 		libwrite(fd, outbuf, n);
 		r.min.y = r.max.y;

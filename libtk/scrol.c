@@ -22,12 +22,12 @@ struct TkScroll
 	int		dragbot;
 	int		jump;		/* Jump scroll enable */
 	int		flag;		/* Display flags */
-	int		top;		/* Top fraction */
-	int		bot;		/* Bottom fraction */
-	int		a1;		/* Pixel top/left arrow1 */
-	int		t1;		/* Pixel top/left trough */
-	int		t2;		/* Pixel top/left lower trough */
-	int		a2;		/* Pixel top/left arrow2 */
+	s32		top;		/* Top fraction */
+	s32		bot;		/* Bottom fraction */
+	s32		a1;		/* Pixel top/left arrow1 */
+	s32		t1;		/* Pixel top/left trough */
+	s32		t2;		/* Pixel top/left lower trough */
+	s32		a2;		/* Pixel top/left arrow2 */
 	char*		cmd;
 };
 

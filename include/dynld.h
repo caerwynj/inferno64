@@ -38,7 +38,7 @@ extern Dynobj*	dynloadfd(int, Dynsym*, int, ulong);
 extern Dynobj*	dynloadgen(void*, long (*r)(void*,void*,long), vlong (*s)(void*,vlong,int), void (*e)(char*), Dynsym*, int, ulong);
 extern long	dynmagic(void);
 extern void	dynobjfree(Dynobj*);
-extern char*	dynreloc(uchar*, ulong, int, Dynsym**, int);
+extern char*	dynreloc(uchar*, uintptr, int, Dynsym**, int);
 extern int	dyntabsize(Dynsym*);
 
 extern Dynsym	_exporttab[];	/* created by linker -x (when desired) */

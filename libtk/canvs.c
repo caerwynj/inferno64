@@ -580,7 +580,7 @@ char*
 tkcvstags(Tk *tk, char *arg, char **val, int af)
 {
 	TkTop *o;
-	int x, y;
+	s32 x, y;
 	TkName *f;
 	TkCtag *t, *tt;
 	char *fmt;
@@ -1719,7 +1719,7 @@ static char*
 tkcvsmove(Tk *tk, char *arg, char **val)
 {
 	TkCtag *t;
-	int fx, fy;
+	s32 fx, fy;
 	TkTop *top;
 	TkCpoints *p;
 	TkName *tag;
@@ -1856,10 +1856,10 @@ tkcvstype(Tk *tk, char *arg, char **val)
 }
 
 static char*
-tkcvsview(Tk *tk, char *arg, char **val, int nl, int *posn, int min, int max, int inc)
+tkcvsview(Tk *tk, char *arg, char **val, s32 nl, s32 *posn, s32 min, s32 max, int inc)
 {
 	TkTop *t;
-	int top, bot, diff, amount;
+	s32 top, bot, diff, amount;
 	char *e;
 	char buf[Tkmaxitem], *v;
 
@@ -1950,7 +1950,7 @@ tkcvsxview(Tk *tk, char *arg, char **val)
  * fits these criteria.
  */
 static int
-tkadjustvis(int *posn, int c0, int c1, int s0, int s1, int spref)
+tkadjustvis(s32 *posn, s32 c0, s32 c1, s32 s0, s32 s1, int spref)
 {
 	int d, v;
 
@@ -2028,7 +2028,8 @@ static char*
 tkcvssee(Tk *tk, char *arg, char **val)
 {
 	Rectangle r;
-	int n, coords[4];
+	int n;
+	s32 coords[4];
 	char *e;
 
 	USED(val);

@@ -388,7 +388,7 @@ struct Proc
 	int	type;		/* interpreter or not */
 	char	text[KNAMELEN];
 	Proc*	qnext;		/* list of processes waiting on a Qlock */
-	long	pid;
+	u32	pid;
 	Proc*	next;		/* list of created processes */
 	Proc*	prev;
 	Lock	rlock;	/* sync between sleep/swiproc for r */
@@ -417,8 +417,9 @@ struct Proc
 	void	*os;		/* host os specific data */
 };
 
-#define poperror()	up->nerr--
-#define	waserror()	(up->nerr++, ossetjmp(up->estack[up->nerr-1]))
+extern	void	showjmpbuf(char *);
+#define poperror()	(up->nerr--, showjmpbuf("poperror"))
+#define	waserror()	(showjmpbuf("waserror"), up->nerr++, ossetjmp(up->estack[up->nerr-1]))
 
 enum
 {

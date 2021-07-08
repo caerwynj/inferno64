@@ -1394,7 +1394,7 @@ TKF2I(int f)
  * Parse a floating point number into a decimal fixed point representation
  */
 char*
-tkfrac(char **arg, s32int *f, TkEnv *env)
+tkfrac(char **arg, s32 *f, TkEnv *env)
 {
 	int c, minus, i, fscale, seendigit;
 	char *p, *e;
@@ -1446,7 +1446,7 @@ tkfrac(char **arg, s32int *f, TkEnv *env)
 }
 
 char*
-tkfracword(TkTop *t, char **arg, s32int *f, TkEnv *env)
+tkfracword(TkTop *t, char **arg, s32 *f, TkEnv *env)
 {
 	char *p;
 	char buf[Tkminitem];

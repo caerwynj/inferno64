@@ -332,7 +332,7 @@ profclose(Chan *c)
 static long
 profread(Chan *c, void *va, long n, vlong offset)
 {
-	int i;
+	intptr i;
 	Record *r;
 	char *a = va;
 
@@ -349,7 +349,7 @@ profread(Chan *c, void *va, long n, vlong offset)
 	case Qpath:
 		return readstr(offset, va, n, r->path);
 	case Qhist:
-		i = (int)c->aux;
+		i = (intptr)c->aux;
 		while(i < r->size && r->bucket[i] == 0)
 			i++;
 		if(i >= r->size)

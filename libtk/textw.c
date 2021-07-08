@@ -130,7 +130,7 @@ static char* 	tktdrawline(Image*, Tk*, TkTline*, Point);
 static void	tktextcursordraw(Tk *, int);
 static char* 	tktsetscroll(Tk*, int);
 static void	tktsetclip(Tk *);
-static char* 	tktview(Tk*, char*, char**, int, int*, int, int);
+static char* 	tktview(Tk*, char*, char**, int, s32*, int, int);
 static Interval tkttranslate(Tk*, Interval, int);
 static void 	tktfixscroll(Tk*, Point);
 static void 	tktnotdrawn(Tk*, int, int, int);
@@ -1770,9 +1770,10 @@ tktsetscroll(Tk *tk, int orient)
 }
 
 static char*
-tktview(Tk *tk, char *arg, char **val, int nl, int *posn, int max, int orient)
+tktview(Tk *tk, char *arg, char **val, int nl, s32 *posn, int max, int orient)
 {
-	int top, bot, amount, n;
+	s32 top, bot, amount;
+	int n;
 	char buf[Tkminitem], *v, *e;
 
 	if(*arg == '\0') {
@@ -3570,7 +3571,7 @@ istext(TkTline *l)
 }
 
 static void
-tkadjpage(Tk *tk, int ody, int *dy)
+tkadjpage(Tk *tk, s32 ody, s32 *dy)
 {
 	int y, a, b, d;
 	TkTindex ix;

@@ -9,7 +9,7 @@
 typedef struct TkScale TkScale;
 struct TkScale
 {
-	int	value;
+	s32	value;
 	int	bigi;
 	int	digits;
 	int	digwidth;
@@ -589,7 +589,7 @@ tkscaleconf(Tk *tk, char *arg, char **val)
 char*
 tkscaleposn(TkEnv *env, Tk *tk, char *arg, int *z)
 {
-	int x, y;
+	s32 x, y;
 	TkScale *tks = TKobj(TkScale, tk);
 	char *e;
 
@@ -640,7 +640,8 @@ tkscaleident(Tk *tk, char *arg, char **val)
 static char*
 tkscalecoords(Tk *tk, char *arg, char **val)
 {
-	int p, x, y, l, value;
+	int p, x, y, l;
+	s32 value;
 	TkScale *tks = TKobj(TkScale, tk);
 	char *e;
 
@@ -673,7 +674,8 @@ tkscalecoords(Tk *tk, char *arg, char **val)
 static char*
 tkscaleget(Tk *tk, char *arg, char **val)
 {
-	int x, y, value, v, l;
+	s32 x, y;
+	int value, v, l;
 	char buf[Tkminitem], *e;
 	TkScale *tks = TKobj(TkScale, tk);
 
@@ -754,7 +756,7 @@ tkscalemotion(Tk *tk, char *arg, char **val)
 static char*
 tkscaledrag(Tk *tk, char *arg, char **val)
 {
-	int x, y, v;
+	s32 x, y, v;
 	char *e, buf[Tkmaxitem], f[32];
 	TkScale *tks = TKobj(TkScale, tk);
 

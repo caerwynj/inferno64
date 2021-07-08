@@ -40,7 +40,7 @@ typedef	struct Type	Type;
 typedef	struct Typelist	Typelist;
 
 typedef	double		Real;
-typedef	vlong		Long;
+typedef	s64int		Long;
 
 enum
 {
@@ -138,7 +138,7 @@ struct Inst
 {
 	Src	src;
 	ushort	op;
-	long	pc;
+	intptr	pc;
 	uchar	reach;			/* could a control path reach this instruction? */
 	uchar	sm;			/* operand addressing modes */
 	uchar	mm;
@@ -420,9 +420,9 @@ enum
 
 #define PARENS	1
 #define TEMP		2
-#define FNPTRA	4	/* argument */
-#define FNPTR2	8	/* 2nd parameter */
-#define FNPTRN	16	/* use -ve offset */
+#define FNPTRA	8/*4*/	/* argument */
+#define FNPTR2	16/*8*/	/* 2nd parameter */
+#define FNPTRN	32/*16*/	/* use -ve offset */
 #define FNPTR		(FNPTRA|FNPTR2|FNPTRN)
 
 struct Node
@@ -526,7 +526,7 @@ struct Type
 	uchar	align;		/* alignment in bytes */
 	uchar	flags;
 	int	sbl;			/* slot in .sbl adt table */
-	long	sig;			/* signature for dynamic type check */
+	u32	sig;			/* signature for dynamic type check */
 	long	size;			/* storage required, in bytes */
 	Decl	*decl;
 	Type	*tof;

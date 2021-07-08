@@ -768,7 +768,7 @@ padr(int am, Addr *a, Inst *br)
 	long reg;
 
 	if(br != nil){
-		print("$%ld", br->pc);
+		print("$%zd", br->pc);
 		return;
 	}
 	reg = a->reg;
@@ -815,7 +815,7 @@ static void
 pins(Inst *i)
 {
 	/* print("%L		%ld	", i->src.start, i->pc); */
-	print("		%ld	", i->pc);
+	print("		%zd	", i->pc);
 	if(i->op < MAXDIS)
 		print("%s", instname[i->op]);
 	else
@@ -1734,17 +1734,17 @@ ckflags(void)
 		k = SS(o->size) != 0;
 		if(j != k){
 			if(!(j == 0 && k == 1 && i == ILEA))
-				fatal("S %ld %s\n", o-opflags, instname[i]);
+				fatal("S %zd %s\n", o-opflags, instname[i]);
 		}
 		j = (o->flags&(Muse|Mdef)) != 0;
 		k = SM(o->size) != 0;
 		if(j != k)
-			fatal("M %ld %s\n", o-opflags, instname[i]);
+			fatal("M %zd %s\n", o-opflags, instname[i]);
 		j = (o->flags&(Duse|Ddef)) != 0;
 		k = SD(o->size) != 0;
 		if(j != k){
 			if(!(j == 1 && k == 0 && (i == IGOTO || i == ICASE || i == ICASEC || i == ICASEL)))
-				fatal("D %ld %s\n", o-opflags, instname[i]);
+				fatal("D %zd %s\n", o-opflags, instname[i]);
 		}
 		o++;
 	}

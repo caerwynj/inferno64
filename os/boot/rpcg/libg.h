@@ -383,9 +383,9 @@ extern	int	_mousefd;
 extern	int	_cursorfd;
 
 #define	BGSHORT(p)		(((p)[0]<<0) | ((p)[1]<<8))
-#define	BGLONG(p)		((BGSHORT(p)<<0) | (BGSHORT(p+2)<<16))
+#define	BG32INT(p)		((s32int)((BGSHORT(p)<<0) | (BGSHORT(p+2)<<16)))
 #define	BPSHORT(p, v)		((p)[0]=(v), (p)[1]=((v)>>8))
-#define	BPLONG(p, v)		(BPSHORT(p, (v)), BPSHORT(p+2, (v)>>16))
+#define	BP32INT(p, v)		(BPSHORT(p, ((s32int)v)), BPSHORT(p+2, ((s32int)v)>>16))
 
 ulong	*wordaddr(Bitmap*, Point);
 uchar	*byteaddr(Bitmap*, Point);

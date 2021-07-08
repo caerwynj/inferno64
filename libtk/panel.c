@@ -228,7 +228,7 @@ tkpanelcget(Tk *tk, char *arg, char **val)
 }
 
 static char*
-tkpanelcvt(Tk *tk, char *arg, int rel, int *p)
+tkpanelcvt(Tk *tk, char *arg, s32 rel, s32 *p)
 {
 	char buf[Tkmaxitem];
 
@@ -334,7 +334,8 @@ static char*
 tkpaneldirty(Tk *tk, char *arg, char **val)
 {
 	char buf[Tkmaxitem];
-	int n, coords[4];
+	int n;
+	s32 coords[4];
 	Rectangle r;
 	char *e, *p;
 	TkPanel *tkp = TKobj(TkPanel, tk);

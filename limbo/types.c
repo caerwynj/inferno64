@@ -3537,7 +3537,7 @@ if(debug['w']) print("\texpanding\n");
  * sign the same information used
  * for testing type equality
  */
-u32int
+u32
 sign(Decl *d)
 {
 	Type *t;

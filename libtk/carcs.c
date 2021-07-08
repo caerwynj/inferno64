@@ -189,7 +189,8 @@ tkcvsarcdraw(Image *img, TkCitem *i, TkEnv *pe)
 	TkCarc *a;
 	Rectangle d;
 	int w, dx, dy;
-	int s, ext, s0, s1, e0, e1, l;
+	int s, ext, l;
+	s32 s0, s1, e0, e1;
 	Image *pen, *col, *tmp;
 	Point p0, p1, c;
 	extern void drawarc(Point,int,int,int,int,int,Image *,Image *,Image *);

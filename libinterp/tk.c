@@ -83,6 +83,7 @@ Tk_toplevel(void *a)
 	Tk *tk;
 	Heap *h;
 	TkTop *t;
+	Tk_Toplevel *tl;
 	TkWin *tkw;
 	TkCtxt *ctxt;
 	Display *disp;
@@ -96,6 +97,7 @@ Tk_toplevel(void *a)
 
 	h = heapz(fakeTkTop);
 	t = H2D(TkTop*, h);
+	tl = (Tk_Toplevel*)t;
 	poolimmutable(h);
 
 	t->dd = f->d;
@@ -137,6 +139,7 @@ Tk_toplevel(void *a)
 	}
 	t->ctxt = ctxt;
 	t->screenr = disp->image->r;
+	tl->screenr = DRECT(t->screenr);
 
 	tkw->next = t->windows;
 	t->windows = tk;
@@ -151,15 +154,18 @@ void
 Tk_cmd(void *a)
 {
 	TkTop *t;
+	Tk_Toplevel *tl;
 	char *val, *e;
 	F_Tk_cmd *f = a;
 
 	t = (TkTop*)f->t;
+	tl = (Tk_Toplevel*)t;
 	if(t == H || D2H(t)->t != fakeTkTop) {
 		retstr(TkNotop, f->ret);
 		return;
 	}
 	lockctxt(t->ctxt);
+	t->screenr = IRECT(tl->screenr);
 	val = nil;
 	e = tkexec(t, string2c(f->arg), &val);
 	unlockctxt(t->ctxt);
@@ -177,6 +183,7 @@ Tk_cmd(void *a)
 		retstr(e == nil ? val : e, f->ret);
 	if(tkwiretap != nil)
 		tkwiretap(t, string2c(f->arg), val, nil, nil);
+	tl->screenr = DRECT(t->screenr);
 	free(val);
 }
 
@@ -197,19 +204,22 @@ Tk_rect(void *fp)
 	F_Tk_rect *f = fp;
 	Tk *tk;
 	TkTop *t;
+	Tk_Toplevel *tl;
 	Rectangle r;
 	Point o;
 	int bd, flags, w, h;
 
 	t = (TkTop*)f->t;
+	tl = (Tk_Toplevel*)t;
 	if(t == H || D2H(t)->t != fakeTkTop){
-		*(Rectangle*)f->ret = ZR;
+		*f->ret = DRECT(ZR);
 		return;
 	}
 	lockctxt(t->ctxt);
+	t->screenr = IRECT(tl->screenr);
 	tk = tklook(t, string2c(f->name), 0);
 	if(tk == nil){
-		*(Rectangle*)f->ret = ZR;
+		*f->ret = DRECT(ZR);
 		unlockctxt(t->ctxt);
 		return;
 	}
@@ -242,7 +252,8 @@ Tk_rect(void *fp)
 		r.max.x = r.min.x + w;
 		r.max.y = r.min.y + h;
 	}
-	*(Rectangle*)f->ret = r;
+	*f->ret = DRECT(r);
+	tl->screenr = DRECT(t->screenr);
 }
 
 int
@@ -325,11 +336,13 @@ Tk_pointer(void *a)
 	TkMouse m;
 	TkCtxt *c;
 	TkTop *t, *ot;
+	Tk_Toplevel *tl;
 	int d, dtype, etype;
 	F_Tk_pointer *f = a;
 	int b, lastb, inside;
 
 	t = (TkTop*)f->t;
+	tl = (Tk_Toplevel*)t;
 	if(t == H || D2H(t)->t != fakeTkTop)
 		return;
 
@@ -347,6 +360,7 @@ Tk_pointer(void *a)
 	 * target is the widget that we're deliver the mouse event to.
 	 * inside is true if the mouse point is located inside target.
 	 */
+	t->screenr = IRECT(tl->screenr);
 	inside = 1;
 	if (c->mgrab != nil && (c->mgrab->flag & Tknograb)) {
 		fw = tkfindfocus(t, f->p.xy.x, f->p.xy.y, 1);
@@ -464,6 +478,7 @@ Tk_pointer(void *a)
 		c->focused = 0;
 		tkenterleave(t);
 	}
+	tl->screenr = DRECT(t->screenr);
 	unlockctxt(c);
 }
 
@@ -472,16 +487,19 @@ Tk_keyboard(void *a)
 {
 	Tk *grab;
 	TkTop *t;
+	Tk_Toplevel *tl;
 	TkCtxt *c;
 	F_Tk_keyboard *f = a;
 
 	t = (TkTop*)f->t;
+	tl = (Tk_Toplevel*)t;
 	if(t == H || D2H(t)->t != fakeTkTop)
 		return;
 	c = t->ctxt;
 	if (c == nil)
 		return;
 	lockctxt(c);
+	t->screenr = IRECT(tl->screenr);
 	if (c->tkmenu != nil)
 		grab = c->tkmenu;
 	else
@@ -494,6 +512,7 @@ Tk_keyboard(void *a)
 	t = grab->env->top;
 	tkdeliver(grab, TkKey|TKKEY(f->key), nil);
 	tkupdate(t);
+	tl->screenr = DRECT(t->screenr);
 	unlockctxt(c);
 }
 
@@ -555,10 +574,12 @@ Tk_namechan(void *a)
 	Heap *h;
 	TkVar *v;
 	TkTop *t;
+	Tk_Toplevel *tl;
 	char *name;
 	F_Tk_namechan *f = a;
 
 	t = (TkTop*)f->t;
+	tl = (Tk_Toplevel*)t;
 	if(t == H || D2H(t)->t != fakeTkTop) {
 		retstr(TkNotop, f->ret);
 		return;
@@ -574,6 +595,7 @@ Tk_namechan(void *a)
 	}
 
 	lockctxt(t->ctxt);
+	t->screenr = IRECT(tl->screenr);
 	v = tkmkvar(t, name, TkVchan);
 	if(v == nil) {
 		unlockctxt(t->ctxt);
@@ -587,6 +609,7 @@ Tk_namechan(void *a)
 	}
 	destroy(v->value);
 	v->value = f->c;
+	tl->screenr = DRECT(t->screenr);
 	unlockctxt(t->ctxt);
 	h = D2H(v->value);
 	h->ref++;
@@ -767,6 +790,7 @@ void
 Tk_putimage(void *a)
 {
 	TkTop *t;
+	Tk_Toplevel *tl;
 	TkImg *tki;
 	Image *i, *m, *oldi, *oldm;
 	int locked, found, reqid, n;
@@ -784,6 +808,7 @@ Tk_putimage(void *a)
 	destroy(r);
 
 	t = (TkTop*)f->t;
+	tl = (Tk_Toplevel*)t;
 	if(t == H || D2H(t)->t != fakeTkTop) {
 		retstr(TkNotop, f->ret);
 		return;
@@ -796,6 +821,7 @@ Tk_putimage(void *a)
 
 	name = string2c(f->name);
 	lockctxt(t->ctxt);
+	t->screenr = IRECT(tl->screenr);
 	e = nil;
 	found = 0;
 	if(name[0] == '.'){
@@ -858,6 +884,7 @@ Tk_putimage(void *a)
 		tksizeimage(t->root, tki);
 	}
 Error:
+	tl->screenr = DRECT(t->screenr);
 	unlockctxt(t->ctxt);
 	if(e != nil)
 		retstr(e, f->ret);
@@ -898,6 +925,7 @@ Tk_getimage(void *a)
 	char *n;
 	TkImg *i;
 	TkTop *t;
+	Tk_Toplevel *tl;
 	int locked;
 	Display *d;
 	F_Tk_getimage *f;
@@ -918,6 +946,7 @@ Tk_getimage(void *a)
 	destroy(r);
 
 	t = (TkTop*)f->t;
+	tl = (Tk_Toplevel*)t;
 	if(t == H || D2H(t)->t != fakeTkTop) {
 		retstr(TkNotop, &f->ret->t2);
 		return;
@@ -925,6 +954,7 @@ Tk_getimage(void *a)
 	d = t->ctxt->display;
 	n = string2c(f->name);
 	lockctxt(t->ctxt);
+	t->screenr = IRECT(tl->screenr);
 	i = tkname2img(t, n);
 	if (i != nil) {
 		image = i->img;
@@ -944,6 +974,7 @@ Tk_getimage(void *a)
 		f->ret->t1 = tkimgcopy(t, mask);
 	if (locked)
 		unlockdisplay(d);
+	tl->screenr = DRECT(t->screenr);
 	unlockctxt(t->ctxt);
 }
 

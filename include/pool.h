@@ -17,7 +17,7 @@ enum
 struct Bhdr
 {
 	u32	magic;
-	u32	size;
+	uintptr	size;
 	union {
 		uchar data[1];
 		struct {
@@ -31,7 +31,7 @@ struct Bhdr
 #define csize	u.l.size
 		struct {
 			Bhdr*	link;
-			int	size;
+			intptr	size;
 		} l;
 	} u;
 };

@@ -13,7 +13,7 @@ readimage(Display *d, int fd, int dolock)
 	int miny, maxy;
 	Rectangle r;
 	int ldepth;
-	ulong chan;
+	u32 chan;
 	uchar *tmp;
 	Image *i;
 

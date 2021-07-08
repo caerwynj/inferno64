@@ -5,7 +5,7 @@ static
 int
 unitsperline(Rectangle r, int d, int bitsperunit)
 {
-	ulong l, t;
+	u32 l, t;
 
 	if(r.min.x >= 0){
 		l = (r.max.x*d+bitsperunit-1)/bitsperunit;
@@ -20,7 +20,7 @@ unitsperline(Rectangle r, int d, int bitsperunit)
 int
 wordsperline(Rectangle r, int d)
 {
-	return unitsperline(r, d, 8*sizeof(ulong));
+	return unitsperline(r, d, 8*sizeof(u32));
 }
 
 int

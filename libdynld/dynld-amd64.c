@@ -11,17 +11,17 @@ dynmagic(void)
 }
 
 char*
-dynreloc(uchar *b, ulong p, int m, Dynsym **tab, int ntab)
+dynreloc(uchar *b, uintptr p, int m, Dynsym **tab, int ntab)
 {
 	int i;
-	ulong v, *pp;
+	uintptr v, *pp;
 
-	p += (ulong)b;
-	pp = (ulong*)p;
+	p += (uintptr)b;
+	pp = (uintptr*)p;
 	v = *pp;
 	switch(m){
 	case 0:
-		v += (ulong)b;
+		v += (uintptr)b;
 		break;
 	case 1:
 		i = v>>22;

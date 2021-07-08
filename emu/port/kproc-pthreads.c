@@ -2,6 +2,8 @@
 #include	"fns.h"
 #include	"error.h"
 
+#define DP if(1){}else print
+
 #undef _POSIX_C_SOURCE 
 #undef getwd
 
@@ -189,10 +191,13 @@ void
 osblock(void)
 {
 	Osdep *os;
+	int i;
 
+	DP("osblock %d %s\n", errno, strerror(errno));
 	os = up->os;
-	while(sem_wait(&os->sem))
-		{}	/* retry on signals (which shouldn't happen) */
+	while(i=sem_wait(&os->sem)){
+		DP("osblock sem_wait returned %d, errno %d %s\n",i, errno, strerror(errno));
+	}	/* retry on signals (which shouldn't happen) */
 }
 
 void

@@ -213,9 +213,9 @@ sblfn(Decl **fns, int nfns)
 		if(ispoly(f))
 			rmfnptrs(f);
 		if(f->dot != nil && f->dot->ty->kind == Tadt)
-			Bprint(bsym, "%ld:%s.%s\n", f->pc->pc, f->dot->sym->name, f->sym->name);
+			Bprint(bsym, "%zd:%s.%s\n", f->pc->pc, f->dot->sym->name, f->sym->name);
 		else
-			Bprint(bsym, "%ld:%s\n", f->pc->pc, f->sym->name);
+			Bprint(bsym, "%zd:%s\n", f->pc->pc, f->sym->name);
 		sbldecl(f->ty->ids, Darg);
 		sbldecl(f->locals, Dlocal);
 		sbltype(f->ty->tof, 0);

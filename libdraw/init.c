@@ -65,7 +65,7 @@ initdisplay(char *dev, char *win, void(*error)(Display*, char*))
 	Image *image;
 	Dir *dir;
 	void *q;
-	ulong chan;
+	u32 chan;
 
 	fmtinstall('P', Pfmt);
 	fmtinstall('R', Rfmt);
@@ -74,7 +74,7 @@ initdisplay(char *dev, char *win, void(*error)(Display*, char*))
 	if(win == 0)
 		win = "/dev";
 	if(strlen(dev)>sizeof buf-25 || strlen(win)>sizeof buf-25){
-		kwerrstr("initdisplay: directory name too long");
+		kwerrstr("initdisplay: directory name too short");
 		return nil;
 	}
 	t = strdup(win);

@@ -1819,7 +1819,7 @@ void
 Draw_icossin(void *fp)
 {
 	F_Draw_icossin *f;
-	s32int s, c;
+	s32 s, c;
 
 	f = fp;
 	icossin(f->deg, &s, &c);
@@ -1831,7 +1831,7 @@ void
 Draw_icossin2(void *fp)
 {
 	F_Draw_icossin2 *f;
-	s32int s, c;
+	s32 s, c;
 
 	f = fp;
 	icossin2(f->p.x, f->p.y, &s, &c);

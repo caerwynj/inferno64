@@ -98,7 +98,7 @@ auditentry(Type *t)
 {
 	Audit **h, *a;
 
-	for(h = &ahash[((ulong)t>>2)%nelem(ahash)]; (a = *h) != nil; h = &a->hash)
+	for(h = &ahash[((uintptr)t>>2)%nelem(ahash)]; (a = *h) != nil; h = &a->hash)
 		if(a->t == t)
 			break;
 	return h;

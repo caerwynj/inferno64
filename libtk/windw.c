@@ -498,7 +498,7 @@ tkfcmpy(void *ap, void *bp)
 }
 
 static void
-tkfintervalintersect(int min1, int max1, int min2, int max2, int *min, int *max)
+tkfintervalintersect(s32 min1, s32 max1, s32 min2, s32 max2, s32 *min, s32 *max)
 {
 	if (min1 < min2)
 		min1 = min2;

@@ -412,7 +412,7 @@ iallocb(int size)
 		return 0;
 	memset(b, 0, sizeof(Block));
 
-	addr = (ulong)b + sizeof(Block);
+	addr = (uintptr)b + sizeof(Block);
 	b->base = (uchar*)addr;
 	b->lim = b->base + size;
 	b->rp = b->base;

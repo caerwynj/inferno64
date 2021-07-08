@@ -261,7 +261,7 @@ tkcmdbind(Tk *tk, int event, char *s, void *data)
 			else if((event & (TkEmouse|TkEnter)))
 				c += snprint(c, len, "%d", m->b);
 			else if((event & TkFocusin))
-				c += snprint(c, len, "%d", (int)data);
+				c += snprint(c, len, "%zd", (intptr)data);
 			else
 				goto def;
 			break;

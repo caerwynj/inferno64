@@ -2,7 +2,7 @@
 #include "draw.h"
 
 Point
-Pt(s32int x, s32int y)
+Pt(s32 x, s32 y)
 {
 	Point p;
 
@@ -12,7 +12,7 @@ Pt(s32int x, s32int y)
 }
 
 Rectangle
-Rect(s32int x, s32int y, s32int bx, s32int by)
+Rect(s32 x, s32 y, s32 bx, s32 by)
 {
 	Rectangle r;
 
@@ -158,7 +158,7 @@ combinerect(Rectangle *r1, Rectangle r2)
 		r1->max.y = r2.max.y;
 }
 
-u32int
+u32
 drawld2chan[] = {
 	GREY1,
 	GREY2,
@@ -166,8 +166,8 @@ drawld2chan[] = {
 	CMAP8,
 };
 
-u32int
-setalpha(u32int color, uchar alpha)
+u32
+setalpha(u32 color, uchar alpha)
 {
 	int red, green, blue;
 

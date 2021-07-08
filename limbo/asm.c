@@ -81,17 +81,17 @@ asminitializer(long offset, Node *n)
 	Case *c;
 	Label *lab;
 	Decl *id;
-	u32int dv[2];
-	s32int e, last, esz, dotlen, idlen;
+	u32 dv[2];
+	s32 e, last, esz, dotlen, idlen;
 	int i;
 
 	switch(n->ty->kind){
 	case Tbyte:
-		Bprint(bout, "\tbyte\t@mp+%ld,%d\n", offset, (s32int)n->val & 0xff);
+		Bprint(bout, "\tbyte\t@mp+%ld,%d\n", offset, (s32)n->val & 0xff);
 		break;
 	case Tint:
 	case Tfix:
-		Bprint(bout, "\tword\t@mp+%ld,%d\n", offset, (s32int)n->val);
+		Bprint(bout, "\tword\t@mp+%ld,%d\n", offset, (s32)n->val);
 		break;
 	case Tbig:
 		Bprint(bout, "\tlong\t@mp+%ld,%lld # %.16llux\n", offset, n->val, n->val);
@@ -117,7 +117,7 @@ asminitializer(long offset, Node *n)
 		Bprint(bout, "\tword\t@mp+%ld,%d", offset, c->nlab);
 		for(i = 0; i < c->nlab; i++){
 			lab = &c->labs[i];
-			Bprint(bout, ",%d,%d,%zd", (s32int)lab->start->val, (s32int)lab->stop->val+1, lab->inst->pc);
+			Bprint(bout, ",%d,%d,%zd", (s32)lab->start->val, (s32)lab->stop->val+1, lab->inst->pc);
 		}
 		Bprint(bout, ",%zd\n", c->iwild ? c->iwild->pc : -1);
 		break;
@@ -159,7 +159,7 @@ asminitializer(long offset, Node *n)
 	case Tany:
 		break;
 	case Tarray:
-		Bprint(bout, "\tarray\t@mp+%ld,$%d,%d\n", offset, n->ty->tof->decl->desc->id, (s32int)n->left->val);
+		Bprint(bout, "\tarray\t@mp+%ld,$%d,%d\n", offset, n->ty->tof->decl->desc->id, (s32)n->left->val);
 		if(n->right == nil)
 			break;
 		Bprint(bout, "\tindir\t@mp+%ld,0\n", offset);
@@ -188,9 +188,9 @@ asminitializer(long offset, Node *n)
 		break;
 	case Tiface:
 		if(LDT)
-			Bprint(bout, "\tword\t@ldt+%ld,%d\n", offset, (s32int)n->val);
+			Bprint(bout, "\tword\t@ldt+%ld,%d\n", offset, (s32)n->val);
 		else
-			Bprint(bout, "\tword\t@mp+%ld,%d\n", offset, (s32int)n->val);
+			Bprint(bout, "\tword\t@mp+%ld,%d\n", offset, (s32)n->val);
 		offset += IBY2WD;
 		for(id = n->decl->ty->ids; id != nil; id = id->next){
 			offset = align(offset, IBY2WD);

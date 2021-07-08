@@ -440,7 +440,7 @@ disint(long off, long v)
 static void
 disbig(long off, Long v)
 {
-	u32int iv;
+	u32 iv;
 
 	disflush(DEFL, off, IBY2LG);
 	iv = v >> 32;
@@ -459,8 +459,8 @@ disbig(long off, Long v)
 static void
 disreal(long off, Real v)
 {
-	u32int bv[2];
-	u32int iv;
+	u32 bv[2];
+	u32 iv;
 
 	disflush(DEFF, off, IBY2LG);
 	dtocanon(v, bv);

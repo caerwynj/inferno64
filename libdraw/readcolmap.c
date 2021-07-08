@@ -2,10 +2,10 @@
 #include "draw.h"
 #include "bio.h"
 
-static ulong
+static u32
 getval(char **p)
 {
-	ulong v;
+	u32 v;
 	char *q;
 
 	v = strtoul(*p, &q, 0);

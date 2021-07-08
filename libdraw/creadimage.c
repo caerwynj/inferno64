@@ -10,7 +10,7 @@ creadimage(Display *d, int fd, int dolock)
 	int m, nb, miny, maxy, new, ldepth, ncblock;
 	uchar *buf, *a;
 	Image *i;
-	u32int chan;
+	u32 chan;
 	int font;
 
 	font = dolock&2;

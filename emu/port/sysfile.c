@@ -438,6 +438,7 @@ kbind(char *new, char *old, int flags)
 
 	c0.c = nil;
 	if(waserror()) {
+		print("kbind error new %s\n", new);
 		cclose(c0.c);
 		return -1;
 	}

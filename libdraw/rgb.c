@@ -46,7 +46,7 @@ int
 rgb2cmap(int cr, int cg, int cb)
 {
 	int i, r, g, b, sq;
-	ulong rgb;
+	u32 rgb;
 	int best, bestsq;
 
 	best = 0;
