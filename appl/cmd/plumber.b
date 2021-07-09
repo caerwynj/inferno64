@@ -590,7 +590,14 @@ matchpattern(in: ref Inmesg, p: ref Pattern): int
 		"dst" =>	msg.dst = text;
 		"dir" =>	msg.dir = text;
 		"kind" =>	msg.kind = text;
-		"attr" =>	msg.attr = text;
+		"attr" =>
+				# this is a hack, 9front provides an add verb
+				# better yet, replace the plumbing rules with a sh script
+				al := plumbmsg->string2attrs(text);
+				for(l := al; l!= nil; l = tl l){
+					in.attrs = hd l :: in.attrs;
+				}
+				msg.attr = plumbmsg->attrs2string(in.attrs);
 		"data" =>	in.text = text;
 				msg.data = array of byte text;
 				msg.kind = "text";
