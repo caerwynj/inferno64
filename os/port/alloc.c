@@ -728,7 +728,7 @@ pooldump(Bhdr *b, int d, int c)
 	if(b == nil)
 		return;
 
-	print("%.8p %.8p %.8p %c %4d %ud (f %.8p p %.8p)\n",
+	print("%.8p %.8p %.8p %c %4d %zud (f %.8p p %.8p)\n",
 		b, b->left, b->right, c, d, b->size, b->fwd, b->prev);
 	d++;
 	for(t = b->fwd; t != b; t = t->fwd)
@@ -855,7 +855,7 @@ dumpvl(char *msg, uintptr *v, int n)
 static void
 corrupted(char *str, char *msg, Pool *p, Bhdr *b, void *v)
 {
-	print("%s(%p): pool %s CORRUPT: %s at %p'%ud(magic=%ux)\n",
+	print("%s(%p): pool %s CORRUPT: %s at %p'%zud(magic=%ux)\n",
 		str, v, p->name, msg, b, b->size, b->magic);
 	dumpvl("bad Bhdr", (uintptr *)((uintptr)b & ~3)-4, 10);
 }
@@ -866,7 +866,7 @@ _auditmemloc(char *str, void *v)
 	Pool *p;
 	Bhdr *bc, *ec, *b, *nb, *fb = nil;
 	char *fmsg, *msg;
-	ulong fsz;
+	uintptr fsz;
 
 	SET(fsz, fmsg);
 	for (p = &table.pool[0]; p < &table.pool[nelem(table.pool)]; p++) {
@@ -931,11 +931,11 @@ found:
 	}
 badchunk:
 	if (fb != nil) {
-		print("%s: %zux in %s:", str, v, p->name);
+		print("%s: %p in %s:", str, v, p->name);
 		if (fb == v)
-			print(" is %s '%lux\n", fmsg, fsz);
+			print(" is %s '%zux\n", fmsg, fsz);
 		else
-			print(" in %s at %lux'%lux\n", fmsg, fb, fsz);
+			print(" in %s at %p'%zux\n", fmsg, fb, fsz);
 		dumpvl("area", (uintptr *)((uintptr)v & ~3)-4, 20);
 	}
 }

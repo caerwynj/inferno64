@@ -75,7 +75,7 @@ rcvbootp(void *a)
 	if(waserror())
 		pexit("", 0);
 	rcvprocp = up;	/* store for postnote below */
-	fd = (int)a;
+	fd = (int)a;	/* at compilation: warning: ../ip/bootp.c:78 conversion of pointer to shorter integer */
 	while(done == 0) {
 		n = kread(fd, rcvbuf, sizeof(rcvbuf));
 		if(n <= 0)

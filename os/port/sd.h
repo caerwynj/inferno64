@@ -41,11 +41,11 @@ struct SDunit {
 	SDperm;
 
 	QLock	ctl;
-	ulong	sectors;
-	ulong	secsize;
+	u32	sectors;
+	u32	secsize;
 	SDpart*	part;			/* nil or array of size npart */
 	int	npart;
-	ulong	vers;
+	u32	vers;
 	SDperm	ctlperm;
 
 	QLock	raw;			/* raw read or write in progress */

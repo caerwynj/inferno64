@@ -746,8 +746,8 @@ bootscreeninit(void)
 {
 	VGAscr *scr;
 	int x, y, z, tilt;
-	uvlong pa;
-	ulong chan, sz;
+	uintptr pa;
+	u32 chan, sz;
 	char *s, *p, *err;
 
 	print("bootscreeninit\n");

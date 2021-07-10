@@ -154,7 +154,7 @@ struct Ctlr {
 	int	active;
 	int	id;
 	int	typ;
-	ulong	feat;
+	u32	feat;
 	int	nqueue;
 
 	/* virtioether has 3 queues: rx, tx and ctl */
@@ -449,11 +449,11 @@ ifstat(Ether *edev, void *a, long n, ulong offset)
 
 	p = smalloc(READSTR);
 
-	l = snprint(p, READSTR, "devfeat %32.32lub\n", ctlr->feat);
+	l = snprint(p, READSTR, "devfeat %32.32ub\n", ctlr->feat);
 	l += snprint(p+l, READSTR-l, "drvfeat %32.32lub\n", inl(ctlr->port+Qdrvfeat));
-	l += snprint(p+l, READSTR-l, "devstatus %8.8ub\n", inb(ctlr->port+Qstatus));
+	l += snprint(p+l, READSTR-l, "devstatus %8.8b\n", inb(ctlr->port+Qstatus));
 	if(ctlr->feat & Fstatus)
-		l += snprint(p+l, READSTR-l, "netstatus %8.8ub\n",  inb(ctlr->port+Qnetstatus));
+		l += snprint(p+l, READSTR-l, "netstatus %8.8b\n",  inb(ctlr->port+Qnetstatus));
 
 	for(i = 0; i < ctlr->nqueue; i++){
 		q = &ctlr->queue[i];

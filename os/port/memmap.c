@@ -206,11 +206,11 @@ memmapadd(uvlong addr, uvlong size, ulong type)
 }
 
 uvlong
-memmapalloc(uvlong addr, uvlong size, uvlong align, ulong type)
+memmapalloc(uvlong addr, uvlong size, uvlong align, u32 type)
 {
 	Mapent *i, *e;
 
-	print("memmapalloc addr 0x%p size 0x%zx %zd align 0x%x type 0x%x\n",
+	print("memmapalloc addr 0x%p size 0x%zx %zd align 0x%zx type 0x%x\n",
 		addr, size, size, align, type);
 	type &= ~Allocated;
 	lock(&mapalloc);
@@ -225,7 +225,7 @@ memmapalloc(uvlong addr, uvlong size, uvlong align, ulong type)
 			if(addr - i->addr >= i->size)
 				goto Fail;
 		}
-		print("memmapalloc addr 0x%p i->addr 0x%p size 0x%x %d i->size 0x%x %d\n",
+		print("memmapalloc addr 0x%p i->addr 0x%p size 0x%zx %zd i->size 0x%zx %zd\n",
 			addr, i->addr, size, size, i->size, i->size);
 		if(addr - i->addr + size > i->size)
 			goto Fail;

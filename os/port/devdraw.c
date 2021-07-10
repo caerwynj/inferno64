@@ -1176,7 +1176,7 @@ drawread(Chan *c, void *a, s32 n, s64 off)
 		m = 0;
 		for(index = 0; index < 256; index++){
 			getcolor(index, &red, &green, &blue);
-			m += sprint((char*)p+m, "%11d %11lud %11lud %11lud\n", index, red>>24, green>>24, blue>>24);
+			m += sprint((char*)p+m, "%11d %11ud %11ud %11ud\n", index, red>>24, green>>24, blue>>24);
 		}
 		n = readstr(offset, a, n, (char*)p);
 		free(p);

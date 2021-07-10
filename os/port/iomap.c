@@ -111,8 +111,8 @@ ioreserve(u32 port, u32 size, u32 align, char *tag)
  * Alloc some io port space and remember who it was
  * alloced to. If port == -1, find a free region.
  */
-u32
-ioalloc(u32 port, u32 size, u32 align, char *tag)
+s32
+ioalloc(s32 port, u32 size, u32 align, char *tag)
 {
 	IOMap *m, **l;
 
@@ -141,7 +141,7 @@ ioalloc(u32 port, u32 size, u32 align, char *tag)
 			iomap.free = m;
 			break;
 		}
-		print("ioalloc: %lux - %lux %s: clashes with: %lux - %lux %s\n",
+		print("ioalloc: %ux - %ux %s: clashes with: %lux - %lux %s\n",
 			port, port+size-1, tag,
 			m->start, m->end-1, m->tag);
 		unlock(&iomap);

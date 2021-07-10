@@ -164,7 +164,7 @@ mmucreate(uintptr *table, uintptr pa, int level, int index)
 		table, pa, level, index);
 	flags = PTEWRITE|PTEVALID;
 	page = (uintptr*)rampage();
-	DP("mmucreate new page 0x%p PTSZ 0x%x %d BY2PG 0x%x %d\n",
+	DP("mmucreate new page 0x%p PTSZ 0x%x %d BY2PG 0x%zx %zd\n",
 		page, PTSZ, PTSZ, BY2PG, BY2PG);
 	memset(page, 0, PTSZ);
 	table[index] = PADDR(page) | flags;

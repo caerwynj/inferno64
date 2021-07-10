@@ -159,7 +159,7 @@ void		memmapdump(void);
 uvlong		memmapnext(uvlong, ulong);
 uvlong		memmapsize(uvlong, uvlong);
 void		memmapadd(uvlong, uvlong, ulong);
-uvlong		memmapalloc(uvlong, uvlong, uvlong, ulong);
+uvlong		memmapalloc(uvlong, uvlong, uvlong, u32);
 void		memmapfree(uvlong, uvlong, ulong);
 int			memusehigh(void);
 void		microdelay(int);

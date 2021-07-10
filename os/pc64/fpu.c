@@ -222,7 +222,7 @@ mathemu(Ureg *ureg, void*)
 		up->fpstate = FPactive | (up->fpstate & (FPnouser|FPkernel|FPindexm));
 		break;
 	case FPactive:
-		panic("math emu pid %ld %s pc %#p", 
+		panic("math emu pid %d %s pc %#p", 
 			up->pid, up->text, ureg->pc);
 		break;
 	}

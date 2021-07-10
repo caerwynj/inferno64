@@ -85,9 +85,9 @@ ptedebug(uintptr pa)
 	pdpe = mmuwalk((uintptr*)PML4ADDR, pa, 2, 0);
 	pde = mmuwalk((uintptr*)PML4ADDR, pa, 1, 0);
 	print("pml4 @ 0x%p pa 0x%zux page is \n"
-		"\tpml4 entry @ 0x%p i %d\n"
-		"\tpdp entry @ 0x%p i %d\n"
-		"\tpd entry @ 0x%p i %d\n",
+		"\tpml4 entry @ 0x%p i %zd\n"
+		"\tpdp entry @ 0x%p i %zd\n"
+		"\tpd entry @ 0x%p i %zd\n",
 		m->pml4, pa,
 		pml4e, (pml4e-m->pml4)/sizeof(intptr),
 		pdpe, ((intptr)pdpe-(intptr)PDPADDR)/sizeof(intptr),
@@ -101,7 +101,7 @@ setupdebug(void)
 		"\tcpu0mach 0x%p cpu0sp 0x%p cpu0gdt 0x%p\n"
 		"\tcpu0pml4 0x%p cpu0pdp 0x%p  cpu0pd 0x%p\n"
 		"\tcpu0end 0x%p\n",
-		KDZERO, CONFADDR,APBOOTSTRAP,
+		(void*)KDZERO, CONFADDR,APBOOTSTRAP,
 		IDTADDR, CPU0MACH, CPU0SP, GDTADDR,
 		PML4ADDR, PDPADDR, PD0ADDR, CPU0END);
 	ptedebug(1*MiB);
@@ -296,7 +296,7 @@ confinit(void)
 	conf.npage = 0;
 	for(i=0; i<nelem(conf.mem); i++)
 		conf.npage += conf.mem[i].npage;
-	print("conf.npage %ld\n", conf.npage);
+	print("conf.npage %d\n", conf.npage);
 
 	conf.nproc = 10 /*+ ((conf.npage*BY2PG)/MiB)*5*/;
 }

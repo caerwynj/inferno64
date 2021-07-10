@@ -1284,13 +1284,13 @@ sdread(Chan *c, void *a, s32 n, s64 off)
 		if(unit->sectors){
 			if(unit->dev->ifc->rctl == nil)
 				l += snprint(p+l, m-l,
-					"geometry %llud %lud\n",
+					"geometry %ud %ud\n",
 					unit->sectors, unit->secsize);
 			pp = unit->part;
 			for(i = 0; i < unit->npart; i++){
 				if(pp->valid)
 					l += snprint(p+l, m-l,
-						"part %s %llud %llud\n",
+						"part %s %lud %lud\n",
 						pp->name, pp->start, pp->end);
 				pp++;
 			}

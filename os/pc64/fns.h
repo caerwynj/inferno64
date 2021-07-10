@@ -82,7 +82,7 @@ void	invlpg(uintptr);
 void	iofree(u32);
 void	ioinit(void);
 s32	iounused(u32, u32);
-u32	ioalloc(u32, u32, u32, char*);
+s32	ioalloc(s32, u32, u32, char*);
 u32	ioreserve(u32, u32, u32, char*);
 int	iprint(char*, ...);
 int	isaconfig(char*, int, ISAConf*);

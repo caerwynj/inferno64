@@ -87,7 +87,7 @@ kernelro(void)
 			panic("kernelro");
 		}
 		if((*pte & PTEVALID) == 0){
-			print("kernelro invalid page va 0x%p pte 0x%zux *pte 0x%zux\n",
+			print("kernelro invalid page va 0x%p pte 0x%p *pte 0x%zux\n",
 				va, pte, *pte);
 			panic("kernelro invalid page\n");
 		}
@@ -431,9 +431,9 @@ static void
 ramscan(uintptr pa, uintptr top)
 {
 	uintptr save, pat, seed, *v, *k0, *pte;
-	int i, n, w;
+	uintptr i, n, w;
 	char *attr;
-	u32 chunk;
+	uintptr chunk;
 
 	chunk = PGLSZ(0);
 	pa += chunk-1;
@@ -533,7 +533,7 @@ showpagetables(uintptr *pml4)
 					continue;
 				pde = *pd;
 				pt = (uintptr*)(pde&(~0xFFF));
-				print("\t\tpd 0x%p has 0x%zx page base address 0x%zx\n",
+				print("\t\tpd 0x%p has 0x%zx page base address 0x%4\n",
 					pd, pde, pt);
 				ept = pt + 512;
 				for(; pt != ept; pt++){
@@ -557,8 +557,8 @@ meminit0(void)
 {
 	uintptr prevbase = 0, base, size = 0;
 
-	print("MemMin 0x%llux end 0x%p KZERO 0x%x KDZERO 0x%p\n"
-		"\tKTZERO 0x%x etext 0x%zux\n\tCPU0END 0x%llux\n"
+	print("MemMin 0x%llux end 0x%p KZERO 0x%x KDZERO 0x%x\n"
+		"\tKTZERO 0x%x etext 0x%p\n\tCPU0END 0x%llux\n"
 		"\tPADDR(PGROUND((uintptr)end)) 0x%zux MemMin-PADDR(PGROUND((uintptr)end)) 0x%zux\n",
 		MemMin, end, KZERO, KDZERO, KTZERO, etext, (uintptr)CPU0END,
 		PADDR(PGROUND((uintptr)end)), MemMin-PADDR(PGROUND((uintptr)end)));
@@ -667,7 +667,7 @@ meminit(void)
 			continue;
 		}
 		if(base < MemMin){
-			print("meminit: ignoring RAM below MemMin base 0x%p size 0x%d\n", base, size);
+			print("meminit: ignoring RAM below MemMin base 0x%p size 0x%zd\n", base, size);
 			continue;
 		}
 		cm->base = memmapalloc(base, size, BY2PG, MemRAM);

@@ -155,5 +155,5 @@ checkb(Block *b, char *msg)
 void
 iallocsummary(void)
 {
-	print("ialloc %ud/%llud\n", ialloc.bytes, conf.ialloc);
+	print("ialloc %ud/%ud\n", ialloc.bytes, conf.ialloc);
 }
