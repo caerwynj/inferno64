@@ -271,7 +271,7 @@ lm78read(Chan *c, void *a, long n, vlong offset)
 
 	off = offset;
 
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qdir:
 		return devdirread(c, a, n, lm78dir, nelem(lm78dir), devgen);
 
@@ -296,7 +296,7 @@ lm78write(Chan *c, void *a, long n, vlong offset)
 
 	off = offset;
 
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	default:
 		error(Eperm);
 

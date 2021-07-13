@@ -436,7 +436,7 @@ pnpgen(Chan *c, char *, Dirtab*, int, int s, Dir *dp)
 		return pcigen(c, s+Qpcictl, p->tbdf, dp);
 	case Qpcictl:
 	case Qpciraw:
-		tbdf = MKBUS(BusPCI, 0, 0, 0)|BUSBDF((ulong)c->qid.path);
+		tbdf = MKBUS(BusPCI, 0, 0, 0)|BUSBDF((u64)c->qid.path);
 		p = pcimatchtbdf(tbdf);
 		if(p == nil)
 			return -1;
@@ -528,7 +528,7 @@ pnpread(Chan *c, void *va, long n, vlong offset)
 		sprint(up->genbuf, "%s\n", serial(cp->id1, cp->id2));
 		return readstr(offset, a, n, up->genbuf);
 	case Qpcictl:
-		tbdf = MKBUS(BusPCI, 0, 0, 0)|BUSBDF((ulong)c->qid.path);
+		tbdf = MKBUS(BusPCI, 0, 0, 0)|BUSBDF((u64)c->qid.path);
 		p = pcimatchtbdf(tbdf);
 		if(p == nil)
 			error(Egreg);
@@ -544,7 +544,7 @@ pnpread(Chan *c, void *va, long n, vlong offset)
 		*w = '\0';
 		return readstr(offset, a, n, buf);
 	case Qpciraw:
-		tbdf = MKBUS(BusPCI, 0, 0, 0)|BUSBDF((ulong)c->qid.path);
+		tbdf = MKBUS(BusPCI, 0, 0, 0)|BUSBDF((u64)c->qid.path);
 		p = pcimatchtbdf(tbdf);
 		if(p == nil)
 			error(Egreg);

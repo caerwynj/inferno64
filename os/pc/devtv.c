@@ -421,7 +421,7 @@ tvread(Chan *c, void *a, long n, vlong offset)
 
 	USED(offset);
 
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qdir:
 		return devdirread(c, a, n, tvtab, nelem(tvtab), devgen);
 	case Qdata:
@@ -455,7 +455,7 @@ tvwrite(Chan *c, void *vp, long n, vlong offset)
 	USED(offset);
 
 	a = vp;
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qctl:
 		if (n > sizeof(buf)-1)
 			n = sizeof(buf)-1;

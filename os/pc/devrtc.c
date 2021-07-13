@@ -83,7 +83,7 @@ static Chan*
 rtcopen(Chan* c, u32 omode)
 {
 	omode = openmode(omode);
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qrtc:
 		if(strcmp(up->env->user, eve)!=0 && omode!=OREAD)
 			error(Eperm);
@@ -183,7 +183,7 @@ rtcread(Chan* c, void* buf, s32 n, s64 off)
 	if(c->qid.type & QTDIR)
 		return devdirread(c, buf, n, rtcdir, nelem(rtcdir), devgen);
 
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qrtc:
 		t = rtctime();
 		n = readnum(offset, buf, n, t, 12);
@@ -235,7 +235,7 @@ rtcwrite(Chan* c, void* buf, s32 n, s64 off)
 		error(Ebadarg);
 
 
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qrtc:
 		/*
 		 *  read the time

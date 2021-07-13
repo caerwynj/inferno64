@@ -251,7 +251,7 @@ vgaopen(Chan* c, u32 omode)
 	static char *openctl = "openctl\n";
 
 	scr = &vgascreen[0];
-	if ((ulong)c->qid.path == Qvgaovlctl) {
+	if ((u64)c->qid.path == Qvgaovlctl) {
 		if (scr->dev && scr->dev->ovlctl)
 			scr->dev->ovlctl(scr, c, openctl, strlen(openctl));
 		else 
@@ -267,7 +267,7 @@ vgaclose(Chan* c)
 	static char *closectl = "closectl\n";
 
 	scr = &vgascreen[0];
-	if((ulong)c->qid.path == Qvgaovlctl)
+	if((u64)c->qid.path == Qvgaovlctl)
 		if(scr->dev && scr->dev->ovlctl){
 			if(waserror()){
 				print("ovlctl error: %s\n", up->env->errstr);
@@ -301,7 +301,7 @@ vgaread(Chan* c, void* a, s32 n, s64 off)
 	u32 offset = off;
 	char chbuf[30];
 
-	switch((u32)c->qid.path){
+	switch((u64)c->qid.path){
 
 	case Qdir:
 		return devdirread(c, a, n, vgadir, nvgadir, devgen);
@@ -555,7 +555,7 @@ vgawrite(Chan* c, void* a, s32 n, s64 off)
 	Cmdbuf *cb;
 	VGAscr *scr;
 
-	switch((u32)c->qid.path){
+	switch((u64)c->qid.path){
 
 	case Qdir:
 		error(Eperm);

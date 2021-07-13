@@ -182,7 +182,7 @@ archread(Chan *c, void *a, s32 n, s64 offset)
 
 	port = offset;
 	end = port+n;
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qdir:
 		return devdirread(c, a, n, archdir, narchdir, devgen);
 
@@ -239,7 +239,7 @@ archwrite(Chan *c, void *a, s32 n, s64 offset)
 
 	port = offset;
 	end = port+n;
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qiob:
 		checkport(port, end);
 		for(cp = a; port < end; port++)
