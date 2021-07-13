@@ -31,7 +31,7 @@ enum {
 						 */
 };
 
-#define CGASCREENBASE	((uchar*)KADDR(0xB8000))
+#define CGASCREENBASE	((uchar*)0xB8000)
 
 static int cgapos;
 static Lock cgascreenlock;
@@ -50,11 +50,6 @@ cgaregw(int index, int data)
 	outb(0x3D4+1, data);
 }
 
-/* TODO BUG the cursor is 2 characters beyond
- * could use pos = cgapos -2
- * but skips a character when 'd' is pressed
- * is it a bug in the shell prompt?
- */
 static void
 movecursor(void)
 {
@@ -97,12 +92,14 @@ cgascreenputc(int c)
 		}
 		cgapos = Width*(Height-1);
 	}
-	movecursor();
 }
 
 static void
 cgascreenputs(char* s, int n)
 {
+	int i,j;
+	/*char pre[512] = "";*/
+
 	if(!islo()){
 		/*
 		 * Don't deadlock trying to
@@ -114,12 +111,17 @@ cgascreenputs(char* s, int n)
 	else
 		lock(&cgascreenlock);
 
+	/*j = snprint(pre,512,"-%d %d-",n, cgapos);
+	for(i=0;i<j&&i<512;i++){
+		outb(0x3D6, pre[i]);
+	}*/
 	while(n-- > 0){
 		outb(0x3D6, *s);
 		// outb(0x3D6, '-');
 		cgascreenputc(*s++);
 		// outb(0x3D6, '_');
 	}
+	movecursor();
 
 	unlock(&cgascreenlock);
 		// outb(0x3D6, ',');
