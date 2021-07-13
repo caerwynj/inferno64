@@ -533,7 +533,7 @@ showpagetables(uintptr *pml4)
 					continue;
 				pde = *pd;
 				pt = (uintptr*)(pde&(~0xFFF));
-				print("\t\tpd 0x%p has 0x%zx page base address 0x%4\n",
+				print("\t\tpd 0x%p has 0x%zx page base address 0x%p\n",
 					pd, pde, pt);
 				ept = pt + 512;
 				for(; pt != ept; pt++){
