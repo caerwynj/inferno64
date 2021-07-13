@@ -103,7 +103,7 @@ tkopen(Chan* c, int omode)
 {
 	if(c->qid.type & QTDIR)
 		return devopen(c, omode, tkdirtab, nelem(tkdirtab), devgen);
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qtkevents:
 		c = devopen(c, omode, tkdirtab, nelem(tkdirtab), devgen);
 		qlock(&tkevents.l);
@@ -139,7 +139,7 @@ static long
 tkread(Chan* c, void* a, long n, vlong offset)
 {
 	USED(offset);
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qdir:
 		return devdirread(c, a, n, tkdirtab, nelem(tkdirtab), devgen);
 	case Qtkevents:

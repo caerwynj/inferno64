@@ -115,7 +115,7 @@ i2cread(Chan *c, void *a, long n, vlong offset)
 	ulong len;
 
 	d = c->aux;
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qdir:
 		return devdirread(c, a, n, d->tab, nelem(d->tab), devgen);
 	case Qdata:
@@ -157,7 +157,7 @@ i2cwrite(Chan *c, void *a, long n, vlong offset)
 	Cmdbuf *cb;
 
 	USED(offset);
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qdata:
 		d = c->aux;
 		len = d->tab[1].length;

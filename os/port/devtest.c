@@ -78,7 +78,7 @@ static long
 testread(Chan* c, void* a, long n, vlong offset)
 {
 	char digest[MD5dlen*2+1];
-	switch ((ulong)c->qid.path) {
+	switch ((u64)c->qid.path) {
 	case Qdir:
 		return devdirread(c, a, n, testtab, nelem(testtab), devgen);
 	case Qkt5sum:

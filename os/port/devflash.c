@@ -112,7 +112,7 @@ flashgen(Chan *c, char*, Dirtab*, int, int s, Dir *dp)
 		return flash2gen(c, QID(s>>1, s&1?Qctl:Qdata), dp);
 	case Qctl:
 	case Qdata:
-		return flash2gen(c, (ulong)c->qid.path, dp);
+		return flash2gen(c, (u64)c->qid.path, dp);
 	}
 	return -1;
 }

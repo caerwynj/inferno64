@@ -87,7 +87,7 @@ XXXread(Chan* c, void* a, long n, vlong offset)
 {
 	USED(offset);
 
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qdir:
 		return devdirread(c, a, n, XXXtab, nelem(XXXtab), devgen);
 	case Qdata:
@@ -110,7 +110,7 @@ XXXwrite(Chan* c, void* a, long n, vlong offset)
 {
 	USED(a, offset);
 
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qdata:
 		break;
 	default:

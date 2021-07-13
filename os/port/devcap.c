@@ -123,7 +123,7 @@ static s32
 capread(Chan *c, void *va, s32 n, s64 vl)
 {
 	USED(vl);
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qdir:
 		return devdirread(c, va, n, capdir, ncapdir, devgen);
 
@@ -204,7 +204,7 @@ static s32
 capwrite(Chan* c, void* buf, s32 n, s64 offset)
 {
 	USED(offset);
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qhash:
 		if(capwritehash(buf, n) < 0)
 			error(Ebadarg);

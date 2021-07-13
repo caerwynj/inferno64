@@ -64,7 +64,7 @@ bootclose(Chan *c)
 static long	 
 bootread(Chan *c, void *buf, long n, vlong offset)
 {
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 
 	case Qdir:
 		return devdirread(c, buf, n, bootdir, nelem(bootdir), devgen);
@@ -90,7 +90,7 @@ bootwrite(Chan *c, void *buf, long n, vlong offset)
 	ulong pc;
 	uchar *p;
 
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qmem:
 		/* kernel memory */
 		if(offset>=KZERO && offset<KZERO+conf.npage*BY2PG){

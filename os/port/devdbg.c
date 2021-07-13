@@ -805,7 +805,7 @@ dbgread(Chan *c, void *buf, long n, vlong offset)
 {
 	char *ctlstate;
 
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qdir:
 		return devdirread(c, buf, n, dbgdir, nelem(dbgdir), devgen);
 	case Qdbgctl:
@@ -956,7 +956,7 @@ dbgwrite(Chan *c, void *va, long n, vlong)
 {
 	Cmdbuf *cb;
 
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	default:
 		error(Egreg);
 		break;

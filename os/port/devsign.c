@@ -282,7 +282,7 @@ signopen(Chan *c, int omode)
 		return c;
 	}
 
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qctl:
 		if(!iseve())
 			error(Eperm);
@@ -320,7 +320,7 @@ signread(Chan *c, void *va, long n, vlong offset)
 	sigs = up->env->sigs;
 	if(sigs == nil)
 		return 0;
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qkey:
 		buf = smalloc(Maxkey);
 		if(waserror()){
@@ -363,7 +363,7 @@ signwrite(Chan *c, void *va, long n, vlong offset)
 	if(c->qid.type & QTDIR)
 		error(Eisdir);
 	USED(offset);
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qkey:
 		if(n >= Maxkey)
 			error(Etoobig);

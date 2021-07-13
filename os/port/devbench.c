@@ -1060,7 +1060,7 @@ benchopen(Chan *c, int omode)
 static int
 benchstat(Chan *c, uchar *dp, int n)
 {
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Benchdataqid:
 		benchtab[Data].length = bench.wpos - bench.buf;
 	}
@@ -1078,7 +1078,7 @@ benchread(Chan *c, void *buf, long n, vlong offset)
 	vlong us;
 	char tmp[64];
 
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Benchdirqid:
 		return devdirread(c, buf, n, benchtab, nelem(benchtab), devgen);
 
@@ -1102,7 +1102,7 @@ benchwrite(Chan *c, void *buf, long n, vlong offset)
 {
 	int argn = n;
 
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Benchctlqid:
 		bench.test = None;
 		memset((char *)bench.buf, 0, bench.bufsz);

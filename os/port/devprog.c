@@ -168,7 +168,7 @@ proggen(Chan *c, char *name, Dirtab *tab, int, int s, Dir *dp)
 		return 1;
 	}
 
-	if((ulong)c->qid.path == Qdir) {
+	if((u64)c->qid.path == Qdir) {
 		if(name != nil){
 			/* ignore s and use name to find pid */
 			pid = strtoul(name, &e, 0);

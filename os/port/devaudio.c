@@ -614,7 +614,7 @@ audioopen(Chan *c, u32 omode)
 	if(audio.major != 4)
 		error(Emajor);
 
-	switch((ulong)c->qid.path) {
+	switch((u64)c->qid.path) {
 	default:
 		error(Eperm);
 		break;
@@ -655,7 +655,7 @@ static void
 audioclose(Chan *c)
 {
 
-	switch((ulong)c->qid.path) {
+	switch((u64)c->qid.path) {
 	default:
 		error(Eperm);
 		break;
@@ -694,7 +694,7 @@ audioread(Chan *c, void *vp, s32 n, s64 offset)
 
 	a = vp;
 	n0 = n;
-	switch((ulong)c->qid.path) {
+	switch((u64)c->qid.path) {
 	default:
 		error(Eperm);
 		break;
@@ -789,7 +789,7 @@ audiowrite(Chan *c, void *vp, s32 n, s64)
 
 	a = vp;
 	n0 = n;
-	switch((ulong)c->qid.path) {
+	switch((u64)c->qid.path) {
 	default:
 		error(Eperm);
 		break;

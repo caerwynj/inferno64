@@ -287,7 +287,7 @@ dlclose(Chan *c)
 static long
 dlread(Chan *c, void *a, long n, vlong voffset)
 {
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qdir:
 		return devdirread(c, a, n, dltab, nelem(dltab), devgen);
 	case Qdynld:
@@ -307,7 +307,7 @@ dlwrite(Chan *c, void *a, long n, vlong voffset)
 	char *name, *tag, *path;
 
 	USED(voffset);
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qdynld:
 		cb = parsecmd(a, n);
 		qlock(&dllock);

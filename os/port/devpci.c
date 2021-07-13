@@ -87,7 +87,7 @@ pcigen(Chan *c, char *, Dirtab*, int, int s, Dir *dp)
 		return pcigen2(c, s+Qpcictl, p->tbdf, dp);
 	case Qpcictl:
 	case Qpciraw:
-		tbdf = MKBUS(BusPCI, 0, 0, 0)|BUSBDF((ulong)c->qid.path);
+		tbdf = MKBUS(BusPCI, 0, 0, 0)|BUSBDF((u64)c->qid.path);
 		p = pcimatchtbdf(tbdf);
 		if(p == nil)
 			return -1;
@@ -141,7 +141,7 @@ pciread(Chan *c, void *va, long n, vlong offset)
 	case Qpcidir:
 		return devdirread(c, a, n, nil, 0, pcigen);
 	case Qpcictl:
-		tbdf = MKBUS(BusPCI, 0, 0, 0)|BUSBDF((ulong)c->qid.path);
+		tbdf = MKBUS(BusPCI, 0, 0, 0)|BUSBDF((u64)c->qid.path);
 		p = pcimatchtbdf(tbdf);
 		if(p == nil)
 			error(Egreg);
@@ -157,7 +157,7 @@ pciread(Chan *c, void *va, long n, vlong offset)
 		*w = '\0';
 		return readstr(offset, a, n, buf);
 	case Qpciraw:
-		tbdf = MKBUS(BusPCI, 0, 0, 0)|BUSBDF((ulong)c->qid.path);
+		tbdf = MKBUS(BusPCI, 0, 0, 0)|BUSBDF((u64)c->qid.path);
 		p = pcimatchtbdf(tbdf);
 		if(p == nil)
 			error(Egreg);

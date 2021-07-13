@@ -146,7 +146,7 @@ pointerwalk(Chan *c, Chan *nc, char **name, int nname)
 	Walkqid *wq;
 
 	wq = devwalk(c, nc, name, nname, pointertab, nelem(pointertab), devgen);
-	if(wq != nil && wq->clone != c && wq->clone != nil && (ulong)c->qid.path == Qpointer)
+	if(wq != nil && wq->clone != c && wq->clone != nil && (u64)c->qid.path == Qpointer)
 		incref(&mouse.ref);	/* can this happen? */
 	return wq;
 }
@@ -161,7 +161,7 @@ static Chan*
 pointeropen(Chan* c, u32 omode)
 {
 	c = devopen(c, omode, pointertab, nelem(pointertab), devgen);
-	if((ulong)c->qid.path == Qpointer){
+	if((u64)c->qid.path == Qpointer){
 		if(waserror()){
 			c->flag &= ~COPEN;
 			nexterror();
@@ -184,7 +184,7 @@ pointerclose(Chan* c)
 {
 	if((c->flag & COPEN) == 0)
 		return;
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qpointer:
 		qlock(&mouse.q);
 		/* TODO if(decref(&mouse.ref) == 0)
@@ -201,7 +201,7 @@ pointerread(Chan* c, void* a, s32 n, s64)
 	char tmp[128];
 	int l;
 
-	switch((ulong)c->qid.path){
+	switch((u64)c->qid.path){
 	case Qdir:
 		return devdirread(c, a, n, pointertab, nelem(pointertab), devgen);
 	case Qpointer:
