@@ -40,6 +40,7 @@ ip
 #	esp
 #	il
 lib
+	fis
 	interp
 	keyring
 	draw 
@@ -102,8 +103,7 @@ misc
 	cga
 	uarti8250
 
-# below from 9front
-#	sdiahci		pci sdscsi led
+	sdiahci	pci sdscsi led
 	sdvirtio	pci sdscsi
 
 	vgasoft		=cur swcursor

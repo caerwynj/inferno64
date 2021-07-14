@@ -1,0 +1,9 @@
+<../mkconfig
+
+LIB=libfis.a
+
+OFILES=fis.$O
+
+HFILES=$ROOT/include/fis.h
+
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE

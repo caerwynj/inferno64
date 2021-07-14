@@ -101,6 +101,9 @@ mp.$O:				mp.h apbootstrap.i
 apic.$O squidboy.$O:		mp.h
 archmp.$O archacpi.$O:		mp.h
 
+$SDEV:				../port/sd.h
+sdiahci.$O:			ahci.h
+
 # to be moved to port/interp 
 bench.h:D: ../../module/bench.m
 	rm -f $target && limbo -a -I../../module ../../module/bench.m > $target
