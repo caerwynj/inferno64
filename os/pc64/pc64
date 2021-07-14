@@ -19,6 +19,7 @@ dev
 
 	ip	bootp ip ipv6 ipaux iproute arp netlog ptclbsum iprouter plan9 nullmedium pktmedium
 	ether		netif netaux ethermedium
+# TODO	bridge		netif log
 
 #	ata
 	audio		dma
@@ -26,6 +27,7 @@ dev
 	sd
 #	floppy	dma
 	tinyfs
+#	kbd
 #	mouse		mouse
 #	dbg	x86break
 ip
@@ -57,41 +59,12 @@ link
 #	ether83815	pci
 #	etherelnk3	pci
 #	ps2mouse
-#	ethermedium
+	ethermedium
 ##	pppmedium ppp compress
-#	below list from 9front
-#	ether2000	ether8390
-	ether2114x	pci
-#	ether589	etherelnk3
-#	ether79c970	pci
-#	ether8003	ether8390
-#	ether8139	pci
-#	ether8169	pci ethermii
-# should be obsoleted by igbe
-#	ether82543gc	pci
-#	ether82557	pci
-#	ether82563	pci
-#	ether82598	pci
-#	etherx550	pci
-#	ether83815	pci
-#	etherbcm        pci
-#	etherdp83820	pci ethermii
-#	etherec2t	ether8390
-#	etherelnk3	pci
-#	etherga620	pci
-#	etherigbe	pci ethermii
-#	ethervgbe	pci ethermii
-#	ethervt6102	pci ethermii
-#	ethervt6105m	pci ethermii
+	ether82563	pci
+	etherx550	pci
 #	ethersink
-#	ethersmc	devi82365 cis
-#	etheryuk	pci
-#	etherwavelan	wavelan devi82365 cis pci
-#	etheriwl	pci wifi
-#	etherwpi	pci wifi
-#	etherrt2860	pci wifi
 	ethervirtio	pci
-#	ethermedium
 
 misc
 	archgeneric
