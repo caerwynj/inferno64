@@ -167,9 +167,9 @@ main(void)
 	doc("links");
 	links();
 	doc("chandevreset");
-	chandevreset();
+	chandevreset(); /* reset() all devices */
 	doc("userinit");
-	userinit();
+	userinit(); /* calls init0, which calls chandevinit to init() all devices */
 	doc("schedinit");
 	active.thunderbirdsarego = 1;
 	schedinit();

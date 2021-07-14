@@ -30,6 +30,7 @@ dev
 #	kbd
 #	mouse		mouse
 #	dbg	x86break
+
 ip
 	tcp
 	udp
@@ -41,6 +42,7 @@ ip
 	ipmux
 #	esp
 #	il
+
 lib
 	fis
 	interp
@@ -161,11 +163,11 @@ root
 	/dis
 	/env	/
 	/fd	/
-	/n
-	/n/remote
+	/n	/
 	/net	/
 	/nvfs	/
 	/prog	/
+	/tmp	/
 	/dis/lib
 	/dis/svc
 	/dis/wm
