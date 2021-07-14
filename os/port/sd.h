@@ -17,8 +17,8 @@ struct SDperm {
 };
 
 struct SDpart {
-	ulong	start;
-	ulong	end;
+	uvlong	start;
+	uvlong	end;
 	SDperm;
 	int	valid;
 	ulong	vers;
@@ -34,18 +34,18 @@ struct SDfile {
 struct SDunit {
 	SDev*	dev;
 	int	subno;
-	uchar	inquiry[256];		/* format follows SCSI spec */
+	uchar	inquiry[255];		/* format follows SCSI spec */
 	uchar	sense[18];		/* format follows SCSI spec */
 	uchar	rsense[18];		/* support seperate rq sense and inline return */
 	uchar	haversense;
 	SDperm;
 
 	QLock	ctl;
-	u32	sectors;
-	u32	secsize;
+	uvlong	sectors;
+	ulong	secsize;
 	SDpart*	part;			/* nil or array of size npart */
 	int	npart;
-	u32	vers;
+	ulong	vers;
 	SDperm	ctlperm;
 
 	QLock	raw;			/* raw read or write in progress */
@@ -57,17 +57,15 @@ struct SDunit {
 	int	nefile;
 };
 
-/* 
+/*
  * Each controller is represented by a SDev.
- * Each controller is responsible for allocating its unit structures.
- * Each controller has at least one unit.
- */ 
+ */
 struct SDev {
 	Ref	r;			/* Number of callers using device */
 	SDifc*	ifc;			/* pnp/legacy */
 	void*	ctlr;
 	int	idno;
-	char*	name;
+	char	name[8];
 	SDev*	next;
 
 	QLock;				/* enable/disable */
@@ -82,8 +80,7 @@ struct SDifc {
 	char*	name;
 
 	SDev*	(*pnp)(void);
-	SDev*	(*legacy)(int, int);
-	SDev*	(*id)(SDev*);
+	SDev*	(*xxlegacy)(int, int);		/* unused.  remove me */
 	int	(*enable)(SDev*);
 	int	(*disable)(SDev*);
 
@@ -96,7 +93,6 @@ struct SDifc {
 	long	(*bio)(SDunit*, int, int, void*, long, uvlong);
 	SDev*	(*probe)(DevConf*);
 	void	(*clear)(SDev*);
-	char*	(*stat)(SDev*, char*, char*);
 	char*	(*rtopctl)(SDev*, char*, char*);
 	int	(*wtopctl)(SDev*, Cmdbuf*);
 	int	(*ataio)(SDreq*);
@@ -105,10 +101,10 @@ struct SDifc {
 struct SDreq {
 	SDunit*	unit;
 	int	lun;
-	int	write;
+	char	write;
 	char	proto;
 	char	ataproto;
-	uchar	cmd[16];
+	uchar	cmd[0x20];
 	int	clen;
 	void*	data;
 	int	dlen;
@@ -117,7 +113,7 @@ struct SDreq {
 
 	int	status;
 	long	rlen;
-	uchar	sense[256];
+	uchar	sense[32];
 };
 
 enum {
@@ -162,7 +158,7 @@ struct SDio {
 	int	(*init)(void);
 	void	(*enable)(void);
 	int	(*inquiry)(char*, int);
-	int	(*cmd)(u32, u32, u32*);
+	int	(*cmd)(u32int, u32int, u32int*);
 	void	(*iosetup)(int, void*, int, int);
 	void	(*io)(int, uchar*, int);
 	char	highspeed;
@@ -180,5 +176,4 @@ extern int sdaddfile(SDunit*, char*, int, char*, SDrw*, SDrw*);
 /* sdscsi.c */
 extern int scsiverify(SDunit*);
 extern int scsionline(SDunit*);
-extern long scsibio(SDunit*, int, int, void*, long, long);
-extern SDev* scsiid(SDev*, SDifc*);
+extern long scsibio(SDunit*, int, int, void*, long, uvlong);

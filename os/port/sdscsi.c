@@ -45,10 +45,10 @@ scsiverify(SDunit* unit)
 	r->write = 0;
 	r->cmd[0] = 0x12;
 	r->cmd[1] = r->lun<<5;
-	r->cmd[4] = sizeof(unit->inquiry)-1;
+	r->cmd[4] = 36;
 	r->clen = 6;
 	r->data = inquiry;
-	r->dlen = sizeof(unit->inquiry)-1;
+	r->dlen = 36;
 	r->flags = 0;
 
 	r->status = ~0;
@@ -57,7 +57,7 @@ scsiverify(SDunit* unit)
 		return 0;
 	}
 	memmove(unit->inquiry, inquiry, r->dlen);
-	free(inquiry); 
+	free(inquiry);
 
 	SET(status);
 	for(i = 0; i < 3; i++){
@@ -130,10 +130,10 @@ scsirio(SDreq* r)
 	r->status = ~0;
 	switch(r->unit->dev->ifc->rio(r)){
 	default:
-		return -1;
+		break;
 	case SDcheck:
 		if(!(r->flags & SDvalidsense))
-			return -1;
+			break;
 		switch(r->sense[2] & 0x0F){
 		case 0x00:		/* no sense */
 		case 0x01:		/* recovered error */
@@ -148,16 +148,17 @@ scsirio(SDreq* r)
 				return 2;
 			if(r->sense[12] == 0x29)
 				return 2;
-			return -1;
+			break;
 		case 0x02:		/* not ready */
 			/*
 			 * If no medium present, bail out.
 			 * If unit is becoming ready, rather than not
-			 * not ready, wait a little then poke it again. 				 */
+			 * not ready, wait a little then poke it again.
+			 */
 			if(r->sense[12] == 0x3A)
-				return 1;
+				break;
 			if(r->sense[12] != 0x04 || r->sense[13] != 0x01)
-				return -1;
+				break;
 
 			while(waserror())
 				;
@@ -166,12 +167,64 @@ scsirio(SDreq* r)
 			scsitest(r);
 			return 2;
 		default:
-			return -1;
+			break;
 		}
+		break;
 	case SDok:
 		return 0;
 	}
 	return -1;
+}
+
+static void
+cap10(SDreq *r)
+{
+	r->cmd[0] = 0x25;
+	r->cmd[1] = r->lun<<5;
+	r->clen = 10;
+	r->dlen = 8;
+}
+
+static void
+cap16(SDreq *r)
+{
+	uint i;
+
+	i = 32;
+	r->cmd[0] = 0x9e;
+	r->cmd[1] = 0x10;
+	r->cmd[10] = i>>24;
+	r->cmd[11] = i>>16;
+	r->cmd[12] = i>>8;
+	r->cmd[13] = i;
+	r->clen = 16;
+	r->dlen = i;
+}
+
+static uint
+belong(uchar *u)
+{
+	return u[0]<<24 | u[1]<<16 | u[2]<<8 | u[3];
+}
+
+static uvlong
+capreply(SDreq *r, ulong *secsize)
+{
+	uchar *u;
+	ulong ss;
+	uvlong s;
+
+	u = r->data;
+	if(r->clen == 16){
+		s = (uvlong)belong(u)<<32 | belong(u + 4);
+		ss = belong(u + 8);
+	}else{
+		s = belong(u);
+		ss = belong(u + 4);
+	}
+	if(secsize)
+		*secsize = ss;
+	return s;
 }
 
 int
@@ -179,17 +232,20 @@ scsionline(SDunit* unit)
 {
 	SDreq *r;
 	uchar *p;
+	ulong ss;
+	uvlong s;
 	int ok, retries;
+	void (*cap)(SDreq*);
 
-	if((r = malloc(sizeof(SDreq))) == nil)
+	if((r = malloc(sizeof *r)) == nil)
 		return 0;
-	if((p = sdmalloc(8)) == nil){
+	if((p = sdmalloc(32)) == nil){
 		free(r);
 		return 0;
 	}
 
 	ok = 0;
-
+	cap = cap10;
 	r->unit = unit;
 	r->lun = 0;				/* ??? */
 	for(retries = 0; retries < 10; retries++){
@@ -200,40 +256,56 @@ scsionline(SDunit* unit)
 		 * plain slow getting their act together after a reset.
 		 */
 		r->write = 0;
-		memset(r->cmd, 0, sizeof(r->cmd));
-		r->cmd[0] = 0x25;
-		r->cmd[1] = r->lun<<5;
-		r->clen = 10;
 		r->data = p;
-		r->dlen = 8;
 		r->flags = 0;
-	
-		r->status = ~0;
+		memset(r->cmd, 0, sizeof r->cmd);
+		cap(r);
+
 		switch(scsirio(r)){
 		default:
+			/*
+			 * ATAPI returns error and no sense information
+			 * on media change / no media present.
+			 * count as retries.
+			 */
+			if(retries < 4)
+				continue;
 			break;
 		case 0:
-			unit->sectors = (p[0]<<24)|(p[1]<<16)|(p[2]<<8)|p[3];
-			if(unit->sectors == 0)
+			s = capreply(r, &ss);
+			if(s == 0xffffffff && cap == cap10){
+				cap = cap16;
 				continue;
-			/*
-			 * Read-capacity returns the LBA of the last sector,
-			 * therefore the number of sectors must be incremented.
-			 */
-			unit->sectors++;
-			unit->secsize = (p[4]<<24)|(p[5]<<16)|(p[6]<<8)|p[7];
+			}
+			if(s == 0xffffffffffffffffLL)
+				s = 0;
 
 			/*
 			 * Some ATAPI CD readers lie about the block size.
 			 * Since we don't read audio via this interface
 			 * it's okay to always fudge this.
 			 */
-			if(unit->secsize == 2352)
-				unit->secsize = 2048;
-			ok = 1;
+			if(ss == 2352)
+				ss = 2048;
+
+			/*
+			 * Devices with removable media may return 0 sectors
+			 * when they have empty media (e.g. sata dvd writers);
+			 * if so, keep the count zero.
+			 *	
+			 * Read-capacity returns the LBA of the last sector,
+			 * therefore the number of sectors must be incremented.
+			 */
+			if(s != 0)
+				s++;
+
+			ok = (unit->sectors != s) ? 2 : 1;
+			unit->sectors = s;
+			unit->secsize = ss;
 			break;
 		case 1:
-			ok = 1;
+			ok = (unit->sectors != 0) ? 2 : 1;
+			unit->sectors = 0;
 			break;
 		case 2:
 			continue;
@@ -243,88 +315,84 @@ scsionline(SDunit* unit)
 	free(p);
 	free(r);
 
+	/*
+	print("scsionline: %s: ok=%d retries=%d sectors=%llud secsize=%lud\n",
+		unit->name, ok, retries, unit->sectors, unit->secsize);
+	*/
+
 	if(ok)
 		return ok+retries;
 	else
 		return 0;
 }
 
-int
-scsiexec(SDunit* unit, int write, uchar* cmd, int clen, void* data, int* dlen)
+static void
+scsifmt10(SDreq *r, int write, int lun, ulong nb, uvlong bno)
 {
-	SDreq *r;
-	int status;
+	uchar *c;
 
-	if((r = malloc(sizeof(SDreq))) == nil)
-		return SDmalloc;
-	r->unit = unit;
-	r->lun = cmd[1]>>5;		/* ??? */
-	r->write = write;
-	memmove(r->cmd, cmd, clen);
-	r->clen = clen;
-	r->data = data;
-	if(dlen)
-		r->dlen = *dlen;
-	r->flags = 0;
+	c = r->cmd;
+	if(write == 0)
+		c[0] = 0x28;
+	else
+		c[0] = 0x2A;
+	c[1] = lun<<5;
+	c[2] = bno>>24;
+	c[3] = bno>>16;
+	c[4] = bno>>8;
+	c[5] = bno;
+	c[6] = 0;
+	c[7] = nb>>8;
+	c[8] = nb;
+	c[9] = 0;
 
-	r->status = ~0;
+	r->clen = 10;
+}
 
-	/*
-	 * Call the device-specific I/O routine.
-	 * There should be no calls to 'error()' below this
-	 * which percolate back up.
-	 */
-	switch(status = unit->dev->ifc->rio(r)){
-	case SDok:
-		if(dlen)
-			*dlen = r->rlen;
-		/*FALLTHROUGH*/
-	case SDcheck:
-		/*FALLTHROUGH*/
-	default:
-		/*
-		 * It's more complicated than this. There are conditions
-		 * which are 'ok' but for which the returned status code
-		 * is not 'SDok'.
-		 * Also, not all conditions require a reqsense, might
-		 * need to do a reqsense here and make it available to the
-		 * caller somehow.
-		 *
-		 * Mañana.
-		 */
-		break;
-	}
-	sdfree(r);
+static void
+scsifmt16(SDreq *r, int write, int lun, ulong nb, uvlong bno)
+{
+	uchar *c;
 
-	return status;
+	c = r->cmd;
+	if(write == 0)
+		c[0] = 0x88;
+	else
+		c[0] = 0x8A;
+	c[1] = lun<<5;		/* so wrong */
+	c[2] = bno>>56;
+	c[3] = bno>>48;
+	c[4] = bno>>40;
+	c[5] = bno>>32;
+	c[6] = bno>>24;
+	c[7] = bno>>16;
+	c[8] = bno>>8;
+	c[9] = bno;
+	c[10] = nb>>24;
+	c[11] = nb>>16;
+	c[12] = nb>>8;
+	c[13] = nb;
+	c[14] = 0;
+	c[15] = 0;
+
+	r->clen = 16;
 }
 
 long
-scsibio(SDunit* unit, int lun, int write, void* data, long nb, long bno)
+scsibio(SDunit* unit, int lun, int write, void* data, long nb, uvlong bno)
 {
 	SDreq *r;
 	long rlen;
 
-	if((r = malloc(sizeof(SDreq))) == nil)
-		error(Enomem);
+	r = smalloc(sizeof(SDreq));
 	r->unit = unit;
 	r->lun = lun;
 again:
 	r->write = write;
-	if(write == 0)
-		r->cmd[0] = 0x28;
+	if(bno > 0xffffffff)
+		scsifmt16(r, write, lun, nb, bno);
 	else
-		r->cmd[0] = 0x2A;
-	r->cmd[1] = (lun<<5);
-	r->cmd[2] = bno>>24;
-	r->cmd[3] = bno>>16;
-	r->cmd[4] = bno>>8;
-	r->cmd[5] = bno;
-	r->cmd[6] = 0;
-	r->cmd[7] = nb>>8;
-	r->cmd[8] = nb;
-	r->cmd[9] = 0;
-	r->clen = 10;
+		scsifmt10(r, write, lun, nb, bno);
 	r->data = data;
 	r->dlen = nb*unit->secsize;
 	r->flags = 0;
@@ -335,14 +403,30 @@ again:
 		rlen = -1;
 		break;
 	case 0:
-		rlen = r->rlen;
-		break;
+		/*
+		 * scsi allows commands to return successfully
+		 * but return sense data, indicating that the
+		 * operation didn't proceed as expected.
+		 * (confusing, no).  this allows the raw commands
+		 * to successfully return errors.  but any sense
+		 * data bio sees must be an error.  bomb out.
+		 */
+		if(r->status == SDok && r->rlen > 0
+		&& ((r->flags & SDvalidsense) == 0 || r->sense[2] == 0)){
+			rlen = r->rlen;
+			break;
+		}
 	case 2:
 		rlen = -1;
 		if(!(r->flags & SDvalidsense))
 			break;
 		switch(r->sense[2] & 0x0F){
 		default:
+			break;
+		case 0x01:		/* recovered error */
+			print("%s: recovered error at sector %llud\n",
+				unit->name, bno);
+			rlen = r->rlen;
 			break;
 		case 0x06:		/* check condition */
 			/*
@@ -364,6 +448,10 @@ again:
 				goto again;
 			break;
 		}
+		snprint(up->genbuf, sizeof up->genbuf, "%s %.2ux%.2ux%.2ux %lld",
+			Eio, r->sense[2], r->sense[12], r->sense[13], bno);
+		free(r);
+		error(up->genbuf);
 		break;
 	}
 	free(r);
@@ -371,23 +459,3 @@ again:
 	return rlen;
 }
 
-SDev*
-scsiid(SDev* sdev, SDifc* ifc)
-{
-	char name[32];
-	static char idno[16] = "0123456789abcdef";
-	static char *p = idno;
-
-	while(sdev){
-		if(sdev->ifc == ifc){
-			sdev->idno = *p++;
-			snprint(name, sizeof(name), "sd%c", sdev->idno);
-			kstrdup(&sdev->name, name);
-			if(p >= &idno[sizeof(idno)])
-				break;
-		}
-		sdev = sdev->next;
-	}
-
-	return nil;
-}

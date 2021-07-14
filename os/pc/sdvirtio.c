@@ -67,15 +67,15 @@ struct Vring
 struct Vdesc
 {
 	u64int	addr;
-	u32	len;
+	u32int	len;
 	u16int	flags;
 	u16int	next;
 };
 
 struct Vused
 {
-	u32	id;
-	u32	len;
+	u32int	id;
+	u32int	len;
 };
 
 struct Vqueue
@@ -128,16 +128,16 @@ enum {
 
 struct ScsiCfg
 {
-	u32	num_queues;
-	u32	seg_max;
-	u32	max_sectors;
-	u32	cmd_per_lun;
-	u32	event_info_size;
-	u32	sense_size;
-	u32	cdb_size;
+	u32int	num_queues;
+	u32int	seg_max;
+	u32int	max_sectors;
+	u32int	cmd_per_lun;
+	u32int	event_info_size;
+	u32int	sense_size;
+	u32int	cdb_size;
 	u16int	max_channel;
 	u16int	max_target;
-	u32	max_lun;
+	u32int	max_lun;
 };
 
 static Vqueue*
@@ -336,8 +336,8 @@ vioblkreq(Vdev *vd, int typ, void *a, long count, long secsize, uvlong lba)
 
 	u8int status;
 	struct Vioblkreqhdr {
-		u32	typ;
-		u32	prio;
+		u32int	typ;
+		u32int	prio;
 		u64int	lba;
 	} req;
 
@@ -396,7 +396,7 @@ vioscsireq(SDreq *r)
 	u8int resp[4+4+2+2+SENSESIZE];
 	u8int req[8+8+3+CDBSIZE];
 	int free, head;
-	u32 len;
+	u32int len;
 	Vqueue *q;
 	Vdesc *d;
 	Vdev *vd;
@@ -469,7 +469,7 @@ vioscsireq(SDreq *r)
 		r->status = SDcheck;
 
 	/* sense_len */
-	len = *((u32*)&resp[0]);
+	len = *((u32int*)&resp[0]);
 	if(len > 0){
 		if(len > sizeof(r->sense))
 			len = sizeof(r->sense);
@@ -478,7 +478,7 @@ vioscsireq(SDreq *r)
 	}
 
 	/* data residue */
-	len = *((u32*)&resp[4]);
+	len = *((u32int*)&resp[4]);
 	if(len > r->dlen)
 		r->rlen = 0;
 	else
@@ -611,7 +611,7 @@ viopnp(void)
 
 	id = 'F';
 	for(vd =  viopnpdevs(TypBlk); vd; vd = vd->next){
-		if(vd->nqueue != 1)
+		if(vd->nqueue == 0)
 			continue;
 
 		if((s = malloc(sizeof(*s))) == nil)
@@ -680,7 +680,6 @@ SDifc sdvirtioifc = {
 
 	viopnp,				/* pnp */
 	nil,				/* legacy */
-	nil,				/* id */
 	vioenable,			/* enable */
 	viodisable,			/* disable */
 
@@ -693,8 +692,6 @@ SDifc sdvirtioifc = {
 	viobio,				/* bio */
 	nil,				/* probe */
 	nil,				/* clear */
-	nil,				/* stat */
 	nil,				/* rtopctl */
 	nil,				/* wtopctl */
-	nil,				/* ataio */
 };
