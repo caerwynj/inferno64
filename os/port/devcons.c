@@ -149,8 +149,6 @@ putstrn0(char *str, int n, int usewrite)
 	int m;
 	char *t;
 	char buf[PRINTSIZE+2];
-	/* int i;
-	char pre[PRINTSIZE+2]; */
 
 	/*
 	 *  how many different output devices do we need?
@@ -179,9 +177,6 @@ putstrn0(char *str, int n, int usewrite)
 		runlock(&kprintq);
 	}
 	if(m && screenputs != nil){
-		/*for debugging for(i = 0; i<n; i++)
-			pre[i] = '.';
-		screenputs(pre, i);*/
 		screenputs(str, n);
 	}
 

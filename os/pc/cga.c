@@ -97,9 +97,6 @@ cgascreenputc(int c)
 static void
 cgascreenputs(char* s, int n)
 {
-	int i,j;
-	/*char pre[512] = "";*/
-
 	if(!islo()){
 		/*
 		 * Don't deadlock trying to
@@ -111,20 +108,13 @@ cgascreenputs(char* s, int n)
 	else
 		lock(&cgascreenlock);
 
-	/*j = snprint(pre,512,"-%d %d-",n, cgapos);
-	for(i=0;i<j&&i<512;i++){
-		outb(0x3D6, pre[i]);
-	}*/
 	while(n-- > 0){
 		outb(0x3D6, *s);
-		// outb(0x3D6, '-');
 		cgascreenputc(*s++);
-		// outb(0x3D6, '_');
 	}
 	movecursor();
 
 	unlock(&cgascreenlock);
-		// outb(0x3D6, ',');
 }
 
 void
