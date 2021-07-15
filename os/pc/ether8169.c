@@ -795,7 +795,7 @@ rtl8169attach(Ether* edev)
 		return;
 	}
 	if(waserror()){
-		print("#l%d: rtl8169: %s\n", edev->ctlrno, up->errstr);
+		print("#l%d: rtl8169: %s\n", edev->ctlrno, up->env->errstr);
 		qunlock(&ctlr->alock);
 		nexterror();
 	}
@@ -842,7 +842,7 @@ rtl8169attach(Ether* edev)
 	poperror();
 	poperror();
 
-	kproc("rtl8169", rtl8169reseter, edev);
+	kproc("rtl8169", rtl8169reseter, edev, 0);
 
 	qunlock(&ctlr->alock);
 	poperror();

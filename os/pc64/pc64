@@ -61,6 +61,7 @@ link
 #	ps2mouse
 	ethermedium
 ##	pppmedium ppp compress
+	ether8169	pci ethermii
 	ether82563	pci
 	etherx550	pci
 #	ethersink
