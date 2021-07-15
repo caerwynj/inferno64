@@ -19,7 +19,7 @@ dev
 
 	ip	bootp ip ipv6 ipaux iproute arp netlog ptclbsum iprouter plan9 nullmedium pktmedium
 	ether		netif netaux ethermedium
-# TODO	bridge		netif log
+#	bridge		netif log
 
 #	ata
 	audio		dma
