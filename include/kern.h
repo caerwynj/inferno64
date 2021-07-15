@@ -89,15 +89,15 @@ extern	int	isupperrune(Rune);
  * malloc
  */
 extern	void*	malloc(ulong);
-extern	void*	mallocz(ulong, int);
+extern	void*	mallocz(uintptr, int);
 extern	void	free(void*);
-extern	ulong	msize(void*);
+extern	uintptr	msize(void*);
 extern	void*	calloc(ulong, ulong);
 extern	void*	realloc(void*, ulong);
-extern	void		setmalloctag(void*, ulong);
-extern	void		setrealloctag(void*, ulong);
-extern	ulong	getmalloctag(void*);
-extern	ulong	getrealloctag(void*);
+extern	void		setmalloctag(void*, uintptr);
+extern	void		setrealloctag(void*, uintptr);
+extern	uintptr	getmalloctag(void*);
+extern	uintptr	getrealloctag(void*);
 extern	void*	malloctopoolblock(void*);
 
 /*

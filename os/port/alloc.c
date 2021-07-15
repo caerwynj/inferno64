@@ -17,18 +17,18 @@ struct Pool
 {
 	char*	name;
 	int	pnum;
-	ulong	maxsize;
+	uintptr	maxsize;
 	int	quanta;
 	int	chunk;
-	ulong	ressize;
-	ulong	cursize;
-	ulong	arenasize;
-	ulong	hw;
+	uintptr	ressize;
+	uintptr	cursize;
+	uintptr	arenasize;
+	uintptr	hw;
 	Lock	l;
 	Bhdr*	root;
 	Bhdr*	chain;
-	ulong	nalloc;
-	ulong	nfree;
+	uintptr	nalloc;
+	uintptr	nfree;
 	int	nbrk;
 	int	lastfree;
 	int	warn;
@@ -40,6 +40,8 @@ struct Pool
 	when pointer size = 8 bytes, then 63 = 2^q -1
 		for 4 bytes, 31
 	TODO make this a macro?
+	for allocpc and reallocpc, 2 * 8 = 16 bytes get added
+	so, minimum size = 2*4 + 2*8 + 5*8 = 64, using 127 to satisfy 2^q -1
  */
 static
 struct
@@ -50,9 +52,9 @@ struct
 } table = {
 	3,
 	{
-		{ "main",  0,	 4*1024*1024, 63,  128*1024, 15*256*1024 },
-		{ "heap",  1,	16*1024*1024, 63,  128*1024, 15*1024*1024 },
-		{ "image", 2,	 8*1024*1024, 63, 300*1024, 15*512*1024 },
+		{ "main",  0, 	32*1024*1024, 127,  512*1024, 0, 31*1024*1024 },
+		{ "heap",  1, 	32*1024*1024, 127,  512*1024, 0, 31*1024*1024 },
+		{ "image", 2,   64*1024*1024+256, 127, 4*1024*1024, 1, 63*1024*1024 },
 	}
 };
 
@@ -62,25 +64,8 @@ Pool*	imagmem = &table.pool[2];
 
 static void _auditmemloc(char *, void *);
 void (*auditmemloc)(char *, void *) = _auditmemloc;
-static void _poolfault(void *, char *, ulong);
-void (*poolfault)(void *, char *, ulong) = _poolfault;
-
-/*	non tracing
- *
-enum {
-	Npadlong	= 0,
-	MallocOffset = 0,
-	ReallocOffset = 0
-};
- *
- */
-
-/* tracing */
-enum {
-	Npadlong	= 2,
-	MallocOffset = 0,
-	ReallocOffset = 1
-};
+static void _poolfault(void *, char *, uintptr);
+void (*poolfault)(void *, char *, uintptr) = _poolfault;
 
 int
 memusehigh(void)
@@ -262,11 +247,11 @@ poolsummary(void)
 }
 
 void*
-poolalloc(Pool *p, ulong asize)
+poolalloc(Pool *p, uintptr asize)
 {
 	Bhdr *q, *t;
-	int alloc, ldr, ns, frag;
-	int osize, size;
+	intptr alloc, ldr, ns, frag;
+	intptr osize, size;
 	Prog *prog;
 
 	// if(asize >= 1024*1024*1024)	/* for sanity and to avoid overflow */
@@ -352,7 +337,7 @@ poolalloc(Pool *p, ulong asize)
 				return nil;
 			p->warn = 1;
 			if (p != mainmem || ns > 512)
-				print("arena too large: %s size %d cursize %lud arenasize %lud maxsize %lud, alloc = %d\n", p->name, osize, p->cursize, p->arenasize, p->maxsize, alloc);
+				print("arena too large: %s size %zd cursize %zud arenasize %zud maxsize %zud, alloc = %zd\n", p->name, osize, p->cursize, p->arenasize, p->maxsize, alloc);
 			return nil;
 		}
 		alloc = ns+ldr+ldr;
@@ -453,14 +438,14 @@ poolfree(Pool *p, void *v)
 }
 
 void *
-poolrealloc(Pool *p, void *v, ulong size)
+poolrealloc(Pool *p, void *v, uintptr size)
 {
 	Bhdr *b;
 	void *nv;
-	int osize;
+	intptr osize;
 
-	if(size >= 1024*1024*1024)	/* for sanity and to avoid overflow */
-		return nil;
+	//if(size >= 1024*1024*1024)	/* for sanity and to avoid overflow */
+	//	return nil;
 	if(size == 0){
 		poolfree(p, v);
 		return nil;
@@ -482,11 +467,11 @@ poolrealloc(Pool *p, void *v, ulong size)
 	return nv;
 }
 
-ulong
+uintptr
 poolmsize(Pool *p, void *v)
 {
 	Bhdr *b;
-	ulong size;
+	uintptr size;
 
 	if(v == nil)
 		return 0;
@@ -497,11 +482,11 @@ poolmsize(Pool *p, void *v)
 	return size;
 }
 
-static ulong
+static uintptr
 poolmax(Pool *p)
 {
 	Bhdr *t;
-	ulong size;
+	uintptr size;
 
 	ilock(&p->l);
 	size = p->maxsize - p->cursize;
@@ -528,7 +513,7 @@ poolread(char *va, int count, u64 offset)
 	signed_off = offset;
 	for(i = 0; i < table.n; i++) {
 		p = &table.pool[i];
-		n += snprint(va+n, count-n, "%11lud %11lud %11lud %11lud %11lud %11d %11lud %s\n",
+		n += snprint(va+n, count-n, "%11zud %11zud %11zud %11zud %11zud %11d %11zud %s\n",
 			p->cursize,
 			p->maxsize,
 			p->hw,
@@ -552,39 +537,34 @@ poolread(char *va, int count, u64 offset)
 	return n;
 }
 
+/* this function signature is tied to the system's libc.h */
 void*
 malloc(ulong size)
 {
 	void *v;
 
-	v = poolalloc(mainmem, size+Npadlong*sizeof(uintptr));
+	v = poolalloc(mainmem, size);
 	if(v != nil){
-		if(Npadlong){
-			v = (uintptr*)v+Npadlong;
-			setmalloctag(v, getcallerpc(&size));
-			setrealloctag(v, 0);
-		}
+		setmalloctag(v, getcallerpc(&size));
+		setrealloctag(v, 0);
 		memset(v, 0, size);
 	}
 	return v;
 }
 
 void*
-smalloc(ulong size)
+smalloc(uintptr size)
 {
 	void *v;
 
 	for(;;) {
-		v = poolalloc(mainmem, size+Npadlong*sizeof(uintptr));
+		v = poolalloc(mainmem, size);
 		if(v != nil)
 			break;
 		tsleep(&up->sleep, return0, 0, 100);
 	}
-	if(Npadlong){
-		v = (uintptr*)v+Npadlong;
-		setmalloctag(v, getcallerpc(&size));
-		setrealloctag(v, 0);
-	}
+	setmalloctag(v, getcallerpc(&size));
+	setrealloctag(v, 0);
 	memset(v, 0, size);
 	return v;
 }
@@ -594,13 +574,10 @@ mallocz(ulong size, int clr)
 {
 	void *v;
 
-	v = poolalloc(mainmem, size+Npadlong*sizeof(uintptr));
+	v = poolalloc(mainmem, size);
 	if(v != nil){
-		if(Npadlong){
-			v = (uintptr*)v+Npadlong;
-			setmalloctag(v, getcallerpc(&size));
-			setrealloctag(v, 0);
-		}
+		setmalloctag(v, getcallerpc(&size));
+		setrealloctag(v, 0);
 		if(clr)
 			memset(v, 0, size);
 	}
@@ -611,7 +588,7 @@ mallocz(ulong size, int clr)
  * need more testing
  */
 void*
-mallocalign(u32 size, u32 align, s32 offset, u32 span)
+mallocalign(uintptr size, u32 align, s32 offset, u32 span)
 {
 	void *v;
 	uintptr a;;
@@ -634,13 +611,12 @@ free(void *v)
 	Bhdr *b;
 
 	if(v != nil) {
-		if(Npadlong)
-			v = (uintptr*)v-Npadlong;
 		D2B(b, v);
 		poolfree(mainmem, v);
 	}
 }
 
+/* this function signature is tied to emu which is tied to the system's libc.h */
 void*
 realloc(void *v, ulong size)
 {
@@ -648,13 +624,9 @@ realloc(void *v, ulong size)
 
 	if(size == 0)
 		return malloc(size);	/* temporary change until realloc calls can be checked */
-	if(v != nil)
-		v = (uintptr*)v-Npadlong;
-	if(Npadlong!=0 && size!=0)
-		size += Npadlong*sizeof(uintptr);
 	nv = poolrealloc(mainmem, v, size);
 	if(nv != nil) {
-		nv = (uintptr*)nv+Npadlong;
+		nv = (uintptr*)nv;
 		setrealloctag(nv, getcallerpc(&v));
 		if(v == nil)
 			setmalloctag(v, getcallerpc(&v));
@@ -665,45 +637,45 @@ realloc(void *v, ulong size)
 void
 setmalloctag(void *v, uintptr pc)
 {
-	uintptr *u;
+	Bhdr *b;
 
-	USED(v);
-	USED(pc);
-	if(Npadlong <= MallocOffset || v == nil)
-		return;
-	u = v;
-	u[-Npadlong+MallocOffset] = pc;
+	if(v != nil){
+		D2B(b, v);
+		b->allocpc = pc;
+	}
 }
 
 uintptr
 getmalloctag(void *v)
 {
-	USED(v);
-	if(Npadlong <= MallocOffset)
+	Bhdr *b;
+
+	if(v == nil)
 		return ~0;
-	return ((uintptr*)v)[-Npadlong+MallocOffset];
+	D2B(b, v);
+	return b->allocpc;
 }
 
 void
 setrealloctag(void *v, uintptr pc)
 {
-	ulong *u;
+	Bhdr *b;
 
-	USED(v);
-	USED(pc);
-	if(Npadlong <= ReallocOffset || v == nil)
-		return;
-	u = v;
-	u[-Npadlong+ReallocOffset] = pc;
+	if(v != nil){
+		D2B(b, v);
+		b->reallocpc = pc;
+	}
 }
 
 uintptr
 getrealloctag(void *v)
 {
-	USED(v);
-	if(Npadlong <= ReallocOffset)
-		return ((uintptr*)v)[-Npadlong+ReallocOffset];
-	return ~0;
+	Bhdr *b;
+
+	if(v == nil)
+		return ~0;
+	D2B(b, v);
+	return b->reallocpc;
 }
 
 ulong
@@ -711,9 +683,10 @@ msize(void *v)
 {
 	if(v == nil)
 		return 0;
-	return poolmsize(mainmem, (uintptr*)v-Npadlong)-Npadlong*sizeof(uintptr);
+	return poolmsize(mainmem, v);
 }
 
+/* this function signature is tied to emu which is tied to the system's libc.h */
 void*
 calloc(ulong n, ulong szelem)
 {
@@ -805,7 +778,7 @@ poolcompact(Pool *pool)
 }
 
 void
-poolsize(Pool *p, u64 max, int contig)
+poolsize(Pool *p, uintptr max, int contig)
 {
 	void *x;
 
@@ -828,7 +801,7 @@ poolsize(Pool *p, u64 max, int contig)
 }
 
 static void
-_poolfault(void *v, char *msg, ulong c)
+_poolfault(void *v, char *msg, uintptr c)
 {
 	setpanic();
 	auditmemloc(msg, v);

@@ -18,6 +18,8 @@ struct Bhdr
 {
 	u32	magic;
 	uintptr	size;
+	intptr	allocpc;
+	intptr	reallocpc;
 	union {
 		uchar data[1];
 		struct {
@@ -52,20 +54,20 @@ struct Btail
 
 #define B2LIMIT(b)	((Bhdr*)((uchar*)b + b->csize))
 
-#define BHDRSIZE	((u32)(((Bhdr*)0)->u.data)+sizeof(Btail))
+#define BHDRSIZE	((uintptr)(((Bhdr*)0)->u.data)+sizeof(Btail))
 
-extern	void	(*poolfault)(void *, char *, ulong);
+extern	void	(*poolfault)(void *, char *, uintptr);
 extern	void	poolinit(void);
-extern	void*	poolalloc(Pool*, ulong);
+extern	void*	poolalloc(Pool*, uintptr);
 extern	void	poolfree(Pool*, void*);
 extern	Bhdr*	poolchain(Pool*);
 extern	int	poolcompact(Pool*);
 extern	void	poolimmutable(void*);
-extern	ulong	poolmsize(Pool*, void*);
+extern	uintptr	poolmsize(Pool*, void*);
 extern	void	poolmutable(void*);
 extern	char*	poolname(Pool*);
 extern	int	poolread(char*, int, uintptr);
-extern	void*	poolrealloc(Pool*, void*, ulong);
+extern	void*	poolrealloc(Pool*, void*, uintptr);
 extern	int	poolsetsize(char*, int);
 extern	void	poolsetcompact(Pool*, void (*)(void*, void*));
 extern	char*	poolaudit(char*(*)(int, Bhdr *));

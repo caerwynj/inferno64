@@ -210,7 +210,7 @@ void		oslopri(void);
 void		ospause(void);
 void		osyield(void);
 void		osreboot(char*, char**);
-ulong	poolmaxsize(void);
+uintptr	poolmaxsize(void);
 Pool*	poolmk(char*, int, int, int);
 void		hnputv(void*, vlong);
 void		hnputl(void*, ulong);
@@ -218,8 +218,8 @@ void		hnputs(void*, ushort);
 vlong		nhgetv(void*);
 ulong		nhgetl(void*);
 ushort		nhgets(void*);
-void*	smalloc(size_t);
-void*	kmalloc(size_t);
+void*	smalloc(uintptr);
+void*	kmalloc(uintptr);
 
 /* Namespace Emulation */
 int		kbind(char*, char*, int);
