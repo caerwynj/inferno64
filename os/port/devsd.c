@@ -1233,7 +1233,7 @@ sdread(Chan *c, void *a, s32 n, s64 off)
 	SDpart *pp;
 	SDreq *r;
 	SDunit *unit;
-	ulong offset;
+	u64 offset;
 	int i, l, m, status;
 
 	offset = off;

@@ -584,25 +584,140 @@ mallocz(ulong size, int clr)
 	return v;
 }
 
-/* TODO ignoring offset and span and hoping it will not be a bug
- * need more testing
- */
-void*
-mallocalign(uintptr size, u32 align, s32 offset, u32 span)
-{
-	void *v;
-	uintptr a;;
+/* on 9front, mallocalign() returns a pointer to a buffer that
+	satisfies the alignment, offset and span requirements.
 
-	USED(offset);
-	USED(span);
-	if(align <= 0)
-		align = 4;
-	if(a = size%align)
-		size += align -a;
-	v = mallocz(size, 1);
-	if(a = (uintptr)v%align)
-		v = (void *)((char *)v + align -a);
-	return v;
+	As inferno keeps track of buffers at a lesser granularity,
+	it is harder to keep track of the small memory areas
+	that will have to be skipped for alignment.
+
+	Instead of taking the responsibility of accounting for
+	those memory areas, this function returns a buffer
+	which will have a pointer that satisfies the size, alignment,
+	offset and span requirements. It will be upto the caller
+	to use it is wants. When free'ing, it needs to ensure that
+	it frees using the Bhdr.u.data pointer and not any other
+	pointer in that buffer.
+
+	Alternate implementation:
+	The free() function finds the Bhdr that contains the
+	pointer being free'ed and frees that Bhdr. This breaks
+	the assumption that the pointer passed to free() is
+	always Bhdr.u.data.
+
+12:25 < joe7> cinap_lenrek: any comments on this? http://okturing.com/src/11617/body
+12:26 < joe7> I have 2 ways of implementing mallocalign on inferno. The second (alternative implementation) approach lies closer to what 9front does.(I think).
+12:27 < joe7> just want to run it by you..
+12:27 < cinap_lenrek> joe7: obviously you want it to be symmetic
+12:27 < cinap_lenrek> like dont push that extra complexity to the caller
+12:27 < cinap_lenrek> the rest is just implementation detail
+12:28 < joe7> izaki, there is a way to read nvram and secstore keys automatically in the boot process.
+12:29 < joe7> cinap_lenrek: so, making the free more robust seems the obvious choice. Instead of assuming that free will always receive the data pointer, we make the assumption that the pointer being freed can be any where in a buffer's data space.
+12:30 < cinap_lenrek> no.
+12:30 < cinap_lenrek> free needs to be called exactly on the pointer returned from mallocalign
+12:30 < joe7> so, someone needs to record the pointer returned by mallocalign..
+12:31 < joe7> the allocator only keeps track of the Bhdr's in the Pool structure now.
+12:31 < cinap_lenrek> or mark it with a header to find the Bhdr
+12:31 < cinap_lenrek> or some padding bytes
+12:31 < joe7> good idea, thanks, will think through.
+12:32 < cinap_lenrek> i think pool has align magic for this
+12:32 < cinap_lenrek> so free is kind of search for the Bhdr
+12:32 < cinap_lenrek> but thats an implementation details
+12:33 < cinap_lenrek> but calling free() on something other than the pointer returned by mallocalign should be undefined
+12:33 < cinap_lenrek> and you shouldnt rely on it
+ */
+static void*
+alignptr(void *v, u32 align, s32 offset)
+{
+	char *c;
+	u32 off;
+
+	c = v;
+	if(align){
+		off = ((u32)(uintptr)c) % align;
+		if(off != offset){
+			offset -= off;
+			if(offset < 0)
+				offset += align;
+			c += offset;
+		}
+	}
+	return c;
+}
+void*
+mallocalign(uintptr dsize, u32 align, s32 offset, u32 span)
+{
+	uintptr asize;
+	void *v;
+	char *c;
+	int skip;
+	Balign *ba;
+	Bhdr *b;
+
+	/*
+	 * allocate block
+	 * 	dsize bytes
+	 *	addr == offset (modulo align)
+	 *	does not cross span-byte block boundary
+	 *
+	 * to satisfy alignment, just allocate an extra
+	 * align bytes and then shift appropriately.
+	 *
+	 * to satisfy span, try once and see if we're
+	 * lucky.  the second time, allocate 2x asize
+	 * so that we definitely get one not crossing
+	 * the boundary.
+	 */
+	if(align){
+		if(offset < 0)
+			offset = align - ((-offset)%align);
+		offset %= align;
+	}
+	asize = dsize+align+sizeof(Balign);
+	v = mallocz(asize, 1);
+	if(v == nil)
+		return nil;
+	if(span && (uintptr)v/span != ((uintptr)v+asize)/span){
+		/* try again */
+		free(v);
+		v = mallocz(2*asize, 1);
+		if(v == nil)
+			return nil;
+	}
+
+	/*
+	 * figure out what pointer we want to return
+	 */
+	c = alignptr(v, align, offset);
+	if(span && (uintptr)c/span != (uintptr)(c+dsize-1)/span){
+		c += span - (uintptr)c%span;
+		c = alignptr(c, align, offset);
+		if((uintptr)c/span != (uintptr)(c+dsize-1)/span){
+			free(v);
+			werrstr("cannot satisfy dsize %lud span %lud with align %lud+%ld", dsize, span, align, offset);
+			return nil;
+		}
+	}
+	skip = c - (char*)v;
+	if(skip == 0){ /* perfect match, Hallelujah */
+		return c;
+	}else if (skip < sizeof(Balign)){
+		/* TODO this situation should be handled, error for now */
+		werrstr("skip %d < sizeof(Balign) %d cannot satisfy dsize %lud span %lud with align %lud+%ld", skip, sizeof(Balign), dsize, span, align, offset);
+		return nil;
+	}else{
+		/* add the Balign header to point back to the header */
+		ba = (Balign*)(c-sizeof(Balign));
+		D2B(b,v);
+		ba->hdr = b;
+		setmalloctag(v, getcallerpc(&dsize));
+		if(0)print("mallocalign dsize %zd align %d 0x%x offset %d span %d\n"
+			"	b 0x%p b->magic 0x%x b->size %zd\n"
+			"	ba 0x%p ba->hdr 0x%p v 0x%p c 0x%p\n",
+			dsize, align, align, offset, span, b, b->magic, b->size,
+			ba, ba->hdr, v, c);
+		return c;
+	}
 }
 
 void
@@ -805,7 +920,7 @@ _poolfault(void *v, char *msg, uintptr c)
 {
 	setpanic();
 	auditmemloc(msg, v);
-	panic("%s %p (from %p/%lux)", msg, v, getcallerpc(&v), c);
+	panic("%s %p (from %p/%zux)", msg, v, getcallerpc(&v), c);
 }
 
 static void
@@ -851,8 +966,9 @@ _auditmemloc(char *str, void *v)
 				goto nextpool;
 			}
 			ec = B2LIMIT(bc);
-			if (((Bhdr*)v >= bc) && ((Bhdr*)v < ec))
+			if (((Bhdr*)v >= bc) && ((Bhdr*)v < ec)){
 				goto found;
+			}
 		}
 		iunlock(&p->l);
 nextpool:	;
@@ -908,7 +1024,8 @@ badchunk:
 		if (fb == v)
 			print(" is %s '%zux\n", fmsg, fsz);
 		else
-			print(" in %s at %p'%zux\n", fmsg, fb, fsz);
+			print(" in %s at %p B2D 0x%p size %zux ec 0x%p next block 0x%p searched address 0x%p\n",
+				fmsg, fb, B2D(fb), fsz, ec, nb, v);
 		dumpvl("area", (uintptr *)((uintptr)v & ~3)-4, 20);
 	}
 }

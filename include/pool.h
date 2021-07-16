@@ -3,6 +3,7 @@
 typedef struct Pool Pool;
 typedef struct Bhdr Bhdr;
 typedef struct Btail Btail;
+typedef struct Balign Balign;
 
 #pragma incomplete Pool
 
@@ -12,6 +13,7 @@ enum
 	MAGIC_F		= 0xbadc0c0a,		/* Free block */
 	MAGIC_E		= 0xdeadbabe,		/* End of arena */
 	MAGIC_I		= 0xabba		/* Block is immutable (hidden from gc) */
+	/* MAGIC_ALIGNED	= 0xa1f1d1c */	/* Block header for the aligned pointer */
 };
 
 struct Bhdr
@@ -44,10 +46,19 @@ struct Btail
 	Bhdr*	hdr;
 };
 
+struct Balign
+{
+	/* u32	magic; */
+	Bhdr*	hdr;
+};
+
 #define B2D(bp)		((void*)bp->u.data)
 #define D2B(b, dp)	b = ((Bhdr*)(((uchar*)dp)-(((Bhdr*)0)->u.data))); \
-			if(b->magic != MAGIC_A && b->magic != MAGIC_I)\
-				poolfault(dp, "alloc:D2B", getcallerpc(&dp));
+			if(b->magic != MAGIC_A && b->magic != MAGIC_I){\
+				b = ((Balign*)((char*)dp-sizeof(Balign)))->hdr; \
+				if(b->magic != MAGIC_A && b->magic != MAGIC_I)\
+					poolfault(dp, "alloc:D2B", getcallerpc(&dp));\
+			}
 #define B2NB(b)		((Bhdr*)((uchar*)b + b->size))
 #define B2PT(b)		((Btail*)((uchar*)b - sizeof(Btail)))
 #define B2T(b)		((Btail*)(((uchar*)b)+b->size-sizeof(Btail)))
