@@ -29,6 +29,8 @@ EMUDIRS=\
 
 
 KERNEL_DIRS=\
+	libfis\
+	libflate\
 	os\
 	os/boot/pc\
 
