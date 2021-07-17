@@ -13,6 +13,7 @@
 Conf conf;
 int idle_spin;
 
+extern ulong kerndate;
 extern void bootscreeninit(void);
 extern int main_pool_pcnt;
 extern int heap_pool_pcnt;
@@ -124,7 +125,7 @@ main(void)
 	i8250console();
 	quotefmtinstall();
 	screeninit();
-	print("\nInferno\n");
+	print("\nInferno release built at %lud\n", kerndate);
 	setupdebug();
 	cpuidentify();
 	meminit0();			/* builds the memmap */
