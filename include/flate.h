@@ -1,5 +1,5 @@
 #pragma	lib	"libflate.a"
-#pragma	src	"/sys/src/libflate"
+#pragma	src	"/usr/inferno/libflate"
 
 /*
  * errors from deflate, deflateinit, deflateblock,

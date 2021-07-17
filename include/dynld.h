@@ -1,6 +1,6 @@
 /* uncomment these lines when installed in /sys/include */
 /*
-#pragma src "/sys/src/libdynld"
+#pragma src "/usr/inferno/libdynld"
 #pragma	lib	"libdynld.a"
 */
 
