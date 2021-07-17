@@ -1,3 +1,20 @@
+<../../../mkconfig
+objtype=386
+SYSTARG=$OSTARG
+OBJTYPE=386
+BIN=$ROOT/Inferno/$OBJTYPE
+LIBDIR=$ROOT/Inferno/$OBJTYPE/lib
+LIBDIRS=$ROOT/libfis $ROOT/libflate $ROOT/libkern
+LIBS=\
+	libfis\
+	libflate\
+	libkern\
+
+LIBFILES=${LIBS:%=$LIBDIR/%.a}
+<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE
+
+BIN=$ROOT/Inferno/$OBJTYPE
+
 TARG=bootia32.efi bootx64.efi efiboot.fat
 HFILES=fns.h mem.h
 IMAGEBASE=0x8000
