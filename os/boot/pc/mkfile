@@ -1,6 +1,19 @@
+<../../../mkconfig
 objtype=386
-</$objtype/mkfile
-BIN=/386
+SYSTARG=$OSTARG
+OBJTYPE=386
+BIN=$ROOT/Inferno/$OBJTYPE
+LIBDIR=$ROOT/Inferno/$OBJTYPE/lib
+LIBDIRS=$ROOT/libfis $ROOT/libflate $ROOT/libkern
+LIBS=\
+	libfis\
+	libflate\
+	libkern\
+
+LIBFILES=${LIBS:%=$LIBDIR/%.a}
+<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE
+
+BIN=$ROOT/Inferno/$OBJTYPE
 
 TARG=9bootiso 9bootpxe 9bootfat 9boothyb mbr pbs
 
@@ -105,3 +118,32 @@ test.dsk: 9bootfat mbr pbs test.iso
 	rm -f /srv/$s
 	unmount /n/$target
 	rm -fr tmp
+	
+# added to cause libfis and libflate to be made automatically:
+
+$ROOT/Inferno/$OBJTYPE/lib/lib%.a:Q:	all-$SHELLTYPE
+	#
+
+rc-lib%.a nt-lib%.a:VQ:
+	echo '@{builtin cd ' $ROOT/lib$stem ';mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE install}'
+	@{builtin cd  $ROOT/lib$stem ;mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE install}
+
+sh-lib%.a:VQ:
+	echo "(cd $ROOT/lib$stem ; mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE install)"
+	(cd $ROOT/lib$stem ; mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE install)
+
+%-sh:QV:
+		for i in $LIBDIRS
+		do
+			echo "(cd $i ; mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE $stem)"
+			(cd $i; mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE $stem)
+		done
+
+%-rc %-nt:QV:
+		for (i in $LIBDIRS)
+		{
+			echo '@{cd $i ; mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE $stem}'
+			@{cd $i; mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE $stem}
+		}
+
+nuke:V:		clean nuke-$SHELLTYPE
