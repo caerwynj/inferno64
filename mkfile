@@ -6,9 +6,13 @@
 #	- commands
 #	- utilities
 
+# TODO libfis and libflate are required by the native kernel and not emu
+#	move them to KERNEL_DIRS(?)
 EMUDIRS=\
 	lib9\
 	libbio\
+	libfis\
+	libflate\
 	libmp\
 	libsec\
 	libmath\
@@ -29,8 +33,6 @@ EMUDIRS=\
 
 
 KERNEL_DIRS=\
-	libfis\
-	libflate\
 	os\
 	os/boot/pc\
 
