@@ -52,6 +52,8 @@ emu:V:	emu/all-$HOSTMODEL
 emuinstall:V:	emu/install-$HOSTMODEL
 emuclean:V:	emu/clean-$HOSTMODEL
 emunuke:V:	emu/nuke-$HOSTMODEL
+# TODO the kernel targets are obsolete(?). definitely need cleanup
+#	mk kernel/pc64-9front tries to build pc64 in os/boot/pc
 kernel:V:	kernel/all-$HOSTMODEL
 kernelall:V:	kernel/all-$HOSTMODEL
 kernelclean:V:	kernel/clean-$HOSTMODEL
@@ -207,6 +209,9 @@ mkdirs-sh:V:
 mkdirs-nt:V:
 	mkdir -p `{cmd /c type lib\emptydirs}
 
+# got the below ideas from plan9front/sys/lib/dist/mkfile
+#	can only be used on 9front. should technically work on plan9 and inferno too.
+
 # build iso using 9front's 9bootfat
 #	details in 9front's
 #		/sys/lib/dist/mkfile
@@ -271,3 +276,76 @@ mkdirs-nt:V:
 		}
 		rm -fr 386 cfg efi
 	}
+
+root=$ROOT
+proto=/n/src9/lib/proto/os
+bootproto=/n/src9/lib/proto/9boot
+
+cd:V:	/tmp/9ferno.386.iso.gz
+
+%.gz:D:	%
+	gzip -9 < $prereq > $target
+
+%.386.iso:
+	@{rfork n
+	objtype=386
+	kernel=/n/src9/$objtype/ipc
+	mk binds
+	mk $target.$pid.pc.iso
+	mv $target.$pid.pc.iso $target
+	}
+
+%.amd64.iso:
+	@{rfork n
+	objtype=amd64
+	kernel=/n/src9/$objtype/ipc64
+	mk binds
+	mk $target.$pid.pc.iso
+	mv $target.$pid.pc.iso $target
+	}
+
+# TODO get rid of the echo + in -p after the proto files are streamlined
+#	replace it with 		-p <{cat $proto $bootproto} \
+%.pc.iso:D:	$root $proto $bootproto $kernel
+	@{rfork n
+	mk binds
+	{	echo 'console=0 b115200'
+		grep -v '^bootfile=' /n/src9/os/pc/plan9.ini
+		echo 'bootfile='^`{echo $kernel | sed 's!^/n/src9!!'}
+	} > /env/plan9.ini
+	aux/stub /n/src9/cfg/plan9.ini
+	bind /env/plan9.ini /n/src9/cfg/plan9.ini
+	cat /n/src9/cfg/plan9.ini
+	disk/mk9660 -c9j -B 386/9bootiso -E 386/efiboot.fat \
+		-p <{echo +} \
+		-s /n/src9 -v 'Inferno 9 Front ('^$objtype^')' $target
+	if(test -r /n/src9/386/9boothyb){
+		dd -if /dev/zero -bs 2048 -count 1024 >> $target
+		disk/partfs -m /n/partfs $target
+		disk=/n/partfs/sdXX
+		disk/mbr -m /n/src9/386/mbr $disk/data
+		@{echo a p1 '$-1' '$'
+			echo t p1 ESP
+			echo A p1
+			echo w
+			echo q} | disk/fdisk -b $disk/data
+		disk/format -b /n/src9/386/pbs -xd -t hard $disk/esp
+		s = esp.$pid
+		dossrv -f $disk/esp $s
+		mount -c /srv/$s /n/esp
+		cp /n/src9/386/9boothyb /n/esp/9bootfat
+		mkdir /n/esp/efi
+		mkdir /n/esp/efi/boot
+		cp /n/src9/386/boot*.efi /n/esp/efi/boot
+		unmount /n/esp
+		rm -f /srv/$s
+	}}
+
+binds:V:
+	bind $root /n/src9
+	bind -a $root/Inferno /n/src9
+	aux/stub -d /n/src9/cfg
+	aux/stub /n/src9/amd64/9pc64
+	bind /root/amd64/9pc64 /n/src9/amd64/9pc64
+	ns
+
