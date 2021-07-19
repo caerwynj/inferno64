@@ -24,7 +24,7 @@ PEFLAGS=$CFLAGS '-DIMAGEBASE='$IMAGEBASE
 all:V: $TARG
 
 install:V: $TARG
-	cp $prereq /386
+	cp $prereq $BIN/
 
 bootia32.efi:	pe32.8 efi.8 fs.8 pxe.8 iso.8 sub.8
 	8l -l -H3 -T$IMAGEBASE -o $target $prereq
