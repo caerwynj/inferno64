@@ -1,0 +1,114 @@
+#!/bin/rc
+rfork en
+
+# TODO this is cinap's 9front release script
+#	need to do this for 9ferno at some point
+
+cd $home/code/plan9front
+
+archs=(amd64 386 arm arm64)
+
+release=9front-`{git/log -s | wc -l}^.^`{git/query HEAD}
+echo release $release
+
+www=$home/www/9front
+rm -f $www/$release.*
+
+. ./sys/lib/rootstub
+. ./sys/lib/rootbind
+
+# preclean
+cd /sys/src
+mk clean
+cd /sys/src/boot
+mk clean
+cd /sys/src/9
+mk clean
+
+# build for cputype
+cd /sys/src
+mk install
+
+# build everything
+for(i in $archs)@{
+	rfork en
+
+	objtype=$i
+	bind -c /n/src9/$i /$i
+
+	# user
+	cd /sys/src
+	mk install
+
+	# kernel
+	switch($objtype){
+	case amd64
+		cd /sys/src/9/pc64
+		mk install
+	case 386
+		cd /sys/src/9/pc
+		mk install
+	case arm
+		cd /sys/src/9/bcm
+		mk 'CONF=pi' install
+		mk 'CONF=pi2' install
+	case arm64
+		cd /sys/src/9/bcm64
+		mk 'CONF=pi3' install
+		mk 'CONF=pi4' install
+	}
+
+	# bootloader
+	switch($objtype){
+	case 386 amd64
+		cd /sys/src/boot/pc
+		mk install
+		cd /sys/src/boot/efi
+		mk install
+	case arm arm64
+		cd /sys/src/boot/bcm
+		mk clean
+		mk
+	}
+}
+
+# postclean
+cd /sys/src
+mk clean
+cd /sys/src/boot
+mk clean
+cd /sys/src/9
+mk clean
+
+# make manpage indices
+cd /sys/man
+mk
+
+# release
+trackers=`{hget https://newtrackon.com/api/live | sed 12q}
+
+webseeds=(\
+	http://9front.org/iso/ \
+	http://lux.felloff.net/usr/cinap_lenrek/9front/ \
+)
+
+for(a in $archs){
+	switch($a){
+	case amd64
+		i=$release.amd64.iso
+	case 386
+		i=$release.386.iso
+	case arm
+		i=$release.pi.img
+	case arm64
+		i=$release.pi3.img
+	}
+	z=$i.gz
+
+	cd /sys/lib/dist
+	mk $www/$z
+
+	cd $www
+	chmod +t $i $z
+	ip/torrent -t^$trackers -w^$webseeds -c $z > $z.torrent
+}
