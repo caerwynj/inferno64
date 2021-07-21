@@ -299,7 +299,7 @@ confinit(void)
 		conf.npage += conf.mem[i].npage;
 	print("conf.npage %d\n", conf.npage);
 
-	conf.nproc = 10 /*+ ((conf.npage*BY2PG)/MiB)*5*/;
+	conf.nproc = 100 + ((conf.npage*BY2PG)/MiB)*5;
 }
 
 void
