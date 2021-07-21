@@ -30,6 +30,7 @@ init(nil: ref Draw->Context, nil: list of string)
 	sys->bind("#i", "/dev", sys->MREPL); 	# draw device
 	sys->bind("#t", "/dev", sys->MAFTER);	# serial line
 	sys->bind("#c", "/dev", sys->MAFTER); 	# console device
+	sys->bind("#S", "/dev", sys->MAFTER); 	# storage device
 	sys->bind("#W","/dev",sys->MAFTER);	# Flash
 #	sys->bind("#O", "/dev", sys->MAFTER);	# Modem
 #	sys->bind("#T","/dev",sys->MAFTER);	# Touchscreen
