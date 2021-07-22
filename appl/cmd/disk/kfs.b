@@ -39,8 +39,8 @@ MAXBUFSIZE:	con 16*1024;
 
 #
 #  fundamental constants
-#
-NAMELEN: con 28;	# size of names, including null byte
+#	NAMELEN 28 -> 144, can add an option -o to use 28 for compatibility, if desired
+NAMELEN: con 144;	# size of names, including null byte
 NDBLOCK:	con 6;	# number of direct blocks in Dentry
 MAXFILESIZE:	con big 16r7FFFFFFF;	# Plan 9's limit (kfs's size is signed)
 
