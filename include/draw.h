@@ -147,14 +147,14 @@ typedef enum
 	Ncomp	= 12,
 } Drawop;
 
-extern	char*	chantostr(char*, u32int);
-extern	u32int	strtochan(char*);
-extern	int		chantodepth(u32int);
+extern	char*	chantostr(char*, u32);
+extern	u32	strtochan(char*);
+extern	int		chantodepth(u32);
 
 struct	Point
 {
-	s32int	x;
-	s32int	y;
+	s32	x;
+	s32	y;
 };
 
 struct Rectangle
@@ -168,7 +168,7 @@ typedef void	(*Reffn)(Image*, Rectangle, void*);
 struct Screen
 {
 	Display	*display;	/* display holding data */
-	s32int	id;		/* id of system-held Screen */
+	s32	id;		/* id of system-held Screen */
 	Image	*image;		/* unused; for reference only */
 	Image	*fill;		/* color to paint behind windows */
 };
@@ -184,27 +184,27 @@ struct Refreshq
 struct Display
 {
 	void*	qlock;
-	s32int		locking;	/*program is using lockdisplay */
-	s32int		dirno;
+	s32		locking;	/*program is using lockdisplay */
+	s32		dirno;
 	void	*datachan;
 	void	*refchan;
 	void	*ctlchan;
-	s32int		imageid;
-	s32int		local;
-	s32int		depth;
-	u32int	chan;
+	s32		imageid;
+	s32		local;
+	s32		depth;
+	u32	chan;
 	void		(*error)(Display*, char*);
 	char		*devdir;
 	char		*windir;
 	char		oldlabel[64];
-	u32int		dataqid;
+	u32		dataqid;
 	Image		*white;
 	Image		*black;
 	Image		*image;
 	Image		*opaque;
 	Image		*transparent;
 	uchar		buf[Displaybufsize+1];	/* +1 for flush message */
-	s32int			bufsize;
+	s32			bufsize;
 	uchar		*bufp;
 	Font		*defaultfont;
 	Subfont		*defaultsubfont;
@@ -217,12 +217,12 @@ struct Display
 struct Image
 {
 	Display		*display;	/* display holding data */
-	s32int		id;		/* id of system-held Image */
+	s32		id;		/* id of system-held Image */
 	Rectangle	r;		/* rectangle in data area, local coords */
 	Rectangle 	clipr;		/* clipping region */
-	s32int		depth;		/* number of bits per pixel */
-	u32int	chan;
-	s32int		repl;		/* flag: data replicates to tile clipr */
+	s32		depth;		/* number of bits per pixel */
+	u32	chan;
+	s32		repl;		/* flag: data replicates to tile clipr */
 	Screen		*screen;	/* 0 if not a window */
 	Image		*next;	/* next in list of windows */
 	Reffn		reffn;
@@ -231,15 +231,15 @@ struct Image
 
 struct RGB
 {
-	u32int	red;
-	u32int	green;
-	u32int	blue;
+	u32	red;
+	u32	green;
+	u32	blue;
 };
 
 /*
  * Subfonts
  *
- * given char c, Subfont *f, Fontchar *i, and Pos32int p, one says
+ * given char c, Subfont *f, Fontchar *i, and Pos32 p, one says
  *	i = f->info+c;
  *	draw(b, Rect(p.x+i->left, p.y+i->top,
  *		p.x+i->left+((i+1)->x-i->x), p.y+i->bottom),
@@ -250,7 +250,7 @@ struct RGB
 
 struct	Fontchar
 {
-	s32int		x;		/* left edge of bits */
+	s32		x;		/* left edge of bits */
 	uchar		top;		/* first non-zero scan-line */
 	uchar		bottom;		/* last non-zero scan-line + 1 */
 	char		left;		/* offset of baseline */
@@ -260,12 +260,12 @@ struct	Fontchar
 struct	Subfont
 {
 	char		*name;
-	s16int		n;		/* number of chars in font */
+	s16		n;		/* number of chars in font */
 	uchar		height;		/* height of image */
 	char		ascent;		/* top of image to baseline */
 	Fontchar 	*info;		/* n+1 character descriptors */
 	Image		*bits;		/* of font */
-	s32int		ref;
+	s32		ref;
 };
 
 enum
@@ -289,23 +289,23 @@ struct Cachefont
 {
 	Rune		min;	/* lowest rune value to be taken from subfont */
 	Rune		max;	/* highest rune value+1 to be taken from subfont */
-	s32int		offset;	/* position in subfont of character at min */
+	s32		offset;	/* position in subfont of character at min */
 	char		*name;			/* stored in font */
 	char		*subfontname;		/* to access subfont */
 };
 
 struct Cacheinfo
 {
-	u16int		x;		/* left edge of bits */
+	u16		x;		/* left edge of bits */
 	uchar		width;		/* width of baseline */
 	schar		left;		/* offset of baseline */
 	Rune		value;	/* value of character at this slot in cache */
-	u16int		age;
+	u16		age;
 };
 
 struct Cachesubf
 {
-	u32int		age;	/* for replacement */
+	u32		age;	/* for replacement */
 	Cachefont	*cf;	/* font info that owns us */
 	Subfont		*f;	/* attached subfont */
 };
@@ -314,14 +314,14 @@ struct Font
 {
 	char		*name;
 	Display		*display;
-	s16int		height;	/* max height of image, interline spacing */
-	s16int		ascent;	/* top of image to baseline */
-	s16int		width;	/* widest so far; used in caching only */	
-	s16int		nsub;	/* number of subfonts */
-	u32int		age;	/* increasing counter; used for LRU */
-	s32int		maxdepth;	/* maximum depth of all loaded subfonts */
-	s32int		ncache;	/* size of cache */
-	s32int		nsubf;	/* size of subfont list */
+	s16		height;	/* max height of image, interline spacing */
+	s16		ascent;	/* top of image to baseline */
+	s16		width;	/* widest so far; used in caching only */	
+	s16		nsub;	/* number of subfonts */
+	u32		age;	/* increasing counter; used for LRU */
+	s32		maxdepth;	/* maximum depth of all loaded subfonts */
+	s32		ncache;	/* size of cache */
+	s32		nsubf;	/* size of subfont list */
 	Cacheinfo	*cache;
 	Cachesubf	*subf;
 	Cachefont	**sub;	/* as read from file */
@@ -334,8 +334,8 @@ struct Font
 /*
  * Image management
  */
-extern Image*	_allocimage(Image*, Display*, Rectangle, u32int, int, u32int, int, int);
-extern Image*	allocimage(Display*, Rectangle, u32int, int, u32int);
+extern Image*	_allocimage(Image*, Display*, Rectangle, u32, int, u32, int, int);
+extern Image*	allocimage(Display*, Rectangle, u32, int, u32);
 extern uchar*	bufimage(Display*, int);
 extern int	bytesperline(Rectangle, int);
 extern void	closedisplay(Display*);
@@ -358,25 +358,25 @@ extern int	wordsperline(Rectangle, int);
 extern int	writeimage(int, Image*, int);
 extern Image*	namedimage(Display*, char*);
 extern int	nameimage(Image*, char*, int);
-extern Image* allocimagemix(Display*, u32int, u32int);
+extern Image* allocimagemix(Display*, u32, u32);
 
 /*
  * Colors
  */
 extern	void	readcolmap(Display*, RGB*);
 extern	void	writecolmap(Display*, RGB*);
-extern	u32int	setalpha(u32int, uchar);
+extern	u32	setalpha(u32, uchar);
 
 /*
  * Windows
  */
 extern Screen*	allocscreen(Image*, Image*, int);
-extern Image*	_allocwindow(Image*, Screen*, Rectangle, int, u32int);
-extern Image*	allocwindow(Screen*, Rectangle, int, u32int);
+extern Image*	_allocwindow(Image*, Screen*, Rectangle, int, u32);
+extern Image*	allocwindow(Screen*, Rectangle, int, u32);
 extern void	bottomnwindows(Image**, int);
 extern void	bottomwindow(Image*);
 extern int	freescreen(Screen*);
-extern Screen*	publicscreen(Display*, int, u32int);
+extern Screen*	publicscreen(Display*, int, u32);
 extern void	topnwindows(Image**, int);
 extern void	topwindow(Image*);
 extern int	originwindow(Image*, Point, Point);
@@ -384,8 +384,8 @@ extern int	originwindow(Image*, Point, Point);
 /*
  * Geometry
  */
-extern Point		Pt(s32int, s32int);
-extern Rectangle	Rect(s32int, s32int, s32int, s32int);
+extern Point		Pt(s32, s32);
+extern Rectangle	Rect(s32, s32, s32, s32);
 extern Rectangle	Rpt(Point, Point);
 extern Point		addpt(Point, Point);
 extern Point		subpt(Point, Point);
@@ -408,8 +408,8 @@ extern Point	drawrepl(Rectangle, Point);
 extern int		rgb2cmap(int, int, int);
 extern int		cmap2rgb(int);
 extern int		cmap2rgba(int);
-extern void		icossin(int, s32int*, s32int*);
-extern void		icossin2(s32int, s32int, s32int*, s32int*);
+extern void		icossin(int, s32*, s32*);
+extern void		icossin2(s32, s32, s32*, s32*);
 
 /*
  * Graphics
@@ -513,9 +513,9 @@ extern	int	_cursorfd;
 extern	int	_drawdebug;	/* set to 1 to see errors from flushimage */
 
 #define	BG16INT(p)		(((p)[0]<<0) | ((p)[1]<<8))
-#define	BG32INT(p)		((s32int)((BG16INT(p)<<0) | (BG16INT(p+2)<<16)))
+#define	BG32INT(p)		((s32)((BG16INT(p)<<0) | (BG16INT(p+2)<<16)))
 #define	BP16INT(p, v)		((p)[0]=(v), (p)[1]=((v)>>8))
-#define	BP32INT(p, v)		(BP16INT(p, ((s32int)v)), BP16INT(p+2, ((s32int)v)>>16))
+#define	BP32INT(p, v)		(BP16INT(p, ((s32)v)), BP16INT(p+2, ((s32)v)>>16))
 
 /*
  * Compressed image file parameters
@@ -529,7 +529,7 @@ extern	void	_twiddlecompressed(uchar*, int);
 extern	int	_compblocksize(Rectangle, int);
 
 /* XXX backwards helps; should go */
-extern	u32int	drawld2chan[];
+extern	u32	drawld2chan[];
 extern	void		drawsetdebug(int);
 
 /*
@@ -549,7 +549,7 @@ extern	void	font_close(Font*);
 */
 #define	IRECT(r)	((Rectangle){IPOINT((r).min),IPOINT((r).max)})
 #define	DRECT(r)	((Draw_Rect){DPOINT((r).min),DPOINT((r).max)})
-#define	IPOINT(p)	((Point){(s32int)((p).x),(s32int)((p).y)})
+#define	IPOINT(p)	((Point){(s32)((p).x),(s32)((p).y)})
 #define	DPOINT(p)	((Draw_Point){(p).x,(p).y})
 
 #define P2P(p1, p2)	(p1).x = (p2).x, (p1).y = (p2).y
