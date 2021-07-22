@@ -6,10 +6,9 @@ CONF=pc64			#default configuration
 CONFLIST=pc64
 CLEANCONFLIST=pc64
 
-ROOT=/mnt/term/home/j/local/plan9/custom/inferno-os
 SYSTARG=Inferno # $OSTARG
 OBJTYPE=amd64 # 386
-INSTALLDIR=$ROOT/Inferno/$OBJTYPE/bin	#path of directory where kernel is installed
+INSTALLDIR=$ROOT/Inferno/$OBJTYPE/	#path of directory where kernel is installed
 #INSTALLDIR=/$OBJTYPE
 
 # must match mem.h
