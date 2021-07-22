@@ -1787,8 +1787,10 @@ rwstat(cp: ref Chan, f: ref Tmsg.Wstat): ref Rmsg
 	# 'type' or'ed with the old directory mode;
 	# else neither are defaults, use the new mode but check
 	# it agrees with 'type'.
-
-	if(dir.qid.qtype == 16rFF && dir.mode == ~0){
+	# checking for the default value of 16rFFFFFFFF also as the
+	# conversion from Dir.mode (u32) to Sys_Dir.mode(intptr)
+	# loses the top 4 bytes and ~0 will not match in those circumstances
+	if(dir.qid.qtype == 16rFF && (dir.mode == ~0||big dir.mode == big 16rFFFFFFFF)){
 		dir.mode = d.mode & 8r777;
 		if(d.mode & DLOCK)
 			dir.mode |= DMEXCL;
@@ -1800,8 +1802,9 @@ rwstat(cp: ref Chan, f: ref Tmsg.Wstat): ref Rmsg
 	else if(dir.qid.qtype == 16rFF){
 		# nothing to do
 	}
-	else if(dir.mode == ~0)
+	else if(dir.mode == ~0||big dir.mode == big 16rFFFFFFFF){
 		dir.mode = (dir.qid.qtype<<24)|(d.mode & 8r777);
+	}
 	else if(dir.qid.qtype != ((dir.mode>>24) & 16rFF)){
 		d.put();
 		return ferr(f, Eqidmode, file, p1);

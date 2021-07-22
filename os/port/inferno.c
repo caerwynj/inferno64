@@ -385,6 +385,13 @@ unpackdir(Dir *d, Sys_Dir *sd)
 	sd->qid.path = d->qid.path;
 	sd->qid.vers = d->qid.vers;
 	sd->qid.qtype = d->qid.type;
+	/* this is not proper. I should not
+		be checking just for ~0 but also for 16rffffffff
+		while checking for the default value of ~0 */
+	/*if(d->mode == ~0)
+		sd->mode = ~0;
+	else
+		sd->mode = d->mode;*/
 	sd->mode = d->mode;
 	sd->atime = d->atime;
 	sd->mtime = d->mtime;
