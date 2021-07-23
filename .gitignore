@@ -342,3 +342,9 @@ y.debug
 # ignore the kernels built
 /Inferno/386/ipc
 /Inferno/amd64/ipc64
+
+os/init/*.dis
+os/init/*.sbl
+os/pc64/pc64.root.s
+
+
