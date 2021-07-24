@@ -426,7 +426,12 @@ mkdir(d: ref Dir)
 	}
 	fd := sys->create(newfile, Sys->OREAD, d.mode);
 	nd := sys->nulldir;
-	nd.mode = d.mode;
+	# if dir, then send the default value of mode to avoid the Enotd error
+	#	raised by kfs
+	#<- Tmsg.Wstat(1,163,Dir("","","joe",Qid(16rffffffffffffffff,-1,16rff),8r20000000755,-1,1627005381,-1,16rffff,-1))
+	#-> Rmsg.Error(1,"wstat -- attempt to change directory")
+	if(d.mode & Sys->DMDIR == 0) # file
+		nd.mode = d.mode;
 	nd.gid = d.gid;
 	nd.mtime = d.mtime;
 	if(fd == nil){
