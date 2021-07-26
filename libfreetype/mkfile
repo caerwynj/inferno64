@@ -25,11 +25,11 @@ OFILES=\
 #	type1cid.$O\
 #	winfnt.$O\
 
-<$ROOT/mkfiles/mksyslib-$SHELLTYPE
+<$SRC/mkfiles/mksyslib-$SHELLTYPE
 
-CFLAGS= $ANSICPP $CFLAGS -I$ROOT/include/freetype -I.
+CFLAGS= $ANSICPP $CFLAGS -I$SRC/include/freetype -I.
 
-freetype.$O:	$ROOT/include/freetype.h
+freetype.$O:	$SRC/include/freetype.h
 
 # FreeType is organised by #include of .c files
 # here are the necessary depenencies

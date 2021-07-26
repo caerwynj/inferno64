@@ -25,9 +25,9 @@ OFILES=	\
 		writepageauxilliary.$O\
 
 HFILES=\
-	$ROOT/include/nandfs.h \
-	$ROOT/include/logfs.h \
+	$SRC/include/nandfs.h \
+	$SRC/include/logfs.h \
 	local.h
 
-<$ROOT/mkfiles/mksyslib-$SHELLTYPE
+<$SRC/mkfiles/mksyslib-$SHELLTYPE
 

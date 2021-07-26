@@ -31,7 +31,7 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/svc/webget
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis
 
 install:V:	install-logs
 

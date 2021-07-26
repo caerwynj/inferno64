@@ -24,4 +24,4 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/grid/lib
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

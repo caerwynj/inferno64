@@ -21,4 +21,4 @@ $BIN/guide : guide
 $BIN/readme : readme
 	rm -f $BIN/readme && cp readme $BIN/readme
 
-<$ROOT/mkfiles/mksubdirs
+<$SRC/mkfiles/mksubdirs

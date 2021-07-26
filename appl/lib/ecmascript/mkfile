@@ -20,4 +20,4 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/lib
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

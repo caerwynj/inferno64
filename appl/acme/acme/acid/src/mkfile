@@ -17,4 +17,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/acme/acid
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

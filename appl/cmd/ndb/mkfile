@@ -25,4 +25,4 @@ MODULES=\
 
 DISBIN=$ROOT/dis/ndb
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

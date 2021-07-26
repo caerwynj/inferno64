@@ -36,7 +36,7 @@ OFILES=\
 
 HFILES=../include/mach.h ../include/a.out.h bootexec.h elf.h ureg4.h ureg6.h ureg8.h uregk.h uregv.h ureg5.h
 
-<$ROOT/mkfiles/mksyslib-$SHELLTYPE
+<$SRC/mkfiles/mksyslib-$SHELLTYPE
 CFLAGS= $CFLAGS -I../include -I..
 
 package:QV:

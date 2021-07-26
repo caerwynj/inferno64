@@ -18,7 +18,7 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/grid/demo
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis
 
 $ROOT/dis/grid/demo/blur.dis:	blur.dis
 	rm -f $target && cp blur.dis $target

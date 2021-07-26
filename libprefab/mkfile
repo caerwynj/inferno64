@@ -13,9 +13,9 @@ OFILES=\
 	textelement.$O\
 
 HFILES=\
-	$ROOT/include/draw.h\
-	$ROOT/include/prefab.h\
+	$SRC/include/draw.h\
+	$SRC/include/prefab.h\
 
-<$ROOT/mkfiles/mksyslib-$SHELLTYPE
+<$SRC/mkfiles/mksyslib-$SHELLTYPE
 
-$OFILES:	$ROOT/module/prefab.m
+$OFILES:	$SRC/module/prefab.m

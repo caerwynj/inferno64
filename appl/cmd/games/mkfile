@@ -10,4 +10,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/games
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

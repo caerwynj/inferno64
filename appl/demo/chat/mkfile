@@ -19,7 +19,7 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/demo/chat
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis
 
 SHFILES=${SHTARG:%.sh=$DISBIN/%}
 install:V:	$SHFILES

@@ -17,4 +17,4 @@ DIRS=\
 	tiny\
 	wm\
 
-<$ROOT/mkfiles/mksubdirs
+<$SRC/mkfiles/mksubdirs

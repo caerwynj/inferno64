@@ -21,4 +21,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/acme/dis
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

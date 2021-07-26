@@ -30,5 +30,5 @@ $BIN/guide : guide
 $BIN/readme : readme
 	rm -f $BIN/readme && cp readme $BIN/readme
 
-<$ROOT/mkfiles/mkdis
-<$ROOT/mkfiles/mksubdirs
+<$SRC/mkfiles/mkdis
+<$SRC/mkfiles/mksubdirs

@@ -32,7 +32,7 @@ LOGS=	httpd.debug\
 
 DISBIN=$ROOT/dis/svc/httpd
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis
 
 install:V: 	install-logs-$SHELLTYPE
 

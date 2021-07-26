@@ -4,7 +4,7 @@ PORTHFILES=\
 	../port/portdat.h\
 	../port/portfns.h\
 
-LIBFILES=${LIBS:%=$ROOT/Inferno/$OBJTYPE/lib/lib%.a}
+LIBFILES=${LIBS:%=$SRC/Inferno/$OBJTYPE/lib/lib%.a}
 
 CLEANEXTRA=
 
@@ -31,7 +31,7 @@ all:V:		default-$SHELLTYPE
 acid:V: i$CONF.acid
 i$CONF.acid:V: $SHELLTYPE-i$CONF.acid
 
-LIBHDIRS= -I$ROOT/libmp/port -I$ROOT/libsec/port
+LIBHDIRS= -I$SRC/libmp/port -I$SRC/libsec/port
 
 
 rc-i$CONF.acid nt-i$CONF.acid:V: i$CONF
@@ -56,12 +56,12 @@ sh-i$CONF.acid:V: i$CONF
 lib%.a:V:	$SHELLTYPE-lib%.a
 
 rc-lib%.a nt-lib%.a:VQ:
-		echo '@{builtin cd' $ROOT/lib$stem ';' mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE install'}'
-		@{builtin cd $ROOT/lib$stem; mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE install}
+		echo '@{builtin cd' $SRC/lib$stem ';' mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE install'}'
+		@{builtin cd $SRC/lib$stem; mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE install}
 
 sh-lib%.a:VQ:
-		echo "(cd $ROOT/lib$stem ; mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE install)"
-		(cd $ROOT/lib$stem; mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE install)
+		echo "(cd $SRC/lib$stem ; mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE install)"
+		(cd $SRC/lib$stem; mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE install)
 
 %-rc %-nt:V:
 		for(i in $CONFLIST)
@@ -89,15 +89,15 @@ cleanconf-rc cleanconf-nt:V:
 nuke-sh:QV:
 		for i in $LIBDIRS
 		do
-			echo "(cd $ROOT/lib$i ; mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE nuke)"
-			(cd $ROOT/lib$i; mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE nuke)
+			echo "(cd $SRC/lib$i ; mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE nuke)"
+			(cd $SRC/lib$i; mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE nuke)
 		done
 
 nuke-rc nuke-nt:QV:
 		for (i in $LIBDIRS)
 		{
-			echo '@{cd $ROOT/lib$i ; mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE nuke}'
-			@{cd $ROOT/lib$i; mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE nuke}
+			echo '@{cd $SRC/lib$i ; mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE nuke}'
+			@{cd $SRC/lib$i; mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE nuke}
 		}
 
 nuke:V:		clean nuke-$SHELLTYPE
@@ -111,17 +111,17 @@ errstr.h:	../port/error.h
 ../init/%.dis:	../init/%.b
 		cd ../init; mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE $stem.dis
 
-$ROOT/libinterp/runt.h:
-		cd $ROOT/libinterp
+$SRC/libinterp/runt.h:
+		cd $SRC/libinterp
 		mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE runt.h
 
-RUNT=$ROOT/libinterp/runt.h		# for culling dependencies
-INTERP=$ROOT/include/interp.h
+RUNT=$SRC/libinterp/runt.h		# for culling dependencies
+INTERP=$SRC/include/interp.h
 
 alloc.$O:	$INTERP
 devdbg.$O:	$INTERP
 
-devmnt.$O:	$ROOT/include/fcall.h
+devmnt.$O:	$SRC/include/fcall.h
 devns16552.$O:	../port/netif.h
 devns16552.$O:	ns16552.h
 devpipe.$O:	$INTERP
@@ -139,11 +139,11 @@ main.$O:	../port/error.h
 netif.$O:	../port/netif.h
 proc.$O:	errstr.h	$INTERP
 screen.$O:	screen.h
-trap.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
+trap.$O:	$SRC/Inferno/$OBJTYPE/include/ureg.h
 
 devroot.$O:	$CONF.root.h
 $CONF.$O:	$CONF.root.h
-$CONF.root.s $CONF.root.h: $CONF ../init/$INIT.dis ../port/mkroot $ROOTFILES
+$CONF.root.s $CONF.root.h: $CONF ../init/$INIT.dis ../port/mkroot $SRCFILES
 	$SHELLNAME ../port/mkroot $CONF
 
-%.$O:	$ROOT/Inferno/$OBJTYPE/include/u.h ../port/lib.h mem.h dat.h fns.h io.h ../port/error.h ../port/portdat.h ../port/portfns.h
+%.$O:	$SRC/Inferno/$OBJTYPE/include/u.h ../port/lib.h mem.h dat.h fns.h io.h ../port/error.h ../port/portdat.h ../port/portfns.h

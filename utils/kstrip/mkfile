@@ -6,8 +6,8 @@ OFILES=	kstrip.$O\
 
 LIBS=	mach bio 9
 
-BIN=$ROOT/$OBJDIR/bin
+BIN=$SRC/$OBJDIR/bin
 
-<$ROOT/mkfiles/mkone-$SHELLTYPE
+<$SRC/mkfiles/mkone-$SHELLTYPE
 
 CFLAGS=	$CFLAGS -I../include

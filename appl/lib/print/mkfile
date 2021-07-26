@@ -21,6 +21,6 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/lib/print
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis
 # force compilation or it's very slow
 LIMBOFLAGS= -c $LIMBOFLAGS

@@ -10,7 +10,7 @@ SFILES=\
 	mpvecsub.s\
 	mpdigdiv.s\
 
-HFILES=$ROOT/Inferno/$OBJTYPE/include/u.h $ROOT/include/mp.h ../port/dat.h
+HFILES=$SRC/Inferno/$OBJTYPE/include/u.h $SRC/include/mp.h ../port/dat.h
 
 OFILES=${SFILES:%.s=%.$O}
 
@@ -18,4 +18,4 @@ UPDATE=mkfile\
 	$HFILES\
 	$SFILES\
 
-<$ROOT/mkfiles/mksyslib-$SHELLTYPE
+<$SRC/mkfiles/mksyslib-$SHELLTYPE

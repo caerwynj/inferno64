@@ -19,4 +19,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/spki
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

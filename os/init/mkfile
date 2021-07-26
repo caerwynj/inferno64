@@ -11,7 +11,7 @@ clean nuke:V:
 	rm -f *.dis *.sbl
 
 INCLD=\
-	-I$ROOT/module\
+	-I$SRC/module\
 
 %.dis:	%.b
 	limbo $INCLD -gw $stem.b

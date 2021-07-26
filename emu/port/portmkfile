@@ -1,9 +1,9 @@
 PORTHFILES=\
-	$ROOT/$OBJDIR/include/lib9.h\
-	$ROOT/$OBJDIR/include/emu.h\
-	$ROOT/include/fcall.h\
-	$ROOT/include/interp.h\
-	$ROOT/include/draw.h\
+	$SRC/$OBJDIR/include/lib9.h\
+	$SRC/$OBJDIR/include/emu.h\
+	$SRC/include/fcall.h\
+	$SRC/include/interp.h\
+	$SRC/include/draw.h\
 	../port/error.h\
 	../port/dat.h\
 	../port/fns.h\
@@ -41,9 +41,9 @@ acid:V: i$CONF.acid
 
 i$CONF.acid:	i$CONF
 	{
-		for (i in `{srclist -ec -r $ROOT/ i$CONF}) {
+		for (i in `{srclist -ec -r $SRC/ i$CONF}) {
 			echo '//FILE: ' $i
-			$CC -I. -I../port -I$ROOT/Inferno/$OBJTYPE/include -I$ROOT/include -I$ROOT/libinterp '-DKERNDATE='$KERNDATE -a $i
+			$CC -I. -I../port -I$SRC/Inferno/$OBJTYPE/include -I$SRC/include -I$SRC/libinterp '-DKERNDATE='$KERNDATE -a $i
 		}
 		echo 'include ("inferno");'
 	} >i$CONF.acid
@@ -51,12 +51,12 @@ i$CONF.acid:	i$CONF
 lib%.a:V:	$SHELLTYPE-lib%.a
 
 rc-lib%.a nt-lib%.a:VQ:
-		echo '@{builtin cd' $ROOT/lib$stem '; mk $MKFLAGS SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE install}'
-		@{builtin cd $ROOT/lib$stem; mk $MKFLAGS 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE install}
+		echo '@{builtin cd' $SRC/lib$stem '; mk $MKFLAGS SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE install}'
+		@{builtin cd $SRC/lib$stem; mk $MKFLAGS 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE install}
 
 sh-lib%.a:VQ:
-		echo "(cd $ROOT/lib$stem ; mk $MKFLAGS SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE install)"
-		(cd $ROOT/lib$stem; mk $MKFLAGS 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE install)
+		echo "(cd $SRC/lib$stem ; mk $MKFLAGS SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE install)"
+		(cd $SRC/lib$stem; mk $MKFLAGS 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE install)
 
 %-rc %-nt:V:
 		for(i in $CONFLIST)
@@ -88,15 +88,15 @@ cleanconf-nt:V:
 nuke-sh:QV:
 		for i in $LIBDIRS
 		do
-			echo "(cd $ROOT/lib$i ; mk $MKFLAGS SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE nuke)"
-			(cd $ROOT/lib$i; mk $MKFLAGS 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE nuke)
+			echo "(cd $SRC/lib$i ; mk $MKFLAGS SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE nuke)"
+			(cd $SRC/lib$i; mk $MKFLAGS 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE nuke)
 		done
 
 nuke-rc nuke-nt:QV:
 		for (i in $LIBDIRS)
 		{
-			echo '@{cd $ROOT/lib$i ; mk $MKFLAGS SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE nuke}'
-			@{cd $ROOT/lib$i; mk $MKFLAGS 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE nuke}
+			echo '@{cd $SRC/lib$i ; mk $MKFLAGS SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE nuke}'
+			@{cd $SRC/lib$i; mk $MKFLAGS 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE nuke}
 		}
 
 nuke:V:		clean nuke-$SHELLTYPE
@@ -111,36 +111,36 @@ errstr.h:	../port/error.h
 ../init/%.dis:	../init/%.b
 		cd ../init; mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE $stem.dis
 
-$ROOT/libinterp/runt.h:
-		cd $ROOT/libinterp
+$SRC/libinterp/runt.h:
+		cd $SRC/libinterp
 		mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE runt.h
 
-INTERP=$ROOT/include/interp.h
-RUNT=$ROOT/libinterp/runt.h		# for culling dependencies
+INTERP=$SRC/include/interp.h
+RUNT=$SRC/libinterp/runt.h		# for culling dependencies
 
 alloc.$O: ../../include/pool.h\
 		$INTERP
-devcons.$O:	$ROOT/include/version.h
-devdraw.$O:	$ROOT/include/draw.h\
-		$ROOT/include/memdraw.h\
-		$ROOT/include/memlayer.h
+devcons.$O:	$SRC/include/version.h
+devdraw.$O:	$SRC/include/draw.h\
+		$SRC/include/memdraw.h\
+		$SRC/include/memlayer.h
 devmem.$O:	$INTERP
 devpipe.$O:	$INTERP
 devprof.$O:	$INTERP
-devprog.$O:	$ROOT/libinterp/runt.h\
+devprog.$O:	$SRC/libinterp/runt.h\
 			$INTERP
 devsign.$O:	$INTERP
-devsign.$O: $ROOT/libkeyring/keys.h
-devsrv.$O:	$ROOT/libinterp/runt.h\
+devsign.$O: $SRC/libkeyring/keys.h
+devsrv.$O:	$SRC/libinterp/runt.h\
 		$INTERP
 devtk.$O:	$INTERP
 dis.$O:	$INTERP
 discall.$O:	$INTERP
 exception.$O:	$INTERP
-inferno.$O:	$ROOT/libinterp/runt.h\
+inferno.$O:	$SRC/libinterp/runt.h\
 		$INTERP
 devmnt.$O: ../../include/fcall.h
-main.$O:	$ROOT/include/version.h
+main.$O:	$SRC/include/version.h
 main.$O:	../port/error.h\
 		$INTERP
 proc.$O:	errstr.h\
@@ -164,7 +164,7 @@ audio.c:N:	../port/audio-tbls.c
 audio.c:N:	../port/audio.h
 
 srv.$O:			srv.h srvm.h
-srv.h srvm.h:D:		$ROOT/module/srvrunt.b $ROOT/module/srv.m
+srv.h srvm.h:D:		$SRC/module/srvrunt.b $SRC/module/srv.m
 			rm -f $alltarget
-			limbo -a -I$ROOT/module $ROOT/module/srvrunt.b >srv.h
-			limbo -t Srv -I$ROOT/module $ROOT/module/srvrunt.b >srvm.h
+			limbo -a -I$SRC/module $SRC/module/srvrunt.b >srv.h
+			limbo -t Srv -I$SRC/module $SRC/module/srvrunt.b >srvm.h

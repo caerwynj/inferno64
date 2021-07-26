@@ -13,4 +13,4 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/lib/encoding
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

@@ -21,4 +21,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/ip/nppp
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

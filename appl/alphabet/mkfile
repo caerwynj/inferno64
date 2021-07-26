@@ -32,7 +32,7 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/alphabet
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis
 LIMBOFLAGS=-F $LIMBOFLAGS
 install:V:	$INS
 
@@ -45,5 +45,5 @@ uninstall:V:
 $ROOT/dis/sh/alphabet.dis: alphabet.shmod.dis
 	rm -f $ROOT/dis/sh/alphabet.dis && cp alphabet.shmod.dis $ROOT/dis/sh/alphabet.dis
 
-<$ROOT/mkfiles/mksubdirs
+<$SRC/mkfiles/mksubdirs
 

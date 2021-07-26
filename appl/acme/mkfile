@@ -76,8 +76,8 @@ DISBIN=$ROOT/dis/acme
 
 all:V:	acme.dis
 
-<$ROOT/mkfiles/mkdis
-<$ROOT/mkfiles/mksubdirs
+<$SRC/mkfiles/mkdis
+<$SRC/mkfiles/mksubdirs
 
 install:V:	$ROOT/dis/acme.dis
 

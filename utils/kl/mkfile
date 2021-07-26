@@ -23,9 +23,9 @@ HFILES=\
 
 LIBS=bio 9		# order is important
 
-BIN=$ROOT/$OBJDIR/bin
+BIN=$SRC/$OBJDIR/bin
 
-<$ROOT/mkfiles/mkone-$SHELLTYPE
+<$SRC/mkfiles/mkone-$SHELLTYPE
 
 enam.$O:	../kc/enam.c
 	$CC $CFLAGS ../kc/enam.c

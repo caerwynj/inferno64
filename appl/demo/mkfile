@@ -11,4 +11,4 @@ DIRS=\
 	whiteboard\
 
 
-<$ROOT/mkfiles/mksubdirs
+<$SRC/mkfiles/mksubdirs

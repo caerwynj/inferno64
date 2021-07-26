@@ -11,7 +11,7 @@ LIBS=\
 	libkern\
 
 LIBFILES=${LIBS:%=$LIBDIR/%.a}
-<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE
+<$SRC/mkfiles/mkfile-$SYSTARG-$OBJTYPE
 
 BIN=$ROOT/Inferno/$OBJTYPE
 
@@ -125,12 +125,12 @@ $ROOT/Inferno/$OBJTYPE/lib/lib%.a:Q:	all-$SHELLTYPE
 	#
 
 rc-lib%.a nt-lib%.a:VQ:
-	echo '@{builtin cd ' $ROOT/lib$stem ';mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE install}'
-	@{builtin cd  $ROOT/lib$stem ;mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE install}
+	echo '@{builtin cd ' $SRC/lib$stem ';mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE install}'
+	@{builtin cd  $SRC/lib$stem ;mk 'SHELLTYPE='$SHELLTYPE 'SYSTARG='$SYSTARG 'OBJTYPE='$OBJTYPE install}
 
 sh-lib%.a:VQ:
-	echo "(cd $ROOT/lib$stem ; mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE install)"
-	(cd $ROOT/lib$stem ; mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE install)
+	echo "(cd $SRC/lib$stem ; mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE install)"
+	(cd $SRC/lib$stem ; mk SHELLTYPE=$SHELLTYPE SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE install)
 
 %-sh:QV:
 		for i in $LIBDIRS

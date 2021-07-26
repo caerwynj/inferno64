@@ -20,4 +20,4 @@ MODULES=\
 
 DISBIN=$ROOT/dis/lego
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

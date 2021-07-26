@@ -12,7 +12,7 @@ AS=		6a
 ASFLAGS=
 
 CC=		6c
-CFLAGS=		-wFVT -I$ROOT/Inferno/$OBJTYPE/include -I$ROOT/Inferno/include -I$ROOT/include
+CFLAGS=		-wFVT -I$SRC/Inferno/$OBJTYPE/include -I$SRC/Inferno/include -I$SRC/include
 ANSICPP= -p
 
 LD=		6l

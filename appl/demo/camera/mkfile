@@ -28,7 +28,7 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/demo/camera
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis
 
 $DISBIN/%.bit:		%.bit
 	rm -f $target && cp $stem.bit $target

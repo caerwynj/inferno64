@@ -13,4 +13,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/acme/mail
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

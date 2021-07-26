@@ -40,4 +40,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/install
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

@@ -4,13 +4,13 @@ TARG=sed
 
 OFILES=	sed.$O\
 
-HFILES= $ROOT/include/bio.h\
+HFILES= $SRC/include/bio.h\
 	../include/regexp.h\
 
 LIBS=regexp bio 9		# libbio.a uses lib9.a so order matters.
 
 CFLAGS=$CFLAGS -I../include
 
-BIN=$ROOT/$OBJDIR/bin
+BIN=$SRC/$OBJDIR/bin
 
-<$ROOT/mkfiles/mkone-$SHELLTYPE
+<$SRC/mkfiles/mkone-$SHELLTYPE

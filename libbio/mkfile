@@ -20,6 +20,6 @@ OFILES=\
 	bvprint.$O\
 	bwrite.$O\
 
-HFILES=	$ROOT/include/bio.h
+HFILES=	$SRC/include/bio.h
 
-<$ROOT/mkfiles/mksyslib-$SHELLTYPE
+<$SRC/mkfiles/mksyslib-$SHELLTYPE

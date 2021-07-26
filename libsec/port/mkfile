@@ -21,8 +21,8 @@ ALLOFILES=${CFILES:%.c=%.$O}
 OFILES=	`{$SHELLNAME ./reduce-$SHELLTYPE $O $TARGMODEL-$OBJTYPE $ALLOFILES }
 
 HFILES=\
-	$ROOT/include/libsec.h\
-	$ROOT/libmp/port/os.h\
+	$SRC/include/libsec.h\
+	$SRC/libmp/port/os.h\
 
 CFLAGS=$CFLAGS -I../../libmp/port
 
@@ -30,4 +30,4 @@ UPDATE=mkfile\
 	$HFILES\
 	$CFILES\
 
-<$ROOT/mkfiles/mksyslib-$SHELLTYPE
+<$SRC/mkfiles/mksyslib-$SHELLTYPE

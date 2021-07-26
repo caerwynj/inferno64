@@ -7,10 +7,10 @@ FILES=\
 	md5block\
 	sha1block\
 
-HFILES=$ROOT/include/libsec.h
+HFILES=$SRC/include/libsec.h
 
 SFILES=${FILES:%=%.s}
 
 OFILES=${FILES:%=%.$O}
 
-<$ROOT/mkfiles/mksyslib-$SHELLTYPE
+<$SRC/mkfiles/mksyslib-$SHELLTYPE

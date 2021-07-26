@@ -7,6 +7,6 @@ OFILES=\
 	dynloadfd.$O\
 	dynld.$O\
 
-HFILES=$ROOT/$SYSTARG/$OBJTYPE/include/lib9.h\
+HFILES=$SRC/$SYSTARG/$OBJTYPE/include/lib9.h\
 
-<$ROOT/mkfiles/mksyslib-$SHELLTYPE
+<$SRC/mkfiles/mksyslib-$SHELLTYPE

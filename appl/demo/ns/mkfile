@@ -16,7 +16,7 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/demo/ns
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis
 
 SHFILES=${SHTARG:%.sh=$DISBIN/%}
 install:V:	$SHFILES

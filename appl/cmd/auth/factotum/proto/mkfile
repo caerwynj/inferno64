@@ -21,4 +21,4 @@ MODULES=\
 
 DISBIN=$ROOT/dis/auth/proto
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

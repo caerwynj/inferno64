@@ -25,4 +25,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/zip
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

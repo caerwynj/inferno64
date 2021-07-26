@@ -13,4 +13,4 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/lib/usb
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

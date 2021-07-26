@@ -17,5 +17,5 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/alphabet
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis
 LIMBOFLAGS=-F $LIMBOFLAGS

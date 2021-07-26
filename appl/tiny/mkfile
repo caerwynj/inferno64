@@ -17,4 +17,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/tiny
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

@@ -21,4 +21,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/wm/brutus
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

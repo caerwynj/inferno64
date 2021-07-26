@@ -6,4 +6,4 @@ DIRS=\
 	edit\
 	mail\
 
-<$ROOT/mkfiles/mksubdirs
+<$SRC/mkfiles/mksubdirs

@@ -76,7 +76,7 @@ DISBIN=$ROOT/dis/charon
 
 all:V:	charon.dis
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis
 
 install:V:	$ROOT/dis/charon.dis
 

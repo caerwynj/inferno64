@@ -15,13 +15,13 @@ OFILES=\
 	xdata.$O\
 
 HFILES=\
-	$ROOT/include/tk.h\
-	$ROOT/include/draw.h\
+	$SRC/include/tk.h\
+	$SRC/include/draw.h\
 
 default:V:	all
 
 <mkfile-$TKSTYLE
-<$ROOT/mkfiles/mksyslib-$SHELLTYPE
+<$SRC/mkfiles/mksyslib-$SHELLTYPE
 
-ebind.$O:		$ROOT/include/interp.h
+ebind.$O:		$SRC/include/interp.h
 windw.$O:	canvs.h textw.h

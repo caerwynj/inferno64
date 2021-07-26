@@ -7,4 +7,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/avr
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

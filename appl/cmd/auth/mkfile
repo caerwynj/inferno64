@@ -37,5 +37,5 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/auth
 
-<$ROOT/mkfiles/mkdis
-<$ROOT/mkfiles/mksubdirs
+<$SRC/mkfiles/mkdis
+<$SRC/mkfiles/mksubdirs

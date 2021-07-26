@@ -16,4 +16,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/dbm
 
-<$ROOT/mkfiles/mkdis
+<$SRC/mkfiles/mkdis

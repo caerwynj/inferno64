@@ -222,8 +222,8 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis
 
-<$ROOT/mkfiles/mkdis
-<$ROOT/mkfiles/mksubdirs
+<$SRC/mkfiles/mkdis
+<$SRC/mkfiles/mksubdirs
 
 auhdr.dis: auplay.dis
 	rm -f auhdr.dis && cp auplay.dis auhdr.dis

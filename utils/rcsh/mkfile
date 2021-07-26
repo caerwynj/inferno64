@@ -30,20 +30,20 @@ YFILES=	syn.y
 
 LIBS=9
 
-BIN=$ROOT/$OBJDIR/bin
+BIN=$SRC/$OBJDIR/bin
 
-<$ROOT/mkfiles/mkone-$SHELLTYPE
+<$SRC/mkfiles/mkone-$SHELLTYPE
 
-CFLAGS=	$CFLAGS '-DROOT="'$ROOT'"'
+CFLAGS=	$CFLAGS '-DSRC="'$SRC'"'
 
 $BIN/%:Q:	$O.out
 	echo $TARG must be installed manually on Windows systems
 	echo use: cp $O.out $target
 	cp $O.out $target
 
-install:V:	$ROOT/utils/lib/rcmain
+install:V:	$SRC/utils/lib/rcmain
 
-$ROOT/utils/lib/rcmain:Q:	rcmain
+$SRC/utils/lib/rcmain:Q:	rcmain
 	echo $prereq must be installed manually on Windows systems
 	echo use: cp $prereq $target
 	cp $prereq $target

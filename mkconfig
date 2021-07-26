@@ -4,35 +4,33 @@
 #	They are almost always the same.
 
 #	On Nt systems, the ROOT path MUST be of the form `drive:/path'
-ROOT=$HOME/src/purgatorio
+# ROOT=/usr/inferno
+ROOT=/home/user/9ferno.root
+SRC=/home/user/9ferno
 
 #
 #	Specify the flavour of Tk (std for standard builds)
 #
 TKSTYLE=std
 
-# emu target, emu-g is a headless variant. Linux/BSD only (emu, emu-g)
-CONF=emu
-
-#	binary will be placed at $SYSTARG/$OBJTYPE/bin/$CONF
-
 #
 #	Except for building kernels, SYSTARG must always be the same as SYSHOST
 #
-SYSHOST=Linux		# build system OS type (Hp, Inferno, Irix, Linux, MacOSX, Nt, Plan9, Solaris)
-SYSTARG=$SYSHOST	# target system OS type (Hp, Inferno, Irix, Linux, Nt, Plan9, Solaris)
+SYSHOST=9front # Plan9		# build system OS type (AIX, Hp, Inferno, Irix, Linux, MacOSX, Nt, Plan9, Solaris)
+SYSTARG=$SYSHOST		# target system OS type (AIX, Hp, Inferno, Irix, Linux, Nt, Plan9, Solaris)
 
 #
 #	specify the architecture of the target system - Plan 9 imports it from the
 #	environment; for other systems it is usually just hard-coded
 #
-#OBJTYPE=386			# target system object type (eg, 386, arm, mips, power, s800, sparc)
-OBJTYPE=386
+# OBJTYPE=386			# target system object type (eg, 386, arm, mips, power, s800, sparc)
+OBJTYPE=amd64
+# OBJTYPE=$objtype
 
 #
 #	no changes required beyond this point
 #
 OBJDIR=$SYSTARG/$OBJTYPE
 
-<$ROOT/mkfiles/mkhost-$SYSHOST			# variables appropriate for host system
-<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE	# variables used to build target object type
+<$SRC/mkfiles/mkhost-$SYSHOST			# variables appropriate for host system
+<$SRC/mkfiles/mkfile-$SYSTARG-$OBJTYPE	# variables used to build target object type
