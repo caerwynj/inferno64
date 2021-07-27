@@ -6,7 +6,7 @@ SHELLNAME=	rc
 HOSTMODEL=	9front
 OSTARG=		Inferno
 
-DATA2S=	data2s
+DATA2S=$ROOT/$OBJDIR/bin/data2s
 NDATE=		date -n
 KSIZE=		size
 AWK=		awk
