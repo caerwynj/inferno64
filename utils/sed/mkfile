@@ -11,6 +11,6 @@ LIBS=regexp bio 9		# libbio.a uses lib9.a so order matters.
 
 CFLAGS=$CFLAGS -I../include
 
-BIN=$SRC/$OBJDIR/bin
+BIN=$ROOT/$OBJDIR/bin
 
 <$SRC/mkfiles/mkone-$SHELLTYPE

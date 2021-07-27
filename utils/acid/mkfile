@@ -23,7 +23,7 @@ LIBS=mach math bio regexp 9
 
 CFLAGS=$CFLAGS -I../include
 
-BIN=$SRC/$OBJDIR/bin
+BIN=$ROOT/$OBJDIR/bin
 
 <$SRC/mkfiles/mkone-$SHELLTYPE
 

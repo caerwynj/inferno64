@@ -24,6 +24,6 @@ LIBS=bio			# order is important
 CFLAGS=$CFLAGS -QIfdiv-
 LDFLAGS=$LDFLAGS setargv.obj
 
-BIN=$SRC/$OBJDIR/bin
+BIN=$ROOT/$OBJDIR/bin
 
 <$SRC/mkfiles/mkone-$SHELLTYPE

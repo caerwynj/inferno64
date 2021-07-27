@@ -14,7 +14,7 @@ YFILES=a.y\
 
 LIBS=cc bio 9		# order is important
 
-BIN=$SRC/$OBJDIR/bin
+BIN=$ROOT/$OBJDIR/bin
 
 <$SRC/mkfiles/mkone-$SHELLTYPE
 
@@ -23,7 +23,7 @@ CFLAGS=	$CFLAGS -I../include
 
 lex.$O:	../cc/macbody ../cc/lexbody
 
-$SRC/$OBJDIR/lib/libcc.a:
+$ROOT/$OBJDIR/lib/libcc.a:
 	cd ../cc
 	mk $MKFLAGS install
 	mk $MKFLAGS clean
