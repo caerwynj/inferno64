@@ -10,7 +10,7 @@ OBJTYPE=arm
 INSTALLDIR=$ROOT/Inferno/$OBJTYPE/bin	#path of directory where kernel is installed
 #end configurable parameters
 
-<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE	#set vars based on target system
+<$SRC/mkfiles/mkfile-$SYSTARG-$OBJTYPE	#set vars based on target system
 
 <| $SHELLNAME ../port/mkdevlist $CONF	#sets $IP, $DEVS, $ETHERS, $VGAS, $PORT, $MISC, $LIBS, $OTHERS
 

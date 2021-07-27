@@ -16,4 +16,4 @@ LIBS=	bio\
 
 BIN=$ROOT/$OBJDIR/bin
 
-<$ROOT/mkfiles/mkmany-$SHELLTYPE
+<$SRC/mkfiles/mkmany-$SHELLTYPE

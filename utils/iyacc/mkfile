@@ -14,7 +14,7 @@ BIN=$ROOT/$OBJDIR/bin
 
 CFLAGS=	$CFLAGS -I../include '-DSRC="'$SRC'"'  '-DROOT="'$ROOT'"' '-DPARSER="yaccpar"' '-DPARSERS="yaccpar"'
 
-install:V:	$SRC/utils/lib/yaccpar
+install:V:	$ROOT/utils/lib/yaccpar
 
-$SRC/utils/lib/yaccpar:	yaccpar
+$ROOT/utils/lib/yaccpar:	yaccpar
 	rm -f $target && cp $prereq $target

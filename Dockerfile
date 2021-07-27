@@ -20,8 +20,8 @@ echo >>mkconfig SYSHOST=Linux; \
 echo >>mkconfig SYSTARG=Linux; \
 echo >>mkconfig OBJTYPE=386; \
 echo >>mkconfig 'OBJDIR=$SYSTARG/$OBJTYPE'; \
-echo >>mkconfig '<$ROOT/mkfiles/mkhost-$SYSHOST'; \
-echo >>mkconfig '<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE'
+echo >>mkconfig '<$SRC/mkfiles/mkhost-$SYSHOST'; \
+echo >>mkconfig '<$SRC/mkfiles/mkfile-$SYSTARG-$OBJTYPE'
 
 # build code
 RUN ./makemk.sh

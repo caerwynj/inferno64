@@ -19,4 +19,4 @@ UPDATE=mkfile\
 	$HFILES\
 	$SFILES\
 
-<$ROOT/mkfiles/mksyslib-$SHELLTYPE
+<$SRC/mkfiles/mksyslib-$SHELLTYPE

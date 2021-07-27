@@ -10,7 +10,7 @@ LIBS=\
 	libkern\
 
 LIBFILES=${LIBS:%=$LIBDIR/%.a}
-<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE
+<$SRC/mkfiles/mkfile-$SYSTARG-$OBJTYPE
 
 BIN=$ROOT/Inferno/$OBJTYPE
 

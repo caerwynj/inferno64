@@ -10,4 +10,4 @@ BIN=$ROOT/$OBJDIR/bin
 
 SYSLIBS= -liodbc
 
-<$ROOT/mkfiles/mkone-$SHELLTYPE
+<$SRC/mkfiles/mkone-$SHELLTYPE
