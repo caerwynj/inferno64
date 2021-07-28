@@ -20,9 +20,9 @@ HFILES=\
 
 LIBS=bio 9
 
-BIN=$SRC/$OBJDIR/bin
+BIN=$ROOT/$OBJDIR/bin
 
-<$SRC/mkfiles/mkone-$SHELLTYPE
+<$ROOT/mkfiles/mkone-$SHELLTYPE
 
 CFLAGS=	$CFLAGS -I ../include -I.
 

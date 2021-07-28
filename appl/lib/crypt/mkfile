@@ -21,4 +21,4 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/lib/crypt
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis

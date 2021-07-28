@@ -22,7 +22,7 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/demo/lego
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis
 
 $DISBIN/%.srec:	%.srec
 	rm -f $target && cp $stem.srec $target

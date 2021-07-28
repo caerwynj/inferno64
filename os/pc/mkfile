@@ -8,12 +8,12 @@ CLEANCONFLIST=pc pcdisk zpc zpcrem pix pcsoe
 
 SYSTARG=$OSTARG
 OBJTYPE=386
-INSTALLDIR=$SRC/Inferno/$OBJTYPE/bin	#path of directory where kernel is installed
+INSTALLDIR=$ROOT/Inferno/$OBJTYPE/bin	#path of directory where kernel is installed
 #INSTALLDIR=/$OBJTYPE
 
 #end configurable parameters
 
-<$SRC/mkfiles/mkfile-$SYSTARG-$OBJTYPE	#set vars based on target system
+<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE	#set vars based on target system
 
 <| $SHELLNAME ../port/mkdevlist $CONF	#sets $IP, $DEVS, $ETHERS, $VGAS, $PORT, $MISC, $LIBS, $OTHERS
 
@@ -47,7 +47,7 @@ HFILES=\
 	fns.h\
 	io.h\
 
-CFLAGS=-wFVT -I$SRC/Inferno/$OBJTYPE/include -I$SRC/include -I$SRC/libinterp -I../port
+CFLAGS=-wFVT -I$ROOT/Inferno/$OBJTYPE/include -I$ROOT/include -I$ROOT/libinterp -I../port
 KERNDATE=`{$NDATE}
 
 default:V: i$CONF
@@ -62,11 +62,11 @@ install:V: i$CONF
 
 <../port/portmkfile
 
-clock.$O:	$SRC/Inferno/$OBJTYPE/include/ureg.h
-devether.$O:	$SRC/Inferno/$OBJTYPE/include/ureg.h
-fault386.$O:	$SRC/Inferno/$OBJTYPE/include/ureg.h
-main.$O:	$SRC/Inferno/$OBJTYPE/include/ureg.h
-trap.$O:	$SRC/Inferno/$OBJTYPE/include/ureg.h
+clock.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
+devether.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
+fault386.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
+main.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
+trap.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
 
 devether.$O $ETHERS:	etherif.h ../port/netif.h
 $IP devip.$O:		../ip/ip.h

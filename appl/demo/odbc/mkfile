@@ -20,7 +20,7 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/demo/odbc
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis
 
 SHFILES=${SHTARG:%.sh=$DISBIN/%}
 install:V:	$SHFILES

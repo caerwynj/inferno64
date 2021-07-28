@@ -4,6 +4,6 @@ LIB=libfis.a
 
 OFILES=fis.$O
 
-HFILES=$SRC/include/fis.h
+HFILES=$ROOT/include/fis.h
 
-<$SRC/mkfiles/mksyslib-$SHELLTYPE
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE

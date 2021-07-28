@@ -33,4 +33,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/ebook
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis

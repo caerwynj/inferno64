@@ -8,6 +8,6 @@ HFILES=
 
 LIBS=9		# libbio.a uses lib9.a so order matters.
 
-BIN=$SRC/$OBJDIR/bin
+BIN=$ROOT/$OBJDIR/bin
 
-<$SRC/mkfiles/mkone-$SHELLTYPE
+<$ROOT/mkfiles/mkone-$SHELLTYPE

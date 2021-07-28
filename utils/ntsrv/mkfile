@@ -5,8 +5,8 @@ SYSTARG=Nt
 SYSHOST=Nt
 OBJTYPE=386
 OBJDIR=$SYSTARG/$OBJTYPE
-<$SRC/mkfiles/mkhost-$SYSHOST
-<$SRC/mkfiles/mkfile-$SYSTARG-$OBJTYPE
+<$ROOT/mkfiles/mkhost-$SYSHOST
+<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE
 
 TARG=ntsrv
 
@@ -18,8 +18,8 @@ LIBS=9
 
 CFLAGS=$CFLAGS -I.
 
-BIN=$SRC/$OBJDIR/bin
+BIN=$ROOT/$OBJDIR/bin
 
 SYSLIBS=	$SYSLIBS wsock32.lib user32.lib gdi32.lib advapi32.lib winmm.lib mpr.lib
 
-<$SRC/mkfiles/mkone-$SHELLTYPE
+<$ROOT/mkfiles/mkone-$SHELLTYPE

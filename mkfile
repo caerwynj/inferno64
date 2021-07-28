@@ -29,7 +29,7 @@ EMUDIRS=\
 
 
 KERNEL_DIRS=\
-	os/pc64\
+	os\
 	os/boot/pc\
 
 # mkconfig is included at this point to allow it to override
@@ -44,19 +44,21 @@ DIRS=\
 foo:QV:
 	echo mk all, clean, install, installall or nuke
 
-all:V:		mkrootdir all-$HOSTMODEL
+all:V:		all-$HOSTMODEL
 clean:V:	clean-$HOSTMODEL
-install:V:	mkrootdir install-$HOSTMODEL
-installall:V:	mkrootdir installall-$HOSTMODEL
+install:V:	install-$HOSTMODEL
+installall:V:	installall-$HOSTMODEL
 emu:V:	emu/all-$HOSTMODEL
-emuinstall:V:	mkrootdir emu/install-$HOSTMODEL
+emuinstall:V:	emu/install-$HOSTMODEL
 emuclean:V:	emu/clean-$HOSTMODEL
 emunuke:V:	emu/nuke-$HOSTMODEL
+# TODO the kernel targets are obsolete(?). definitely need cleanup
+#	mk kernel/pc64-9front tries to build pc64 in os/boot/pc
 kernel:V:	kernel/all-$HOSTMODEL
 kernelall:V:	kernel/all-$HOSTMODEL
 kernelclean:V:	kernel/clean-$HOSTMODEL
-kernelinstall:V:	mkrootdir kernel/install-$HOSTMODEL
-kernelinstallall:V:	mkrootdir kernel/installall-$HOSTMODEL
+kernelinstall:V:	kernel/install-$HOSTMODEL
+kernelinstallall:V:	kernel/installall-$HOSTMODEL
 kernelnuke:V:	kernel/nuke-$HOSTMODEL
 nuke:V:		nuke-$HOSTMODEL
 
@@ -194,52 +196,18 @@ Nt-% nt-% Win95-% win95-%:V:
 Solaris-% solaris-%:V:
 	mk 'SYSHOST=Solaris' 'OBJTYPE=sparc' $stem
 
-
-mkrootdir:V:	 mkrootdir-$SHELLTYPE mkdirs
-
-mkrootdir-rc:V:
-	test -d $ROOT || mkdir $ROOT
-	for (d in doc fonts icons lib locale man module services)
-	{
-		echo dircp $SRC/$d $ROOT/$d
-		test -d $ROOT/$d || mkdir -p $ROOT/$d
-		dircp $SRC/$d $ROOT/$d
-	}
-
-mkrootdir-sh:V:
-	test -d $ROOT || mkdir $ROOT
-	for (d in doc fonts icons lib locale man module services)
-	{
-		echo cp -a $SRC/$d $ROOT/
-		cp -a $SRC/$d $ROOT/
-	}
-
-mkrootdir-nt:V:
-	test -d $ROOT || mkdir $ROOT
-	for (d in doc fonts icons lib locale man module services)
-	{
-		echo cp -a $SRC/$d $ROOT/$d
-		cp -a $SRC/$d $ROOT/$d # TODO does this work on nt?
-	}
-
 mkdirs:V:	mkdirs-$SHELLTYPE
 
 mkdirs-rc:V:
-	test -d $ROOT || mkdir $ROOT
-	cd $ROOT
-	mkdir -p `{cat $SRC/lib/emptydirs}
+	mkdir -p `{cat lib/emptydirs}
 	chmod 555 mnt/* n/client/* n/*
 
 mkdirs-sh:V:
-	test -d $ROOT || mkdir $ROOT
-	cd $ROOT
-	mkdir -p `cat $SRC/lib/emptydirs`
+	mkdir -p `cat lib/emptydirs`
 	chmod 555 mnt/* n/client/* n/*
 
 mkdirs-nt:V:
-	test -d $ROOT || mkdir $ROOT
-	cd $ROOT
-	mkdir -p `{cmd /c type $SRC\lib\emptydirs}
+	mkdir -p `{cmd /c type lib\emptydirs}
 
 # got the below ideas from plan9front/sys/lib/dist/mkfile
 #	can only be used on 9front. should technically work on plan9 and inferno too.

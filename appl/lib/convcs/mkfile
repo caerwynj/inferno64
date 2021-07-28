@@ -26,4 +26,4 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/lib/convcs
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis

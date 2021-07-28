@@ -11,4 +11,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/mpc
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis

@@ -28,7 +28,7 @@ all:V:	ftree.dis $TARG
 $ROOT/dis/wm/ftree.dis:	ftree.dis
 	rm -f $ROOT/dis/wm/ftree.dis && cp ftree.dis $ROOT/dis/wm/ftree.dis
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis
 
 install:V:	$ROOT/dis/wm/ftree.dis
 

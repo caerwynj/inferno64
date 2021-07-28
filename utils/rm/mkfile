@@ -12,9 +12,9 @@ HFILES=
 
 LIBS=9
 
-BIN=$SRC/$OBJDIR/bin
+BIN=$ROOT/$OBJDIR/bin
 
-<$SRC/mkfiles/mkone-$SHELLTYPE
+<$ROOT/mkfiles/mkone-$SHELLTYPE
 
 rm-Posix.c rm-Inferno.c:QV:
 	echo 'rm is only built on Windows NT or Windows 95'

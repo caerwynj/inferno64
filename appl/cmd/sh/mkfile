@@ -44,7 +44,7 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/sh
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis
 
 all:V:		$TARG
 

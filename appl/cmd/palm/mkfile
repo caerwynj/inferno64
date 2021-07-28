@@ -13,4 +13,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/palm
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis

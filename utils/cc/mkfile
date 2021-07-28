@@ -25,7 +25,7 @@ HFILES=cc.h\
  
 YFILES=cc.y\
 
-<$SRC/mkfiles/mksyslib-$SHELLTYPE
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE
 
 CFLAGS=	$CFLAGS -I../include
 

@@ -19,8 +19,8 @@ COMMONFILES=\
 
 OFILES=$COMMONFILES $SYSFILES
 
-HFILES=	$SRC/include/draw.h\
-	$SRC/include/memdraw.h\
-	$SRC/include/memlayer.h
+HFILES=	$ROOT/include/draw.h\
+	$ROOT/include/memdraw.h\
+	$ROOT/include/memlayer.h
 
-<$SRC/mkfiles/mksyslib-$SHELLTYPE
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE

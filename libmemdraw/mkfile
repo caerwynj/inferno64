@@ -25,9 +25,9 @@ COMMONFILES=\
 
 OFILES=$COMMONFILES $SYSFILES
 
-HFILES=	$SRC/include/draw.h\
-	$SRC/include/memdraw.h\
+HFILES=	$ROOT/include/draw.h\
+	$ROOT/include/memdraw.h\
 
-<$SRC/mkfiles/mksyslib-$SHELLTYPE
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE
 
 %-x11.$O:	xmem.h

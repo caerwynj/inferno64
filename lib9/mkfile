@@ -80,13 +80,13 @@ IMPORTFILES=\
 
 OFILES=$COMMONFILES $TARGFILES
 
-HFILES=$SRC/$SYSTARG/$OBJTYPE/include/lib9.h\
+HFILES=$ROOT/$SYSTARG/$OBJTYPE/include/lib9.h\
 	fmtdef.h\
 
-<$SRC/mkfiles/mksyslib-$SHELLTYPE
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE
 
-convD2M.$O: $SRC/include/fcall.h
-convM2D.$O: $SRC/include/fcall.h
-convM2S.$O: $SRC/include/fcall.h
-convS2M.$O: $SRC/include/fcall.h
-fcallfmt.$O: $SRC/include/fcall.h
+convD2M.$O: $ROOT/include/fcall.h
+convM2D.$O: $ROOT/include/fcall.h
+convM2S.$O: $ROOT/include/fcall.h
+convS2M.$O: $ROOT/include/fcall.h
+fcallfmt.$O: $ROOT/include/fcall.h

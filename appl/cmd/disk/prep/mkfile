@@ -19,7 +19,7 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/disk
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis
 
 # calc
 calc.tab.b:

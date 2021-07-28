@@ -23,5 +23,5 @@ MODULES=\
 
 DISBIN=$ROOT/dis/auth
 
-<$SRC/mkfiles/mkdis
-<$SRC/mkfiles/mksubdirs
+<$ROOT/mkfiles/mkdis
+<$ROOT/mkfiles/mksubdirs

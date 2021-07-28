@@ -12,7 +12,7 @@ AS=		6a
 ASFLAGS=
 
 CC=		6c
-CFLAGS=		-wFV -I$SRC/9front/$OBJTYPE/include -I$SRC/9front/include -I$SRC/include
+CFLAGS=		-wFV -I$ROOT/9front/$OBJTYPE/include -I$ROOT/9front/include -I$ROOT/include
 ANSICPP= -p
 
 LD=		6l

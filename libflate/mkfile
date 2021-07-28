@@ -15,7 +15,7 @@ OFILES=\
 	adler.$O\
 
 HFILES=\
-	$SRC/include/flate.h\
+	$ROOT/include/flate.h\
 	zlib.h\
 
-<$SRC/mkfiles/mksyslib-$SHELLTYPE
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE

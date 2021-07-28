@@ -20,4 +20,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/acme/edit
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis

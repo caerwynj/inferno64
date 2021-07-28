@@ -15,7 +15,7 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/demo/cpupool
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis
 
 SHFILES=${SHTARG:%.sh=$DISBIN/%}
 install:V:	$SHFILES

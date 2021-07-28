@@ -26,7 +26,7 @@ all:V:	$TARG $LIBTARG
 
 install:V:	$DISBIN/dmview.dis $DISBIN/dmwm.dis $DISLIB/drawmux.dis
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis
 
 nuke:V:	nuke-lib
 

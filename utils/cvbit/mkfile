@@ -5,11 +5,11 @@ TARG=cvbit
 OFILES=	cvbit.$O\
 
 HFILES=	\
-	$SRC/include/draw.h\
-	$SRC/include/memdraw.h\
+	$ROOT/include/draw.h\
+	$ROOT/include/memdraw.h\
 
 LIBS=	draw memdraw draw bio 9
 
-BIN=$SRC/$OBJDIR/bin
+BIN=$ROOT/$OBJDIR/bin
 
-<$SRC/mkfiles/mkone-$SHELLTYPE
+<$ROOT/mkfiles/mkone-$SHELLTYPE

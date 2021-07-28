@@ -15,8 +15,8 @@ CC=		cc -c
 CFLAGS=	-g\
 		-O\
 		-Wno-deprecated-declarations -Wuninitialized -Wunused -Wreturn-type -Wimplicit\
-		-I$SRC/OpenBSD/amd64/include\
-		-I$SRC/include\
+		-I$ROOT/OpenBSD/amd64/include\
+		-I$ROOT/include\
  		-I/usr/X11R6/include\
 		-DOPENBSD_amd64 -fno-stack-protector
 

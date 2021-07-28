@@ -3,4 +3,4 @@
 # TARGMODEL not SYSTARG for now
 DIRS=port $TARGMODEL-$OBJTYPE
 
-<$SRC/mkfiles/mklibsubdirs
+<$ROOT/mkfiles/mklibsubdirs

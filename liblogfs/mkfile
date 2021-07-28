@@ -39,7 +39,7 @@ OFILES=	\
 
 HFILES=\
 	local.h \
-	$SRC/include/logfs.h
+	$ROOT/include/logfs.h
 
-<$SRC/mkfiles/mksyslib-$SHELLTYPE
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE
 

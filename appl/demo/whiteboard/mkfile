@@ -17,7 +17,7 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/demo/whiteboard
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis
 
 SHFILES=${SHTARG:%.sh=$DISBIN/%}
 install:V:	$SHFILES

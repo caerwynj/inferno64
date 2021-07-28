@@ -22,8 +22,8 @@ OFILES=	asm.$O\
 HFILES=	limbo.h\
 	fns.h\
 	y.tab.h\
-	$SRC/include/interp.h\
-	$SRC/include/isa.h\
+	$ROOT/include/interp.h\
+	$ROOT/include/isa.h\
 
 LIBS=	bio\
 	math\
@@ -35,7 +35,7 @@ YFILES=	limbo.y
 
 BIN=$ROOT/$OBJDIR/bin
 
-<$SRC/mkfiles/mkone-$SHELLTYPE
+<$ROOT/mkfiles/mkone-$SHELLTYPE
 
 CFLAGS='-DINCPATH="'$ROOT/module'"' $CFLAGS
 YFLAGS=-d

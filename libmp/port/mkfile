@@ -38,8 +38,8 @@ ALLOFILES=${FILES:%=%.$O}
 OFILES=	`{$SHELLNAME ./reduce-$SHELLTYPE $O $TARGMODEL-$OBJTYPE $ALLOFILES }
 
 HFILES=\
-	$SRC/$OBJDIR/include/lib9.h\
-	$SRC/include/mp.h\
+	$ROOT/$OBJDIR/include/lib9.h\
+	$ROOT/include/mp.h\
 	dat.h\
 
 CFILES=${FILES:%=%.c}
@@ -49,4 +49,4 @@ UPDATE=mkfile\
 	$HFILES\
 	$CFILES\
 
-<$SRC/mkfiles/mksyslib-$SHELLTYPE
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE

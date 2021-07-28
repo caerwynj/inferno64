@@ -347,8 +347,4 @@ os/init/*.dis
 os/init/*.sbl
 os/pc64/pc64.root.s
 
-# ignore the generated boot files
-Inferno/386/bootia32.efi
-Inferno/386/bootx64.efi
-Inferno/386/efiboot.fat
 

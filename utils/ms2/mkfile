@@ -6,11 +6,11 @@ TARG=ms2
 OFILES=	ms2.$O\
 
 HFILES=	\
-	$SRC/include/bio.h\
+	$ROOT/include/bio.h\
 	../include/mach.h\
 
 LIBS=mach bio 9			#order matters
 
-BIN=$SRC/$OBJDIR/bin
+BIN=$ROOT/$OBJDIR/bin
 
-<$SRC/mkfiles/mkone-$SHELLTYPE
+<$ROOT/mkfiles/mkone-$SHELLTYPE

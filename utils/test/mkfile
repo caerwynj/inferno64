@@ -12,9 +12,9 @@ HFILES=
 
 LIBS=9
 
-BIN=$SRC/$OBJDIR/bin
+BIN=$ROOT/$OBJDIR/bin
 
-<$SRC/mkfiles/mkone-$SHELLTYPE
+<$ROOT/mkfiles/mkone-$SHELLTYPE
 
 test-Posix.c test-Inferno.c:QV:
 	echo 'test is only built on Windows NT or Windows 95'

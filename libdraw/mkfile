@@ -47,8 +47,8 @@ OFILES=	alloc.$O\
 	writesubfont.$O\
 
 HFILES=\
-	$SRC/include/draw.h \
-	$SRC/include/interp.h\
+	$ROOT/include/draw.h \
+	$ROOT/include/interp.h\
 
-<$SRC/mkfiles/mksyslib-$SHELLTYPE
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE
 

@@ -45,8 +45,8 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/grid
 
-<$SRC/mkfiles/mkdis
-<$SRC/mkfiles/mksubdirs
+<$ROOT/mkfiles/mkdis
+<$ROOT/mkfiles/mksubdirs
 
 $ROOT/dis/demo/readjpg.dis:	readjpg.dis
 	rm -f $target && cp readjpg.dis $target

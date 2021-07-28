@@ -57,10 +57,10 @@ OFILES=\
 	s_tanh.$O\
 
 HFILES=\
-	$SRC/include/mathi.h\
+	$ROOT/include/mathi.h\
 	fdlibm/fdlibm.h\
 	
-<$SRC/mkfiles/mksyslib-$SHELLTYPE
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE
 
 %.$O:	fdlibm/%.c
 	$CC $CFLAGS -o $target -Ifdlibm fdlibm/$stem.c

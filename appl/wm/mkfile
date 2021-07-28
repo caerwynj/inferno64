@@ -100,5 +100,5 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/wm
 
-<$SRC/mkfiles/mkdis
-<$SRC/mkfiles/mksubdirs
+<$ROOT/mkfiles/mkdis
+<$ROOT/mkfiles/mksubdirs

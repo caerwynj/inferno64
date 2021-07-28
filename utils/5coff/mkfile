@@ -15,9 +15,9 @@ LIBS=mach bio 9	# order matters.
 
 CFLAGS=$CFLAGS -I../include
 
-BIN=$SRC/$OBJDIR/bin
+BIN=$ROOT/$OBJDIR/bin
 
-<$SRC/mkfiles/mkone-$SHELLTYPE
+<$ROOT/mkfiles/mkone-$SHELLTYPE
 
 $O.readcoff:	readcoff.$O
 	$LD $LDFLAGS -o $target readcoff.$O $libs $SYSLIBS

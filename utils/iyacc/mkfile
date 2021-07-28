@@ -10,11 +10,11 @@ LIBS=bio 9		# libbio.a uses lib9.a so order matters.
 
 BIN=$ROOT/$OBJDIR/bin
 
-<$SRC/mkfiles/mkone-$SHELLTYPE
+<$ROOT/mkfiles/mkone-$SHELLTYPE
 
-CFLAGS=	$CFLAGS -I../include '-DSRC="'$SRC'"'  '-DROOT="'$ROOT'"' '-DPARSER="yaccpar"' '-DPARSERS="yaccpar"'
+CFLAGS=	$CFLAGS -I../include '-DROOT="'$ROOT'"' '-DPARSER="yaccpar"' '-DPARSERS="yaccpar"'
 
-install:V:	$SRC/utils/lib/yaccpar
+install:V:	$ROOT/utils/lib/yaccpar
 
-$SRC/utils/lib/yaccpar:	yaccpar
+$ROOT/utils/lib/yaccpar:	yaccpar
 	rm -f $target && cp $prereq $target

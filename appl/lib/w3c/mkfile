@@ -16,4 +16,4 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/lib/w3c
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis

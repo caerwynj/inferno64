@@ -40,4 +40,4 @@ SYSMODULES=\
 
 DISBIN=$ROOT/dis/math
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis

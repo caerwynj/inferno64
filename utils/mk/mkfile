@@ -33,10 +33,10 @@ HFILES=	fns.h\
 
 LIBS=	regexp bio 9
 
-BIN=$SRC/$OBJDIR/bin
+BIN=$ROOT/$OBJDIR/bin
 
-<$SRC/mkfiles/mkone-$SHELLTYPE
+<$ROOT/mkfiles/mkone-$SHELLTYPE
 
-CFLAGS=$CFLAGS -I../include -DSRC'="'$SRC'"'
+CFLAGS=$CFLAGS -I../include -DROOT'="'$ROOT'"'
 
 <mkfile-$HOSTMODEL

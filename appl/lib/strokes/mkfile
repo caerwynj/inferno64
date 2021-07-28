@@ -15,4 +15,4 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/lib/strokes
 
-<$SRC/mkfiles/mkdis
+<$ROOT/mkfiles/mkdis

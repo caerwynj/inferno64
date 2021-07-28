@@ -13,7 +13,7 @@ SHTARG=\
 
 BIN=$ROOT/dis/svc
 
-<$SRC/mkfiles/mksubdirs
+<$ROOT/mkfiles/mksubdirs
 
 SHFILES=${SHTARG:%.sh=$BIN/%}
 install:V:	$SHFILES

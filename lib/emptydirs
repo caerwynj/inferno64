@@ -10,9 +10,6 @@ FreeBSD/386/lib
 Inferno/386/bin
 Inferno/386/include
 Inferno/386/lib
-Inferno/amd64/bin
-Inferno/amd64/include
-Inferno/amd64/lib
 Inferno/arm/bin
 Inferno/arm/include
 Inferno/arm/lib
@@ -124,11 +121,7 @@ usr/inferno/keyring
 usr/inferno/tmp
 services/collab/export/services
 services/collab/export/collab
-acme/acid
-acme/bin
 acme/dis
-acme/edit
-acme/mail
 dis/acme
 dis/alphabet
 dis/alphabet/abc
@@ -199,5 +192,3 @@ dis/wm
 dis/wm/brutus
 dis/wm/vixen
 dis/zip
-services/httpd
-services/webget

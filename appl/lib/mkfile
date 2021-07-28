@@ -214,8 +214,8 @@ SYSMODULES= \
 
 DISBIN=$ROOT/dis/lib
 
-<$SRC/mkfiles/mkdis
-<$SRC/mkfiles/mksubdirs
+<$ROOT/mkfiles/mkdis
+<$ROOT/mkfiles/mksubdirs
 
 plumbing.dis:N: plumbing.m
 plumber.dis:N: plumbing.m

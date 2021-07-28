@@ -23,9 +23,9 @@ LIBS=bio 9			# order is important
 
 CFLAGS=$CFLAGS -I../include -I.
 
-BIN=$SRC/$OBJDIR/bin
+BIN=$ROOT/$OBJDIR/bin
 
-<$SRC/mkfiles/mkone-$SHELLTYPE
+<$ROOT/mkfiles/mkone-$SHELLTYPE
 
 enam.$O:	../5c/enam.c
 	$CC $CFLAGS ../5c/enam.c
