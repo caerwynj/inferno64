@@ -8,4 +8,4 @@ OFILES=\
 
 HFILES=\
 
-<$SRC/mkfiles/mksyslib-$SHELLTYPE
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE

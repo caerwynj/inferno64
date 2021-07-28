@@ -50,9 +50,6 @@ Nt/386/lib
 OpenBSD/386/bin
 OpenBSD/386/include
 OpenBSD/386/lib
-OpenBSD/amd64/bin
-OpenBSD/amd64/include
-OpenBSD/amd64/lib
 OpenBSD/arm/bin
 OpenBSD/arm/include
 OpenBSD/arm/lib
@@ -125,7 +122,6 @@ tmp
 usr/inferno/charon
 usr/inferno/keyring
 usr/inferno/tmp
-utils/lib/
 services/collab/export/services
 services/collab/export/collab
 acme/acid

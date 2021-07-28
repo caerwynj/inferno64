@@ -18,4 +18,4 @@ HFILES=\
 	$ROOT/include/flate.h\
 	zlib.h\
 
-<$SRC/mkfiles/mksyslib-$SHELLTYPE
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE

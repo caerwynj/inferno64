@@ -14,4 +14,4 @@ SFILES=${FILES:%=%.s}
 
 OFILES=${FILES:%=%.$O}
 
-<$SRC/mkfiles/mksyslib-$SHELLTYPE
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE

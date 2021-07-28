@@ -12,7 +12,7 @@ INSTALLDIR=$ROOT/$SYSTARG/$OBJTYPE/bin	#path of directory where kernel is instal
 
 X11LIBS= -lX11 -lXext
 
-<$SRC/mkfiles/mkfile-$SYSTARG-$OBJTYPE	#set vars based on target system
+<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE	#set vars based on target system
 
 <| $SHELLNAME ../port/mkdevlist $CONF	#sets $IP, $DEVS, $PORT, $LIBS
 

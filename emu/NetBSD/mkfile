@@ -13,7 +13,7 @@ INSTALLDIR=$ROOT/$SYSTARG/$OBJTYPE/bin	#path of directory where kernel is instal
 # can remove or override X11LIBS using env section in config files
 X11LIBS= -L/usr/X11R7/lib -R/usr/X11R7/lib -lXext -lX11
 
-<$SRC/mkfiles/mkfile-$SYSTARG-$OBJTYPE	#set vars based on target system
+<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE	#set vars based on target system
 
 <| $SHELLNAME ../port/mkdevlist $CONF	#sets $IP, $DEVS, $PORT, $LIBS
 

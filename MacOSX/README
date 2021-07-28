@@ -63,7 +63,7 @@ eia devices will recognize /dev/ttyd.irda and /dev/ttyd.modem though both are co
 
 The following modification was added to various 'mkfile' to support required redefinition of varios core functions.
 
-	<$SRC/mkfiles/mkalloc-$SYSHOST-$OBJTYPE
+	<$ROOT/mkfiles/mkalloc-$SYSHOST-$OBJTYPE
 
 Some of the base libraries and utils will have *.pbproj files which were used to bootstrap the initial build system on Mac OS X (Public Beta).
 

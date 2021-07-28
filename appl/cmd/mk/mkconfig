@@ -24,5 +24,5 @@ OBJTYPE=386
 #
 OBJDIR=$SYSTARG/$OBJTYPE
 
-<$SRC/mkfiles/mkhost-$SYSHOST			# variables appropriate for host system
-<$SRC/mkfiles/mkfile-$SYSTARG-$OBJTYPE	# variables used to build target object type
+<$ROOT/mkfiles/mkhost-$SYSHOST			# variables appropriate for host system
+<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE	# variables used to build target object type

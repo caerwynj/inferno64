@@ -2,7 +2,7 @@ objtype=power
 OBJTYPE=power	# always
 <../../../mkconfig
 SYSTARG=$OSTARG	# always
-<$SRC/mkfiles/mkfile-$SYSTARG-$OBJTYPE
+<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE
 INSTALLDIR=$ROOT/Inferno/$OBJTYPE/bin	#path of directory where kernel is installed
 CONF=rpcg	# selects board dependent code
 TARG=qb$CONF

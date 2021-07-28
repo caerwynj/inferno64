@@ -4,4 +4,4 @@ DIRS=\
 	libstyx\
 	styxtest\
 
-<$SRC/mkfiles/mksubdirs
+<$ROOT/mkfiles/mksubdirs

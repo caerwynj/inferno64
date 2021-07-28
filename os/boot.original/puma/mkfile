@@ -2,7 +2,7 @@
 
 SYSTARG=Inferno
 OBJTYPE=arm
-<$SRC/mkfiles/mkfile-$SYSTARG-$OBJTYPE	#set vars based on target system
+<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE	#set vars based on target system
 
 TARGET=${O}boot
 OBJ=\

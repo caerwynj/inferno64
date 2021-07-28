@@ -44,19 +44,19 @@ DIRS=\
 foo:QV:
 	echo mk all, clean, install, installall or nuke
 
-all:V:		all-$HOSTMODEL
+all:V:		mkrootdir all-$HOSTMODEL
 clean:V:	clean-$HOSTMODEL
-install:V:	install-$HOSTMODEL
-installall:V:	installall-$HOSTMODEL
+install:V:	mkrootdir install-$HOSTMODEL
+installall:V:	mkrootdir installall-$HOSTMODEL
 emu:V:	emu/all-$HOSTMODEL
-emuinstall:V:	emu/install-$HOSTMODEL
+emuinstall:V:	mkrootdir emu/install-$HOSTMODEL
 emuclean:V:	emu/clean-$HOSTMODEL
 emunuke:V:	emu/nuke-$HOSTMODEL
 kernel:V:	kernel/all-$HOSTMODEL
 kernelall:V:	kernel/all-$HOSTMODEL
 kernelclean:V:	kernel/clean-$HOSTMODEL
-kernelinstall:V:	kernel/install-$HOSTMODEL
-kernelinstallall:V:	kernel/installall-$HOSTMODEL
+kernelinstall:V:	mkrootdir kernel/install-$HOSTMODEL
+kernelinstallall:V:	mkrootdir kernel/installall-$HOSTMODEL
 kernelnuke:V:	kernel/nuke-$HOSTMODEL
 nuke:V:		nuke-$HOSTMODEL
 
@@ -66,9 +66,7 @@ cleandist:V: clean
 nukedist:V: nuke
 	rm -f $ROOT/$OBJDIR/bin/*.exe
 	rm -f $ROOT/$OBJDIR/lib/lib*.a
-
-&/install-& install-& &/installall-& installall-&:QV:	mkrootdir
-
+	
 &-Posix:QV:
 	for j in $DIRS utils tools
 	do
@@ -210,11 +208,11 @@ mkrootdir-rc:V:
 
 mkrootdir-sh:V:
 	test -d $ROOT || mkdir $ROOT
-	for d in doc fonts icons lib locale man module services usr
-	do
+	for (d in doc fonts icons lib locale man module services usr)
+	{
 		echo cp -a $SRC/$d $ROOT/
 		cp -a $SRC/$d $ROOT/
-	done
+	}
 
 mkrootdir-nt:V:
 	test -d $ROOT || mkdir $ROOT

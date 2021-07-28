@@ -14,7 +14,7 @@ BIN=$ROOT/$OBJDIR/bin
 
 <mkfile-$SYSTARG
 
-<$SRC/mkfiles/mkone-$SHELLTYPE
+<$ROOT/mkfiles/mkone-$SHELLTYPE
 
 CFLAGS=	$CFLAGS -I../libstyx
 
