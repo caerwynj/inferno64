@@ -5,7 +5,6 @@ BEGIN{
 
 		conf = ARGV[1];
 		infernoroot = ENVIRON["ROOT"];
-		infernosrc = ENVIRON["SRC"];
 		init = ENVIRON["INIT"];
 		data2s = ENVIRON["DATA2S"];
 		nroot = 0;
@@ -23,9 +22,8 @@ collect && section ~ "root"{
 		dst[nroot] = $1;
 		if (NF > 1)
 			src[nroot] = infernoroot $2;
-		else if (dst[nroot] == "/osinit.dis"){
-			src[nroot] = infernosrc "/os/init/" init ".dis";
-		}
+		else if (dst[nroot] == "/osinit.dis")
+			src[nroot] = infernoroot "/os/init/" init ".dis";
 		else
 			src[nroot] = infernoroot $1;
 		for(i=0; i<nroot; i++)

@@ -198,6 +198,7 @@ root
 	/dis/lib/workdir.dis
 	/dis/sh/std.dis
 	/dis/9660srv.dis
+	/dis/bootrc
 
 bootdir
 	/$objtype/bin/paqfs

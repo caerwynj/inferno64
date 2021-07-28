@@ -8,7 +8,7 @@ CLEANCONFLIST=pc64
 
 SYSTARG=Inferno # $OSTARG
 OBJTYPE=amd64 # 386
-INSTALLDIR=$ROOT/Inferno/$OBJTYPE/	#path of directory where kernel is installed
+INSTALLDIR=$SRC/Inferno/$OBJTYPE/	#path of directory where kernel is installed
 #INSTALLDIR=/$OBJTYPE
 
 # must match mem.h
