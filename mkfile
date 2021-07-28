@@ -199,7 +199,7 @@ mkrootdir:V:	 mkrootdir-$SHELLTYPE mkdirs
 
 mkrootdir-rc:V:
 	test -d $ROOT || mkdir $ROOT
-	for (d in doc fonts icons lib locale man module services usr)
+	for (d in doc fonts icons lib locale man module services)
 	{
 		echo dircp $SRC/$d $ROOT/$d
 		test -d $ROOT/$d || mkdir -p $ROOT/$d
@@ -208,7 +208,7 @@ mkrootdir-rc:V:
 
 mkrootdir-sh:V:
 	test -d $ROOT || mkdir $ROOT
-	for (d in doc fonts icons lib locale man module services usr)
+	for (d in doc fonts icons lib locale man module services)
 	{
 		echo cp -a $SRC/$d $ROOT/
 		cp -a $SRC/$d $ROOT/
@@ -216,7 +216,7 @@ mkrootdir-sh:V:
 
 mkrootdir-nt:V:
 	test -d $ROOT || mkdir $ROOT
-	for (d in doc fonts icons lib locale man module services usr)
+	for (d in doc fonts icons lib locale man module services)
 	{
 		echo cp -a $SRC/$d $ROOT/$d
 		cp -a $SRC/$d $ROOT/$d # TODO does this work on nt?
