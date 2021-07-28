@@ -156,6 +156,9 @@ y.debug
 /Inferno/386/bin
 /Inferno/386/include
 /Inferno/386/lib
+/Inferno/amd64/bin
+/Inferno/amd64/include
+/Inferno/amd64/lib
 /Inferno/arm/bin
 /Inferno/arm/include
 /Inferno/arm/lib
@@ -193,6 +196,9 @@ y.debug
 /OpenBSD/386/bin
 /OpenBSD/386/include
 /OpenBSD/386/lib
+/OpenBSD/amd64/bin
+/OpenBSD/amd64/include
+/OpenBSD/amd64/lib
 /OpenBSD/arm/bin
 /OpenBSD/arm/include
 /OpenBSD/arm/lib
