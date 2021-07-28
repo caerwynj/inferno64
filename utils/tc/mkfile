@@ -18,11 +18,11 @@ HFILES=	gc.h\
 
 LIBS=cc bio 9		# order is important
 
-BIN=$ROOT/$OBJDIR/bin
+BIN=$SRC/$OBJDIR/bin
 
 <$SRC/mkfiles/mkone-$SHELLTYPE
 
-$ROOT/$OBJDIR/lib/libcc.a:
+$SRC/$OBJDIR/lib/libcc.a:
 	cd ../cc
 	mk $MKFLAGS install
 	mk $MKFLAGS clean

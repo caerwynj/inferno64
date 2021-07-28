@@ -20,7 +20,7 @@ HFILES=\
 
 LIBS=bio 9			# order is important
 
-BIN=$ROOT/$OBJDIR/bin
+BIN=$SRC/$OBJDIR/bin
 
 <$SRC/mkfiles/mkone-$SHELLTYPE
 

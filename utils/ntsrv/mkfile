@@ -18,7 +18,7 @@ LIBS=9
 
 CFLAGS=$CFLAGS -I.
 
-BIN=$ROOT/$OBJDIR/bin
+BIN=$SRC/$OBJDIR/bin
 
 SYSLIBS=	$SYSLIBS wsock32.lib user32.lib gdi32.lib advapi32.lib winmm.lib mpr.lib
 

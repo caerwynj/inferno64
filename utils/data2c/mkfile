@@ -8,6 +8,6 @@ HFILES=../../include/bio.h
 
 LIBS=bio 9			#order matters
 
-BIN=$ROOT/$OBJDIR/bin
+BIN=$SRC/$OBJDIR/bin
 
 <$SRC/mkfiles/mkone-$SHELLTYPE
