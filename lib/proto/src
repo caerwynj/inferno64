@@ -42,6 +42,26 @@ emu
 		+
 	Unixware
 		+
+libbio
+	NOTICE
+	bbuffered.c
+	bfildes.c
+	bflush.c
+	bgetc.c
+	bgetd.c
+	bgetrune.c
+	binit.c
+	boffset.c
+	bprint.c
+	bputc.c
+	bputrune.c
+	brdline.c
+	brdstr.c
+	bread.c
+	bseek.c
+	bvprint.c
+	bwrite.c
+	mkfile
 libdraw
 	NOTICE
 	alloc.c
@@ -101,6 +121,23 @@ libdynld
 	dynld.c
 	dynloadfd.c
 	mkfile
+libfis
+	fis.c
+	mkfile
+libflate
+	adler.c
+	crc.c
+	deflate.c
+	deflateblock.c
+	deflatezlib.c
+	deflatezlibblock.c
+	flateerr.c
+	inflate.c
+	inflateblock.c
+	inflatezlib.c
+	inflatezlibblock.c
+	mkfile
+	zlib.h
 libfreetype
 	NOTICE
 		+
@@ -418,6 +455,152 @@ libinterp
 	tkmod.h
 	validstk.c
 	xec.c
+libkern
+	NOTICE
+	abort.c
+	abs.c
+	atol.c
+	charstod.c
+	cistrcmp.c
+	cistrncmp.c
+	cistrstr.c
+	cleanname.c
+	convD2M.c
+	convM2D.c
+	convM2S.c
+	convS2M.c
+	div-arm.s
+	div-thumb.s
+	dofmt.c
+	exp.c
+	fcallfmt.c
+	floor.c
+	fmt.c
+	fmtdef.h
+	fmtprint.c
+	fmtquote.c
+	fmtstr.c
+	fmtvprint.c
+	frexp-386.c
+	frexp-arm.c
+	frexp-mips.c
+	frexp-power.c
+	frexp-sparc.c
+	frexp-spim.c
+	frexp-thumb.c
+	getfcr-386.s
+	getfcr-amd64.s
+	getfcr-arm.s
+	getfcr-mips.s
+	getfcr-power.s
+	getfcr-sparc.s
+	getfcr-spim.s
+	getfcr-thumb.s
+	getfields.c
+	log.c
+	memccpy-power.s
+	memccpy.c
+	memchr.c
+	memcmp-power.s
+	memcmp.c
+	memmove-386.s
+	memmove-amd64.s
+	memmove-arm.s
+	memmove-mips.s
+	memmove-power.s
+	memmove-sparc.s
+	memmove-spim.s
+	memmove-thumb.s
+	memmove.c
+	memset-386.s
+	memset-amd64.s
+	memset-arm.s
+	memset-mips.s
+	memset-power.s
+	memset-sparc.s
+	memset-spim.s
+	memset-thumb.s
+	memset.c
+	mkfile
+	mkfile-amd64
+	mkfile-arm
+	mkfile-mips
+	mkfile-power
+	mkfile-sparc
+	mkfile-spim
+	mkfile-thumb
+	nan-386.c
+	nan-arm.c
+	nan-mips.c
+	nan-power.c
+	nan-sparc.c
+	nan-spim.c
+	nan-thumb.c
+	netmkaddr.c
+	pow.c
+	pow10.c
+	qsort.c
+	rune.c
+	runestrlen.c
+	seprint.c
+	sin.c
+	smprint.c
+	snprint.c
+	sqrt.c
+	strcat.c
+	strchr-386.s
+	strchr-amd64.s
+	strchr-arm.s
+	strchr-mips.s
+	strchr-power.s
+	strchr-sparc.s
+	strchr-spim.c
+	strchr-spim.s
+	strchr-thumb.s
+	strchr.c
+	strcmp-power.s
+	strcmp.c
+	strcpy.c
+	strdup.c
+	strecpy.c
+	strlen.c
+	strncmp-power.s
+	strncmp.c
+	strncpy.c
+	strrchr.c
+	strstr.c
+	strtod.c
+	strtol.c
+	strtoll.c
+	strtoul.c
+	strtoull.c
+	tokenize.c
+	toupper.c
+	u16.c
+	u32.c
+	u64.c
+	utfecpy.c
+	utflen.c
+	utfnlen.c
+	utfrrune.c
+	utfrune.c
+	vlop-386.s
+	vlop-arm.s
+	vlop-mips.s
+	vlop-power.s
+	vlop-sparc.s
+	vlop-spim.s
+	vlop-thumb.s
+	vlrt-386.c
+	vlrt-arm.c
+	vlrt-mips.c
+	vlrt-power.c
+	vlrt-sparc.c
+	vlrt-spim.c
+	vlrt-thumb.c
+	vseprint.c
+	vsmprint.c
+	vsnprint.c
 libkeyring
 	NOTICE
 	dsaalg.c
@@ -425,6 +608,43 @@ libkeyring
 	keys.h
 	mkfile
 	rsaalg.c
+liblogfs
+	NOTICE
+	boot.c
+	clunk.c
+	conv.c
+	create.c
+	dump.c
+	error.c
+	extentlist.c
+	fidmap.c
+	findfreeblock.c
+	flush.c
+	format.c
+	gn.c
+	group.c
+	groupset.c
+	is.c
+	local.h
+	log.c
+	map.c
+	mkfile
+	open.c
+	path.c
+	perm.c
+	read.c
+	remove.c
+	replace.c
+	replay.c
+	scan.c
+	srv.c
+	sweep.c
+	tagname.c
+	test.c
+	ust.c
+	walk.c
+	write.c
+	wstat.c
 limbo
 	NOTICE
 	asm.c
@@ -637,6 +857,30 @@ libmp
 		reduce-sh
 		strtomp.c
 	test.c
+libnandfs
+	NOTICE
+	calcformat.c
+	correctauxilliary.c
+	ecc.c
+	eraseblock.c
+	extracttags.c
+	findfreeblock.c
+	formatblock.c
+	getblockstatus.c
+	hamming31_26.c
+	init.c
+	local.h
+	markblockbad.c
+	mkfile
+	open.c
+	readblock.c
+	readpage.c
+	readpageauxilliary.c
+	reformatblock.c
+	setget.c
+	updatepage.c
+	writeblock.c
+	writepageauxilliary.c
 libprefab
 	NOTICE
 	box.c

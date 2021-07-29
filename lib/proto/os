@@ -4,6 +4,11 @@ Inferno
 		include
 			*
 		lib
+	amd64
+		bin
+		include
+			*
+		lib
 	arm
 		bin
 		include
@@ -258,7 +263,7 @@ liblogfs
 os
 	NOTICE
 	README
-	boot
+	boot.original
 		README
 		libflate
 			LICENCE
@@ -536,6 +541,78 @@ os
 			uartboot.c
 			ureg.h
 			zqs.c
+	boot
+		bcm
+			mkfile
+		bitsy
+			dat.h
+			donprint.c
+			fns.h
+			il.s
+			imain.c
+			inflate.c
+			io.h
+			l.s
+			lib.h
+			map
+			mem.h
+			mkfile
+			print.c
+			sinflate
+			uart.c
+		efi
+			bootia32.efi
+			bootx64.efi
+			bootx64.out
+			efi.c
+			efi.h
+			efiboot.fat
+			fns.h
+			fs.c
+			iso.c
+			mem.h
+			mkfile
+			pe32.s
+			pe64.s
+			pxe.c
+			sub.c
+		mkfile
+		pc
+			9bootfat
+			9boothyb
+			9bootiso
+			9bootpxe
+			a20.s
+			apm.s
+			e820.s
+			fat.c
+			fns.h
+			iso.c
+			l.s
+			mbr
+			mbr.s
+			mem.h
+			mkfile
+			pbs
+			pbs.s
+			pxe.c
+			sub.c
+			uart.s
+			x16.h
+		zynq
+			boothead.c
+			dat.h
+			ddr.s
+			fns.h
+			fsbl.s
+			jtagload.c
+			main.c
+			mem.h
+			mkfile
+			mkfile.port
+			mmc.c
+			net.c
+			qspi.c
 	cerf1110
 		Mk
 		NOTICE
@@ -897,6 +974,35 @@ os
 		wavelan.h
 		x86break.c
 		zoran.h
+	pc64
+		NOTICE
+		ahci.h
+		apbootstrap.s
+		apic.c
+		archmp.c
+		audio.h
+		dat.h
+		errstr.h
+		etherif.h
+		fns.h
+		fpsave.s
+		fpu.c
+		inferno.main.c
+		io.h
+		l.s
+		main.c
+		mem.h
+		memory.c
+		mkfile
+		mmu.c
+		mp.h
+		pc64
+		screen.c
+		screen.h
+		squidboy.c
+		trap.c
+		vga.h
+		vgasoft.c
 	port
 		*
 	pxa
