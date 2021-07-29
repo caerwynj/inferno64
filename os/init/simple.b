@@ -56,5 +56,5 @@ init(nil: ref Draw->Context, nil: list of string)
 	} else {
 		sys->fprint(stderr, "init: cannot find /dis/init: %r\n");
 		spawn sh->init(nil, nil);
-	} 
+	}
 }
