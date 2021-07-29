@@ -279,9 +279,6 @@ mkdirs-nt:V:
 	}
 
 root=$ROOT
-proto=/n/src9/lib/proto/os
-bootproto=/n/src9/lib/proto/9boot
-
 cd:V:	/tmp/9ferno.386.iso.gz
 
 %.gz:D:	%
@@ -305,9 +302,10 @@ cd:V:	/tmp/9ferno.386.iso.gz
 	mv $target.$pid.pc.iso $target
 	}
 
-# TODO get rid of the echo + in -p after the proto files are streamlined
-#	replace it with 		-p <{cat /n/src9/lib/proto/^(9boot inferno os src)} \
-%.pc.iso:D:	$root $proto $bootproto $kernel
+# TODO
+#	correct/fix the warnings due to the proto files
+#	test the hybrid image from a usb disk
+%.pc.iso:D:	install kernelinstall
 	@{rfork n
 	mk binds
 	{	echo 'console=0 b115200'
