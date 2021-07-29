@@ -3,12 +3,13 @@ load std
 x=$*
 {~ $#x 1 && ~ ${hd $x} -h -r} || {echo usage: shutdown -h or shutdown -r >[1=2]; exit usage}
 # the following is a bit pointless until kfs has halt
-#ftest -f /dis/disk/kfscmd.dis && {
-#	for(a in /chan/kfs.*.cmd){
-#		b=${hd ${tl ${split '.' $a}}}
-#		~ $b '*' || disk/kfscmd -n $b halt
-#	}
-#}
+#	but, the sync will atleast write out all the dirty blocks
+ftest -f /dis/disk/kfscmd.dis && {
+	for(a in /chan/kfs.*.cmd){
+		b=${hd ${tl ${split '.' $a}}}
+		~ $b '*' || disk/kfscmd -n $b sync # halt
+	}
+}
 if {~ $1 -r} {
 	echo reboot >/dev/sysctl
 } {~ $1 -h} {
