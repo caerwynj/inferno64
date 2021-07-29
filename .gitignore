@@ -135,6 +135,9 @@ y.debug
 /Inferno/386/9bootiso
 /Inferno/386/9bootpxe
 /Inferno/386/mbr
+/Inferno/386/bootia32.efi
+/Inferno/386/bootx64.efi
+/Inferno/386/efiboot.fat
 /os/boot/efi/bootia32.efi
 /os/boot/efi/bootx64.efi
 /os/boot/efi/bootx64.out
