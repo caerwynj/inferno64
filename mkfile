@@ -29,8 +29,9 @@ EMUDIRS=\
 
 
 KERNEL_DIRS=\
-	os\
 	os/boot/pc\
+	os/boot/efi\
+	os/pc64\
 
 # mkconfig is included at this point to allow it to override
 #the preceding declarations (particularly KERNEL_DIRS) if need be
@@ -305,7 +306,7 @@ cd:V:	/tmp/9ferno.386.iso.gz
 	}
 
 # TODO get rid of the echo + in -p after the proto files are streamlined
-#	replace it with 		-p <{cat $proto $bootproto} \
+#	replace it with 		-p <{cat /n/src9/lib/proto/^(9boot inferno os src)} \
 %.pc.iso:D:	$root $proto $bootproto $kernel
 	@{rfork n
 	mk binds
@@ -317,7 +318,7 @@ cd:V:	/tmp/9ferno.386.iso.gz
 	bind /env/plan9.ini /n/src9/cfg/plan9.ini
 	cat /n/src9/cfg/plan9.ini
 	disk/mk9660 -c9j -B 386/9bootiso -E 386/efiboot.fat \
-		-p <{echo +} \
+		-p <{cat /n/src9/lib/proto/^(9boot inferno os src utils)} \
 		-s /n/src9 -v 'Inferno 9 Front ('^$objtype^')' $target
 	if(test -r /n/src9/386/9boothyb){
 		dd -if /dev/zero -bs 2048 -count 1024 >> $target
@@ -347,5 +348,5 @@ binds:V:
 	aux/stub -d /n/src9/cfg
 	aux/stub /n/src9/amd64/9pc64
 	bind /root/amd64/9pc64 /n/src9/amd64/9pc64
-	ns
+	# ns
 
