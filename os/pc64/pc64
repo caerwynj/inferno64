@@ -178,6 +178,7 @@ root
 	/dis/cat.dis
 	/dis/bind.dis
 	/dis/mount.dis
+	/dis/unmount.dis
 	/dis/mntgen.dis
 	/dis/pwd.dis
 	/dis/echo.dis

@@ -1,15 +1,30 @@
-#!/dis/sh
+#!/dis/sh -nx
 load std
 x=$*
-{~ $#x 1 && ~ ${hd $x} -h -r} || {echo usage: shutdown -h or shutdown -r >[1=2]; exit usage}
+{~ $#x 1 && ~ ${hd $x} -h -r} || {
+	echo usage: shutdown -h or shutdown -r >[1=2];
+	exit usage
+}
 # the following is a bit pointless until kfs has halt
 #	but, the sync will atleast write out all the dirty blocks
 ftest -f /dis/disk/kfscmd.dis && {
 	for(a in /chan/kfs.*.cmd){
 		b=${hd ${tl ${split '.' $a}}}
-		~ $b '*' || disk/kfscmd -n $b sync # halt
+		~ $"b '\*' || {
+			disk/kfscmd -n $b sync # halt
+		}
 	}
 }
+
+# need a better way of doing this - this is dumb
+#	there is no way to clean up all the mounts and binds
+ns | grep '/n/rootdisk/dis /dis' &&
+	unmount /n/rootdisk/dis /dis
+unmount /n/rootdisk /
+unmount /n/rootdisk
+status=()
+ns
+
 if {~ $1 -r} {
 	echo reboot >/dev/sysctl
 } {~ $1 -h} {
