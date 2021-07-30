@@ -173,16 +173,18 @@ root
 	/dis/svc
 	/dis/wm
 	/osinit.dis
-	/dis/sh.dis
-	/dis/ls.dis
-	/dis/cat.dis
+	/dis/9660srv.dis
 	/dis/bind.dis
-	/dis/mount.dis
-	/dis/unmount.dis
-	/dis/mntgen.dis
-	/dis/pwd.dis
-	/dis/echo.dis
+	/dis/cat.dis
 	/dis/cd.dis
+	/dis/disk/calc.tab.dis
+	/dis/disk/fdisk.dis
+	/dis/disk/kfs.dis
+	/dis/disk/kfscmd.dis
+	/dis/disk/pedit.dis
+	/dis/disk/prep.dis
+	/dis/echo.dis
+	/dis/init
 	/dis/lib/arg.dis
 	/dis/lib/auth.dis
 	/dis/lib/bufio.dis
@@ -198,16 +200,15 @@ root
 	/dis/lib/styx.dis
 	/dis/lib/styxservers.dis
 	/dis/lib/workdir.dis
+	/dis/ls.dis
+	/dis/mntgen.dis
+	/dis/mount.dis
+	/dis/ns.dis
+	/dis/pwd.dis
+	/dis/sh.dis
 	/dis/sh/std.dis
-	/dis/9660srv.dis
-	/dis/init
-	/dis/disk/pedit.dis
-	/dis/disk/calc.tab.dis
-	/dis/disk/fdisk.dis
-	/dis/disk/kfs.dis
-	/dis/disk/kfscmd.dis
-	/dis/disk/prep.dis
 	/dis/shutdown
+	/dis/unmount.dis
 
 bootdir
 	/$objtype/bin/paqfs
