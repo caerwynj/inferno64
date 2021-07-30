@@ -286,6 +286,7 @@ void
 confinit(void)
 {
 	char *p;
+	int pcnt;
 	u64 maxmem;
 	int i;
 
@@ -293,13 +294,21 @@ confinit(void)
 		maxmem = strtoull(p, 0, 0);
 	else
 		maxmem = 0;
+	if(p = getconf("*kernelpercent"))
+		pcnt = 100 - strtol(p, 0, 0);
+	else
+		pcnt = 0;
 
 	conf.npage = 0;
 	for(i=0; i<nelem(conf.mem); i++)
 		conf.npage += conf.mem[i].npage;
-	print("conf.npage %d\n", conf.npage);
 
+	if(pcnt < 10)
+		pcnt = 70;
+	conf.ialloc = (((conf.npage*(100-pcnt))/100)/2)*BY2PG;
 	conf.nproc = 100 + ((conf.npage*BY2PG)/MiB)*5;
+	print("conf.npage %d conf.ialloc %d conf.nproc %d\n",
+			conf.npage, conf.ialloc, conf.nproc);
 }
 
 void

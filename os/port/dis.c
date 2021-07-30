@@ -288,16 +288,23 @@ void
 tellsomeone(Prog *p, char *buf)
 {
 	Osenv *o;
+	int ret;
 
 	DP("tellsomeone pid %d buf %s\n", p->pid, buf);
 	if(waserror())
 		return;
 	DP("tellsomeone after waserror() pid %d buf %s\n", p->pid, buf);
 	o = p->osenv;
-	if(o->childq != nil)
+	if(o->childq != nil){
 		qproduce(o->childq, buf, strlen(buf));
-	if(o->waitq != nil)
-		qproduce(o->waitq, buf, strlen(buf));
+		if(ret != strlen(buf))
+			print("tellsomeone qproduce on childq sent %d bytes out of %d\n", ret, strlen(buf));
+	}
+	if(o->waitq != nil){
+		ret = qproduce(o->waitq, buf, strlen(buf));
+		if(ret != strlen(buf))
+			print("tellsomeone qproduce on waitq sent %d bytes out of %d\n", ret, strlen(buf));
+	}
 	poperror();
 }
 

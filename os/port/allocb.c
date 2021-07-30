@@ -73,13 +73,13 @@ iallocb(int size)
 	Block *b;
 
 	if(ialloc.bytes > conf.ialloc){
-		//print("iallocb: limited %lud/%lud\n", ialloc.bytes, conf.ialloc);
+		print("iallocb: limited %lud/%lud\n", ialloc.bytes, conf.ialloc);
 		return nil;
 	}
 
 	b = _allocb(size);
 	if(b == nil){
-		//print("iallocb: no memory %lud/%lud\n", ialloc.bytes, conf.ialloc);
+		print("iallocb: no memory %lud/%lud\n", ialloc.bytes, conf.ialloc);
 		return nil;
 	}
 	setmalloctag(b, getcallerpc(&size));
