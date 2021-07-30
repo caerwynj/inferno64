@@ -1,5 +1,5 @@
 # boot initialization here
-# sh -n /dis/bootrc
+# sh -n /dis/init
 
 load std
 
@@ -7,28 +7,29 @@ mount { mntgen } /n
 disk/fdisk -p /dev/sdG0/data >/dev/sdG0/ctl
 disk/prep -p /dev/sdG0/plan9 > /dev/sdG0/ctl
 
-## for using the cd
-#9660srv /dev/sdF0/data /n/cd
+# for using the cd
+9660srv /dev/sdF0/data /n/cd
 #bind -b /n/cd/dis /dis
 #bind -b /n/cd/Inferno/386 /
 
-## for formatting the disk
-##	bind -a '#S' /dev	# simple.b does this
-#disk/mbr -m mbr /dev/sdG0/data
-#disk/fdisk -baw /dev/sdG0/data
-#disk/prep -bw -a^(9fat fs) /dev/sdG0/plan9
-#disk/format -b pbs -d -r 2 /dev/sdG0/9fat 9bootfat /n/cd/cfg/plan9.ini
-
+### for formatting the disk
+###	bind -a '#S' /dev	# simple.b does this
+##disk/mbr -m mbr /dev/sdG0/data
+##disk/fdisk -baw /dev/sdG0/data
+##disk/prep -bw -a^(9fat fs) /dev/sdG0/plan9
+##disk/format -b pbs -d -r 2 /dev/sdG0/9fat 9bootfat /n/cd/cfg/plan9.ini
+#
 ## for installing to a formatted disk
-#mount -c { disk/kfs -r -n root /dev/sdG0/fs } /n/local # reams
+#mount -c { disk/kfs -r -n root /dev/sdG0/fs } /n/local # ream
 #disk/kfscmd -n root sync
 #disk/mkfs -v -r -s /n/cd/ -d /n/local/ <{ echo + }
 #disk/kfscmd -n root sync
 
 # starting inferno already installed to a disk
-mount -c { disk/kfs -n root /dev/sdG0/fs } /n/local
+mount -c { disk/kfs -D -n root /dev/sdG0/fs } /n/local
 disk/kfscmd -n root sync
 bind -b /n/local/dis /dis
 bind -a -c /n/local/ /
+disk/mkfs -v -s /n/cd/ -d /n/local/ <{ echo + }
 
 sh -n

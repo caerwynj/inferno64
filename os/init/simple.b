@@ -30,22 +30,23 @@ init(nil: ref Draw->Context, nil: list of string)
 	sys->print("Welcome to Inferno...\n");
 
 	# set up basic devices, ignoring errors
-	sys->bind("#d", "/fd", Sys->MREPL);
+	sys->bind("#d", "/fd", Sys->MREPL);		# dup(3)
 	sys->bind("#S", "/dev", sys->MAFTER);	# Disks
-#	sys->bind("#l", "/net", sys->MAFTER);	# Network interfaces - hangs this program now
-#	sys->bind("#I", "/net", sys->MAFTER);	# IP
+	sys->bind("#l", "/net", sys->MAFTER);	# Network interfaces - hangs this program now
+	sys->bind("#I", "/net", sys->MAFTER);	# IP
 	sys->bind("#p", "/prog", sys->MREPL);	# prog device
 	sys->bind("#t", "/dev", sys->MAFTER);	# serial line
 	sys->bind("#c", "/dev", sys->MAFTER);	# console device
-#	sys->bind("#P","/dev",sys->MAFTER);
-#	sys->bind("#P/realmode","/dev",sys->MAFTER);	# arch
-#	sys->bind("#P/realmodemem","/dev",sys->MAFTER);
-	sys->bind("#i", "/dev", sys->MREPL);	# draw device
+	sys->bind("#e", "/env", sys->MAFTER);	# env
+	sys->bind("#P","/dev",sys->MAFTER);		# arch
+#	sys->bind("#P/realmode","/dev",sys->MAFTER); # not in the arch(3). What is this for?
+#	sys->bind("#P/realmodemem","/dev",sys->MAFTER);# not in the arch(3). What is this for?
+#	sys->bind("#i", "/dev", sys->MREPL);	# draw device
 #	sys->bind("#v","/dev",sys->MAFTER);     # VGA
-#	sys->bind("#m","/dev",sys->MAFTER);     # pointer/mouse
-#	sys->bind("#W","/dev",sys->MAFTER);	# Flash
+	sys->bind("#m","/dev",sys->MAFTER);     # pointer/mouse
+#	sys->bind("#W","/dev",sys->MAFTER);		# Flash
 #	sys->bind("#O", "/dev", sys->MAFTER);	# Modem
-#	sys->bind("#T","/dev",sys->MAFTER);	# Touchscreen
+#	sys->bind("#T","/dev",sys->MAFTER);		# Touchscreen
 
 	#sys->print("after the binds\n");
 	sh := load Sh "/dis/sh.dis";
