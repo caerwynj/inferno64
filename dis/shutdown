@@ -5,6 +5,7 @@ x=$*
 	echo usage: shutdown -h or shutdown -r >[1=2];
 	exit usage
 }
+cd /
 # the following is a bit pointless until kfs has halt
 #	but, the sync will atleast write out all the dirty blocks
 ftest -f /dis/disk/kfscmd.dis && {
