@@ -8,6 +8,14 @@ include "draw.m";
 include "string.m";
 	str: String;
 
+include "lists.m";
+
+include "env.m";
+	env: Env;
+
+include "workdir.m";
+	wd: Workdir;
+
 include "arg.m";
 
 Os: module
@@ -21,23 +29,51 @@ init(nil: ref Draw->Context, args: list of string)
 	str = load String String->PATH;
 	if(str == nil)
 		fail(sys->sprint("cannot load %s: %r", String->PATH));
+	env = load Env Env->PATH;
+	if(env == nil)
+		fail(sys->sprint("cannot load %s: %r", Env->PATH));
+	wd= load Workdir Workdir->PATH;
+	if(wd== nil)
+		fail(sys->sprint("cannot load %s: %r", Workdir->PATH));
 	arg := load Arg Arg->PATH;
 	if(arg == nil)
 		fail(sys->sprint("cannot load %s: %r", Arg->PATH));
 
 	arg->init(args);
-	arg->setusage("os [-d dir] [-m mount] [-n] [-N nice] [-b] command [arg...]");
+	arg->setusage("os [-DrcCbn] [-d dir] [-m mount] [-N nice] command [arg...]");
 
+	emuroot := env->getenv("emuroot");
+
+	debug := 0;
 	nice := 0;
 	nicearg: string;
-	workdir := "";
+	workdir:= "";
 	mntpoint := "";
 	foreground := 1;
+	convpaths := 1;
+
+	# Root ourselves in the of our cwd inside of Inferno by default
+	rooted := 1;
+	usecwd := 1;
 
 	while((opt := arg->opt()) != 0) {
 		case opt {
+		'D' =>
+			# Turn on debugging 
+			debug = 1;
+		'r' =>
+			# Don't root at Inferno /
+			rooted = 0;
+		'c' =>
+			# Don't use cwd - will run at Inferno / if -r isn't set
+			usecwd = 0;
+		'C' =>
+			# Don't convert arguments starting with / to $emuroot^/$arg
+			convpaths = 0;
 		'd' =>
 			workdir = arg->earg();
+			usecwd = 0;
+			rooted = 0;
 		'm' =>
 			mntpoint = arg->earg();
 		'n' =>
@@ -52,7 +88,7 @@ init(nil: ref Draw->Context, args: list of string)
 		}
 	}
 	args = arg->argv();
-	if (args == nil)
+	if(args == nil)
 		arg->usage();
 	arg = nil;
 
@@ -78,6 +114,44 @@ init(nil: ref Draw->Context, args: list of string)
 	wfd := sys->open(dir+"/wait", Sys->OREAD);
 	if(nice && sys->fprint(cfd, "nice%s", nicearg) < 0)
 		sys->fprint(sys->fildes(2), "os: warning: can't set nice priority: %r\n");
+
+	# Convert arguments beginning with / to $emuroot^/$arg
+	if(convpaths && len args > 1){
+		lists := load Lists Lists->PATH;
+		if(lists == nil)
+			raise "cannot load lists";
+
+		nargs: list of string;
+		argv0 := hd args;
+		args = tl args;
+
+		for(; args != nil; args = tl args){
+			a := hd args;
+			if(a[0] == '/')
+				a = emuroot + a;
+
+			nargs = a :: nargs;
+		}
+
+		args = lists->reverse(nargs);
+		args = argv0 :: args;
+	}
+
+	if(debug){
+		sys->fprint(sys->fildes(2), "Args to cmd:\n");
+		for(argv := args; argv != nil; argv = tl argv)
+			sys->fprint(sys->fildes(2), "\t%s\n", hd argv);
+	}
+
+	if(usecwd)
+		workdir = wd->init();
+
+	# If $emuroot is not set, don't care, directory is checked below
+	if(rooted)
+		workdir = emuroot + workdir;
+
+	if(debug)
+		sys->fprint(sys->fildes(2), "Workdir = %s\n", workdir);
 
 	if(workdir != nil && sys->fprint(cfd, "dir %s", workdir) < 0)
 		fail(sys->sprint("cannot set cwd %q: %r", workdir));
