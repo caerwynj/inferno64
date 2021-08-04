@@ -24,6 +24,10 @@ struct Schedq
 	Proc*	tail;
 };
 
+/* multiple run queues by priority, different from Brian's book
+ * Per Brian's book, it is the struct Procs == struct Scheq.
+ * Now, inferno maintains multiple Schedq based on priority.
+ */
 static Schedq	runq[Nrq];
 static ulong	occupied;
 int	nrdy;
@@ -116,6 +120,8 @@ ready(Proc *p)
 		return;
 	}
 */
+
+	/* adding to the end of the queue of procs ready to run */
 	rq = &runq[p->pri];
 	lock(runq);
 	p->rnext = 0;

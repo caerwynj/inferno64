@@ -71,10 +71,10 @@ enum {
 	Ncmd = 20,
 };
 
-#define TYPE(q)		((((ulong)(q).path)>>TypeSHIFT) & TypeMASK)
-#define PART(q)		((((ulong)(q).path)>>PartSHIFT) & PartMASK)
-#define UNIT(q)		((((ulong)(q).path)>>UnitSHIFT) & UnitMASK)
-#define DEV(q)		((((ulong)(q).path)>>DevSHIFT) & DevMASK)
+#define TYPE(q)		((((u64)(q).path)>>TypeSHIFT) & TypeMASK)
+#define PART(q)		((((u64)(q).path)>>PartSHIFT) & PartMASK)
+#define UNIT(q)		((((u64)(q).path)>>UnitSHIFT) & UnitMASK)
+#define DEV(q)		((((u64)(q).path)>>DevSHIFT) & DevMASK)
 #define QID(d,u, p, t)	(((d)<<DevSHIFT)|((u)<<UnitSHIFT)|\
 					 ((p)<<PartSHIFT)|((t)<<TypeSHIFT))
 
@@ -777,8 +777,8 @@ sdbio(Chan* c, int write, char* a, long len, uvlong off)
 	SDpart *pp;
 	SDunit *unit;
 	SDev *sdev;
-	ulong max, nb, offset;
-	uvlong bno;
+	u64 max, nb, offset;
+	u64 bno;
 
 	sdev = sdgetdev(DEV(c->qid));
 	if(sdev == nil){
@@ -1233,7 +1233,7 @@ sdread(Chan *c, void *a, s32 n, s64 off)
 	SDpart *pp;
 	SDreq *r;
 	SDunit *unit;
-	u64 offset;
+	s64 offset;
 	int i, l, m, status;
 
 	offset = off;
