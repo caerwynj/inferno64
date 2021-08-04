@@ -20,7 +20,7 @@ Queue*	kbdq;			/* unprocessed console input */
 Queue*	lineq;			/* processed console input */
 Queue*	printq;			/* console output */
 Queue*	klogq;			/* kernel print (log) output */
-int	iprintscreenputs;
+int	iprintscreenputs = 1;
 int	panicking;
 
 static struct
