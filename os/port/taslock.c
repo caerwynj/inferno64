@@ -108,7 +108,11 @@ unlock(Lock *l)
 	l->pc = 0;
 	l->key = 0;
 	coherence();
-	if(up){
+	if(up && islo()){
+		/*
+		 * Call sched if the need arose while locks were held
+		 * But, don't do it from interrupt routines, hence the islo() test
+		 */
 		up->pri = p;
 		if(up->state == Running && anyhigher())
 			sched();
