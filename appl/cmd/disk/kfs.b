@@ -444,6 +444,9 @@ init(nil: ref Draw->Context, args: list of string)
 	if(wrencheck(wrenfd))
 		error("kfs super/root in trouble");
 
+	if(debug)
+		sys->print("ream %d readonly %d !read %d !readonly %d\n",
+					ream, readonly, !ream, !readonly);
 	if(!ream && !readonly && !superok(0)){
 		sys->print("kfs needs check\n");
 		if(!nocheck)
@@ -1959,8 +1962,10 @@ superok(set: int): int
 	sb := Superb.get(thedevice, Bread|Bmod|Bimm);
 	ok := sb.fsok;
 	sb.fsok = set;
-	if(debug)
+	if(debug){
+		sys->print("superok ok %d\n", ok);
 		sb.print();
+	}
 	sb.touched();
 	sb.put();
 	return ok;
