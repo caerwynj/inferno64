@@ -33,12 +33,12 @@ rampage(void)
 	/*
 	 * Allocate from the map directly to make page tables.
 	 */
-	print("before calling rampage\n");
-	memmapdump();
+	DP("before calling rampage\n");
+	/* memmapdump(); */
 	pa = memmapalloc(-1, BY2PG, BY2PG, MemRAM);
 	if(pa == -1)
 		panic("rampage: out of memory\n");
-	print("rampage returned 0x%p\n", pa);
+	DP("rampage returned 0x%p\n", pa);
 	return (void*)pa;
 }
 
