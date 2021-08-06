@@ -117,7 +117,7 @@ mod
 	math
 
 init
-	simple
+	disinit
 	#shell
 	#wminit
 

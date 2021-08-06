@@ -4,45 +4,52 @@
 load std
 
 mount { mntgen } /n
-#disk/fdisk -p /dev/sdG0/data >/dev/sdG0/ctl
-#disk/prep -p /dev/sdG0/plan9 > /dev/sdG0/ctl
+
+## usually better than 1970
+#cat '#r/rtc' >/dev/time >[2]/dev/null
 #
-## for using the cd
-#9660srv /dev/sdF0/data /n/cd
-#bind -b /n/cd/dis /dis
-##bind -b /n/cd/Inferno/386 /
-#
-#### for formatting the disk
-####	bind -a '#S' /dev	# simple.b does this
-###disk/mbr -m mbr /dev/sdG0/data
-###disk/fdisk -baw /dev/sdG0/data
-###disk/prep -bw -a^(9fat fs) /dev/sdG0/plan9
-###disk/format -b pbs -d -r 2 /dev/sdG0/9fat 9bootfat /n/cd/cfg/plan9.ini
-##
-### for installing to a formatted disk
-##mount -c { disk/kfs -r -n root /dev/sdG0/fs } /n/rootdisk # ream
-##disk/kfscmd -n root sync
-##disk/mkfs -v -r -s /n/cd/ -d /n/rootdisk/ <{ echo + }
-##disk/kfscmd -n root sync
-#
-### starting inferno already installed to a disk
-##mount -c { disk/kfs -D -n rootdisk /dev/sdG0/fs } /n/rootdisk
-##disk/kfscmd -n rootdisk sync
-###bind -b /n/rootdisk/dis /dis
-##bind -a -c /n/rootdisk/ /
-###disk/mkfs -v -s /n/cd/ -d /n/rootdisk/ <{ echo + }
-#
-#ftest -f '#P'/archctl && {
-#	echo '#P'/archctl
-#	cat '#P'/archctl
+#fn showlocaldev {
+#	echo $1'	' $2
+#	if(~ $#bootargs 0){
+#		if(! ~ $#cdboot 0){
+#			if(~ $2 9660)
+#				bootargs=local!$1
+#		}
+#		if not {
+#			if(! ~ $2 '' dos)
+#				bootargs=local!$1
+#		}
+#	}
 #}
-#bind -b /n/cd/ /
-#ns
-#ndb/cs -v
-#<>/net/ipifc/clone {
-#	x=`{read}
-#	echo bind ether /net/ether0 > /net/ipifc/$x/ctl
-#	ip/dhcp -h vmx9ferno -p /net/ipifc/$x
+#
+#fn showlocaldevs{
+#	for(d in /dev/sd*) if(test -r $d/ctl){
+#		q=`{sed 's,(inquiry|geometry),\
+#\1,g' $d/ctl | grep inquiry}
+#		echo $d':' $q(2-)
+#		for(i in `{ls -p $d}){
+#			p=$d/$i
+#			switch($i){
+#			case ctl raw log led
+#				;
+#			case plan9 nvram swap
+#				echo $p
+#			case *
+#				showlocaldev $p `{fstype $p}
+#			}
+#		}
+#	}
+#	for(d in /shr/sd*) if(test -d $d) {
+#		echo $d':'
+#		for(p in $d/*.^(iso paq)) if(test -f $p){
+#			t=`{fstype $p}
+#			~ $#t 0 || showlocaldev $p $t
+#		}
+#	}
 #}
+#
+#showlocaldevs
+
+ftest -f `{cat /dev/user}^/lib/profile && `{cat /dev/user}^/lib/profile
 
 sh -n
