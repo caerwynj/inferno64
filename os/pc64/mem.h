@@ -55,8 +55,8 @@
 /*
  * Fundamental addresses
  */
-#define	REBOOTADDR	(0x11000)		/* reboot code - physical address */
-#define	CONFADDR	(KDZERO+ 0x1200ull)	/* info passed from boot loader */
+#define	CONFADDR	(0x1200ull)		/* info passed from boot loader */
+#define	REBOOTADDR	(0x11000ull)	/* reboot code - physical address */
 #define	APBOOTSTRAP	(KDZERO+ 0x7000ull)	/* AP bootstrap code */
 #define	IDTADDR		(KDZERO+0x10000ull)	/* idt */
 #define GDTADDR		(KDZERO+0x11000ull)	/* gdt */
@@ -66,8 +66,6 @@
 /* 1 PD table has 512 entries
  * each entry maps to a 2MB page
  * 512 entries maps 1GiB and occupies 512*8 = 4096 bytes
- * TODO Drop the CPU0 prefix for the page tables and gdt
- * call them BOOTPML4 and PML4
  */
 #define PML4ADDR	(KDZERO+0x23000ull)
 #define PDPADDR		(KDZERO+0x24000ull)
@@ -79,7 +77,8 @@
 						/* fill with page tables until KTZERO */
 
 /*
- * Where configuration info is left for the loaded programme.
+ * Where configuration info is left for us by 9boot.
+ * (e.g. why parse the .ini file twice?).
  * There are 24064 bytes available at CONFADDR.
  */
 #define BOOTLINE	((char*)CONFADDR)

@@ -109,7 +109,7 @@ cgascreenputs(char* s, int n)
 		lock(&cgascreenlock);
 
 	while(n-- > 0){
-		outb(0x3D6, *s);
+		/* outb(0x3D6, *s); */
 		cgascreenputc(*s++);
 	}
 	movecursor();

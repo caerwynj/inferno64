@@ -287,7 +287,7 @@ cd:V:	/tmp/9ferno.386.iso.gz
 %.386.iso:
 	@{rfork n
 	objtype=386
-	kernel=/n/src9/$objtype/ipc
+	kernel=/n/src9/Inferno/$objtype/ipc
 	mk binds
 	mk $target.$pid.pc.iso
 	mv $target.$pid.pc.iso $target
@@ -296,7 +296,7 @@ cd:V:	/tmp/9ferno.386.iso.gz
 %.amd64.iso:
 	@{rfork n
 	objtype=amd64
-	kernel=/n/src9/$objtype/ipc64
+	kernel=/n/src9/Inferno/$objtype/ipc64
 	mk binds
 	mk $target.$pid.pc.iso
 	mv $target.$pid.pc.iso $target
@@ -308,15 +308,18 @@ cd:V:	/tmp/9ferno.386.iso.gz
 %.pc.iso:D:	install kernelinstall
 	@{rfork n
 	mk binds
-	{	echo 'console=0 b115200'
+	{	# echo 'console=0 b115200'
 		grep -v '^bootfile=' /n/src9/os/pc/plan9.ini
-		echo 'bootfile='^`{echo $kernel | sed 's!^/n/src9!!'}
+		#echo 'bootfile='^`{echo $kernel | sed 's!^/n/src9!!'}
+		echo 'bootfile=ipc64'
 	} > /env/plan9.ini
 	aux/stub /n/src9/cfg/plan9.ini
 	bind /env/plan9.ini /n/src9/cfg/plan9.ini
+	aux/stub /n/src9/ipc64
+	bind $kernel /n/src9/ipc64
 	cat /n/src9/cfg/plan9.ini
 	disk/mk9660 -c9j -B 386/9bootiso -E 386/efiboot.fat \
-		-p <{cat /n/src9/lib/proto/^(9boot inferno os src utils)} \
+		-p <{echo ipc64; cat /n/src9/lib/proto/^(9boot inferno os src utils)} \
 		-s /n/src9 -v 'Inferno 9 Front ('^$objtype^')' $target
 	if(test -r /n/src9/386/9boothyb){
 		dd -if /dev/zero -bs 2048 -count 1024 >> $target

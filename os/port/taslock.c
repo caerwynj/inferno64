@@ -105,8 +105,8 @@ unlock(Lock *l)
 	if(l->key == 0)
 		print("unlock: not locked: pc %zux\n", getcallerpc(&l));
 	p = l->pri;
-	l->pc = 0;
 	l->key = 0;
+	l->pc = 0;
 	coherence();
 	if(up && islo()){
 		/*

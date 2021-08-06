@@ -426,7 +426,34 @@ e820scan(void)
 	return 0;
 }
 
-/* TODO untested */
+/*
+21:00 < joe7> ori, you around? I am trying to figure out how ramscan() works. When writing the pattern, why does it do this: *k0 = ~pat; ?
+21:01 < joe7> that value is not used anywhere else again in that subroutine.
+21:06 < joe7> nemo's kernel book on page 51 asks the same question too.
+21:06 < joe7> It says, "the author is saving the value actually stored at address KZERO, can you guess why?"
+0:36 < cinap_lenrek> joe7: it is to detect aliases
+00:36 < cinap_lenrek> joe7: it is a RAM tester basically
+00:36 < cinap_lenrek> joe7: you should not use this at all
+00:37 < cinap_lenrek> in modern machines, this approach is impossible
+00:37 < cinap_lenrek> because ram now contains life firmware for devices and megabytes of persistent firmware code
+00:40 < cinap_lenrek> if you write to that or damage that info the whole machine will just lock up or brick itself
+04:38 < joe7> cinap_lenrek: joe7: you should not use this at all -- which one? the ramscan() or *k = pat?
+04:39 < joe7> I see ramscan in 9front 9/pc/memory.c too
+04:39 < joe7> Iif(e820scan() < 0)
+04:39 < joe7> IIramscan(MemMin, -((uintptr)MemMin), 4*MB);
+04:39 < joe7> that is how the ram is being discovered
+04:46 < cinap_lenrek> e820scan() just reads the *e820= plan9.ini parameter
+04:46 < cinap_lenrek> ramscan() is a fallback
+04:46 < cinap_lenrek> when theres no memory map
+04:46 < cinap_lenrek> like on reeeeeally old machines
+04:46 < cinap_lenrek> or when bios is totally broken
+04:47 < cinap_lenrek> dont worry about it
+04:47 < cinap_lenrek> theres not really a point in supporting it anymore
+04:47 < cinap_lenrek> as i said
+04:47 < cinap_lenrek> it is a destructive memory test
+04:47 < joe7> oh, ok. I must have screwed up something as it is going to ramscan() each time.
+04:47 < joe7> I will fix it. Thanks.
+ */
 static void
 ramscan(uintptr pa, uintptr top)
 {
