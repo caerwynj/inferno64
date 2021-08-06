@@ -477,6 +477,7 @@ ramscan(uintptr pa, uintptr top)
 	pat = 0x12345678UL;
 	for(; pa < top; pa += chunk){
 		DP("ramscan pa 0x%p\n", pa);
+		v = (uintptr*)pa;
 		attr = mtrrattr(pa, nil);
 		if(attr != nil && strcmp(attr, "wb") != 0)
 			goto Skip;
