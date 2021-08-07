@@ -24,6 +24,27 @@ int	iprintscreenputs = 1;
 
 int	panicking;
 
+/* below until kbdfs */
+int mouseshifted;
+Queue*  kbdq;                   /* unprocessed console input */
+Queue*  lineq;                  /* processed console input */
+static struct
+{
+        QLock;
+
+        int     raw;            /* true if we shouldn't process input */
+        int     ctl;            /* number of opens to the control file */
+        int     kbdr;           /* number of open reads to the keyboard */
+        int     scan;           /* true if reading raw scancodes */
+        int     x;              /* index into line */
+        char    line[1024];     /* current input line */
+
+        char    c;
+        int     count;
+        int     repeat;
+} kbd;
+/* above until kbdfs */
+
 char*	sysname;
 char*	eve;
 
@@ -490,6 +511,21 @@ rexit(Rune)
 static void
 consinit(void)
 {
+	/* below until kbdfs is built */
+	if(lineq == nil){
+        lineq = qopen(2*1024, 0, nil, nil);
+        if(lineq == nil)
+                panic("consinit");
+        qnoblock(lineq, 1);
+	}
+	if(kbdq == nil){
+		kbdq = qopen(4*1024, 0, 0, 0);
+		if(kbdq == nil)
+			panic("consinit");
+		qnoblock(kbdq, 1);
+	}
+	/* above until kbdfs is built */
+
 	todinit();
 	randominit();
 /*
@@ -574,7 +610,61 @@ consread(Chan *c, void *buf, s32 n, s64 offset)
 	case Qsysctl:
 		return readstr(offset, buf, n, VERSION);
 	case Qcons:
-		error(Egreg);
+		/* below belongs in kbdfs */
+		qlock(&kbd);
+		if(waserror()) {
+			qunlock(&kbd);
+			nexterror();
+		}
+		if(kbd.raw || kbd.kbdr) {
+			if(qcanread(lineq))
+				n = qread(lineq, buf, n);
+			else {
+				/* read as much as possible */
+				char *cbuf = buf;
+				do {
+					i = qread(kbdq, cbuf, n);
+					cbuf += i;
+					n -= i;
+				} while(n>0 && qcanread(kbdq));
+				n = cbuf - (char*)buf;
+			}
+		} else {
+			int ch, eol;
+			while(!qcanread(lineq)) {
+				qread(kbdq, &kbd.line[kbd.x], 1);
+				ch = kbd.line[kbd.x];
+				eol = 0;
+				switch(ch){
+					case '\b':
+						if(kbd.x)
+						kbd.x--;
+						break;
+					case 0x15:
+						kbd.x = 0;
+						break;
+					case '\n':
+					case 0x04:
+						eol = 1;
+					default:
+						kbd.line[kbd.x++] = ch;
+						break;
+				}
+				if(kbd.x == sizeof(kbd.line) || eol) {
+					if(ch == 0x04)
+						kbd.x--;
+					qwrite(lineq, kbd.line, kbd.x);
+					kbd.x = 0;
+				}
+			}
+			n = qread(lineq, buf, n);
+		}
+		qunlock(&kbd);
+		poperror();
+		return n;
+		/* above belongs in kbdfs */
+		/* commented until the above is removed
+		error(Egreg); */
 
 	case Qtime:
 		snprint(tmp, sizeof(tmp), "%.lld", (vlong)mseconds()*1000);
@@ -841,4 +931,295 @@ truerand(void)
 
 	randomread(&x, sizeof(x));
 	return x;
+}
+
+/* all the below belongs in kbdfs  */
+
+/*
+ * The codes at 0x79 and 0x81 are produed by the PFU Happy Hacking keyboard.
+ * A 'standard' keyboard doesn't produce anything above 0x58.
+ */
+Rune kbtab[] = 
+{
+[0x00]	No,	0x1b,	'1',	'2',	'3',	'4',	'5',	'6',
+[0x08]	'7',	'8',	'9',	'0',	'-',	'=',	'\b',	'\t',
+[0x10]	'q',	'w',	'e',	'r',	't',	'y',	'u',	'i',
+[0x18]	'o',	'p',	'[',	']',	'\n',	LCtrl,	'a',	's',
+[0x20]	'd',	'f',	'g',	'h',	'j',	'k',	'l',	';',
+[0x28]	'\'',	'`',	Shift,	'\\',	'z',	'x',	'c',	'v',
+[0x30]	'b',	'n',	'm',	',',	'.',	'/',	Shift,	'*',
+[0x38]	Latin,	' ',	LCtrl,	KF|1,	KF|2,	KF|3,	KF|4,	KF|5,
+[0x40]	KF|6,	KF|7,	KF|8,	KF|9,	KF|10,	Num,	Scroll,	'7',
+[0x48]	'8',	'9',	'-',	'4',	'5',	'6',	'+',	'1',
+[0x50]	'2',	'3',	'0',	'.',	No,	No,	No,	KF|11,
+[0x58]	KF|12,	No,	No,	No,	No,	No,	No,	No,
+[0x60]	No,	No,	No,	No,	No,	No,	No,	No,
+[0x68]	No,	No,	No,	No,	No,	No,	No,	No,
+[0x70]	No,	No,	No,	No,	No,	No,	No,	No,
+[0x78]	No,	View,	No,	Up,	No,	No,	No,	No,
+};
+
+Rune kbtabshift[] =
+{
+[0x00]	No,	0x1b,	'!',	'@',	'#',	'$',	'%',	'^',
+[0x08]	'&',	'*',	'(',	')',	'_',	'+',	'\b',	'\t',
+[0x10]	'Q',	'W',	'E',	'R',	'T',	'Y',	'U',	'I',
+[0x18]	'O',	'P',	'{',	'}',	'\n',	LCtrl,	'A',	'S',
+[0x20]	'D',	'F',	'G',	'H',	'J',	'K',	'L',	':',
+[0x28]	'"',	'~',	Shift,	'|',	'Z',	'X',	'C',	'V',
+[0x30]	'B',	'N',	'M',	'<',	'>',	'?',	Shift,	'*',
+[0x38]	Latin,	' ',	LCtrl,	KF|1,	KF|2,	KF|3,	KF|4,	KF|5,
+[0x40]	KF|6,	KF|7,	KF|8,	KF|9,	KF|10,	Num,	Scroll,	'7',
+[0x48]	'8',	'9',	'-',	'4',	'5',	'6',	'+',	'1',
+[0x50]	'2',	'3',	'0',	'.',	No,	No,	No,	KF|11,
+[0x58]	KF|12,	No,	No,	No,	No,	No,	No,	No,
+[0x60]	No,	No,	No,	No,	No,	No,	No,	No,
+[0x68]	No,	No,	No,	No,	No,	No,	No,	No,
+[0x70]	No,	No,	No,	No,	No,	No,	No,	No,
+[0x78]	No,	Up,	No,	Up,	No,	No,	No,	No,
+};
+
+Rune kbtabesc1[] =
+{
+[0x00]	No,	No,	No,	No,	No,	No,	No,	No,
+[0x08]	No,	No,	No,	No,	No,	No,	No,	No,
+[0x10]	No,	No,	No,	No,	No,	No,	No,	No,
+[0x18]	No,	No,	No,	No,	'\n',	LCtrl,	No,	No,
+[0x20]	No,	No,	No,	No,	No,	No,	No,	No,
+[0x28]	No,	No,	Shift,	No,	No,	No,	No,	No,
+[0x30]	No,	No,	No,	No,	No,	'/',	No,	Print,
+[0x38]	Latin,	No,	No,	No,	No,	No,	No,	No,
+[0x40]	No,	No,	No,	No,	No,	No,	Break,	Home,
+[0x48]	Up,	Pgup,	No,	Left,	No,	Right,	No,	End,
+[0x50]	Down,	Pgdown,	Ins,	Del,	No,	No,	No,	No,
+[0x58]	No,	No,	No,	No,	No,	No,	No,	No,
+[0x60]	No,	No,	No,	No,	No,	No,	No,	No,
+[0x68]	No,	No,	No,	No,	No,	No,	No,	No,
+[0x70]	No,	No,	No,	No,	No,	No,	No,	No,
+[0x78]	No,	Up,	No,	No,	No,	No,	No,	No,
+};
+
+void
+echo(Rune r, char *buf, int n)
+{
+        if(kbd.raw)
+                return;
+
+        if(r == '\n'){
+				putstrn("\r", 1);
+        } else if(r == 0x15){
+                buf = "^U\n";
+                n = 3;
+        }
+		putstrn(buf, n);
+}
+
+/*
+ *  Put character, possibly a rune, into read queue at interrupt time.
+ *  Performs translation for compose sequences
+ *  Called at interrupt time to process a character.
+ */
+int
+kbdputc(Queue *q, int ch)
+{
+        int n;
+        char buf[UTFmax] = "";
+        Rune r;
+        static Rune kc[15];
+        static int nk, collecting = 0;
+
+        r = ch;
+        if(r == Latin) {
+                collecting = 1;
+                nk = 0;
+                return 0;
+        }
+        if(collecting) {
+                int c;
+                nk += runetochar((char*)&kc[nk], &r);
+                c = latin1(kc, nk);
+                if(c < -1)      /* need more keystrokes */
+                        return 0;
+                collecting = 0;
+                if(c == -1) {   /* invalid sequence */
+                        echo(kc[0], (char*)kc, nk);
+                        qproduce(q, kc, nk);
+                        return 0;
+                }
+                r = (Rune)c;
+        }
+        kbd.c = r;
+        n = runetochar(buf, &r);
+        if(n == 0)
+                return 0;
+        echo(r, buf, n);
+        qproduce(q, buf, n);
+        return 0;
+}
+
+void
+kbdrepeat(int rep)
+{
+        kbd.repeat = rep;
+        kbd.count = 0;
+}
+
+void
+kbdclock(void)
+{
+        if(kbd.repeat == 0)
+                return;
+        if(kbd.repeat==1 && ++kbd.count>HZ){
+                kbd.repeat = 2;
+                kbd.count = 0;
+                return;
+        }
+        if(++kbd.count&1)
+                kbdputc(kbdq, kbd.c);
+}
+
+/*
+ *  Called by a uart interrupt for console input.
+ *
+ *  turn '\r' into '\n' before putting it into the queue.
+ */
+int
+kbdcr2nl(Queue *q, int ch)
+{
+        if(ch == '\r')
+                ch = '\n';
+        return kbdputc(q, ch);
+}
+
+/*
+ *  called from the keyboard interrupt
+ */
+void
+kbdprocesschar(int ch)
+{
+	int s, c, i;
+	static int esc1, esc2;
+	static int alt, caps, ctl, num, shift;
+	static int collecting, nk;
+	static Rune kc[5];
+	int keyup;
+
+	c = ch;
+	/*
+	 *  e0's is the first of a 2 character sequence
+	 */
+	if(c == 0xe0){
+		esc1 = 1;
+		return;
+	} else if(c == 0xe1){
+		esc2 = 2;
+		return;
+	}
+
+	keyup = c&0x80;
+	c &= 0x7f;
+	if(c > sizeof kbtab){
+		c |= keyup;
+		if(c != 0xFF)	/* these come fairly often: CAPSLOCK U Y */
+			print("unknown key %ux\n", c);
+		return;
+	}
+
+	if(esc1){
+		c = kbtabesc1[c];
+		esc1 = 0;
+	} else if(esc2){
+		esc2--;
+		return;
+	} else if(shift)
+		c = kbtabshift[c];
+	else
+		c = kbtab[c];
+
+	if(caps && c<='z' && c>='a')
+		c += 'A' - 'a';
+
+	/*
+	 *  keyup only important for shifts
+	 */
+	if(keyup){
+		switch(c){
+		case Latin:
+			alt = 0;
+			break;
+		case Shift:
+			shift = 0;
+			mouseshifted = 0;
+			break;
+		case RCtrl:
+		case LCtrl:
+			ctl = 0;
+			break;
+		}
+		return;
+	}
+
+	/*
+ 	 *  normal character
+	 */
+	if(!(c & (Spec|KF))){
+		if(ctl){
+			if(alt && c == Del)
+				exit(0);
+			c &= 0x1f;
+		}
+		if(!collecting){
+			kbdputc(kbdq, c);
+			return;
+		}
+		kc[nk++] = c;
+		c = latin1(kc, nk);
+		if(c < -1)	/* need more keystrokes */
+			return;
+		if(c != -1)	/* valid sequence */
+			kbdputc(kbdq, c);
+		else	/* dump characters */
+			for(i=0; i<nk; i++)
+				kbdputc(kbdq, kc[i]);
+		nk = 0;
+		collecting = 0;
+		return;
+	} else {
+		switch(c){
+		case Caps:
+			caps ^= 1;
+			return;
+		case Num:
+			num ^= 1;
+			return;
+		case Shift:
+			shift = 1;
+			mouseshifted = 1;
+			return;
+		case Latin:
+			alt = 1;
+			/*
+			 * VMware uses Ctl-Alt as the key combination
+			 * to make the VM give up keyboard and mouse focus.
+			 * This has the unfortunate side effect that when you
+			 * come back into focus, Plan 9 thinks you want to type
+			 * a compose sequence (you just typed alt). 
+			 *
+			 * As a clumsy hack around this, we look for ctl-alt
+			 * and don't treat it as the start of a compose sequence.
+			 */
+			if(!ctl){
+				collecting = 1;
+				nk = 0;
+			}
+			return;
+		case LCtrl:
+		case RCtrl:
+			collecting = 0;
+			nk = 0;
+			ctl = 1;
+			return;
+		}
+	}
+	kbdputc(kbdq, c);
 }

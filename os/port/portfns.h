@@ -123,10 +123,11 @@ int		iseve(void);
 int		islo(void);
 void		iunlock(Lock*);
 void		ixsummary(void);
-void		kbdclock(void);
-int		kbdcr2nl(Queue*, int);
-int		kbdputc(Queue*, int);
-void		kbdrepeat(int);
+void		kbdclock(void);		/* will go away with kbdfs */
+int		kbdcr2nl(Queue*, int);	/* will go away with kbdfs */
+void		kbdprocesschar(int);	/* will go away with kbdfs */
+int		kbdputc(Queue*, int);	/* will go away with kbdfs */
+void		kbdrepeat(int);		/* will go away with kbdfs */
 void		kproc(char*, void(*)(void*), void*, int);
 int		kfgrpclose(Fgrp*, int);
 void		kprocchild(Proc*, void (*)(void*), void*);

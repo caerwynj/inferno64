@@ -31,6 +31,7 @@ init(nil: ref Draw->Context, nil: list of string)
 
 	# set up basic devices, ignoring errors
 	# 9front does this in the shell. Can move them to dis/init later
+	sys->bind("#b", "/dev", sys->MAFTER);	# kbd
 	sys->bind("#c", "/dev", sys->MAFTER);	# console device
 	sys->bind("#d", "/fd", Sys->MREPL);		# dup(3)
 	sys->bind("#e", "/env", sys->MAFTER);	# env
