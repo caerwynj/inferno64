@@ -30,7 +30,6 @@ OBJ=\
 	i8253.$O\
 	i8259.$O\
 	main.$O\
-	kbd.$O\
 	memmap.$O\
 	memory.$O\
 	mmu.$O\

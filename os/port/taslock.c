@@ -12,7 +12,6 @@ lockloop(Lock *l, uintptr pc)
 
 	if(panicking)
 		return;
-	setpanic();
 	panic("lock loop 0x%p key 0x%ux pc 0x%zux held by pc 0x%zux\n", l, l->key, pc, l->pc);
 	panic("lockloop");
 }
@@ -36,6 +35,9 @@ lock(Lock *l)
 			}
 		}
 		l->pc = pc;
+		l->p = up;
+		l->m = MACHP(m->machno);
+		l->isilock = 0;
 		return;
 	}
 
@@ -54,6 +56,9 @@ lock(Lock *l)
 	l->pri = up->pri;
 	up->pri = PriLock;
 	l->pc = pc;
+	l->p = up;
+	l->m = MACHP(m->machno);
+	l->isilock = 0;
 }
 
 void
@@ -68,6 +73,9 @@ ilock(Lock *l)
 		if(_tas((int*)&l->key) == 0) {
 			l->sr = x;
 			l->pc = pc;
+			l->p = up;
+			l->m = MACHP(m->machno);
+			l->isilock = 1;
 			return;
 		}
 		if(conf.nmach < 2)
@@ -94,6 +102,9 @@ canlock(Lock *l)
 		up->pri = PriLock;
 	}
 	l->pc = getcallerpc(&l);
+	l->p = up;
+	l->m = MACHP(m->machno);
+	l->isilock = 0;
 	return 1;
 }
 
@@ -104,10 +115,17 @@ unlock(Lock *l)
 
 	if(l->key == 0)
 		print("unlock: not locked: pc %zux\n", getcallerpc(&l));
+	if(l->isilock)
+		print("unlock(%#p) of ilock: pc %#p, held by %#p\n",
+			l, getcallerpc(&l), l->pc);
+	if(l->p != up)
+		print("unlock(%#p): up changed: pc %#p, acquired at pc %#p, lock p %#p, unlock up %#p\n",
+			l, getcallerpc(&l), l->pc, l->p, up);
 	p = l->pri;
+	l->m = nil;
+	coherence();
 	l->key = 0;
 	l->pc = 0;
-	coherence();
 	if(up && islo()){
 		/*
 		 * Call sched if the need arose while locks were held
@@ -122,13 +140,14 @@ unlock(Lock *l)
 void
 iunlock(Lock *l)
 {
-	ulong sr;
+	u32 sr;
 
 	if(l->key == 0)
 		print("iunlock: not locked: pc %zux\n", getcallerpc(&l));
 	sr = l->sr;
+	l->m = nil;
+	coherence();
 	l->pc = 0;
 	l->key = 0;
-	coherence();
 	splx(sr);
 }

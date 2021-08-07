@@ -135,7 +135,6 @@ main(void)
 	meminit();			/* builds the conf.mem entries */
 	confinit();
 	xinit();
-	kbdinit();
 	i8253init();
 	/* TODO 9front if(i8237alloc != nil)
 		i8237alloc(); */
@@ -157,8 +156,6 @@ main(void)
 	timersinit();
 	doc("mathinit");
 	mathinit();
-	doc("kbdenable");
-	kbdenable();
 	if(arch->clockenable){
 		doc("clockinit");
 		arch->clockenable();

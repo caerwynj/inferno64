@@ -918,7 +918,6 @@ poolsize(Pool *p, uintptr max, int contig)
 static void
 _poolfault(void *v, char *msg, uintptr c)
 {
-	setpanic();
 	auditmemloc(msg, v);
 	panic("%s %p (from %p/%zux)", msg, v, getcallerpc(&v), c);
 }
@@ -1078,8 +1077,10 @@ poolaudit(char*(*audit)(int, Bhdr *))
 	return r;
 }
 
+/*
 void
 poolinit(void)
 {
 	debugkey('m', "memory pools", poolsummary, 0);
 }
+*/

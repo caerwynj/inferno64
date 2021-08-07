@@ -13,13 +13,15 @@ dev
 	ssl
 	cap
 
-	draw	screen vga vgax cga
-	pointer
-	vga	pci
-
-	ip	bootp ip ipv6 ipaux iproute arp netlog ptclbsum iprouter plan9 nullmedium pktmedium
 	ether		netif netaux ethermedium
 #	bridge		netif log
+	ip	bootp ip ipv6 ipaux iproute arp netlog ptclbsum iprouter plan9 nullmedium pktmedium
+
+	draw	screen vga vgax cga
+#	mouse		mouse
+	pointer
+	kbd
+	vga	pci
 
 #	ata
 	audio		dma
@@ -27,8 +29,6 @@ dev
 	sd
 #	floppy	dma
 	tinyfs
-#	kbd
-#	mouse		mouse
 #	dbg	x86break
 
 ip

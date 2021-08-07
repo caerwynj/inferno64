@@ -1524,6 +1524,6 @@ void
 qdump(Queue *q)
 {
 	if(q)
-	kprint("q=%p bfirst=%p blast=%p len=%d dlen=%d limit=%d state=#%x\n",
+	iprint("q=%p bfirst=%p blast=%p len=%d dlen=%d limit=%d state=#%x\n",
 		q, q->bfirst, q->blast, q->len, q->dlen, q->limit, q->state);
 }

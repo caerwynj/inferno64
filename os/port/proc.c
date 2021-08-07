@@ -306,7 +306,7 @@ procinit(void)
 		p->qnext = p+1;
 	p->qnext = 0;
 
-	debugkey('p', "processes", procdump, 0);
+	/* debugkey('p', "processes", procdump, 0); */
 }
 
 void

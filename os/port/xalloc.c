@@ -67,7 +67,7 @@ xinit(void)
 		xhole(cm->base, cm->npage*BY2PG);
 	}
 
-	debugkey('x', "xalloc/ialloc", ixprt, 0);
+	/* debugkey('x', "xalloc/ialloc", ixprt, 0); */
 	xsummary();
 }
 

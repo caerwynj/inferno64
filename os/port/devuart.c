@@ -5,6 +5,7 @@
 #include	"fns.h"
 #include	"io.h"
 #include	"../port/error.h"
+
 #include	"../port/netif.h"
 
 enum
@@ -22,6 +23,7 @@ static Uart** uart;
 static int uartnuart;
 static Dirtab *uartdir;
 static int uartndir;
+static Timer *uarttimer;
 
 struct Uartalloc {
 	Lock;
@@ -34,19 +36,21 @@ static void	uartflow(void*);
 /*
  *  enable/disable uart and add/remove to list of enabled uarts
  */
-static Uart*
+Uart*
 uartenable(Uart *p)
 {
 	Uart **l;
 
+	if(p->enabled)
+		return p;
 	if(p->iq == nil){
-		if((p->iq = qopen(4*1024, 0, uartflow, p)) == nil)
+		if((p->iq = qopen(8*1024, Qcoalesce, uartflow, p)) == nil)
 			return nil;
 	}
 	else
 		qreopen(p->iq);
 	if(p->oq == nil){
-		if((p->oq = qopen(4*1024, 0, uartkick, p)) == nil){
+		if((p->oq = qopen(8*1024, 0, uartkick, p)) == nil){
 			qfree(p->iq);
 			p->iq = nil;
 			return nil;
@@ -78,7 +82,11 @@ uartenable(Uart *p)
 		uartctl(p, "b9600");
 	(*p->phys->enable)(p, 1);
 
-	lock(&uartalloc);
+	/*
+	 * use ilock because uartclock can otherwise interrupt here
+	 * and would hang on an attempt to lock uartalloc.
+	 */
+	ilock(&uartalloc);
 	for(l = &uartalloc.elist; *l; l = &(*l)->elist){
 		if(*l == p)
 			break;
@@ -88,7 +96,7 @@ uartenable(Uart *p)
 		uartalloc.elist = p;
 	}
 	p->enabled = 1;
-	unlock(&uartalloc);
+	iunlock(&uartalloc);
 
 	return p;
 }
@@ -98,9 +106,11 @@ uartdisable(Uart *p)
 {
 	Uart **l;
 
+	if(!p->enabled)
+		return;
 	(*p->phys->disable)(p);
 
-	lock(&uartalloc);
+	ilock(&uartalloc);
 	for(l = &uartalloc.elist; *l; l = &(*l)->elist){
 		if(*l == p){
 			*l = p->elist;
@@ -108,7 +118,7 @@ uartdisable(Uart *p)
 		}
 	}
 	p->enabled = 0;
-	unlock(&uartalloc);
+	iunlock(&uartalloc);
 }
 
 static Uart*
@@ -204,6 +214,8 @@ uartreset(void)
 
 	uartndir = 1 + 3*uartnuart;
 	uartdir = xalloc(uartndir * sizeof(Dirtab));
+	if(uartnuart && uart == nil || uartdir == nil)
+		panic("uartreset: no memory");
 	dp = uartdir;
 	strcpy(dp->name, ".");
 	mkqid(&dp->qid, 0, 0, QTDIR);
@@ -213,15 +225,15 @@ uartreset(void)
 	p = uartlist;
 	for(i = 0; i < uartnuart; i++){
 		/* 3 directory entries per port */
-		sprint(dp->name, "eia%d", i);
+		snprint(dp->name, sizeof dp->name, "eia%d", i);
 		dp->qid.path = NETQID(i, Ndataqid);
 		dp->perm = 0660;
 		dp++;
-		sprint(dp->name, "eia%dctl", i);
+		snprint(dp->name, sizeof dp->name, "eia%dctl", i);
 		dp->qid.path = NETQID(i, Nctlqid);
 		dp->perm = 0660;
 		dp++;
-		sprint(dp->name, "eia%dstatus", i);
+		snprint(dp->name, sizeof dp->name, "eia%dstatus", i);
 		dp->qid.path = NETQID(i, Nstatqid);
 		dp->perm = 0444;
 		dp++;
@@ -231,9 +243,7 @@ uartreset(void)
 		if(p->console || p->special){
 			if(uartenable(p) != nil){
 				if(p->console){
-					kbdq = p->iq;
-					printq = p->oq;
-					p->putc = kbdcr2nl;
+					serialoq = p->oq;
 				}
 				p->opens++;
 			}
@@ -244,9 +254,9 @@ uartreset(void)
 	if(uartnuart){
 		/*
 		 * at 115200 baud, the 1024 char buffer takes 56 ms to process,
-		 * processing it every 22 ms should be fine
+		 * processing it every 22 ms should be fine.
 		 */
-		addclock0link(uartclock, 22);
+		uarttimer = addclock0link(uartclock, 22);
 	}
 }
 
@@ -258,13 +268,13 @@ uartattach(char *spec)
 }
 
 static Walkqid*
-uartwalk(Chan *c, Chan *nc, char **name, int nname)
+uartwalk(Chan *c, Chan *nc, char **name, s32 nname)
 {
 	return devwalk(c, nc, name, nname, uartdir, uartndir, devgen);
 }
 
-static int
-uartstat(Chan *c, uchar *dp, int n)
+static s32
+uartstat(Chan *c, uchar *dp, s32 n)
 {
 	if(NETTYPE(c->qid.path) == Ndataqid)
 		setlength(NETID(c->qid.path));
@@ -308,9 +318,8 @@ uartdrained(void* arg)
 static void
 uartdrainoutput(Uart *p)
 {
-	if(!p->enabled)
+	if(!p->enabled || up == nil || !islo())
 		return;
-
 	p->drain = 1;
 	if(waserror()){
 		p->drain = 0;
@@ -336,7 +345,9 @@ uartclose(Chan *c)
 		qlock(p);
 		if(--(p->opens) == 0){
 			qclose(p->iq);
+			ilock(&p->rlock);
 			p->ir = p->iw = p->istage;
+			iunlock(&p->rlock);
 
 			/*
 			 */
@@ -474,22 +485,18 @@ uartctl(Uart *p, char *cmd)
 			if((*p->phys->stop)(p, n) < 0)
 				return -1;
 			break;
-		case 'T':
-		case 't':
-			p->dcdts = n;
-			break;
 		case 'W':
 		case 'w':
-			/* TODO 9front manages the timer here */
-			/* obsolete */
+			if(uarttimer == nil || n < 1)
+				return -1;
+			uarttimer->tns = (vlong)n * 100000LL;
 			break;
 		case 'X':
 		case 'x':
-			if(p->enabled){
-				ilock(&p->tlock);
-				p->xonoff = n;
-				iunlock(&p->tlock);
-			}
+			ilock(&p->tlock);
+			p->xonoff = n;
+			p->blocked = 0;
+			iunlock(&p->tlock);
 			break;
 		}
 	}
@@ -521,7 +528,7 @@ uartwrite(Chan *c, void *buf, s32 n, s64)
 		poperror();
 		break;
 	case Nctlqid:
-		cmd = malloc(n+1);
+		cmd = smalloc(n+1);
 		memmove(cmd, buf, n);
 		cmd[n] = 0;
 		qlock(p);
@@ -544,8 +551,8 @@ uartwrite(Chan *c, void *buf, s32 n, s64)
 	return n;
 }
 
-static int
-uartwstat(Chan *c, uchar *dp, int n)
+static s32
+uartwstat(Chan *c, uchar *dp, s32 n)
 {
 	Dir d;
 	Dirtab *dt;
@@ -567,7 +574,7 @@ uartwstat(Chan *c, uchar *dp, int n)
 }
 
 void
-uartpower(int on)
+uartpower(s32 on)
 {
 	Uart *p;
 
@@ -637,7 +644,7 @@ uartkick(void *v)
 {
 	Uart *p = v;
 
-	if(p->blocked)
+	if(!p->enabled || p->blocked)
 		return;
 
 	ilock(&p->tlock);
@@ -647,6 +654,35 @@ uartkick(void *v)
 	if(p->drain && uartdrained(p)){
 		p->drain = 0;
 		wakeup(&p->r);
+	}
+}
+
+/*
+ * Move data from the interrupt staging area to
+ * the input Queue.
+ */
+static void
+uartstageinput(Uart *p)
+{
+	int n;
+	uchar *ir, *iw;
+
+	while(p->ir != p->iw){
+		ir = p->ir;
+		if(p->ir > p->iw){
+			iw = p->ie;
+			p->ir = p->istage;
+		}
+		else{
+			iw = p->iw;
+			p->ir = p->iw;
+		}
+		if((n = qproduce(p->iq, ir, iw - ir)) < 0){
+			p->serr++;
+			(*p->phys->rts)(p, 0);
+		}
+		else if(n == 0)
+			p->berr++;
 	}
 }
 
@@ -671,14 +707,18 @@ uartrecv(Uart *p,  char ch)
 	/* receive the character */
 	if(p->putc)
 		p->putc(p->iq, ch);
-	else{
+	else if (p->iw) {		/* maybe the line isn't enabled yet */
+		ilock(&p->rlock);
 		next = p->iw + 1;
 		if(next == p->ie)
 			next = p->istage;
+		if(next == p->ir)
+			uartstageinput(p);
 		if(next != p->ir){
 			*p->iw = ch;
 			p->iw = next;
 		}
+		iunlock(&p->rlock);
 	}
 }
 
@@ -690,22 +730,15 @@ static void
 uartclock(void)
 {
 	Uart *p;
-	uchar *iw;
 
+	ilock(&uartalloc);
 	for(p = uartalloc.elist; p; p = p->elist){
 
-		/* this amortizes cost of qproduce to many chars */
+		/* this hopefully amortizes cost of qproduce to many chars */
 		if(p->iw != p->ir){
-			iw = p->iw;
-			if(iw < p->ir){
-				if(qproduce(p->iq, p->ir, p->ie-p->ir) < 0)
-					(*p->phys->rts)(p, 0);
-				p->ir = p->istage;
-			}
-			if(iw > p->ir)
-				if(qproduce(p->iq, p->ir, iw-p->ir) < 0)
-					(*p->phys->rts)(p, 0);
-			p->ir = iw;
+			ilock(&p->rlock);
+			uartstageinput(p);
+			iunlock(&p->rlock);
 		}
 
 		/* hang up if requested */
@@ -725,6 +758,7 @@ uartclock(void)
 			iunlock(&p->tlock);
 		}
 	}
+	iunlock(&uartalloc);
 }
 
 /*

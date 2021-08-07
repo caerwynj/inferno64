@@ -37,6 +37,10 @@ struct Lock
 	u32	sr;
 	uintptr	pc;
 	u32	pri;
+	void *p;	/* Proc */
+	Mach *m;
+	u16 isilock;
+	u32 lockcycles;
 };
 
 struct Label

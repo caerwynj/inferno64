@@ -14,36 +14,15 @@ extern int keepbroken;
 
 void	(*serwrite)(char *, int);
 
-Queue*	kscanq;			/* keyboard raw scancodes (when needed) */
-char*	kscanid;		/* name of raw scan format (if defined) */
-Queue*	kbdq;			/* unprocessed console input */
-Queue*	lineq;			/* processed console input */
-Queue*	printq;			/* console output */
-Queue*	klogq;			/* kernel print (log) output */
+void	(*consdebug)(void) = nil;
+void	(*screenputs)(char*, int) = nil;
+
+Queue*	serialoq;		/* serial console output */
+Queue*	kprintoq;		/* console output, for /dev/kprint */
+ulong	kprintinuse;	/* test and set whether /dev/kprint is open */
 int	iprintscreenputs = 1;
+
 int	panicking;
-
-static struct
-{
-	RWlock;
-	Queue*	q;
-} kprintq;
-
-static struct
-{
-	QLock;
-
-	int	raw;		/* true if we shouldn't process input */
-	int	ctl;		/* number of opens to the control file */
-	int	kbdr;		/* number of open reads to the keyboard */
-	int	scan;		/* true if reading raw scancodes */
-	int	x;		/* index into line */
-	char	line[1024];	/* current input line */
-
-	char	c;
-	int	count;
-	int	repeat;
-} kbd;
 
 char*	sysname;
 char*	eve;
@@ -71,10 +50,6 @@ static Cmdtab sysctlcmd[] =
 void
 printinit(void)
 {
-	lineq = qopen(2*1024, 0, nil, nil);
-	if(lineq == nil)
-		panic("printinit");
-	qnoblock(lineq, 1);
 }
 
 /*
@@ -92,8 +67,8 @@ iseve(void)
 static int
 consactive(void)
 {
-	if(printq)
-		return qlen(printq) > 0;
+	if(serialoq)
+		return qlen(serialoq) > 0;
 	return 0;
 }
 
@@ -103,7 +78,7 @@ prflush(void)
 	ulong now;
 
 	now = m->ticks;
-	while(serwrite==nil && consactive())
+	while(consactive())
 		if(m->ticks - now >= HZ)
 			break;
 }
@@ -148,7 +123,7 @@ putstrn0(char *str, int n, int usewrite)
 {
 	int m;
 	char *t;
-	char buf[PRINTSIZE+2];
+	int (*wq)(Queue*, void*, int);
 
 	/*
 	 *  how many different output devices do we need?
@@ -156,62 +131,35 @@ putstrn0(char *str, int n, int usewrite)
 	kmesgputs(str, n);
 
 	/*
-	 *  if kprint is open, put the message there, otherwise
-	 *  if there's an attached bit mapped display,
+	 *  if someone is reading /dev/kprint,
 	 *  put the message there.
-	 */
-	m = consoleprint;
-	if(canrlock(&kprintq)){
-		if(kprintq.q != nil){
-			if(waserror()){
-				runlock(&kprintq);
-				nexterror();
-			}
-			if(usewrite)
-				qwrite(kprintq.q, str, n);
-			else
-				qiwrite(kprintq.q, str, n);
-			poperror();
-			m = 0;
-		}
-		runlock(&kprintq);
-	}
-	if(m && screenputs != nil){
-		screenputs(str, n);
-	}
-
-	/*
+	 *  if not and there's an attached bit mapped display,
+	 *  put the message there.
+	 *
 	 *  if there's a serial line being used as a console,
 	 *  put the message there.
 	 */
-	if(serwrite != nil) {
-		serwrite(str, n);
+	wq = usewrite && islo() ? qwrite : qiwrite;
+	if(kprintoq != nil && !qisclosed(kprintoq))
+		(*wq)(kprintoq, str, n);
+	else if(screenputs != nil)
+		screenputs(str, n);
+
+	if(serialoq == nil){
+		uartputs(str, n);
 		return;
 	}
 
-	if(printq == 0)
-		return;
-
 	while(n > 0) {
 		t = memchr(str, '\n', n);
-		if(t && !kbd.raw) {
-			m = t - str;
-			if(m > sizeof(buf)-2)
-				m = sizeof(buf)-2;
-			memmove(buf, str, m);
-			buf[m] = '\r';
-			buf[m+1] = '\n';
-			if(usewrite)
-				qwrite(printq, buf, m+2);
-			else
-				qiwrite(printq, buf, m+2);
-			str = t + 1;
-			n -= m + 1;
+		if(t != nil) {
+			m = t-str;
+			(*wq)(serialoq, str, m);
+			(*wq)(serialoq, "\r\n", 2);
+			n -= m+1;
+			str = t+1;
 		} else {
-			if(usewrite)
-				qwrite(printq, str, n);
-			else 
-				qiwrite(printq, str, n);
+			(*wq)(serialoq, str, n);
 			break;
 		}
 	}
@@ -279,25 +227,32 @@ fprint(int fd, char *fmt, ...)
 	return n;
 }
 
-int
-kprint(char *fmt, ...)
+/*
+ * Want to interlock iprints to avoid interlaced output on 
+ * multiprocessor, but don't want to deadlock if one processor
+ * dies during print and another has something important to say.
+ * Make a good faith effort.
+ */
+static Lock iprintlock;
+static int
+iprintcanlock(Lock *l)
 {
-	va_list arg;
-	char buf[PRINTSIZE];
-	int n;
-
-	va_start(arg, fmt);
-	n = vseprint(buf, buf+sizeof(buf), fmt, arg) - buf;
-	va_end(arg);
-	if(qfull(klogq))
-		qflush(klogq);
-	return qproduce(klogq, buf, n);
+	int i;
+	
+	for(i=0; i<1000; i++){
+		if(canlock(l))
+			return 1;
+		if(l->m == MACHP(m->machno))
+			return 0;
+		microdelay(100);
+	}
+	return 0;
 }
 
 int
 iprint(char *fmt, ...)
 {
-	int n, s;
+	int n, s, locked;
 	va_list arg;
 	char buf[PRINTSIZE];
 
@@ -305,45 +260,56 @@ iprint(char *fmt, ...)
 	va_start(arg, fmt);
 	n = vseprint(buf, buf+sizeof(buf), fmt, arg) - buf;
 	va_end(arg);
+	locked = iprintcanlock(&iprintlock);
 	if(screenputs != nil && iprintscreenputs)
 		screenputs(buf, n);
 	uartputs(buf, n);
+	if(locked)
+		unlock(&iprintlock);
 	splx(s);
 
 	return n;
 }
 
 void
-setpanic(void)
-{
-	panicking = 1;
-}
-
-void
 panic(char *fmt, ...)
 {
-	int n;
+	int s;
 	va_list arg;
 	char buf[PRINTSIZE];
 
-	setpanic();
-	kprintq.q = nil;
+	kprintoq = nil;	/* don't try to write to /dev/kprint */
+
+	if(panicking)
+		for(;;);
+	panicking = 1;
+
+	s = splhi();
 	strcpy(buf, "panic: ");
 	va_start(arg, fmt);
-	n = vseprint(buf+strlen(buf), buf+sizeof(buf)-1, fmt, arg) - buf;
+	vseprint(buf+strlen(buf), buf+sizeof(buf), fmt, arg);
 	va_end(arg);
-	buf[n] = '\n';
-	putstrn(buf, n+1);
-	spllo();
+	iprint("%s\n", buf);
+	if(consdebug)
+		(*consdebug)();
+	splx(s);
+	prflush();
 	dumpstack();
 
-	exit(1);
+	/* reboot cpu servers and headless machines when not debugging */
+	if(getconf("*debug") == nil)
+	if(!conf.monitor)
+		exit(1);
+
+	/* otherwise, just hang */
+	while(islo()) idlehands();
+	for(;;);
 }
 
 void
 _assert(char *fmt)
 {
-	panic("assert failed: %s", fmt);
+	panic("assert failed at %#p: %s", getcallerpc(&fmt), fmt);
 }
 
 /*
@@ -352,13 +318,13 @@ _assert(char *fmt)
 void
 sysfatal(char *fmt, ...)
 {
+	char err[256];
 	va_list arg;
-	char buf[64];
 
 	va_start(arg, fmt);
-	vsnprint(buf, sizeof(buf), fmt, arg);
+	vseprint(err, err + sizeof err, fmt, arg);
 	va_end(arg);
-	error(buf);
+	panic("sysfatal: %s", err);
 }
 
 int
@@ -366,30 +332,22 @@ pprint(char *fmt, ...)
 {
 	int n;
 	Chan *c;
-	Osenv *o;
 	va_list arg;
 	char buf[2*PRINTSIZE];
 
-	n = sprint(buf, "%s %d: ", up->text, up->pid);
+	if(up == nil || up->env->fgrp == nil)
+		return 0;
+
+	c = up->env->fgrp->fd[2];
+	if(c==nil || (c->flag&CMSG)!=0 || (c->mode!=OWRITE && c->mode!=ORDWR))
+		return 0;
+	n = snprint(buf, sizeof buf, "%s %ud: ", up->text, up->pid);
 	va_start(arg, fmt);
 	n = vseprint(buf+n, buf+sizeof(buf), fmt, arg) - buf;
 	va_end(arg);
 
-	o = up->env;
-	if(o->fgrp == 0) {
-		print("%s", buf);
+	if(waserror())
 		return 0;
-	}
-	c = o->fgrp->fd[2];
-	if(c==0 || (c->mode!=OWRITE && c->mode!=ORDWR)) {
-		print("%s", buf);
-		return 0;
-	}
-
-	if(waserror()) {
-		print("%s", buf);
-		return 0;
-	}
 	devtab[c->type]->write(c, buf, n, c->offset);
 	poperror();
 
@@ -400,260 +358,6 @@ pprint(char *fmt, ...)
 	return n;
 }
 
-void
-echo(Rune r, char *buf, int n)
-{
-	if(kbd.raw)
-		return;
-
-	if(r == '\n'){
-		if(printq)
-			qiwrite(printq, "\r", 1);
-	} else if(r == 0x15){
-		buf = "^U\n";
-		n = 3;
-	}
-	if(consoleprint && screenputs != nil)
-		screenputs(buf, n);
-	if(printq)
-		qiwrite(printq, buf, n);
-}
-
-/*
- *	Debug key support.  Allows other parts of the kernel to register debug
- *	key handlers, instead of devcons.c having to know whatever's out there.
- *	A kproc is used to invoke most handlers, rather than tying up the CPU at
- *	splhi, which can choke some device drivers (eg softmodem).
- */
-typedef struct {
-	Rune	r;
-	char	*m;
-	void	(*f)(Rune);
-	int	i;	/* function called at interrupt time */
-} Dbgkey;
-
-static struct {
-	Rendez;
-	Dbgkey	*work;
-	Dbgkey	keys[50];
-	int	nkeys;
-	int	on;
-} dbg;
-
-static Dbgkey *
-finddbgkey(Rune r)
-{
-	int i;
-	Dbgkey *dp;
-
-	for(dp = dbg.keys, i = 0; i < dbg.nkeys; i++, dp++)
-		if(dp->r == r)
-			return dp;
-	return nil;
-}
-
-static int
-dbgwork(void *)
-{
-	return dbg.work != 0;
-}
-
-static void
-dbgproc(void *)
-{
-	Dbgkey *dp;
-
-	setpri(PriRealtime);
-	for(;;) {
-		do {
-			sleep(&dbg, dbgwork, 0);
-			dp = dbg.work;
-		} while(dp == nil);
-		dp->f(dp->r);
-		dbg.work = nil;
-	}
-}
-
-void
-debugkey(Rune r, char *msg, void (*fcn)(), int iflag)
-{
-	Dbgkey *dp;
-
-	if(dbg.nkeys >= nelem(dbg.keys))
-		return;
-	if(finddbgkey(r) != nil)
-		return;
-	for(dp = &dbg.keys[dbg.nkeys++] - 1; dp >= dbg.keys; dp--) {
-		if(strcmp(dp->m, msg) < 0)
-			break;
-		dp[1] = dp[0];
-	}
-	dp++;
-	dp->r = r;
-	dp->m = msg;
-	dp->f = fcn;
-	dp->i = iflag;
-}
-
-static int
-isdbgkey(Rune r)
-{
-	static int ctrlt;
-	Dbgkey *dp;
-	int echoctrlt = ctrlt;
-
-	/*
-	 * ^t hack BUG
-	 */
-	if(dbg.on || (ctrlt >= 2)) {
-		if(r == 0x14 || r == 0x05) {
-			ctrlt++;
-			return 0;
-		}
-		if(dp = finddbgkey(r)) {
-			if(dp->i || ctrlt > 2)
-				dp->f(r);
-			else {
-				dbg.work = dp;
-				wakeup(&dbg);
-			}
-			ctrlt = 0;
-			return 1;
-		}
-		ctrlt = 0;
-	}
-	else if(r == 0x14){
-		ctrlt++;
-		return 1;
-	}
-	else
-		ctrlt = 0;
-	if(echoctrlt){
-		char buf[UTFmax];
-
-		buf[0] = 0x14;
-		while(--echoctrlt >= 0){
-			echo(buf[0], buf, 1);
-			qproduce(kbdq, buf, 1);
-		}
-	}
-	return 0;
-}
-
-static void
-dbgtoggle(Rune)
-{
-	dbg.on = !dbg.on;
-	print("Debug keys %s\n", dbg.on ? "HOT" : "COLD");
-}
-
-static void
-dbghelp(void)
-{
-	int i;
-	Dbgkey *dp;
-	Dbgkey *dp2;
-	static char fmt[] = "%c: %-22s";
-
-	dp = dbg.keys;
-	dp2 = dp + (dbg.nkeys + 1)/2;
-	for(i = dbg.nkeys; i > 1; i -= 2, dp++, dp2++) {
-		print(fmt, dp->r, dp->m);
-		print(fmt, dp2->r, dp2->m);
-		print("\n");
-	}
-	if(i)
-		print(fmt, dp->r, dp->m);
-	print("\n");
-}
-
-static void
-debuginit(void)
-{
-	kproc("consdbg", dbgproc, nil, 0);
-	debugkey('|', "HOT|COLD keys", dbgtoggle, 0);
-	debugkey('?', "help", dbghelp, 0);
-}
-
-/*
- *  Called by a uart interrupt for console input.
- *
- *  turn '\r' into '\n' before putting it into the queue.
- */
-int
-kbdcr2nl(Queue *q, int ch)
-{
-	if(ch == '\r')
-		ch = '\n';
-	return kbdputc(q, ch);
-}
-
-/*
- *  Put character, possibly a rune, into read queue at interrupt time.
- *  Performs translation for compose sequences
- *  Called at interrupt time to process a character.
- */
-int
-kbdputc(Queue *q, int ch)
-{
-	int n;
-	char buf[UTFmax];
-	Rune r;
-	static Rune kc[15];
-	static int nk, collecting = 0;
-
-	r = ch;
-	if(r == Latin) {
-		collecting = 1;
-		nk = 0;
-		return 0;
-	}
-	if(collecting) {
-		int c;
-		nk += runetochar((char*)&kc[nk], &r);
-		c = latin1(kc, nk);
-		if(c < -1)	/* need more keystrokes */
-			return 0;
-		collecting = 0;
-		if(c == -1) {	/* invalid sequence */
-			echo(kc[0], (char*)kc, nk);
-			qproduce(q, kc, nk);
-			return 0;
-		}
-		r = (Rune)c;
-	}
-	kbd.c = r;
-	n = runetochar(buf, &r);
-	if(n == 0)
-		return 0;
-	if(!isdbgkey(r)) {
-		echo(r, buf, n);
-		qproduce(q, buf, n);
-	}
-	return 0;
-}
-
-void
-kbdrepeat(int rep)
-{
-	kbd.repeat = rep;
-	kbd.count = 0;
-}
-
-void
-kbdclock(void)
-{
-	if(kbd.repeat == 0)
-		return;
-	if(kbd.repeat==1 && ++kbd.count>HZ){
-		kbd.repeat = 2;
-		kbd.count = 0;
-		return;
-	}
-	if(++kbd.count&1)
-		kbdputc(kbdq, kbd.c);
-}
-
 enum{
 	Qdir,
 	Qcons,
@@ -662,8 +366,8 @@ enum{
 	Qdrivers,
 	Qhostowner,
 	Qkeyboard,
-	Qklog,
-	Qkprint,
+	Qklog,		/* same as 9front's kmesg */
+	Qkprint,	/* tail of kprint's and cons. Why not just a tail of klog? Why is this needed? */
 	Qscancode,
 	Qmemory,
 	Qmsec,
@@ -680,7 +384,6 @@ static Dirtab consdir[]=
 {
 	".",	{Qdir, 0, QTDIR},	0,		DMDIR|0555,
 	"cons",		{Qcons},	0,		0660,
-	"consctl",	{Qconsctl},	0,		0220,
 	"sysctl",	{Qsysctl},	0,		0644,
 	"drivers",	{Qdrivers},	0,		0444,
 	"hostowner",	{Qhostowner},	0,	0644,
@@ -787,12 +490,13 @@ rexit(Rune)
 static void
 consinit(void)
 {
+	todinit();
 	randominit();
-	debuginit();
+/*
 	debugkey('f', "files/6", fddump, 0);
 	debugkey('q', "panic", qpanic, 1);
 	debugkey('r', "exit", rexit, 1);
-	klogq = qopen(128*1024, 0, 0, 0);
+*/
 }
 
 static Chan*
@@ -813,110 +517,42 @@ consstat(Chan *c, uchar *dp, s32 n)
 	return devstat(c, dp, n, consdir, nelem(consdir), devgen);
 }
 
-static void
-flushkbdline(Queue *q)
-{
-	if(kbd.x){
-		qwrite(q, kbd.line, kbd.x);
-		kbd.x = 0;
-	}
-}
-
 static Chan*
 consopen(Chan *c, u32 omode)
 {
-	c->aux = 0;
+	c->aux = nil;
+	c = devopen(c, omode, consdir, nelem(consdir), devgen);
 	switch((u64)c->qid.path){
-	case Qconsctl:
-		if(!iseve())
-			error(Eperm);
-		qlock(&kbd);
-		kbd.ctl++;
-		qunlock(&kbd);
-		break;
-
-	case Qkeyboard:
-		if((omode & 3) != OWRITE) {
-			qlock(&kbd);
-			kbd.kbdr++;
-			flushkbdline(kbdq);
-			kbd.raw = 1;
-			qunlock(&kbd);
-		}
-		break;
-
-	case Qscancode:
-		qlock(&kbd);
-		if(kscanq || !kscanid) {
-			qunlock(&kbd);
-			c->flag &= ~COPEN;
-			if(kscanq)
-				error(Einuse);
-			else
-				error(Ebadarg);
-		}
-		kscanq = qopen(256, 0, nil, nil);
-		qunlock(&kbd);
-		break;
-
 	case Qkprint:
-		if((omode & 3) != OWRITE) {
-			wlock(&kprintq);
-			if(kprintq.q != nil){
-				wunlock(&kprintq);
-				error(Einuse);
-			}
-			kprintq.q = qopen(32*1024, Qcoalesce, nil, nil);
-			if(kprintq.q == nil){
-				wunlock(&kprintq);
+		if(tas(&kprintinuse) != 0){
+			c->flag &= ~COPEN;
+			error(Einuse);
+		}
+		if(kprintoq == nil){
+			kprintoq = qopen(8*1024, Qcoalesce, 0, 0);
+			if(kprintoq == nil){
+				c->flag &= ~COPEN;
 				error(Enomem);
 			}
-			qnoblock(kprintq.q, 1);
-			wunlock(&kprintq);
-			c->iounit = qiomaxatomic;
-		}
+			qnoblock(kprintoq, 1);
+		}else
+			qreopen(kprintoq);
+		c->iounit = qiomaxatomic;
 		break;
 	}
-	return devopen(c, omode, consdir, nelem(consdir), devgen);
+	return c;
 }
 
 static void
 consclose(Chan *c)
 {
-	if((c->flag&COPEN) == 0)
-		return;
-
 	switch((u64)c->qid.path){
-	case Qconsctl:
-		/* last close of control file turns off raw */
-		qlock(&kbd);
-		if(--kbd.ctl == 0)
-			kbd.raw = 0;
-		qunlock(&kbd);
-		break;
-
-	case Qkeyboard:
-		if(c->mode != OWRITE) {
-			qlock(&kbd);
-			--kbd.kbdr;
-			qunlock(&kbd);
-		}
-		break;
-
-	case Qscancode:
-		qlock(&kbd);
-		if(kscanq) {
-			qfree(kscanq);
-			kscanq = 0;
-		}
-		qunlock(&kbd);
-		break;
-
+	/* close of kprint allows other opens */
 	case Qkprint:
-		wlock(&kprintq);
-		qfree(kprintq.q);
-		kprintq.q = nil;
-		wunlock(&kprintq);
+		if(c->flag & COPEN){
+			kprintinuse = 0;
+			qhangup(kprintoq, nil);
+		}
 		break;
 	}
 }
@@ -926,9 +562,8 @@ consread(Chan *c, void *buf, s32 n, s64 offset)
 {
 	int l;
 	Osenv *o;
-	int ch, eol, i;
+	int i;
 	char *p, tmp[128];
-	char *cbuf = buf;
 
 	if(n <= 0)
 		return n;
@@ -939,62 +574,7 @@ consread(Chan *c, void *buf, s32 n, s64 offset)
 	case Qsysctl:
 		return readstr(offset, buf, n, VERSION);
 	case Qcons:
-	case Qkeyboard:
-		qlock(&kbd);
-		if(waserror()) {
-			qunlock(&kbd);
-			nexterror();
-		}
-		if(kbd.raw || kbd.kbdr) {
-			if(qcanread(lineq))
-				n = qread(lineq, buf, n);
-			else {
-				/* read as much as possible */
-				do {
-					i = qread(kbdq, cbuf, n);
-					cbuf += i;
-					n -= i;
-				} while(n>0 && qcanread(kbdq));
-				n = cbuf - (char*)buf;
-			}
-		} else {
-			while(!qcanread(lineq)) {
-				qread(kbdq, &kbd.line[kbd.x], 1);
-				ch = kbd.line[kbd.x];
-				eol = 0;
-				switch(ch){
-				case '\b':
-					if(kbd.x)
-						kbd.x--;
-					break;
-				case 0x15:
-					kbd.x = 0;
-					break;
-				case '\n':
-				case 0x04:
-					eol = 1;
-				default:
-					kbd.line[kbd.x++] = ch;
-					break;
-				}
-				if(kbd.x == sizeof(kbd.line) || eol) {
-					if(ch == 0x04)
-						kbd.x--;
-					qwrite(lineq, kbd.line, kbd.x);
-					kbd.x = 0;
-				}
-			}
-			n = qread(lineq, buf, n);
-		}
-		qunlock(&kbd);
-		poperror();
-		return n;
-
-	case Qscancode:
-		if(offset == 0)
-			return readstr(0, buf, n, kscanid);
-		else
-			return qread(kscanq, buf, n);
+		error(Egreg);
 
 	case Qtime:
 		snprint(tmp, sizeof(tmp), "%.lld", (vlong)mseconds()*1000);
@@ -1048,18 +628,23 @@ consread(Chan *c, void *buf, s32 n, s64 offset)
 		return n;
 
 	case Qklog:
-		return qread(klogq, buf, n);
+		/*
+		 * This is unlocked to avoid tying up a process
+		 * that's writing to the buffer.  kmesg.n never 
+		 * gets smaller, so worst case the reader will
+		 * see a slurred buffer.
+		 */
+		if(offset >= kmesg.n)
+			n = 0;
+		else{
+			if(offset+n > kmesg.n)
+				n = kmesg.n - offset;
+			memmove(buf, kmesg.buf+offset, n);
+		}
+		return n;
 
 	case Qkprint:
-		rlock(&kprintq);
-		if(waserror()){
-			runlock(&kprintq);
-			nexterror();
-		}
-		n = qread(kprintq.q, buf, n);
-		poperror();
-		runlock(&kprintq);
-		return n;
+		return qread(kprintoq, buf, n);
 
 	default:
 		print("consread %llud\n", c->qid.path);
@@ -1097,34 +682,7 @@ conswrite(Chan *c, void *va, s32 n, s64 offset)
 		break;
 
 	case Qconsctl:
-		if(n >= sizeof(buf))
-			n = sizeof(buf)-1;
-		strncpy(buf, a, n);
-		buf[n] = 0;
-		for(a = buf; a;){
-			if(strncmp(a, "rawon", 5) == 0){
-				qlock(&kbd);
-				flushkbdline(kbdq);
-				kbd.raw = 1;
-				qunlock(&kbd);
-			} else if(strncmp(a, "rawoff", 6) == 0){
-				qlock(&kbd);
-				kbd.raw = 0;
-				kbd.x = 0;
-				qunlock(&kbd);
-			}
-			if(a = strchr(a, ' '))
-				a++;
-		}
-		break;
-
-	case Qkeyboard:
-		for(x=0; x<n; ) {
-			Rune r;
-			x += chartorune(&r, &a[x]);
-			kbdputc(kbdq, r);
-		}
-		break;
+		error(Egreg);
 	
 	case Qtime:
 		if(n >= sizeof(buf))
