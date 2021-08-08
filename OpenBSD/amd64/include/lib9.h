@@ -453,7 +453,7 @@ extern	long	readn(int, void*, long);
 extern	int	remove(const char*);
 extern	void	rerrstr(char*, uint);
 extern	vlong	seek(int, vlong, int);
-extern	s32	segflush(void*, u32);
+extern	long	segflush(void*, ulong);
 extern	void	werrstr(char*, ...);
 
 extern char *argv0;

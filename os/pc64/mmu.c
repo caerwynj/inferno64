@@ -148,8 +148,8 @@ vunmap(void *va, int size)
 {
 }
 
-s32
-segflush(void*, u32)
+long
+segflush(void*, ulong)
 {
 	return 0;
 }

@@ -181,7 +181,7 @@ int	screenprint(char*, ...);			/* debugging */
 void	(*screenputs)(char*, int);
 void	setconfenv(void);
 void*	sigsearch(char*, int);
-s32	segflush(void*, u32);
+long	segflush(void*, ulong);
 void	showframe(void*, void*);
 void	syncclock(void);
 uvlong	tscticks(uvlong*);
