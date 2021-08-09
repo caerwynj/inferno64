@@ -161,10 +161,11 @@ putstrn0(char *str, int n, int usewrite)
 	 *  put the message there.
 	 */
 	wq = usewrite && islo() ? qwrite : qiwrite;
-	if(kprintoq != nil && !qisclosed(kprintoq))
+	if(kprintoq != nil && !qisclosed(kprintoq)){
 		(*wq)(kprintoq, str, n);
-	else if(screenputs != nil)
+	}else if(screenputs != nil){
 		screenputs(str, n);
+	}
 
 	if(serialoq == nil){
 		uartputs(str, n);
@@ -1005,9 +1006,7 @@ echo(Rune r, char *buf, int n)
         if(kbd.raw)
                 return;
 
-        if(r == '\n'){
-				putstrn("\r", 1);
-        } else if(r == 0x15){
+        if(r == 0x15){
                 buf = "^U\n";
                 n = 3;
         }
