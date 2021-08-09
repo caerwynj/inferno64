@@ -26,7 +26,36 @@ static struct {
 static void
 dump1(Mapent *e)
 {
-	print("%.16llux-%.16llux %lux\n", e->addr, e->addr + e->size, e->type);
+	char tstr[64], *ep;
+	int n;
+	u32 type;
+
+	memset(tstr, '\0', 64);
+	if(e->type & Allocated)
+		strncpy(tstr, "Allocated ", 64);
+	n = strlen(tstr);
+	type = e->type & 0xf;
+	switch(type){
+		case 0:
+			 strncpy(tstr+n, "unbacked physical address", 64-n);
+			break;
+		case 1:
+			 strncpy(tstr+n, "upper memory block (<16MB)", 64-n);
+			break;
+		case 2:
+			 strncpy(tstr+n, "physical memory", 64-n);
+			break;
+		case 3:
+			 strncpy(tstr+n, "ACPI tables", 64-n);
+			break;
+		case 4:
+			 strncpy(tstr+n, "Reserved don't allocate", 64-n);
+			break;
+		default:
+			 strncpy(tstr+n, "unknown type", 64-n);
+	}
+	print("%.16llux-%.16llux %lux	%s\n",
+		e->addr, e->addr + e->size, e->type, (char*)tstr);
 }
 
 static int
@@ -145,11 +174,13 @@ memmapdump(void)
 {
 	int i;
 
+	print("-----memmap dump------\n");
 	lock(&mapalloc);
 	sort();
 	for(i = 0; i < mapalloc.n; i++)
 		dump1(&mapalloc.a[i]);
 	unlock(&mapalloc);
+	print("----------------------\n");
 }
 
 uvlong
@@ -210,8 +241,6 @@ memmapalloc(uvlong addr, uvlong size, uvlong align, u32 type)
 {
 	Mapent *i, *e;
 
-	print("memmapalloc addr 0x%p size 0x%zx %zd align 0x%zx type 0x%x\n",
-		addr, size, size, align, type);
 	type &= ~Allocated;
 	lock(&mapalloc);
 	sort();
@@ -225,12 +254,9 @@ memmapalloc(uvlong addr, uvlong size, uvlong align, u32 type)
 			if(addr - i->addr >= i->size)
 				goto Fail;
 		}
-		print("memmapalloc addr 0x%p i->addr 0x%p size 0x%zx %zd i->size 0x%zx %zd\n",
-			addr, i->addr, size, size, i->size, i->size);
 		if(addr - i->addr + size > i->size)
 			goto Fail;
 Alloc:
-		print("memmapalloc insert addr 0x%p size 0x%zx %zd\n", addr, size, size);
 		if(size > 0 && !insert(addr, size, type|Allocated))
 			goto Fail;
 		unlock(&mapalloc);

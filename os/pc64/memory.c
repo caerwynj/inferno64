@@ -274,7 +274,7 @@ rsdsearch(void)
 u64
 upaalloc(u64 pa, u32 size, u32 align)
 {
-	print("before memmapalloc pa 0x%p size 0x%x %d\n",
+	DP("before memmapalloc pa 0x%p size 0x%x %d\n",
 		pa, size, size);
 	// memmapdump();
 	return memmapalloc(pa, size, align, MemUPA);
@@ -389,7 +389,6 @@ e820scan(void)
 		if((s = getconf("e820")) == nil)
 			return -1;
 
-	print("e820scan %s\n", s);
 	for(;;){
 		while(*s == ' ')
 			s++;
@@ -617,17 +616,11 @@ meminit0(void)
 	 */
 	memmapadd(16*MB, (u32)-16*MB, MemUPA);
 
-		print("------before lowraminit -----\n");
-		memmapdump();
-		print("-----------\n");
 	/*
 	 * Discover conventional RAM, ROMs and UMBs.
 	 */
 	lowraminit();
 
-		print("------after lowraminit -----\n");
-		memmapdump();
-		print("-----------\n");
 	/*
 	 * Discover more RAM and map to KZERO.
 	 */
@@ -672,13 +665,7 @@ meminit(void)
 	uintptr base, size;
 	Confmem *cm;
 
-		print("------ before umbexclude -----\n");
-		memmapdump();
-		print("-----------\n");
 	umbexclude();
-		print("------ after umbexclude -----\n");
-		memmapdump();
-		print("-----------\n");
 	for(base = memmapnext(-1, MemUMB); base != -1; base = memmapnext(base, MemUMB)){
 		size = memmapsize(base, BY2PG) & ~(BY2PG-1);
 		if(size != 0)
@@ -706,9 +693,7 @@ meminit(void)
 		cm++;
 	}
 
-	print("-----------\n");
-	if(1) memmapdump();
-	print("-----------\n");
+	memmapdump();
 	// showpagetables((uintptr*)PML4ADDR);
 	//showpagetables((uintptr*)PML4ADDR);
 }
