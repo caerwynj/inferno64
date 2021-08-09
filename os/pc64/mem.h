@@ -29,7 +29,7 @@
 #define	FPalign		64
 
 #define	MAXMACH		128			/* max # cpus system can run */
-#define	KSTACK		(32*KiB)		/* Size of kernel stack */
+#define	KSTACK		(32*KiB)	/* Size of kernel stack */
 #define	MACHSIZE	(2*KSTACK)
 
 /*
@@ -62,6 +62,7 @@
 #define GDTADDR		(KDZERO+0x11000ull)	/* gdt */
 #define	CPU0MACH	(KDZERO+0x12000ull)	/* Mach for bootstrap processor */
 #define CPU0END		(KDZERO+0x22000ull)	/* CPU0MACH + (MACHSIZE = 64 KiB = 0x10 000) */
+										/* MACHSIZE includes stack size */
 #define CPU0SP		(KDZERO+0x22000ull)
 /* 1 PD table has 512 entries
  * each entry maps to a 2MB page

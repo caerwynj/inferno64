@@ -584,9 +584,11 @@ meminit0(void)
 {
 	uintptr prevbase = 0, base, size = 0;
 
-	print("MemMin 0x%llux end 0x%p KZERO 0x%x KDZERO 0x%x\n"
+	print("Memory Configuration\n"
+		"\tMemMin 0x%llux end 0x%p KZERO 0x%x KDZERO 0x%x\n"
 		"\tKTZERO 0x%x etext 0x%p\n\tCPU0END 0x%llux\n"
-		"\tPADDR(PGROUND((uintptr)end)) 0x%zux MemMin-PADDR(PGROUND((uintptr)end)) 0x%zux\n",
+		"\tPADDR(PGROUND((uintptr)end)) 0x%zux\n"
+		"\tMemMin-PADDR(PGROUND((uintptr)end)) 0x%zux\n",
 		MemMin, end, KZERO, KDZERO, KTZERO, etext, (uintptr)CPU0END,
 		PADDR(PGROUND((uintptr)end)), MemMin-PADDR(PGROUND((uintptr)end)));
 	/*

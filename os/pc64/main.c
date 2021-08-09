@@ -27,7 +27,7 @@ char bootdisk[KNAMELEN];
 static void
 doc(char *m)
 {
-	int i;
+	/*int i;*/
 	print("%s...\n", m);
 	/*for(i = 0; i < 100*1024*1024; i++)
 		i++;*/
@@ -78,38 +78,45 @@ writemsg(char *msg, int msglen)
 }
 
 void
-ptedebug(uintptr pa)
+ptedebug(uintptr pa, char *desc)
 {
 	uintptr *pml4e, *pdpe, *pde;
+	char pdestr[64] = "unmapped";
 
 	pml4e = mmuwalk((uintptr*)PML4ADDR, pa, 3, 0);
 	pdpe = mmuwalk((uintptr*)PML4ADDR, pa, 2, 0);
 	pde = mmuwalk((uintptr*)PML4ADDR, pa, 1, 0);
-	print("pml4 @ 0x%p pa 0x%zux page is \n"
-		"\tpml4 entry @ 0x%p i %zd\n"
-		"\tpdp entry @ 0x%p i %zd\n"
-		"\tpd entry @ 0x%p i %zd\n",
-		m->pml4, pa,
-		pml4e, (pml4e-m->pml4)/sizeof(intptr),
-		pdpe, ((intptr)pdpe-(intptr)PDPADDR)/sizeof(intptr),
-		pde, ((intptr)pde-(intptr)PD0ADDR)/sizeof(intptr));
+	if((intptr)pde > 0){
+		snprint(pdestr, 64, "at 0x%p i %zd",
+				pde, ((intptr)pde-(intptr)PD0ADDR)/sizeof(intptr));
+	}
+	print("\tpage of address 0x%zux (%s) with pml4 at 0x%p\n"
+			"\t\tpml4 entry at 0x%p i %zd\n"
+			"\t\tpdp entry at 0x%p i %zd\n"
+			"\t\tpd entry %s\n",
+			pa, desc, m->pml4,
+			pml4e, (pml4e-m->pml4)/sizeof(intptr),
+			pdpe, ((intptr)pdpe-(intptr)PDPADDR)/sizeof(intptr),
+			pdestr);
 }
 
 void
 showconfig(void)
 {
 	showconf();
-	print("kdzero 0x%p confaddr 0x%p apbootstrap 0x%p idtaddr 0x%p\n"
+	print("Important Addresses\n"
+		"\tkdzero 0x%p confaddr 0x%p apbootstrap 0x%p idtaddr 0x%p\n"
 		"\tcpu0mach 0x%p cpu0sp 0x%p cpu0gdt 0x%p\n"
 		"\tcpu0pml4 0x%p cpu0pdp 0x%p  cpu0pd 0x%p\n"
 		"\tcpu0end 0x%p\n",
 		(void*)KDZERO, CONFADDR,APBOOTSTRAP,
 		IDTADDR, CPU0MACH, CPU0SP, GDTADDR,
 		PML4ADDR, PDPADDR, PD0ADDR, CPU0END);
-	ptedebug(1*MiB);
-	ptedebug(2*MiB);
-	ptedebug(1*GiB);
-	ptedebug(4ull*GiB);
+	print("Some page table entries\n");
+	ptedebug(1*MiB,"1 MiB");
+	ptedebug(2*MiB,"2 MiB");
+	ptedebug(1*GiB,"1 GiB");
+	ptedebug(4ull*GiB,"4 GiB");
 }
 
 /* to check from acid on whether the data segment is being trashed */

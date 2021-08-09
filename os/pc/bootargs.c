@@ -198,7 +198,8 @@ showconf(void)
 {
 	int i;
 
+	print("Boot configuration\n");
 	for(i = 0; i < nconf; i++){
-		print("%s=%s\n", confname[i], confval[i]);
+		print("	%s=%s\n", confname[i], confval[i]);
 	}
 }
