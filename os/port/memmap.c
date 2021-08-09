@@ -26,16 +26,14 @@ static struct {
 static void
 dump1(Mapent *e)
 {
-	char tstr[64], *ep;
+	char tstr[64];
 	int n;
-	u32 type;
 
 	memset(tstr, '\0', 64);
 	if(e->type & Allocated)
 		strncpy(tstr, "Allocated ", 64);
 	n = strlen(tstr);
-	type = e->type & 0xf;
-	switch(type){
+	switch(e->type & 0xf){
 		case 0:
 			 strncpy(tstr+n, "unbacked physical address", 64-n);
 			break;
