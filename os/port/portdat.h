@@ -563,7 +563,7 @@ struct Bkpt
 
 enum
 {
-	PRINTSIZE =	256,
+	PRINTSIZE	= 1024 /*256*/,
 	NUMSIZE	=	12,		/* size of formatted number */
 	MB =		(1024*1024),
 	READSTR =	1000,		/* temporary buffer size for device reads */

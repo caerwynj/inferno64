@@ -54,7 +54,7 @@ enum
 	KNAMELEN	= 28,
 	MAXROOT		= 5*KNAMELEN, 	/* Maximum root pathname len of devfs-* */
 	NUMSIZE		= 11,
-	PRINTSIZE	= 256,
+	PRINTSIZE	= 1024 /*256*/,
 	READSTR		= 1000		/* temporary buffer size for device reads */
 };
 
