@@ -96,8 +96,9 @@ ptedebug(uintptr pa)
 }
 
 void
-setupdebug(void)
+showconfig(void)
 {
+	showconf();
 	print("kdzero 0x%p confaddr 0x%p apbootstrap 0x%p idtaddr 0x%p\n"
 		"\tcpu0mach 0x%p cpu0sp 0x%p cpu0gdt 0x%p\n"
 		"\tcpu0pml4 0x%p cpu0pdp 0x%p  cpu0pd 0x%p\n"
@@ -126,7 +127,7 @@ main(void)
 	quotefmtinstall();
 	screeninit();
 	print("\nInferno release built at %lud\n", kerndate);
-	setupdebug();
+	showconfig();
 	cpuidentify();
 	meminit0();			/* builds the memmap */
 	archinit();

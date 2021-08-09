@@ -192,3 +192,13 @@ writeconf(void)
 	poperror();
 	free(p);
 }
+
+void
+showconf(void)
+{
+	int i;
+
+	for(i = 0; i < nconf; i++){
+		print("%s=%s\n", confname[i], confval[i]);
+	}
+}

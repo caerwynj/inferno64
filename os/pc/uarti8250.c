@@ -435,28 +435,25 @@ i8250break(Uart* uart, int ms)
 static void
 i8250kick(Uart* uart)
 {
-	int i, n;
+	int i;
 	Ctlr *ctlr;
 
-	if(uart->cts == 0 || uart->blocked )
+	if(uart->cts == 0 || uart->blocked)
 		return;
 
 	/*
-	 *  Stagesize here imposes an arbitrary limit to make sure
+	 *  128 here is an arbitrary limit to make sure
 	 *  we don't stay in this loop too long.  If the
-	 *  chip's output queue is longer than Stagesize, too
-	 *  bad, performance will be slower.
-	 *  Stagesize = 1024
+	 *  chip's output queue is longer than 128, too
+	 *  bad -- presotto
 	 */
 	ctlr = uart->regs;
-	if(!(csr8r(ctlr, Lsr) & Thre))
-		return;
-	for(n = uartstageoutput(uart); n > 0; n--, uart->op++){
+	for(i = 0; i < 128; i++){
 		if(!(csr8r(ctlr, Lsr) & Thre))
 			break;
-		if(uart->op >= uart->oe)
+		if(uart->op >= uart->oe && uartstageoutput(uart) == 0)
 			break;
-		outb(ctlr->io+Thr, *uart->op);
+		outb(ctlr->io+Thr, *(uart->op++));
 	}
 }
 

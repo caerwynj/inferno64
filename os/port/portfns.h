@@ -269,6 +269,7 @@ int		setlabel(Label*);
 void		setmalloctag(void*, uintptr);
 int		setpri(int);
 void		setrealloctag(void*, uintptr);
+void	showconf(void);
 char*		skipslash(char*);
 void		sleep(Rendez*, int(*)(void*), void*);
 void*		smalloc(uintptr);
