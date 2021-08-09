@@ -628,9 +628,12 @@ uartstageoutput(Uart *p)
 {
 	int n;
 
+	if(p->op < p->oe)
+		return p->oe - p->op;
 	n = qconsume(p->oq, p->ostage, Stagesize);
-	if(n <= 0)
+	if(n <= 0){
 		return 0;
+	}
 	p->op = p->ostage;
 	p->oe = p->ostage + n;
 	return n;

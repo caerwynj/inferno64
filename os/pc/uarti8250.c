@@ -158,7 +158,7 @@ i8250status(Uart* uart, void* buf, long n, long offset)
 	uchar ier, lcr, mcr, msr;
 
 	ctlr = uart->regs;
-	p = malloc(READSTR);
+	p = smalloc(READSTR);
 	mcr = ctlr->sticky[Mcr];
 	msr = csr8r(ctlr, Msr);
 	ier = ctlr->sticky[Ier];
@@ -435,25 +435,28 @@ i8250break(Uart* uart, int ms)
 static void
 i8250kick(Uart* uart)
 {
-	int i;
+	int i, n;
 	Ctlr *ctlr;
 
-	if(uart->cts == 0 || uart->blocked)
+	if(uart->cts == 0 || uart->blocked )
 		return;
 
 	/*
-	 *  128 here is an arbitrary limit to make sure
+	 *  Stagesize here imposes an arbitrary limit to make sure
 	 *  we don't stay in this loop too long.  If the
-	 *  chip's output queue is longer than 128, too
-	 *  bad -- presotto
+	 *  chip's output queue is longer than Stagesize, too
+	 *  bad, performance will be slower.
+	 *  Stagesize = 1024
 	 */
 	ctlr = uart->regs;
-	for(i = 0; i < 128; i++){
+	if(!(csr8r(ctlr, Lsr) & Thre))
+		return;
+	for(n = uartstageoutput(uart); n > 0; n--, uart->op++){
 		if(!(csr8r(ctlr, Lsr) & Thre))
 			break;
-		if(uart->op >= uart->oe && uartstageoutput(uart) == 0)
+		if(uart->op >= uart->oe)
 			break;
-		outb(ctlr->io+Thr, *(uart->op++));
+		outb(ctlr->io+Thr, *uart->op);
 	}
 }
 
@@ -542,8 +545,8 @@ i8250disable(Uart* uart)
 	csr8w(ctlr, Ier, ctlr->sticky[Ier]);
 
 	if(ctlr->iena != 0){
-		if(intrdisable(ctlr->irq, i8250interrupt, uart, ctlr->tbdf, uart->name) == 0)
-			ctlr->iena = 0;
+		ctlr->iena = 0;
+		intrdisable(ctlr->irq, i8250interrupt, uart, ctlr->tbdf, uart->name);
 	}
 }
 
@@ -563,7 +566,7 @@ i8250enable(Uart* uart, int ie)
 	 * the transmitter is really empty.
 	 * Also, reading the Iir outwith i8250interrupt()
 	 * can be dangerous, but this should only happen
-	 * once, before interrupts are enabled.
+	 * once before interrupts are enabled.
 	 */
 	ilock(ctlr);
 	if(!ctlr->checkfifo){
@@ -621,12 +624,14 @@ i8250alloc(int io, int irq, int tbdf)
 {
 	Ctlr *ctlr;
 
-	if((ctlr = malloc(sizeof(Ctlr))) != nil){
-		ctlr->io = io;
-		ctlr->irq = irq;
-		ctlr->tbdf = tbdf;
+	ctlr = malloc(sizeof(Ctlr));
+	if(ctlr == nil){
+		print("i8250alloc: no memory for Ctlr\n");
+		return nil;
 	}
-
+	ctlr->io = io;
+	ctlr->irq = irq;
+	ctlr->tbdf = tbdf;
 	return ctlr;
 }
 
@@ -691,18 +696,9 @@ i8250console(void)
 	if((p = getconf("console")) == nil)
 		return;
 	n = strtoul(p, &cmd, 0);
-	if(p == cmd)
+	if(p == cmd || n < 0 || n >= nelem(i8250uart))
 		return;
-	switch(n){
-	default:
-		return;
-	case 0:
-		uart = &i8250uart[0];
-		break;
-	case 1:
-		uart = &i8250uart[1];
-		break;	
-	}
+	uart = &i8250uart[n];
 
 	(*uart->phys->enable)(uart, 0);
 	uartctl(uart, "b9600 l8 pn s1");
@@ -712,29 +708,3 @@ i8250console(void)
 	consuart = uart;
 	uart->console = 1;
 }
-/* TODO these are not in 9front
-void
-i8250mouse(char* which, int (*putc)(Queue*, int), int setb1200)
-{
-	char *p;
-	int port;
-
-	port = strtol(which, &p, 0);
-	if(p == which || port < 0 || port > 1)
-		error(Ebadarg);
-	uartmouse(&i8250uart[port], putc, setb1200);
-}
-
-void
-i8250setmouseputc(char* which, int (*putc)(Queue*, int))
-{
-	char *p;
-	int port;
-
-	port = strtol(which, &p, 0);
-	if(p == which || port < 0 || port > 1)
-		error(Ebadarg);
-	uartsetmouseputc(&i8250uart[port], putc);
-
-}
-*/
