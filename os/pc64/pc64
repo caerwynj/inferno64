@@ -183,22 +183,30 @@ root
 	/dis/disk/kfscmd.dis
 	/dis/disk/pedit.dis
 	/dis/disk/prep.dis
+	/dis/dossrv.dis
 	/dis/echo.dis
 	/dis/init
+	/dis/ip/dhcp.dis
+	/dis/ip/ping.dis
 	/dis/lib/arg.dis
 	/dis/lib/auth.dis
 	/dis/lib/bufio.dis
 	/dis/lib/daytime.dis
+	/dis/lib/dhcpclient.dis
 	/dis/lib/dial.dis
 	/dis/lib/disks.dis
 	/dis/lib/env.dis
 	/dis/lib/filepat.dis
+	/dis/lib/ip.dis
 	/dis/lib/nametree.dis
+	/dis/lib/random.dis
+	/dis/lib/rand.dis
 	/dis/lib/readdir.dis
 	/dis/lib/ssl.dis
 	/dis/lib/string.dis
 	/dis/lib/styx.dis
 	/dis/lib/styxservers.dis
+	/dis/lib/timers.dis
 	/dis/lib/workdir.dis
 	/dis/ls.dis
 	/dis/mntgen.dis
