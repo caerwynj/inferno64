@@ -16,7 +16,7 @@ memory.c identify memory from bios, e820
 		initialization is accounted for.
  */
 
-#define DP if(0){}else print
+#define DP if(1){}else print
 
 enum {
 	MemUPA		= 0,	/* unbacked physical address */
@@ -286,14 +286,13 @@ upaalloc(uintptr pa, u32 size, u32 align)
 {
 	DP("before memmapalloc pa 0x%p size 0x%x %d\n",
 		pa, size, size);
-	memmapdump();
 	return memmapalloc(pa, size, align, MemUPA);
 }
 
 uintptr
 upamalloc(uintptr pa, u32 size, u32 align)
 {
-	print("before memmapalloc pa 0x%p size 0x%x %d\n",
+	DP("before memmapalloc pa 0x%p size 0x%x %d\n",
 		pa, size, size);
 	return memmapalloc(pa, size, align, MemUPA);
 }
