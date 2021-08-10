@@ -15,6 +15,7 @@ memory.c identify memory from bios, e820
 		after meminit0(), it runs archinit() to ensure architecture specific memory
 		initialization is accounted for.
  */
+
 #define DP if(0){}else print
 
 enum {
