@@ -5,6 +5,30 @@
 #include	"fns.h"
 #include	"io.h"
 
+/*
+mmu.c: differs between pc and pc64
+	- on 9front:
+	pmap() - setup up page table entries for the physical address in virtual memory
+			the virtual memory address is a parameter
+			the flags are included in the physical address
+			used by memory.c:^mapkzero for setting the page tables of the kernel
+	vmap() - setup page tables for device memory
+			virtual memory address = device memory address
+			used by almost all the device drivers accessing registers
+				as memory addresses (unbacked physical address)
+	kmap() - setup kernel page tables
+			virtual memory address = page address + KMAP
+	A process's virtual memory usage is maintained in the PMMU data structure
+		on inferno:
+	1. there is no separate virtual memory address - linear mapping
+	2. As all memory is linear and global, there is no need to maintain
+		a per-process list of page tables
+	3. pmap() without the parameter for the virtual memory address handles the
+		above needs
+	3. vmap() is  a wrapper around pmap() specialized for unbacked physical
+		addresses
+	4. kmap() is obsolete
+ */
 #define DP	if(1){}else print
 /*
  * Simple segment descriptors with no translation.
@@ -137,15 +161,40 @@ mmukmap(uintptr pa, uintptr va, int size)
 return 0;
 }
 
+/*
+ * Add a device mapping to the vmap range.
+ * note that the VMAP and KZERO PDPs are shared
+ * between processors (see mpstartap) so no
+ * synchronization is being done.
+ *
+ * < cinap_lenrek> joe7: pmap() is kind of generic function,
+ *  allowing to pass the protection flags too
+ * < cinap_lenrek> vmap() and kmap() are all built ontop of it
+ */
 void*
 vmap(uintptr pa, int size)
 {
-return 0;
+        int o;
+
+        if(pa < BY2PG || size <= 0 || -pa < size || pa+size > VMAPSIZE){
+                print("vmap pa=%llux size=%d pc=%#p\n", pa, size, getcallerpc(&pa));
+                return nil;
+        }
+
+        /*
+         * might be asking for less than a page.
+         */
+        o = pa & (BY2PG-1);
+        pa -= o;
+        size += o;
+        pmap(pa, PTEUNCACHED|PTEWRITE|PTENOEXEC|PTEVALID, size);
+        return (void*)(pa+o);
 }
 
 void
 vunmap(void *va, int size)
 {
+/* nothing to do */
 }
 
 long

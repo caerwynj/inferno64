@@ -11,9 +11,9 @@ enum {
 typedef struct Mapent Mapent;
 struct Mapent
 {
-	ulong	type;
-	uvlong	addr;
-	uvlong	size;
+	u32	type;
+	uintptr	addr;
+	uintptr	size;
 };
 
 static struct {
@@ -52,12 +52,12 @@ dump1(Mapent *e)
 		default:
 			 strncpy(tstr+n, "unknown type", 64-n);
 	}
-	print("%.16llux-%.16llux %lux	%s\n",
+	print("%.16zux-%.16zux %ux	%s\n",
 		e->addr, e->addr + e->size, e->type, (char*)tstr);
 }
 
 static int
-insert(uvlong addr, uvlong size, ulong type)
+insert(uintptr addr, uintptr size, u32 type)
 {
 	Mapent *e;
 
@@ -76,7 +76,7 @@ insert(uvlong addr, uvlong size, ulong type)
 }
 
 static Mapent*
-lookup(uvlong addr)
+lookup(uintptr addr)
 {
 	Mapent *i, *e;
 
@@ -182,7 +182,7 @@ memmapdump(void)
 }
 
 uvlong
-memmapnext(uvlong addr, ulong type)
+memmapnext(uintptr addr, u32 type)
 {
 	Mapent *i, *e;
 
@@ -201,7 +201,7 @@ memmapnext(uvlong addr, ulong type)
 }
 
 uvlong
-memmapsize(uvlong addr, uvlong align)
+memmapsize(uintptr addr, uintptr align)
 {
 	Mapent *i;
 	uvlong size;
@@ -222,7 +222,7 @@ memmapsize(uvlong addr, uvlong align)
 }
 
 void
-memmapadd(uvlong addr, uvlong size, ulong type)
+memmapadd(uintptr addr, uintptr size, u32 type)
 {
 	type &= ~Allocated;
 	lock(&mapalloc);
@@ -234,8 +234,8 @@ memmapadd(uvlong addr, uvlong size, ulong type)
 	unlock(&mapalloc);
 }
 
-uvlong
-memmapalloc(uvlong addr, uvlong size, uvlong align, u32 type)
+uintptr
+memmapalloc(uintptr addr, uintptr size, uintptr align, u32 type)
 {
 	Mapent *i, *e;
 
@@ -280,7 +280,7 @@ Fail:
 }
 
 void
-memmapfree(uvlong addr, uvlong size, ulong type)
+memmapfree(uintptr addr, uintptr size, u32 type)
 {
 	Mapent *i;
 

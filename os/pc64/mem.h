@@ -51,6 +51,7 @@
  */
 #define KDZERO		(0x100000)
 #define KTZERO		(0x200000)
+#define VMAPSIZE  (512ull*GiB)
 
 /*
  * Fundamental addresses

@@ -6,7 +6,16 @@
 #include "io.h"
 #include "ureg.h"
 
-#define DP if(1){}else print
+/*
+memory.c identify memory from bios, e820
+	puts memory entries to memmap -> conf.mem[] -> xlist.hole's
+	the kernel low level page allocator allocates from the xlist holes (xspanalloc)
+	inferno's meminit() identifies all memory
+	9front splits memory initialization to meminit0() and meminit().
+		after meminit0(), it runs archinit() to ensure architecture specific memory
+		initialization is accounted for.
+ */
+#define DP if(0){}else print
 
 enum {
 	MemUPA		= 0,	/* unbacked physical address */
@@ -43,7 +52,7 @@ rampage(void)
 }
 
 static void
-mapkzero(uintptr base, u64 len, int type)
+mapkzero(uintptr base, uintptr len, int type)
 {
 	uintptr flags, n;
 
@@ -61,10 +70,10 @@ mapkzero(uintptr base, u64 len, int type)
 	case MemRAM:
 		if(base < MemMin)
 			return;
-		flags = PTEWRITE|PTEVALID;
+		flags = PTEGLOBAL|PTEWRITE|PTEVALID;
 		break;
 	case MemUMB:
-		flags = PTEWRITE|PTEUNCACHED|PTEVALID;
+		flags = PTEGLOBAL|PTEWRITE|PTEUNCACHED|PTEVALID;
 		break;
 	}
 	pmap(base, flags, len);
@@ -271,23 +280,25 @@ rsdsearch(void)
  * does not map the physical address into virtual memory.
  * Call vmap to do that.
  */
-u64
-upaalloc(u64 pa, u32 size, u32 align)
+uintptr
+upaalloc(uintptr pa, u32 size, u32 align)
 {
 	DP("before memmapalloc pa 0x%p size 0x%x %d\n",
 		pa, size, size);
-	// memmapdump();
+	memmapdump();
 	return memmapalloc(pa, size, align, MemUPA);
 }
 
-u64
-upamalloc(u64 pa, u32 size, u32 align)
+uintptr
+upamalloc(uintptr pa, u32 size, u32 align)
 {
+	print("before memmapalloc pa 0x%p size 0x%x %d\n",
+		pa, size, size);
 	return memmapalloc(pa, size, align, MemUPA);
 }
 
-u64
-upaallocwin(u64 pa, u32 win, u32 size, u32 align)
+uintptr
+upaallocwin(uintptr pa, u32 win, u32 size, u32 align)
 {
 	uvlong a, base, top = pa + win;
 
@@ -305,7 +316,7 @@ upaallocwin(u64 pa, u32 win, u32 size, u32 align)
 }
 
 void
-upafree(u64 pa, u32 size)
+upafree(uintptr pa, u32 size)
 {
 	memmapfree(pa, size, MemUPA);
 }
