@@ -567,7 +567,7 @@ extern	vlong	seek(int, vlong, int);
 extern	long	segattach(int, char*, void*, ulong);
 extern	int	segbrk(void*, void*);
 extern	int	segdetach(void*);
-extern	long	segflush(void*, ulong);
+extern	int	segflush(void*, ulong);
 extern	int	segfree(void*, ulong);
 extern	int	sleep(long);
 extern	int	stat(char*, uchar*, int);

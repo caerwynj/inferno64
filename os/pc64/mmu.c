@@ -197,7 +197,7 @@ vunmap(void *va, int size)
 /* nothing to do */
 }
 
-long
+int
 segflush(void*, ulong)
 {
 	return 0;
