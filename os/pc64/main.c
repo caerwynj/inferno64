@@ -312,7 +312,7 @@ confinit(void)
 		pcnt = 70;
 	conf.ialloc = (((conf.npage*(100-pcnt))/100)/2)*BY2PG;
 	conf.nproc = 100 + ((conf.npage*BY2PG)/MiB)*5;
-	print("conf.npage %d conf.ialloc %d conf.nproc %d\n",
+	print("conf.npage %d conf.ialloc %ud conf.nproc %d\n",
 			conf.npage, conf.ialloc, conf.nproc);
 }
 
