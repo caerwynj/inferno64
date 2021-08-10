@@ -24,7 +24,7 @@ enum {					/* Local APIC registers */
 	LapicICRLO	= 0x0300,	/* Interrupt Command */
 	LapicICRHI	= 0x0310,	/* Interrupt Command [63:32] */
 	LapicTIMER	= 0x0320,	/* Local Vector Table 0 (TIMER) */
-	LapicPCINT	= 0x0340,	/* Performance COunter LVT */
+	LapicPCINT	= 0x0340,	/* Performance Counter LVT */
 	LapicLINT0	= 0x0350,	/* Local Vector Table 1 (LINT0) */
 	LapicLINT1	= 0x0360,	/* Local Vector Table 2 (LINT1) */
 	LapicERROR	= 0x0370,	/* Local Vector Table 3 (ERROR) */
@@ -76,35 +76,39 @@ enum {					/* LapicTIMER */
 	LapicDIVIDER	= 0x00080000,	/* use output of the divider */
 };
 
-enum {					/* LapicTDCR */
-	LapicX2		= 0x00000000,	/* divide by 2 */
-	LapicX4		= 0x00000001,	/* divide by 4 */
-	LapicX8		= 0x00000002,	/* divide by 8 */
-	LapicX16	= 0x00000003,	/* divide by 16 */
-	LapicX32	= 0x00000008,	/* divide by 32 */
-	LapicX64	= 0x00000009,	/* divide by 64 */
-	LapicX128	= 0x0000000A,	/* divide by 128 */
-	LapicX1		= 0x0000000B,	/* divide by 1 */
+static uchar lapictdxtab[] = {		/* LapicTDCR */
+	0x0B,	/* divide by 1 */
+	0x00,	/* divide by 2 */
+	0x01,	/* divide by 4 */
+	0x02,	/* divide by 8 */
+	0x03,	/* divide by 16 */
+	0x08,	/* divide by 32 */
+	0x09,	/* divide by 64 */
+	0x0A,	/* divide by 128 */
 };
 
 static ulong* lapicbase;
 
-struct
+typedef struct Apictimer Apictimer;
+struct Apictimer
 {
 	uvlong	hz;
 	ulong	max;
 	ulong	min;
 	ulong	div;
-} lapictimer;
+	int	tdx;
+};
 
-static int
+static Apictimer lapictimer[MAXMACH];
+
+static ulong
 lapicr(int r)
 {
 	return *(lapicbase+(r/sizeof(*lapicbase)));
 }
 
 static void
-lapicw(int r, int data)
+lapicw(int r, ulong data)
 {
 	*(lapicbase+(r/sizeof(*lapicbase))) = data;
 	data = *(lapicbase+(LapicID/sizeof(*lapicbase)));
@@ -114,60 +118,100 @@ lapicw(int r, int data)
 void
 lapiconline(void)
 {
+	Apictimer *a;
+
+	a = &lapictimer[m->machno];
+
 	/*
 	 * Reload the timer to de-synchronise the processors,
 	 * then lower the task priority to allow interrupts to be
 	 * accepted by the APIC.
 	 */
 	microdelay((TK2MS(1)*1000/conf.nmach) * m->machno);
-	lapicw(LapicTICR, lapictimer.max);
+	lapicw(LapicTICR, a->max);
 	lapicw(LapicTIMER, LapicCLKIN|LapicPERIODIC|(VectorPIC+IrqTIMER));
+
+	/*
+	 * not strickly neccesary, but reported (osdev.org) to be
+	 * required for some machines.
+	 */
+	lapicw(LapicTDCR, lapictdxtab[a->tdx]);
 
 	lapicw(LapicTPR, 0);
 }
 
 /*
- *  use the i8253 clock to figure out our lapic timer rate.
+ *  use the i8253/tsc clock to figure out our lapic timer rate.
  */
 static void
 lapictimerinit(void)
 {
 	uvlong x, v, hz;
+	Apictimer *a;
+	int s;
 
-	v = m->cpuhz/1000;
-	lapicw(LapicTDCR, LapicX1);
-	lapicw(LapicTIMER, ApicIMASK|LapicCLKIN|LapicONESHOT|(VectorPIC+IrqTIMER));
-
-	if(lapictimer.hz == 0ULL){
-		x = fastticks(&hz);
-		x += hz/10;
-		lapicw(LapicTICR, 0xffffffff);
-		do{
-			v = fastticks(nil);
-		}while(v < x);
-
-		lapictimer.hz = (0xffffffffUL-lapicr(LapicTCCR))*10;
-		lapictimer.max = lapictimer.hz/HZ;
-		lapictimer.min = lapictimer.hz/(100*HZ);
-
-		if(lapictimer.hz > hz)
-			panic("lapic clock faster than cpu clock");
-		lapictimer.div = hz/lapictimer.hz;
+	if(m->machno != 0){
+		lapictimer[m->machno] = lapictimer[0];
+		return;
 	}
+
+	s = splhi();
+	a = &lapictimer[m->machno];
+	a->tdx = 0;
+Retry:
+	lapicw(LapicTIMER, ApicIMASK|LapicCLKIN|LapicONESHOT|(VectorPIC+IrqTIMER));
+	lapicw(LapicTDCR, lapictdxtab[a->tdx]);
+
+	x = fastticks(&hz);
+	x += hz/10;
+	lapicw(LapicTICR, 0xffffffff);
+	do{
+		v = fastticks(nil);
+	}while(v < x);
+
+	v = (0xffffffffUL-lapicr(LapicTCCR))*10;
+	if(v > hz-(hz/10)){
+		if(v > hz+(hz/10) && a->tdx < nelem(lapictdxtab)-1){
+			a->tdx++;
+			goto Retry;
+		}
+		v = hz;
+	}
+
+	assert(v >= (100*HZ));
+
+	a->hz = v;
+	a->div = hz/a->hz;
+	a->max = a->hz/HZ;
+	a->min = a->hz/(100*HZ);
+
+	splx(s);
+
+	v = (v+500000LL)/1000000LL;
+	print("cpu%d: lapic clock at %lludMHz\n", m->machno, v);
 }
 
 void
 lapicinit(Apic* apic)
 {
-	ulong r, lvt;
+	ulong dfr, ldr, lvt;
 
 	if(lapicbase == 0)
 		lapicbase = apic->addr;
 
-	lapicw(LapicDFR, 0xFFFFFFFF);
-	r = (lapicr(LapicID)>>24) & 0xFF;
-	lapicw(LapicLDR, (1<<r)<<24);
-	lapicw(LapicTPR, 0xFF);
+	/*
+	 * These don't really matter in Physical mode;
+	 * set the defaults anyway.
+	 */
+	if(strncmp(m->cpuidid, "AuthenticAMD", 12) == 0)
+		dfr = 0xf0000000;
+	else
+		dfr = 0xffffffff;
+	ldr = 0x00000000;
+
+	lapicw(LapicDFR, dfr);
+	lapicw(LapicLDR, ldr);
+	lapicw(LapicTPR, 0xff);
 	lapicw(LapicSVR, LapicENABLE|(VectorPIC+IrqSPURIOUS));
 
 	lapictimerinit();
@@ -222,8 +266,10 @@ lapicinit(Apic* apic)
 void
 lapicstartap(Apic* apic, int v)
 {
-	int crhi, i;
+	int i;
+	ulong crhi;
 
+	/* make apic's processor do a warm reset */
 	crhi = apic->apicno<<24;
 	lapicw(LapicICRHI, crhi);
 	lapicw(LapicICRLO, LapicFIELD|ApicLEVEL|LapicASSERT|ApicINIT);
@@ -231,8 +277,10 @@ lapicstartap(Apic* apic, int v)
 	lapicw(LapicICRLO, LapicFIELD|ApicLEVEL|LapicDEASSERT|ApicINIT);
 	delay(10);
 
+	/* assumes apic is not an 82489dx */
 	for(i = 0; i < 2; i++){
 		lapicw(LapicICRHI, crhi);
+		/* make apic's processor start at v in real mode */
 		lapicw(LapicICRLO, LapicFIELD|ApicEDGE|ApicSTARTUP|(v/BY2PG));
 		microdelay(200);
 	}
@@ -241,7 +289,7 @@ lapicstartap(Apic* apic, int v)
 void
 lapicerror(Ureg*, void*)
 {
-	int esr;
+	ulong esr;
 
 	lapicw(LapicESR, 0);
 	esr = lapicr(LapicESR);
@@ -251,7 +299,7 @@ lapicerror(Ureg*, void*)
 	case 0x52C:				/* stepping cC0 */
 		return;
 	}
-	print("cpu%d: lapicerror: 0x%8.8uX\n", m->machno, esr);
+	print("cpu%d: lapicerror: 0x%8.8luX\n", m->machno, esr);
 }
 
 void
@@ -263,7 +311,7 @@ lapicspurious(Ureg*, void*)
 int
 lapicisr(int v)
 {
-	int isr;
+	ulong isr;
 
 	isr = lapicr(LapicISR + (v/32));
 
@@ -279,7 +327,7 @@ lapiceoi(int v)
 }
 
 void
-lapicicrw(int hi, int lo)
+lapicicrw(ulong hi, ulong lo)
 {
 	lapicw(LapicICRHI, hi);
 	lapicw(LapicICRLO, lo);
@@ -350,29 +398,49 @@ void
 lapictimerset(uvlong next)
 {
 	vlong period;
-	int x;
+	Apictimer *a;
 
-	x = splhi();
-	lock(&m->apictimerlock);
-
-	period = lapictimer.max;
-	if(next != 0){
-		period = next - fastticks(nil);
-		period /= lapictimer.div;
-
-		if(period < lapictimer.min)
-			period = lapictimer.min;
-		else if(period > lapictimer.max - lapictimer.min)
-			period = lapictimer.max;
-	}
+	a = &lapictimer[m->machno];
+	period = next - fastticks(nil);
+	period /= a->div;
+	if(period < a->min)
+		period = a->min;
+	else if(period > a->max - a->min)
+		period = a->max;
 	lapicw(LapicTICR, period);
-
-	unlock(&m->apictimerlock);
-	splx(x);
 }
 
 void
 lapicclock(Ureg *u, void*)
 {
+	/*
+	 * since the MTRR updates need to be synchronized across processors,
+	 * we want to do this within the clock tick.
+	 */
+	mtrrclock();
 	timerintr(u, 0);
+}
+
+void
+lapicintron(void)
+{
+	lapicw(LapicTPR, 0);
+}
+
+void
+lapicintroff(void)
+{
+	lapicw(LapicTPR, 0xFF);
+}
+
+void
+lapicnmienable(void)
+{
+	lapicw(LapicPCINT, ApicNMI);
+}
+
+void
+lapicnmidisable(void)
+{
+	lapicw(LapicPCINT, ApicIMASK);
 }
