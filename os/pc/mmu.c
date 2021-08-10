@@ -336,8 +336,8 @@ vunmap(void *va, int size)
 		upafree(PADDR(va), size);
 }
 
-s32
-segflush(void*, u32)
+int
+segflush(void*, ulong)
 {
 	return 0;
 }
