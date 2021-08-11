@@ -1,4 +1,4 @@
-#!/dis/sh -nx
+#!/dis/sh -x -n
 load std
 x=$*
 {~ $#x 1 && ~ ${hd $x} -h -r} || {
