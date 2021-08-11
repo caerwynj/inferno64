@@ -137,15 +137,19 @@ main(void)
 	showconfig();
 	cpuidentify();
 	meminit0();			/* builds the memmap */
+	doc("archinit");
 	archinit();
+	doc("arch->clockinit");
 	if(arch->clockinit)
 		arch->clockinit();
 	meminit();			/* builds the conf.mem entries */
+	doc("confinit");
 	confinit();
 	xinit();
 	i8253init();
 	/* TODO 9front if(i8237alloc != nil)
 		i8237alloc(); */
+	doc("pcicfginit");
 	pcicfginit();
 	bootscreeninit();	/* vga maps pages for the frame buffer TODO bug causes an i8042 system reset in poolsizeinit() */
 	trapinit();
