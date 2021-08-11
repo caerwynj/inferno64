@@ -226,7 +226,6 @@ root
 	/dis/lib/styxconv/new2old.dis
 	/dis/lib/styxconv/ostyx.dis
 	/dis/lib/styxpersist.dis
-	/dis/sh.dis
 	/dis/lib/env.dis
 	/dis/lib/filepat.dis
 	/dis/lib/workdir.dis
