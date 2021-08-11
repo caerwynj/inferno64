@@ -238,6 +238,10 @@ root
 #	/keydb  /
 #	/keydb/mutual   /usr/inferno/keyring/mutual
 #	/keydb/spree /usr/inferno/keyring/spree
+# user personalization
+	/usr	/
+	/usr/inferno	/
+	/usr/inferno/lib/profile
 
 bootdir
 	/$objtype/bin/paqfs

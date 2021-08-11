@@ -59,6 +59,9 @@ if{~ $"mac deadbeefcafe}{
 }
 
 #ns
+	# disinit.b does this but not sure why it loses it later
+	bind -c '#e' /env
+
 if{~ $"sysname vmx9ferno}{
 	# for using the cd
 	9660srv /dev/sdF0/data /n/cd
@@ -89,11 +92,15 @@ if{~ $"sysname vmx9ferno}{
 
 	# refresh the disk contents from the cd
 	disk/mkfs -v -s /n/cd/ -d /n/rootdisk/ <{ echo + }
-} &
-<>/net/ipifc/clone {
-	x=`{read}
-	echo bind ether /net/ether0 > /net/ipifc/^$x^/ctl
-	ip/dhcp -h `{cat /env/sysname} -p /net/ipifc/$x
+
+	mkdir -p /usr/`{cat /dev/user}
 } &
 
-sh -n
+<>/net/ipifc/clone {
+	x=`{read}
+	echo bind ether /net/ether0 > /net/ipifc/^$x^/ctl &&
+	ip/dhcp -h $sysname -p /net/ipifc/$x
+} &
+
+cd /usr/`{cat /dev/user}
+sh -l -n # to use the ./lib/profile

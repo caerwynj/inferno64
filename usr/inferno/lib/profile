@@ -10,3 +10,12 @@ bind -b $home/module /module
 ndb/cs
 ndb/dns
 
+if{~ $"sysname vmx9ferno}{
+	# serve the cd
+	styxlisten -A -v tcp!192.168.88.118!17001 export /n/cd/
+}
+
+if{~ $"sysname 9ferno}{
+	# mount the vmx cd
+	mount -A tcp!192.168.88.118!17001 /n/cd
+}
