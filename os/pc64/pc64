@@ -169,61 +169,18 @@ root
 	/net    /
 	/nvfs   /
 	/prog   /
-# factotum needs this. factotum is needed to run import
-	/mnt	/
 	/dis/lib
 	/dis/svc
 	/dis/wm
 	/osinit.dis
-# basic commands
-	/dis/sh.dis
-	/dis/ls.dis
-	/dis/cat.dis
-	/dis/bind.dis
-	/dis/mount.dis
-	/dis/pwd.dis
-	/dis/echo.dis
-	/dis/cd.dis
-# support disk, cd and ethernet root and install to disk
-	/dis/9660srv.dis
-	/dis/auth/factotum.dis
-	/dis/bind.dis
-	/dis/cat.dis
-	/dis/cd.dis
-	/dis/disk/calc.tab.dis
-	/dis/disk/fdisk.dis
-	/dis/disk/kfs.dis
-	/dis/disk/kfscmd.dis
-	/dis/disk/pedit.dis
-	/dis/disk/prep.dis
-	/dis/dossrv.dis
-	/dis/echo.dis
+# for custom initialization and shutdown
 	/dis/init
-	/dis/import.dis
-	/dis/ip/dhcp.dis
-	/dis/ip/ping.dis
-	/dis/lib/encoding/base64.dis
-	/dis/lib/factotum.dis
-	/dis/lib/arg.dis
-	/dis/lib/auth.dis
-	/dis/lib/bufio.dis
-	/dis/lib/daytime.dis
-	/dis/lib/dhcpclient.dis
-	/dis/lib/dial.dis
-	/dis/lib/disks.dis
-	/dis/lib/env.dis
-	/dis/lib/filepat.dis
-	/dis/lib/ip.dis
-	/dis/lib/nametree.dis
-	/dis/lib/random.dis
-	/dis/lib/rand.dis
-	/dis/lib/readdir.dis
-	/dis/lib/ssl.dis
-	/dis/lib/string.dis
-	/dis/lib/styx.dis
-	/dis/lib/styxservers.dis
-	/dis/lib/timers.dis
-	/dis/lib/workdir.dis
+	/dis/shutdown
+# basic commands
+	/dis/bind.dis
+	/dis/cat.dis
+	/dis/cd.dis
+	/dis/echo.dis
 	/dis/ls.dis
 	/dis/mntgen.dis
 	/dis/mount.dis
@@ -231,9 +188,48 @@ root
 	/dis/pwd.dis
 	/dis/read.dis
 	/dis/sh.dis
+	/dis/sh.dis
 	/dis/sh/std.dis
-	/dis/shutdown
 	/dis/unmount.dis
+## support disk, cd and ethernet root and install to disk
+	/dis/9660srv.dis
+# for installing to disk
+	/dis/disk/fdisk.dis
+	/dis/disk/kfs.dis
+	/dis/disk/kfscmd.dis
+	/dis/disk/prep.dis
+# for network connectivity
+	/dis/ip/dhcp.dis
+	/dis/ip/ping.dis
+	/dis/auth/factotum.dis
+# libraries for the above commands
+	/dis/lib/arg.dis
+	/dis/lib/daytime.dis
+	/dis/lib/string.dis
+	/dis/lib/styx.dis
+	/dis/disk/pedit.dis
+	/dis/disk/calc.tab.dis
+	/dis/lib/bufio.dis
+	/dis/lib/disks.dis
+	/dis/lib/dhcpclient.dis
+	/dis/lib/dial.dis
+	/dis/lib/ip.dis
+	/dis/lib/random.dis
+	/dis/lib/rand.dis
+	/dis/lib/timers.dis
+	/dis/lib/readdir.dis
+	/dis/lib/nametree.dis
+	/dis/lib/styxservers.dis
+	/dis/lib/auth.dis
+	/dis/lib/ssl.dis
+	/dis/lib/factotum.dis
+	/dis/lib/styxconv/new2old.dis
+	/dis/lib/styxconv/ostyx.dis
+	/dis/lib/styxpersist.dis
+	/dis/sh.dis
+	/dis/lib/env.dis
+	/dis/lib/filepat.dis
+	/dis/lib/workdir.dis
 # would need these to authenticate with the root server
 #	/keydb  /
 #	/keydb/mutual   /usr/inferno/keyring/mutual
@@ -242,6 +238,8 @@ root
 	/usr	/
 	/usr/inferno	/
 	/usr/inferno/lib/profile
+# for factotum
+	/mnt
 
 bootdir
 	/$objtype/bin/paqfs
