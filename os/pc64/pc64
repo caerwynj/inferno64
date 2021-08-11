@@ -169,6 +169,8 @@ root
 	/net    /
 	/nvfs   /
 	/prog   /
+# factotum needs this. factotum is needed to run import
+	/mnt	/
 	/dis/lib
 	/dis/svc
 	/dis/wm
