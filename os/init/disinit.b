@@ -39,6 +39,7 @@ init(nil: ref Draw->Context, nil: list of string)
 	sys->bind("#l", "/net", sys->MAFTER);	# Network interfaces
 	sys->bind("#m","/dev",sys->MAFTER);     # pointer/mouse
 	sys->bind("#p", "/prog", sys->MREPL);	# prog device
+	sys->bind("#r", "/dev", sys->MAFTER);	# rtc
 	sys->bind("#t", "/dev", sys->MAFTER);	# serial line
 #	sys->bind("#v","/dev",sys->MAFTER);     # VGA
 	sys->bind("#I", "/net", sys->MAFTER);	# IP
@@ -50,14 +51,16 @@ init(nil: ref Draw->Context, nil: list of string)
 #	sys->bind("#T","/dev",sys->MAFTER);		# Touchscreen
 #	sys->bind("#W","/dev",sys->MAFTER);		# Flash
 
-	srv();
+	# TODO '#c/sysenv' seems obsolete
+	#sys->print("srv()\n");
+	#srv();
 
-	#sys->print("after the binds\n");
+	sys->print("loading /dis/sh.dis\n");
 	sh := load Sh "/dis/sh.dis";
 	(s, nil) := sys->stat("/dis/init");
 	if(s == 0){
-		#sys->print("spawn sh -n /dis/init\n");
-		spawn sh->init(nil, "sh" :: "-n" :: "/dis/init" :: nil);
+		sys->print("spawn sh -n /dis/init\n");
+		spawn sh->init(nil, "sh" :: "-x" :: "-n" :: "/dis/init" :: nil);
 	} else {
 		sys->fprint(stderr, "init: cannot find /dis/init: %r\n");
 		spawn sh->init(nil, "-n" :: nil);
