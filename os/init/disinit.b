@@ -34,7 +34,7 @@ init(nil: ref Draw->Context, nil: list of string)
 	sys->bind("#b", "/dev", sys->MAFTER);	# kbd
 	sys->bind("#c", "/dev", sys->MAFTER);	# console device
 	sys->bind("#d", "/fd", Sys->MREPL);		# dup(3)
-	sys->bind("#e", "/env", sys->MAFTER);	# env
+	sys->bind("#e", "/env", sys->MREPL|sys->MCREATE);	# environment
 #	sys->bind("#i", "/dev", sys->MREPL);	# draw device
 	sys->bind("#l", "/net", sys->MAFTER);	# Network interfaces
 	sys->bind("#m","/dev",sys->MAFTER);     # pointer/mouse

@@ -3,11 +3,12 @@
 
 load std
 
-mount { mntgen } /n
+mount -a { mntgen } /n
+mount -a { mntgen } /mnt
 
-## usually better than 1970
-#cat '#r/rtc' >/dev/time >[2]/dev/null
-#
+# usually better than 1970
+cat '#r/rtc' >/dev/time >[2]/dev/null
+
 #fn showlocaldev {
 #	echo $1'	' $2
 #	if(~ $#bootargs 0){
@@ -50,6 +51,49 @@ mount { mntgen } /n
 #
 #showlocaldevs
 
-ftest -f `{cat /dev/user}^/lib/profile && `{cat /dev/user}^/lib/profile
+mac=`{cat /net/ether0/addr}
+if{~ $"mac deadbeefcafe}{
+	sysname=vmx9ferno
+}{
+	sysname=9ferno
+}
+
+#ns
+if{~ $"sysname vmx9ferno}{
+	# for using the cd
+	9660srv /dev/sdF0/data /n/cd
+	bind -a /n/cd/dis /dis
+	#bind -a /n/cd/ /
+
+	disk/fdisk -p /dev/sdG0/data >/dev/sdG0/ctl
+	disk/prep -p /dev/sdG0/plan9 > /dev/sdG0/ctl
+
+	### for formatting the disk
+	###	bind -a '#S' /dev	# simple.b does this
+	##disk/mbr -m mbr /dev/sdG0/data
+	##disk/fdisk -baw /dev/sdG0/data
+	##disk/prep -bw -a^(9fat fs) /dev/sdG0/plan9
+	##disk/format -b pbs -d -r 2 /dev/sdG0/9fat 9bootfat /n/cd/cfg/plan9.ini
+	#
+	## for installing to a formatted disk
+	#mount -c { disk/kfs -r -n root /dev/sdG0/fs } /n/rootdisk # ream
+	#disk/kfscmd -n root sync
+	#disk/mkfs -v -r -s /n/cd/ -d /n/rootdisk/ <{ echo + }
+	#disk/kfscmd -n root sync
+
+	## starting inferno already installed to a disk
+	mount -c { disk/kfs -n rootdisk /dev/sdG0/fs } /n/rootdisk
+	#disk/kfscmd -n rootdisk sync
+	bind -b /n/rootdisk/dis /dis
+	bind -a -c /n/rootdisk/ /
+
+	# refresh the disk contents from the cd
+	disk/mkfs -v -s /n/cd/ -d /n/rootdisk/ <{ echo + }
+} &
+<>/net/ipifc/clone {
+	x=`{read}
+	echo bind ether /net/ether0 > /net/ipifc/^$x^/ctl
+	ip/dhcp -h `{cat /env/sysname} -p /net/ipifc/$x
+} &
 
 sh -n
