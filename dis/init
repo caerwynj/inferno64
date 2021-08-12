@@ -98,8 +98,8 @@ if{~ $"sysname vmx9ferno}{
 
 <>/net/ipifc/clone {
 	x=`{read}
-	echo bind ether /net/ether0 > /net/ipifc/^$x^/ctl &&
-	ip/dhcp -h $sysname -p /net/ipifc/$x
+	and {echo bind ether /net/ether0 > /net/ipifc/^$x^/ctl} {
+		ip/dhcp -h $sysname -p /net/ipifc/$x}
 } &
 
 cd /usr/`{cat /dev/user}
