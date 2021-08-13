@@ -3104,7 +3104,7 @@ tcpgc(Proto *tcp)
 	Tcpctl *tcb;
 
 
-	n = 0;
+	n = natgc(tcp->ipproto);
 	ep = &tcp->conv[tcp->nc];
 	for(pp = tcp->conv; pp < ep; pp++) {
 		c = *pp;

@@ -59,7 +59,7 @@ Queue	*qlog;
 extern	void nullmediumlink(void);
 extern	void pktmediumlink(void);
 static	long ndbwrite(Fs*, char*, ulong, int);
-static	void	closeconv(Conv*);
+extern void    closeconv(Conv*);
 
 static int
 ip3gen(Chan *c, int i, Dir *dp)
@@ -550,7 +550,7 @@ ipwstat(Chan *c, uchar *dp, s32 n)
 	return n;
 }
 
-static void
+extern void
 closeconv(Conv *cv)
 {
 	Conv *nc;
@@ -773,7 +773,7 @@ setluniqueport(Conv* c, int lport)
 /*
  *  pick a local port and set it
  */
-static void
+extern void
 setlport(Conv* c)
 {
 	Proto *p;
@@ -811,7 +811,7 @@ setlport(Conv* c)
 				break;
 			}
 		}
-		if(!found)
+		if(found == 0)
 			break;
 	}
 	c->lport = (*pp)++;

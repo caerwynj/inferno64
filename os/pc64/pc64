@@ -15,7 +15,7 @@ dev
 
 	ether		netif netaux ethermedium
 #	bridge		netif log
-	ip	bootp ip ipv6 ipaux iproute arp netlog ptclbsum iprouter plan9 nullmedium pktmedium
+	ip	bootp ip ipv6 ipaux iproute arp netlog ptclbsum iprouter plan9 nullmedium pktmedium nat
 
 	draw	screen vga vgax cga
 #	mouse		mouse

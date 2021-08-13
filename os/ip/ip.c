@@ -7,7 +7,6 @@
 
 #include	"ip.h"
 
-typedef struct Ip4hdr		Ip4hdr;
 typedef struct IP		IP;
 typedef struct Fragment4	Fragment4;
 typedef struct Fragment6	Fragment6;
@@ -25,20 +24,6 @@ enum
 };
 
 #define BLKIPVER(xp)	(((Ip4hdr*)((xp)->rp))->vihl&0xF0)
-
-struct Ip4hdr
-{
-	uchar	vihl;		/* Version and header length */
-	uchar	tos;		/* Type of service */
-	uchar	length[2];	/* packet length */
-	uchar	id[2];		/* ip->identification */
-	uchar	frag[2];	/* Fragment information */
-	uchar	ttl;      	/* Time to live */
-	uchar	proto;		/* Protocol */
-	uchar	cksum[2];	/* Header checksum */
-	uchar	src[4];		/* IP source */
-	uchar	dst[4];		/* IP destination */
-};
 
 /* MIB II counters */
 enum
@@ -295,6 +280,10 @@ ipoput4(Fs *f, Block *bp, int gating, int ttl, int tos, Conv *c)
 	if(ifc->m == nil)
 		goto raise;
 
+	/* Output NAT */
+	if(nato(bp, ifc, f) != 0)
+		goto raise;
+
 	/* If we dont need to fragment just send it */
 	medialen = ifc->maxtu - ifc->m->hsize;
 	if(len <= medialen) {
@@ -442,6 +431,9 @@ ipiput4(Fs *f, Ipifc *ifc, Block *bp)
 	}
 
 	h = (Ip4hdr*)(bp->rp);
+
+	/* Input NAT */
+	nati(bp, ifc);
 
 	/* dump anything that whose header doesn't checksum */
 	if((bp->flag & Bipck) == 0 && ipcsum(&h->vihl)) {

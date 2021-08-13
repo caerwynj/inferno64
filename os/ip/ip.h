@@ -25,6 +25,9 @@ typedef struct 	Hostparams	Hostparams;
 typedef struct 	V6router	V6router;
 typedef struct	V6params	V6params;
 
+typedef struct Ip4hdr     Ip4hdr;
+typedef struct Nat	Nat;
+
 #pragma incomplete Arp
 #pragma	incomplete Ifclog
 #pragma incomplete Ipself
@@ -38,7 +41,7 @@ enum
 	Maxproto=	20,
 	Nhash=		64,
 	Maxincall=	5,
-	Nchans=		256,
+	Nchans=		16383,
 	MAClen=		16,		/* longest mac address */
 
 	MAXTTL=		255,
@@ -68,6 +71,22 @@ enum
 	Announced=	2,
 	Connecting=	3,
 	Connected=	4,
+};
+
+/* on the wire packet header */
+struct Ip4hdr
+{
+	uchar	vihl;		/* Version and header length */
+	uchar	tos;		/* Type of service */
+	uchar	length[2];	/* packet length */
+	uchar	id[2];		/* ip->identification */
+	uchar	frag[2];	/* Fragment information */
+	uchar	ttl;      	/* Time to live */
+	uchar	proto;		/* Protocol */
+	uchar	cksum[2];	/* Header checksum */
+	uchar	src[4];		/* IP source */
+	uchar	dst[4];		/* IP destination */
+	uchar	data[1];	/* start of data */
 };
 
 /*
@@ -390,6 +409,7 @@ char*	Fsstdconnect(Conv*, char**, int);
 char*	Fsstdannounce(Conv*, char**, int);
 char*	Fsstdbind(Conv*, char**, int);
 ulong	scalednconv(void);
+void	closeconv(Conv*);
 
 /* 
  *  logging
@@ -414,6 +434,7 @@ enum
 	Logrudpmsg=	1<<16,
 	Logesp=		1<<17,
 	Logtcpwin=	1<<18,
+	Lognat=		1<<19,
 };
 
 void	netloginit(Fs*);
@@ -522,6 +543,7 @@ struct IPaux
 };
 
 extern IPaux*	newipaux(char*, char*);
+extern void	setlport(Conv*);
 
 /*
  *  arp.c
@@ -570,6 +592,9 @@ extern int	eipfmt(Fmt*);
 
 #define	ipmove(x, y) memmove(x, y, IPaddrlen)
 #define	ipcmp(x, y) ( (x)[IPaddrlen-1] != (y)[IPaddrlen-1] || memcmp(x, y, IPaddrlen) )
+ 
+#define	ip4move(x, y) memmove(x, y, IPv4addrlen)
+#define	ip4cmp(x, y) ( (x)[IPv4addrlen-1] != (y)[IPv4addrlen-1] || memcmp(x, y, IPv4addrlen) )
 
 extern uchar IPv4bcast[IPaddrlen];
 extern uchar IPv4bcastobs[IPaddrlen];
@@ -670,3 +695,15 @@ extern Chan*	chandial(char*, char*, char*, Chan**);
  *  global to all of the stack
  */
 extern void	(*igmpreportfn)(Ipifc*, uchar*);
+
+/*
+ * nat.c
+ */
+extern int	nato(Block*, Ipifc*, Fs*);
+extern void	nati(Block*, Ipifc*);
+extern int	natgc(uchar);
+
+extern int	addnataddr(uchar*, uchar*, Iplifc*);
+extern int	removenataddr(uchar*, uchar*, Iplifc*);
+extern void	shownataddr(void);
+extern void flushnataddr(void);

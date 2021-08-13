@@ -10,27 +10,11 @@
 
 typedef struct Ipmuxrock  Ipmuxrock;
 typedef struct Ipmux      Ipmux;
-typedef struct Ip4hdr     Ip4hdr;
 typedef struct Ip6hdr     Ip6hdr;
 
 enum
 {
 	IPHDR		= 20,		/* sizeof(Ip4hdr) */
-};
-
-struct Ip4hdr
-{
-	uchar	vihl;		/* Version and header length */
-	uchar	tos;		/* Type of service */
-	uchar	length[2];	/* packet length */
-	uchar	id[2];		/* ip->identification */
-	uchar	frag[2];	/* Fragment information */
-	uchar	ttl;		/* Time to live */
-	uchar	proto;		/* Protocol */
-	uchar	cksum[2];	/* Header checksum */
-	uchar	src[4];		/* IP source */
-	uchar	dst[4];		/* IP destination */
-	uchar	data[1];	/* start of data */
 };
 
 struct Ip6hdr
