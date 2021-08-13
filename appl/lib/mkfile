@@ -36,7 +36,8 @@ TARG=\
 	debug.dis\
 	deflate.dis\
 	devpointer.dis\
-	dhcpclient.dis\
+	dhcp.dis\
+	dhcpd.dis\
 	dial.dis\
 	dialog.dis\
 	dict.dis\
@@ -60,6 +61,7 @@ TARG=\
 	iobuf.dis\
 	ip.dis\
 	ipattr.dis\
+	ipval.dis\
 	ir.dis\
 	irsage.dis\
 	irsim.dis\
@@ -168,6 +170,8 @@ SYSMODULES= \
 	db.m\
 	debug.m\
 	devpointer.m\
+	dhcp.m\
+	dhcpd.m\
 	dict.m\
 	draw.m\
 	env.m\
@@ -180,6 +184,7 @@ SYSMODULES= \
 	html.m\
 	imagefile.m\
 	inflate.m\
+	ipval.m\
 	ir.m\
 	keyring.m\
 	lock.m\

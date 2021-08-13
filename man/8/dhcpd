@@ -1,0 +1,118 @@
+.TH DHCPD 8
+.SH NAME
+.B ip/dhcpd
+[
+.B -ds
+] [
+.B -f
+.I ndbfile
+] [
+.B -x
+.I net
+] [
+.I ipaddr n ...
+]
+.SH DESCRIPTION
+.B Dhcpd
+serves the BOOTP protocol, and DHCP extensions.
+.PP
+Options:
+.TP
+.BI -f " ndbfile"
+Read configuration from
+.I ndbfile
+instead of the default
+.IR /lib/ndb/local .
+.TP
+.BI -x " net"
+Serve on
+.I net
+instead of the default
+.IR /net .
+.TP
+.B -d
+Print debug information.
+.TP
+.B -s
+Only listen for and print requests, don't respond to them.
+.PP
+Bootp clients need an explicit
+.I ether
+entry in the ndb file.
+Dhcp clients may have an explicit
+.I ether
+entry.  Clients that are not explicitly configured will receive an available address from the dynamic address pool.
+The pool is specified by parameters to dhcpd, with zero or more pairs of
+.I ipaddr
+and
+.IR n ,
+the first ip address of a range and the number of addresses.
+Leases are recorded in
+.IR /services/dhcpd/,
+each leased ip address is stored in a file named after the ip address.
+Files in /services/dhcpd/ are read at start up, to ensure leases survive restarts
+dhcpd and clients receive the same ip addresses as long
+as the pool has unused addresses.
+.PP
+Clients request an ip address and accompanying configuration (e.g.
+gateway, dns servers).  Dhcpd consults the ndb file for the following
+options:
+.IR ipmask ,
+.IR ipgw,
+.IR dns ,
+.IR sys ,
+.IR dnsdomain ,
+.IR bootf ,
+.IR rootpath ,
+.IR leasetime ,
+.IR nextserver .
+.IR Ndb (6)
+defines most of them.
+.I Rootpath
+is used by clients with a network file system as root.
+.I Leasetime
+is the DHCP lease time, it defaults to one day.
+.I Nextserver
+is the server to continue booting from, typically a tftp server that serves a kernel.
+.PP
+Attributes are resolved by first looking for entries that exactly match the IP address.
+.I Ipnet
+entries are consulted for the remaining options, most specific
+.I ipmask
+first.
+.SH EXAMPLE
+The following is a snippet from a /lib/ndb/local:
+
+.EX
+	ipnet=lan ip=192.168.1.0 ipmask=255.255.255.0
+		ipgw=192.168.1.254
+		dnsdomain=lan
+		dns=192.168.1.254
+		nextserver=192.168.1.1
+
+	ip=192.168.1.1 sys=narf
+	ip=192.168.1.10 sys=laser
+	ip=192.168.1.11 sys=wrt54gl
+
+	ip=192.168.1.33 ether=000ae43623bc sys=dis
+	ip=192.168.1.34 ether=000ae4269c38 sys=bad
+		bootf=9pxeload
+	ip=192.168.1.35 ether=000ae432664c sys=yeah
+	ip=192.168.1.50 ether=00504301c7d5 sys=sheeva0
+		bootf=sheeva0
+.EE
+.SH SOURCE
+.B /appl/cmd/ip/dhcpd.b
+.SH FILES
+.B /services/dhcpd/
+.SH SEE ALSO
+.IR ndb (6),
+.IR dhcp (8)
+.br
+Internet RFCs
+.IR RFC951 ,
+.IR RFC1542 ,
+.IR RFC2131 ,
+.IR RFC2132
+.SH BUGS
+Only DHCPv4 support is implemented.

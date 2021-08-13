@@ -7,6 +7,7 @@ DIRS=\
 TARG=\
 	bootpd.dis\
 	dhcp.dis\
+	dhcpd.dis\
 	ping.dis\
 	rip.dis\
 	tftpd.dis\
@@ -14,13 +15,18 @@ TARG=\
 	sntp.dis\
 
 SYSMODULES=\
+	arg.m\
 	attrdb.m\
 	bufio.m\
+	daytime.m\
 	dhcp.m\
 	draw.m\
+	encoding.m\
 	ether.m\
 	ip.m\
 	ipattr.m\
+	lists.m\
+	string.m\
 	sys.m\
 
 DISBIN=$ROOT/dis/ip
