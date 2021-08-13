@@ -59,12 +59,13 @@ init(nil: ref Draw->Context, nil: list of string)
 	sh := load Sh "/dis/sh.dis";
 	(s, nil) := sys->stat("/dis/init");
 	if(s == 0){
-		sys->print("spawn sh -n /dis/init\n");
+		sys->print("spawn sh -x -n /dis/init\n");
 		spawn sh->init(nil, "sh" :: "-x" :: "-n" :: "/dis/init" :: nil);
-	} else {
-		sys->fprint(stderr, "init: cannot find /dis/init: %r\n");
-		spawn sh->init(nil, "-n" :: nil);
 	}
+	# fallback console
+	sh1 := load Sh "/dis/sh.dis";
+	sys->print("sh -x -n\n");
+	sh1->init(nil, "sh" :: "-x" :: "-n" :: nil);
 }
 
 srv()
