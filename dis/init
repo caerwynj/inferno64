@@ -9,9 +9,6 @@ load std
 mount -a { mntgen } /n
 mount -a { mntgen } /mnt
 
-# usually better than 1970
-cat '#r/rtc' >/dev/time
-
 #fn showlocaldev {
 #	echo $1'	' $2
 #	if(~ $#bootargs 0){

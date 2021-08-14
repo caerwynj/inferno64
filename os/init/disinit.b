@@ -51,6 +51,12 @@ init(nil: ref Draw->Context, nil: list of string)
 #	sys->bind("#T","/dev",sys->MAFTER);		# Touchscreen
 #	sys->bind("#W","/dev",sys->MAFTER);		# Flash
 
+	# set clock
+	#	does not handle bootp provided time source
+	now := getclock("#r/rtc");
+	now *= big 1000000;
+	setclock("#c/time", now);
+
 	# TODO '#c/sysenv' seems obsolete
 	#sys->print("srv()\n");
 	#srv();
@@ -123,4 +129,35 @@ echoto(fname, str: string): int
 		return -1;
 	}
 	return 0;
+}
+
+getclock(timefile: string): big
+{
+	now := big 0;
+	if(timefile != nil){
+		fd := sys->open(timefile, Sys->OREAD);
+		if(fd != nil){
+			b := array[64] of byte;
+			n := sys->read(fd, b, len b-1);
+			if(n > 0){
+				now = big string b[0:n];
+				if(now <= big 16r20000000)
+					now = big 0;	# remote itself is not initialised
+			}
+		}
+	}
+	return now;
+}
+
+setclock(timefile: string, now: big)
+{
+	fd := sys->open(timefile, sys->OWRITE);
+	if (fd == nil) {
+		sys->print("init: can't open %s: %r", timefile);
+		return;
+	}
+
+	b := sys->aprint("%ubd", now);
+	if (sys->write(fd, b, len b) != len b)
+		sys->print("init: can't write to %s: %r", timefile);
 }
