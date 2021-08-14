@@ -159,16 +159,16 @@ port
 	xalloc
 
 root
-	/chan   /
-	/dev    /
+	/chan	/
+	/dev	/
 	/dis
-	/env    /
-	/fd     /
-	/n
+	/env	/
+	/fd	/
+	/n	/
 	/n/remote
-	/net    /
-	/nvfs   /
-	/prog   /
+	/net	/
+	/nvfs	/
+	/prog	/
 	/dis/lib
 	/dis/svc
 	/dis/wm
@@ -236,6 +236,7 @@ root
 # user personalization
 	/usr	/
 	/usr/inferno	/
+	/usr/inferno/lib	/
 	/usr/inferno/lib/profile
 # for factotum
 	/mnt
