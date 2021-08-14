@@ -175,7 +175,7 @@ main(void)
 	doc("procinit");
 	procinit();
 	doc("links");
-	links();
+	links(); /* runs etherlink() of the link'ed ethernet devices */
 	doc("chandevreset");
 	chandevreset(); /* reset() all devices */
 	doc("userinit");

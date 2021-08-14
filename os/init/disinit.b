@@ -36,13 +36,13 @@ init(nil: ref Draw->Context, nil: list of string)
 	sys->bind("#d", "/fd", Sys->MREPL);		# dup(3)
 	sys->bind("#e", "/env", sys->MREPL|sys->MCREATE);	# environment
 #	sys->bind("#i", "/dev", sys->MREPL);	# draw device
-	sys->bind("#l", "/net", sys->MAFTER);	# Network interfaces
+	sys->bind("#l0", "/net", sys->MAFTER);	# Ehernet device
 	sys->bind("#m","/dev",sys->MAFTER);     # pointer/mouse
 	sys->bind("#p", "/prog", sys->MREPL);	# prog device
 	sys->bind("#r", "/dev", sys->MAFTER);	# rtc
 	sys->bind("#t", "/dev", sys->MAFTER);	# serial line
 #	sys->bind("#v","/dev",sys->MAFTER);     # VGA
-	sys->bind("#I", "/net", sys->MAFTER);	# IP
+	sys->bind("#I0", "/net", sys->MAFTER);	# IP
 	sys->bind("#P","/dev",sys->MAFTER);		# arch
 #	sys->bind("#P/realmode","/dev",sys->MAFTER); # not in the arch(3). What is this for?
 #	sys->bind("#P/realmodemem","/dev",sys->MAFTER);# not in the arch(3). What is this for?
