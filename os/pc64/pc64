@@ -165,10 +165,11 @@ root
 	/env	/
 	/fd	/
 	/n	/
-	/n/remote
 	/net	/
+	/net.alt	/
 	/nvfs	/
 	/prog	/
+	/tmp	/
 	/dis/lib
 	/dis/svc
 	/dis/wm
@@ -233,11 +234,6 @@ root
 #	/keydb  /
 #	/keydb/mutual   /usr/inferno/keyring/mutual
 #	/keydb/spree /usr/inferno/keyring/spree
-# user personalization
-	/usr	/
-	/usr/inferno	/
-	/usr/inferno/lib	/
-	/usr/inferno/lib/profile
 # for factotum
 	/mnt
 
