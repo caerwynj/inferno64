@@ -2439,5 +2439,6 @@ usr
 		keyring
 		lib
 			plumbing
+			profile
 		namespace
 wrap

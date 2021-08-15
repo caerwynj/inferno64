@@ -1,28 +1,31 @@
-# emu sh initialisation here
+# sh initialisation here
 load std
 
 user = `{cat /dev/user}
 home = /usr/^$user
 pubgridreg = tcp!registry.9p.zone!registry
+cd $home
 
-bind /locale/US_Central /locale/timezone
-
-# Fix creation annoyance for hosted inferno
-# this might be relevant for native, but is untested
-bind -c '#U'/dis /dis
-
-# Set up environment
-bind -b '#s' /chan
+# build the user's namespace in $home/
+and {ftest -e namespace}	{nsbuild}
 
 # Networking
 ndb/dns -r
 ndb/cs
 # bind -a '#scs' /net
-mount {mntgen} /n
-mount {mntgen} /mnt
+
+if{~ $#emuhost 0 && ~ $#emuwdir 0}{
+	# running native
+
+	# load a heap based filesystem on /tmp
+	memfs
+}{
+	# running hosted
+
+	# dis/init has set this up already for native booting
+	mount {mntgen} /n
+	mount {mntgen} /mnt
+}
 
 # Run the user's profile
-cd
-and {ftest -e namespace}	{nsbuild}
-and {ftest -d tmp}		{bind -c tmp /tmp}
 and {ftest -e lib/profile}	{run ./lib/profile}

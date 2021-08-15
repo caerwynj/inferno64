@@ -1,4 +1,6 @@
-# boot initialization here
+# boot initialization
+#	configure devices
+#	setup /
 # sh -n /dis/init
 
 # disinit.b does this but not sure why it loses it later
@@ -6,8 +8,8 @@ bind -c '#e' /env
 
 load std
 
-mount -a { mntgen } /n
-mount -a { mntgen } /mnt
+mount {mntgen} /n
+mount {mntgen} /mnt
 
 #fn showlocaldev {
 #	echo $1'	' $2
@@ -54,13 +56,23 @@ mount -a { mntgen } /mnt
 mac=`{cat /net/ether0/addr}
 if{~ $"mac deadbeefcafe}{
 	sysname=vmx9ferno
-}{
+}{~ $"mac 6805ca1bae72}{
 	sysname=9ferno
+}{
+	sysname=9ferno1
 }
 
-#ns
+echo $"sysname > '#c'/sysname
 
+	<>/net/ipifc/clone {
+		x=`{read}
+		echo bind ether /net/ether0 > /net/ipifc/^$x^/ctl
+		ip/dhcp -dp -h $sysname /net/ipifc/$x
+	}
+
+#ns
 if{~ $"sysname vmx9ferno}{
+
 	# for using the cd
 	9660srv /dev/sdF0/data /n/cd
 	bind -a /n/cd/dis /dis
@@ -85,20 +97,24 @@ if{~ $"sysname vmx9ferno}{
 	## starting inferno already installed to a disk
 	mount -c { disk/kfs -n rootdisk /dev/sdG0/fs } /n/rootdisk
 	#disk/kfscmd -n rootdisk sync
-	bind -b /n/rootdisk/dis /dis
+	#bind -b /n/rootdisk/dis /dis
 	bind -a -c /n/rootdisk/ /
 
 	# refresh the disk contents from the cd
-	disk/mkfs -v -s /n/cd/ -d /n/rootdisk/ <{ echo + }
+	#disk/mkfs -v -s /n/cd/ -d /n/rootdisk/ <{ echo + } &
 
-	mkdir -p /usr/`{cat /dev/user}
-} &
+}{~ $"sysname 9ferno}{
 
-<>/net/ipifc/clone {
-	x=`{read}
-	and {echo bind ether /net/ether0 > /net/ipifc/^$x^/ctl} {
-		ip/dhcp -h $sysname -p /net/ipifc/$x}
-} &
+	# mount the vmx cd
+	mount -A tcp!192.168.88.118!17001 /n/cd
+	bind -b /n/cd/dis /dis
+	bind -a /n/cd /
 
-cd /usr/^`{cat /dev/user}
-sh -l -n # to use the ./lib/profile
+	disk/fdisk -p /dev/sdE0/data >/dev/sdE0/ctl
+	disk/prep -p /dev/sdE0/plan9 > /dev/sdE0/ctl
+
+}
+
+# if I add /lib/sh/profile to devroot,
+#	all the above binds can be moved to $home/namespace
+sh -x -l -n # to run the /lib/sh/profile

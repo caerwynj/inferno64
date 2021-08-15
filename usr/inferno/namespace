@@ -1,18 +1,6 @@
-# Referenced by startup scripts in /lib/sh.
-# This is run by sh, unlike in Plan 9.
-#load std
-
-# interface to host operating system commands
-bind -a #C /
-
-# mounting /tmp for acme
-bind -a -c '#U*'/tmp /tmp
 
 # /chan/foo is more natural than '#s'/foo
-# for some reason, below breaks wmlib
-# wmlib: cannot open /chan/wmctl: '/chan/wmctl' file does not exist
-# also, this is done by wm/wm anyway. so, not needed
-# bind '#s' /chan
+bind -b '#s' /chan
 
-# mount 9front's network stack
-bind -c '#U*'/net /net
+bind -ib /usr/inferno/dis /dis
+bind -ib /usr/inferno/module /module
