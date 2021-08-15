@@ -19,7 +19,8 @@ SYSMODULES=\
 	attrdb.m\
 	bufio.m\
 	daytime.m\
-	dhcp.m\
+	dhcpclient.m\
+	dhcpserver.m\
 	draw.m\
 	encoding.m\
 	ether.m\

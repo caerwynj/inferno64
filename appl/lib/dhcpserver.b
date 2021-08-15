@@ -12,7 +12,7 @@ include "lists.m";
 	lists: Lists;
 include "ether.m";
 	ether: Ether;
-include "dhcpd.m";
+include "dhcpserver.m";
 
 debug: con 0;
 

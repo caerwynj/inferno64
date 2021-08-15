@@ -1,6 +1,6 @@
 Dhcpserver: module
 {
-	PATH:	con "/dis/lib/dhcpd.dis";
+	PATH:	con "/dis/lib/dhcpserver.dis";
 
 	init:	fn();
 

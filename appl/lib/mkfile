@@ -36,8 +36,8 @@ TARG=\
 	debug.dis\
 	deflate.dis\
 	devpointer.dis\
-	dhcp.dis\
-	dhcpd.dis\
+	dhcpclient.dis\
+	dhcpserver.dis\
 	dial.dis\
 	dialog.dis\
 	dict.dis\
@@ -170,8 +170,8 @@ SYSMODULES= \
 	db.m\
 	debug.m\
 	devpointer.m\
-	dhcp.m\
-	dhcpd.m\
+	dhcpclient.m\
+	dhcpserver.m\
 	dict.m\
 	draw.m\
 	env.m\
@@ -239,7 +239,8 @@ dbm.dis: $ROOT/module/dbm.m
 names.dis: $ROOT/module/names.m
 disks.dis: $ROOT/module/disks.m
 scsiio.dis:	$ROOT/module/scsiio.m
-dhcpclient.dis:	$ROOT/module/dhcp.m
+dhcpclient.dis:	$ROOT/module/dhcpclient.m
+dhcpserver.dis:	$ROOT/module/dhcpserver.m
 ubfa.dis: $ROOT/module/ubfa.m
 secstore.dis:	$ROOT/module/secstore.m
 ida.dis:	$ROOT/module/ida.m

@@ -20,7 +20,7 @@ include "security.m";	# for Random
 include "dial.m";
 	dial: Dial;
 
-include "dhcp.m";
+include "dhcpclient.m";
 
 debug := 0;
 

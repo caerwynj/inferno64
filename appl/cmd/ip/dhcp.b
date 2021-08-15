@@ -15,7 +15,7 @@ include "ip.m";
 	IPaddr: import ip;
 	get2, get4, put2, put4: import ip;
 
-include "dhcp.m";
+include "dhcpclient.m";
 	dhcpclient: Dhcpclient;
 	Bootconf, Lease: import dhcpclient;
 
@@ -56,7 +56,7 @@ init(nil: ref Draw->Context, args: list of string)
 		'm' =>	monitor = 1;
 		'n' =>	noctl = 1;
 		'p' =>	pcfg = 1;
-		'r' =>		retry = 1;
+		'r' =>	retry = 1;
 		'x' =>	netdir = arg->earg();
 		* =>		arg->usage();
 		}

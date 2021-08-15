@@ -24,7 +24,7 @@ include "lists.m";
 	lists: Lists;
 include "encoding.m";
 	base16: Encoding;
-include "dhcpd.m";
+include "dhcpserver.m";
 	dhcp: Dhcpserver;
 	Dhcpmsg, Opt: import dhcp;
 include "ipval.m";
