@@ -1,5 +1,4 @@
 /*
- *  Reliable User Datagram Protocol, currently only for IPv4.
  *  This protocol is compatible with UDP's packet format.
  *  It could be done over UDP if need be.
  */
@@ -26,17 +25,20 @@
 
 enum
 {
+	UDP_HDRSIZE	= 20,	/* pseudo header + udp header */
 	UDP_PHDRSIZE	= 12,	/* pseudo header */
-//	UDP_HDRSIZE	= 20,	/* pseudo header + udp header */
 	UDP_RHDRSIZE	= 36,	/* pseudo header + udp header + rudp header */
 	UDP_IPHDR	= 8,	/* ip header */
 	IP_UDPPROTO	= 254,
-	UDP_USEAD7	= 52,	/* size of new ipv6 headers struct */
+	UDP_USEAD7	= 52,
+	UDP_USEAD6	= 36,
+	UDP_USEAD4	= 12,
 
 	Rudprxms	= 200,
 	Rudptickms	= 50,
 	Rudpmaxxmit	= 10,
 	Maxunacked	= 100,
+
 };
 
 #define Hangupgen	0xffffffff	/* used only in hangup messages */
@@ -203,7 +205,7 @@ rudpstartackproc(Proto *rudp)
 		qlock(&rpriv->apl);
 		if(rpriv->ackprocstarted == 0){
 			sprint(kpname, "#I%drudpack", rudp->f->dev);
-			kproc(kpname, relackproc, rudp);
+			kproc(kpname, relackproc, rudp, 0);
 			rpriv->ackprocstarted = 1;
 		}
 		qunlock(&rpriv->apl);
@@ -238,7 +240,6 @@ rudpstate(Conv *c, char *state, int n)
 	qlock(ucb);
 	for(r = ucb->r; r; r = r->next)
 		m += snprint(state+m, n-m, " %I/%ld", r->addr, UNACKED(r));
-	m += snprint(state+m, n-m, "\n");
 	qunlock(ucb);
 	return m;
 }
@@ -280,7 +281,7 @@ rudpclose(Conv *c)
 	/* force out any delayed acks */
 	ucb = (Rudpcb*)c->ptcl;
 	qlock(ucb);
-	for(r = ucb->r; r != nil; r = r->next){
+	for(r = ucb->r; r; r = r->next){
 		if(r->acksent != r->rcvseq)
 			relsendack(c, r, 0);
 	}
@@ -373,10 +374,27 @@ rudpkick(void *x)
 		rport = nhgets(bp->rp);
 		bp->rp += 2+2;			/* Ignore local port */
 		break;
+	case 6:
+		/* get user specified addresses */
+		bp = pullupblock(bp, UDP_USEAD6);
+		if(bp == nil)
+			return;
+		ipmove(raddr, bp->rp);
+		bp->rp += IPaddrlen;
+		ipmove(laddr, bp->rp);
+		bp->rp += IPaddrlen;
+		/* pick interface closest to dest */
+		if(ipforme(f, laddr) != Runi)
+			findlocalip(f, laddr, raddr);
+		rport = nhgets(bp->rp);
+
+		bp->rp += 4;			/* Igonore local port */
+		break;
 	default:
 		ipmove(raddr, c->raddr);
 		ipmove(laddr, c->laddr);
 		rport = c->rport;
+
 		break;
 	}
 
@@ -384,6 +402,9 @@ rudpkick(void *x)
 
 	/* Make space to fit rudp & ip header */
 	bp = padblock(bp, UDP_IPHDR+UDP_RHDRSIZE);
+	if(bp == nil)
+		return;
+
 	uh = (Udphdr *)(bp->rp);
 	uh->vihl = IP_VER4;
 
@@ -396,6 +417,7 @@ rudpkick(void *x)
 	uh->frag[1] = 0;
 	hnputs(uh->udpplen, ptcllen);
 	switch(ucb->headers){
+	case 6:
 	case 7:
 		v6tov4(uh->udpdst, raddr);
 		hnputs(uh->udpdport, rport);
@@ -506,7 +528,7 @@ rudpiput(Proto *rudp, Ipifc *ifc, Block *bp)
 
 	c = iphtlook(&upriv->ht, raddr, rport, laddr, lport);
 	if(c == nil){
-		/* no conversation found */
+		/* no converstation found */
 		upriv->ustats.rudpNoPorts++;
 		qunlock(rudp);
 		netlog(f, Logudp, "udp: no conv %I!%d -> %I!%d\n", raddr, rport,
@@ -552,32 +574,45 @@ rudpiput(Proto *rudp, Ipifc *ifc, Block *bp)
 		p = bp->rp;
 		ipmove(p, raddr); p += IPaddrlen;
 		ipmove(p, laddr); p += IPaddrlen;
-		if(!ipv6local(ifc, p, 0, raddr))
-			ipmove(p, ifc->lifc != nil ? ifc->lifc->local : IPnoaddr);
-		p += IPaddrlen;
+		ipmove(p, ifc->lifc->local); p += IPaddrlen;
+		hnputs(p, rport); p += 2;
+		hnputs(p, lport);
+		break;
+	case 6:
+		/* pass the src address */
+		bp = padblock(bp, UDP_USEAD6);
+		p = bp->rp;
+		ipmove(p, raddr); p += IPaddrlen;
+		ipmove(p, ipforme(f, laddr)==Runi ? laddr : ifc->lifc->local); p += IPaddrlen;
 		hnputs(p, rport); p += 2;
 		hnputs(p, lport);
 		break;
 	default:
 		/* connection oriented rudp */
 		if(ipcmp(c->raddr, IPnoaddr) == 0){
-			/* reply with the same ip address (if not broadcast) */
-			if(ipforme(f, laddr) != Runi)
-				ipv6local(ifc, laddr, 0, raddr);
-			ipmove(c->laddr, laddr);
+			/* save the src address in the conversation */
 		 	ipmove(c->raddr, raddr);
 			c->rport = rport;
+
+			/* reply with the same ip address (if not broadcast) */
+			if(ipforme(f, laddr) == Runi)
+				ipmove(c->laddr, laddr);
+			else
+				v4tov6(c->laddr, ifc->lifc->local);
 		}
 		break;
 	}
+	if(bp->next)
+		bp = concatblock(bp);
 
 	if(qfull(c->rq)) {
-		netlog(f, Logrudp, "rudp: qfull %I.%d -> %I.%d\n",
-			raddr, rport, laddr, lport);
+		netlog(f, Logrudp, "rudp: qfull %I.%d -> %I.%d\n", raddr, rport,
+			laddr, lport);
 		freeblist(bp);
-	} else {
-		qpass(c->rq, concatblock(bp));
 	}
+	else
+		qpass(c->rq, bp);
+	
 	qunlock(ucb);
 }
 
@@ -594,21 +629,23 @@ rudpctl(Conv *c, char **f, int n)
 	if(n < 1)
 		return rudpunknown;
 
-	if(strcmp(f[0], "headers") == 0){
-		ucb->headers = 7;		/* new headers format */
+	if(strcmp(f[0], "headers++4") == 0){
+		ucb->headers = 7;
+		return nil;
+	} else if(strcmp(f[0], "headers") == 0){
+		ucb->headers = 6;
 		return nil;
 	} else if(strcmp(f[0], "hangup") == 0){
 		if(n < 3)
 			return "bad syntax";
-		if (parseip(ip, f[1]) == -1)
-			return Ebadip;
+		parseip(ip, f[1]);
 		x = atoi(f[2]);
 		qlock(ucb);
 		relforget(c, ip, x, 1);
 		qunlock(ucb);
 		return nil;
 	} else if(strcmp(f[0], "randdrop") == 0){
-		x = 10;			/* default is 10% */
+		x = 10;		/* default is 10% */
 		if(n > 1)
 			x = atoi(f[1]);
 		if(x > 100 || x < 0)
@@ -635,13 +672,12 @@ rudpadvise(Proto *rudp, Block *bp, char *msg)
 	pdest = nhgets(h->udpdport);
 
 	/* Look for a connection */
-	for(p = rudp->conv; (s = *p) != nil; p++) {
+	for(p = rudp->conv; *p; p++) {
+		s = *p;
 		if(s->rport == pdest)
 		if(s->lport == psource)
 		if(ipcmp(s->raddr, dest) == 0)
 		if(ipcmp(s->laddr, source) == 0){
-			if(s->ignoreadvice)
-				break;
 			qhangup(s->rq, msg);
 			qhangup(s->wq, msg);
 			break;
@@ -665,6 +701,12 @@ rudpstats(Proto *rudp, char *buf, int len)
 		upriv->orders);
 }
 
+int
+rudpgc(Proto *rudp)
+{
+	return natgc(rudp->ipproto);
+}
+
 void
 rudpinit(Fs *fs)
 {
@@ -683,8 +725,9 @@ rudpinit(Fs *fs)
 	rudp->rcv = rudpiput;
 	rudp->advise = rudpadvise;
 	rudp->stats = rudpstats;
+	rudp->gc = rudpgc;
 	rudp->ipproto = IP_UDPPROTO;
-	rudp->nc = 32;
+	rudp->nc = 16;
 	rudp->ptclsize = sizeof(Rudpcb);
 
 	Fsproto(fs, rudp);
@@ -727,8 +770,6 @@ relackproc(void *a)
 
 	rudp = (Proto *)a;
 
-	while(waserror())
-		;
 loop:
 	tsleep(&up->sleep, return0, 0, Rudptickms);
 
@@ -948,6 +989,8 @@ relsendack(Conv *c, Reliable *r, int hangup)
 	Fs *f;
 
 	bp = allocb(UDP_IPHDR + UDP_RHDRSIZE);
+	if(bp == nil)
+		return;
 	bp->wp += UDP_IPHDR + UDP_RHDRSIZE;
 	f = c->p->f;
 	uh = (Udphdr *)(bp->rp);

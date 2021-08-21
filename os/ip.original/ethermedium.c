@@ -5,9 +5,9 @@
 #include "fns.h"
 #include "../port/error.h"
 
-#include "../port/netif.h"
 #include "ip.h"
 #include "ipv6.h"
+#include "kernel.h"
 
 typedef struct Etherhdr Etherhdr;
 struct Etherhdr
@@ -18,9 +18,9 @@ struct Etherhdr
 };
 
 static uchar ipbroadcast[IPaddrlen] = {
-	0xff,0xff,0xff,0xff,
-	0xff,0xff,0xff,0xff,
-	0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,  
+	0xff,0xff,0xff,0xff,  
+	0xff,0xff,0xff,0xff,  
 	0xff,0xff,0xff,0xff,
 };
 
@@ -33,12 +33,12 @@ static void	etherunbind(Ipifc *ifc);
 static void	etherbwrite(Ipifc *ifc, Block *bp, int version, uchar *ip);
 static void	etheraddmulti(Ipifc *ifc, uchar *a, uchar *ia);
 static void	etherremmulti(Ipifc *ifc, uchar *a, uchar *ia);
-static void	etherareg(Fs *f, Ipifc *ifc, Iplifc *lifc, uchar *ip);
 static Block*	multicastarp(Fs *f, Arpent *a, Medium*, uchar *mac);
 static void	sendarp(Ipifc *ifc, Arpent *a);
-static void	sendndp(Ipifc *ifc, Arpent *a);
+static void	sendgarp(Ipifc *ifc, uchar*);
 static int	multicastea(uchar *ea, uchar *ip);
 static void	recvarpproc(void*);
+static void	resolveaddr6(Ipifc *ifc, Arpent *a);
 static void	etherpref2addr(uchar *pref, uchar *ea);
 
 Medium ethermedium =
@@ -53,7 +53,8 @@ Medium ethermedium =
 .bwrite=	etherbwrite,
 .addmulti=	etheraddmulti,
 .remmulti=	etherremmulti,
-.areg=		etherareg,
+.ares=		arpenter,
+.areg=		sendgarp,
 .pref2addr=	etherpref2addr,
 };
 
@@ -69,7 +70,8 @@ Medium gbemedium =
 .bwrite=	etherbwrite,
 .addmulti=	etheraddmulti,
 .remmulti=	etherremmulti,
-.areg=		etherareg,
+.ares=		arpenter,
+.areg=		sendgarp,
 .pref2addr=	etherpref2addr,
 };
 
@@ -92,6 +94,9 @@ struct Etherrock
  */
 enum
 {
+	ETARP		= 0x0806,
+	ETIP4		= 0x0800,
+	ETIP6		= 0x86DD,
 	ARPREQUEST	= 1,
 	ARPREPLY	= 2,
 };
@@ -122,92 +127,128 @@ static char *nbmsg = "nonblocking";
 static void
 etherbind(Ipifc *ifc, int argc, char **argv)
 {
-	char addr[Maxpath], dir[Maxpath];
+	Chan *mchan4, *cchan4, *achan, *mchan6, *cchan6;
+	char addr[Maxpath];	//char addr[2*KNAMELEN];
+	char dir[Maxpath];	//char dir[2*KNAMELEN];
+	char *buf;
+	int fd, cfd, n;
+	char *ptr;
 	Etherrock *er;
-	Chan *c;
-	int n;
 
 	if(argc < 2)
 		error(Ebadarg);
 
-	/*
-	 *  get mac address
-	 */
-	snprint(addr, sizeof(addr), "%s/addr", argv[2]);
-	c = namec(addr, Aopen, OREAD, 0);
+	mchan4 = cchan4 = achan = mchan6 = cchan6 = nil;
+	buf = nil;
 	if(waserror()){
-		cclose(c);
-		nexterror();
+		if(mchan4 != nil)
+			cclose(mchan4);
+		if(cchan4 != nil)
+			cclose(cchan4);
+		if(achan != nil)
+			cclose(achan);
+		if(mchan6 != nil)
+			cclose(mchan6);
+		if(cchan6 != nil)
+			cclose(cchan6);
+		if(buf != nil)
+			free(buf);
+		nexterror(); 
 	}
-	n = devtab[c->type]->read(c, addr, sizeof(addr)-1, 0);
-	if(n < 0)
+
+	/*
+	 *  open ip converstation
+	 *
+	 *  the dial will fail if the type is already open on
+	 *  this device.
+	 */
+	snprint(addr, sizeof(addr), "%s!0x800", argv[2]);
+	fd = kdial(addr, nil, dir, &cfd);
+	if(fd < 0)
+		errorf("dial 0x800 failed: %s", up->env->errstr);
+	mchan4 = commonfdtochan(fd, ORDWR, 0, 1);
+	cchan4 = commonfdtochan(cfd, ORDWR, 0, 1);
+	kclose(fd);
+	kclose(cfd);
+
+	/*
+	 *  make it non-blocking
+	 */
+	devtab[cchan4->type]->write(cchan4, nbmsg, strlen(nbmsg), 0);
+
+	/*
+	 *  get mac address and speed
+	 */
+	snprint(addr, sizeof(addr), "%s/stats", dir);
+	fd = kopen(addr, OREAD);
+	if(fd < 0)
+		errorf("can't open ether stats: %s", up->env->errstr);
+
+	buf = smalloc(512);
+	n = kread(fd, buf, 511);
+	kclose(fd);
+	if(n <= 0)
 		error(Eio);
-	addr[n] = 0;
-	if(parsemac(ifc->mac, addr, sizeof(ifc->mac)) != 6)
-		error("could not find mac address");
-	cclose(c);
-	poperror();
+	buf[n] = 0;
 
-	er = smalloc(sizeof(*er));
-	er->read4p = er->read6p = er->arpp = (void*)-1;
-	er->mchan4 = er->cchan4 = er->mchan6 = er->cchan6 = er->achan = nil;
-	er->f = ifc->conv->p->f;
+	ptr = strstr(buf, "addr: ");
+	if(!ptr)
+		error(Eio);
+	ptr += 6;
+	parsemac(ifc->mac, ptr, 6);
 
-	if(waserror()){
-		if(er->mchan4 != nil)
-			cclose(er->mchan4);
-		if(er->cchan4 != nil)
-			cclose(er->cchan4);
-		if(er->mchan6 != nil)
-			cclose(er->mchan6);
-		if(er->cchan6 != nil)
-			cclose(er->cchan6);
-		if(er->achan != nil)
-			cclose(er->achan);
-		free(er);
-		nexterror();
-	}
-
-	/*
-	 *  open ipv4 conversation
-	 *
-	 *  the dial will fail if the type is already open on
-	 *  this device.
-	 */
-	snprint(addr, sizeof(addr), "%s!0x800", argv[2]);	/* ETIP4 */
-	er->mchan4 = chandial(addr, nil, dir, &er->cchan4);
-
-	/*
-	 *  make it non-blocking
-	 */
-	devtab[er->cchan4->type]->write(er->cchan4, nbmsg, strlen(nbmsg), 0);
-
-	/*
-	 *  open ipv6 conversation
-	 *
-	 *  the dial will fail if the type is already open on
-	 *  this device.
-	 */
-	snprint(addr, sizeof(addr), "%s!0x86DD", argv[2]);	/* ETIP6 */
-	er->mchan6 = chandial(addr, nil, dir, &er->cchan6);
-
-	/*
-	 *  make it non-blocking
-	 */
-	devtab[er->cchan6->type]->write(er->cchan6, nbmsg, strlen(nbmsg), 0);
+	ptr = strstr(buf, "mbps: ");
+	if(ptr){
+		ptr += 6;
+		ifc->mbps = atoi(ptr);
+	} else
+		ifc->mbps = 100;
 
 	/*
  	 *  open arp conversation
 	 */
-	snprint(addr, sizeof(addr), "%s!0x806", argv[2]);	/* ETARP */
-	er->achan = chandial(addr, nil, nil, nil);
-	poperror();
+	snprint(addr, sizeof(addr), "%s!0x806", argv[2]);
+	fd = kdial(addr, nil, nil, nil);
+	if(fd < 0)
+		errorf("dial 0x806 failed: %s", up->env->errstr);
+	achan = commonfdtochan(fd, ORDWR, 0, 1);
+	kclose(fd);
 
+	/*
+	 *  open ip conversation
+	 *
+	 *  the dial will fail if the type is already open on
+	 *  this device.
+	 */
+	snprint(addr, sizeof(addr), "%s!0x86DD", argv[2]);
+	fd = kdial(addr, nil, dir, &cfd);
+	if(fd < 0)
+		errorf("dial 0x86DD failed: %s", up->env->errstr);
+	mchan6 = commonfdtochan(fd, ORDWR, 0, 1);
+	cchan6 = commonfdtochan(cfd, ORDWR, 0, 1);
+	kclose(fd);
+	kclose(cfd);
+
+	/*
+	 *  make it non-blocking
+	 */
+	devtab[cchan6->type]->write(cchan6, nbmsg, strlen(nbmsg), 0);
+
+	er = smalloc(sizeof(*er));
+	er->mchan4 = mchan4;
+	er->cchan4 = cchan4;
+	er->achan = achan;
+	er->mchan6 = mchan6;
+	er->cchan6 = cchan6;
+	er->f = ifc->conv->p->f;
 	ifc->arg = er;
 
-	kproc("etherread4", etherread4, ifc);
-	kproc("etherread6", etherread6, ifc);
-	kproc("recvarpproc", recvarpproc, ifc);
+	free(buf);
+	poperror();
+
+	kproc("etherread4", etherread4, ifc, 0);
+	kproc("recvarpproc", recvarpproc, ifc, 0);
+	kproc("etherread6", etherread6, ifc, 0);
 }
 
 /*
@@ -218,43 +259,27 @@ etherunbind(Ipifc *ifc)
 {
 	Etherrock *er = ifc->arg;
 
-	while(waserror())
-		;
-
-	/* wait for readers to start */
-	while(er->arpp == (void*)-1 || er->read4p == (void*)-1 || er->read6p == (void*)-1)
-		tsleep(&up->sleep, return0, 0, 300);
-
-	if(er->read4p != nil)
+	if(er->read4p)
 		postnote(er->read4p, 1, "unbind", 0);
-	if(er->read6p != nil)
+	if(er->read6p)
 		postnote(er->read6p, 1, "unbind", 0);
-	if(er->arpp != nil)
+	if(er->arpp)
 		postnote(er->arpp, 1, "unbind", 0);
 
-	poperror();
-
-	wunlock(ifc);
-	while(waserror())
-		;
-
 	/* wait for readers to die */
-	while(er->arpp != nil || er->read4p != nil || er->read6p != nil)
+	while(er->arpp != 0 || er->read4p != 0 || er->read6p != 0)
 		tsleep(&up->sleep, return0, 0, 300);
-
-	poperror();
-	wlock(ifc);
 
 	if(er->mchan4 != nil)
 		cclose(er->mchan4);
+	if(er->achan != nil)
+		cclose(er->achan);
 	if(er->cchan4 != nil)
 		cclose(er->cchan4);
 	if(er->mchan6 != nil)
 		cclose(er->mchan6);
 	if(er->cchan6 != nil)
 		cclose(er->cchan6);
-	if(er->achan != nil)
-		cclose(er->achan);
 
 	free(er);
 }
@@ -272,16 +297,16 @@ etherbwrite(Ipifc *ifc, Block *bp, int version, uchar *ip)
 
 	/* get mac address of destination */
 	a = arpget(er->f->arp, bp, version, ifc, ip, mac);
-	if(a != nil){
+	if(a){
 		/* check for broadcast or multicast */
 		bp = multicastarp(er->f, a, ifc->m, mac);
-		if(bp == nil){
+		if(bp==nil){
 			switch(version){
 			case V4:
 				sendarp(ifc, a);
 				break;
-			case V6:
-				sendndp(ifc, a);
+			case V6: 
+				resolveaddr6(ifc, a);
 				break;
 			default:
 				panic("etherbwrite: version %d", version);
@@ -292,6 +317,8 @@ etherbwrite(Ipifc *ifc, Block *bp, int version, uchar *ip)
 
 	/* make it a single block with space for the ether header */
 	bp = padblock(bp, ifc->m->hsize);
+	if(bp->next)
+		bp = concatblock(bp);
 	if(BLEN(bp) < ifc->mintu)
 		bp = adjustblock(bp, ifc->mintu);
 	eh = (Etherhdr*)bp->rp;
@@ -331,28 +358,29 @@ etherread4(void *a)
 	ifc = a;
 	er = ifc->arg;
 	er->read4p = up;	/* hide identity under a rock for unbind */
-	if(!waserror())
+	if(waserror()){
+		er->read4p = 0;
+		pexit("hangup", 1);
+	}
 	for(;;){
 		bp = devtab[er->mchan4->type]->bread(er->mchan4, ifc->maxtu, 0);
-		if(bp == nil)
-			break;
-		rlock(ifc);
+		if(!canrlock(ifc)){
+			freeb(bp);
+			continue;
+		}
 		if(waserror()){
 			runlock(ifc);
 			nexterror();
 		}
 		ifc->in++;
-		if(ifc->lifc == nil || BLEN(bp) <= ifc->m->hsize)
+		bp->rp += ifc->m->hsize;
+		if(ifc->lifc == nil)
 			freeb(bp);
-		else {
-			bp->rp += ifc->m->hsize;
+		else
 			ipiput4(er->f, ifc, bp);
-		}
 		runlock(ifc);
 		poperror();
 	}
-	er->read4p = nil;
-	pexit("hangup", 1);
 }
 
 
@@ -369,28 +397,29 @@ etherread6(void *a)
 	ifc = a;
 	er = ifc->arg;
 	er->read6p = up;	/* hide identity under a rock for unbind */
-	if(!waserror())
+	if(waserror()){
+		er->read6p = 0;
+		pexit("hangup", 1);
+	}
 	for(;;){
 		bp = devtab[er->mchan6->type]->bread(er->mchan6, ifc->maxtu, 0);
-		if(bp == nil)
-			break;
-		rlock(ifc);
+		if(!canrlock(ifc)){
+			freeb(bp);
+			continue;
+		}
 		if(waserror()){
 			runlock(ifc);
 			nexterror();
 		}
 		ifc->in++;
-		if(ifc->lifc == nil || BLEN(bp) <= ifc->m->hsize)
+		bp->rp += ifc->m->hsize;
+		if(ifc->lifc == nil)
 			freeb(bp);
-		else {
-			bp->rp += ifc->m->hsize;
+		else
 			ipiput6(er->f, ifc, bp);
-		}
 		runlock(ifc);
 		poperror();
 	}
-	er->read6p = nil;
-	pexit("hangup", 1);
 }
 
 static void
@@ -448,16 +477,12 @@ sendarp(Ipifc *ifc, Arpent *a)
 	Block *bp;
 	Etherarp *e;
 	Etherrock *er = ifc->arg;
-	uchar targ[IPv4addrlen], src[IPv4addrlen];
 
 	/* don't do anything if it's been less than a second since the last */
 	if(NOW - a->ctime < 1000){
 		arprelease(er->f->arp, a);
 		return;
 	}
-
-	/* try to keep it around for a second more */
-	a->ctime = NOW;
 
 	/* remove all but the last message */
 	while((bp = a->hold) != nil){
@@ -467,20 +492,18 @@ sendarp(Ipifc *ifc, Arpent *a)
 		freeblist(bp);
 	}
 
-	memmove(targ, a->ip+IPv4off, IPv4addrlen);
+	/* try to keep it around for a second more */
+	a->ctime = NOW;
 	arprelease(er->f->arp, a);
 
-	if(!ipv4local(ifc, src, 0, targ))
-		return;
-
 	n = sizeof(Etherarp);
-	if(n < ifc->m->mintu)
-		n = ifc->m->mintu;
+	if(n < a->type->mintu)
+		n = a->type->mintu;
 	bp = allocb(n);
 	memset(bp->rp, 0, n);
 	e = (Etherarp*)bp->rp;
-	memmove(e->tpa, targ, sizeof(e->tpa));
-	memmove(e->spa, src, sizeof(e->spa));
+	memmove(e->tpa, a->ip+IPv4off, sizeof(e->tpa));
+	ipv4local(ifc, e->spa);
 	memmove(e->sha, ifc->mac, sizeof(e->sha));
 	memset(e->d, 0xff, sizeof(e->d));		/* ethernet broadcast */
 	memmove(e->s, ifc->mac, sizeof(e->s));
@@ -493,14 +516,18 @@ sendarp(Ipifc *ifc, Arpent *a)
 	hnputs(e->op, ARPREQUEST);
 	bp->wp += n;
 
-	devtab[er->achan->type]->bwrite(er->achan, bp, 0);
+	n = devtab[er->achan->type]->bwrite(er->achan, bp, 0);
+	if(n < 0)
+		print("arp: send: %r\n");
 }
 
 static void
-sendndp(Ipifc *ifc, Arpent *a)
+resolveaddr6(Ipifc *ifc, Arpent *a)
 {
+	int sflag;
 	Block *bp;
 	Etherrock *er = ifc->arg;
+	uchar ipsrc[IPaddrlen];
 
 	/* don't do anything if it's been less than a second since the last */
 	if(NOW - a->ctime < ReTransTimer){
@@ -516,7 +543,19 @@ sendndp(Ipifc *ifc, Arpent *a)
 		freeblist(bp);
 	}
 
-	ndpsendsol(er->f, ifc, a);	/* unlocks arp */
+	/* try to keep it around for a second more */
+	a->ctime = NOW;
+	a->rtime = NOW + ReTransTimer;
+	if(a->rxtsrem <= 0) {
+		arprelease(er->f->arp, a);
+		return;
+	}
+
+	a->rxtsrem--;
+	arprelease(er->f->arp, a);
+
+	if(sflag = ipv6anylocal(ifc, ipsrc)) 
+		icmpns(er->f, ipsrc, sflag, a->ip, TARG_MULTI, ifc->mac);
 }
 
 /*
@@ -529,6 +568,10 @@ sendgarp(Ipifc *ifc, uchar *ip)
 	Block *bp;
 	Etherarp *e;
 	Etherrock *er = ifc->arg;
+
+	/* don't arp for our initial non address */
+	if(ipcmp(ip, IPnoaddr) == 0)
+		return;
 
 	n = sizeof(Etherarp);
 	if(n < ifc->m->mintu)
@@ -550,13 +593,15 @@ sendgarp(Ipifc *ifc, uchar *ip)
 	hnputs(e->op, ARPREQUEST);
 	bp->wp += n;
 
-	devtab[er->achan->type]->bwrite(er->achan, bp, 0);
+	n = devtab[er->achan->type]->bwrite(er->achan, bp, 0);
+	if(n < 0)
+		print("garp: send: %r\n");
 }
 
 static void
 recvarp(Ipifc *ifc)
 {
-	int n, forme;
+	int n;
 	Block *ebp, *rbp;
 	Etherarp *e, *r;
 	uchar ip[IPaddrlen];
@@ -564,10 +609,10 @@ recvarp(Ipifc *ifc)
 	Etherrock *er = ifc->arg;
 
 	ebp = devtab[er->achan->type]->bread(er->achan, ifc->maxtu, 0);
-	if(ebp == nil)
+	if(ebp == nil) {
+		print("arp: rcv: %r\n");
 		return;
-
-	rlock(ifc);
+	}
 
 	e = (Etherarp*)ebp->rp;
 	switch(nhgets(e->op)) {
@@ -575,13 +620,9 @@ recvarp(Ipifc *ifc)
 		break;
 
 	case ARPREPLY:
-		/* make sure not to enter multi/broadcat address */
-		if(e->sha[0] & 1)
-			break;
-
 		/* check for machine using my ip address */
 		v4tov6(ip, e->spa);
-		if(iplocalonifc(ifc, ip) != nil || ipproxyifc(er->f, ifc, ip)){
+		if(iplocalonifc(ifc, ip) || ipproxyifc(er->f, ifc, ip)){
 			if(memcmp(e->sha, ifc->mac, sizeof(e->sha)) != 0){
 				print("arprep: 0x%E/0x%E also has ip addr %V\n",
 					e->s, e->sha, e->spa);
@@ -589,47 +630,46 @@ recvarp(Ipifc *ifc)
 			}
 		}
 
-		/* refresh what we know about sender */
-		arpenter(er->f, V4, e->spa, e->sha, sizeof(e->sha), e->tpa, ifc, 1);
+		/* make sure we're not entering broadcast addresses */
+		if(ipcmp(ip, ipbroadcast) == 0 ||
+			!memcmp(e->sha, etherbroadcast, sizeof(e->sha))){
+			print("arprep: 0x%E/0x%E cannot register broadcast address %I\n",
+				e->s, e->sha, e->spa);
+			break;
+		}
+
+		arpenter(er->f, V4, e->spa, e->sha, sizeof(e->sha), 0);
 		break;
 
 	case ARPREQUEST:
-		/* don't reply to multi/broadcat addresses */
-		if(e->sha[0] & 1)
-			break;
-
 		/* don't answer arps till we know who we are */
-		if(ifc->lifc == nil)
+		if(ifc->lifc == 0)
 			break;
 
 		/* check for machine using my ip or ether address */
 		v4tov6(ip, e->spa);
-		if(iplocalonifc(ifc, ip) != nil || ipproxyifc(er->f, ifc, ip)){
+		if(iplocalonifc(ifc, ip) || ipproxyifc(er->f, ifc, ip)){
 			if(memcmp(e->sha, ifc->mac, sizeof(e->sha)) != 0){
-				if(memcmp(eprinted, e->spa, sizeof(e->spa)) != 0){
+				if (memcmp(eprinted, e->spa, sizeof(e->spa))){
 					/* print only once */
-					print("arpreq: 0x%E also has ip addr %V\n",
-						e->sha, e->spa);
+					print("arpreq: 0x%E also has ip addr %V\n", e->sha, e->spa);
 					memmove(eprinted, e->spa, sizeof(e->spa));
 				}
-				break;
 			}
 		} else {
 			if(memcmp(e->sha, ifc->mac, sizeof(e->sha)) == 0){
-				print("arpreq: %V also has ether addr %E\n",
-					e->spa, e->sha);
+				print("arpreq: %V also has ether addr %E\n", e->spa, e->sha);
 				break;
 			}
 		}
 
-		/*
-		 * when request is for our address or systems we're proxying for,
-		 * enter senders address into arp table and reply, otherwise just
-		 * refresh the senders address.
-		 */
+		/* refresh what we know about sender */
+		arpenter(er->f, V4, e->spa, e->sha, sizeof(e->sha), 1);
+
+		/* answer only requests for our address or systems we're proxying for */
 		v4tov6(ip, e->tpa);
-		forme = iplocalonifc(ifc, ip) != nil || ipproxyifc(er->f, ifc, ip);
-		if(arpenter(er->f, V4, e->spa, e->sha, sizeof(e->sha), e->tpa, ifc, !forme) < 0 || !forme)
+		if(!iplocalonifc(ifc, ip))
+		if(!ipproxyifc(er->f, ifc, ip))
 			break;
 
 		n = sizeof(Etherarp);
@@ -652,14 +692,10 @@ recvarp(Ipifc *ifc)
 		memmove(r->s, ifc->mac, sizeof(r->s));
 		rbp->wp += n;
 
-		runlock(ifc);
-		freeb(ebp);
-
-		devtab[er->achan->type]->bwrite(er->achan, rbp, 0);
-		return;
+		n = devtab[er->achan->type]->bwrite(er->achan, rbp, 0);
+		if(n < 0)
+			print("arp: write: %r\n");
 	}
-
-	runlock(ifc);
 	freeb(ebp);
 }
 
@@ -671,7 +707,7 @@ recvarpproc(void *v)
 
 	er->arpp = up;
 	if(waserror()){
-		er->arpp = nil;
+		er->arpp = 0;
 		pexit("hangup", 1);
 	}
 	for(;;)
@@ -713,9 +749,14 @@ static Block*
 multicastarp(Fs *f, Arpent *a, Medium *medium, uchar *mac)
 {
 	/* is it broadcast? */
-	if(ipforme(f, a->ip) == Rbcast){
-		memset(mac, 0xff, medium->maclen);
+	switch(ipforme(f, a->ip)){
+	case Runi:
+		return nil;
+	case Rbcast:
+		memset(mac, 0xff, 6);
 		return arpresolve(f->arp, a, medium, mac);
+	default:
+		break;
 	}
 
 	/* if multicast, fill in mac */
@@ -737,52 +778,15 @@ ethermediumlink(void)
 }
 
 
-static void
+static void 
 etherpref2addr(uchar *pref, uchar *ea)
 {
-	pref[8] = ea[0] ^ 0x2;
-	pref[9] = ea[1];
+	pref[8]  = ea[0] | 0x2;
+	pref[9]  = ea[1];
 	pref[10] = ea[2];
 	pref[11] = 0xFF;
 	pref[12] = 0xFE;
 	pref[13] = ea[3];
 	pref[14] = ea[4];
 	pref[15] = ea[5];
-}
-
-static void
-etherareg(Fs *f, Ipifc *ifc, Iplifc *lifc, uchar *ip)
-{
-	static char tdad[] = "dad6";
-	uchar a[IPaddrlen];
-
-	if(ipcmp(ip, IPnoaddr) == 0 || ipcmp(ip, v4prefix) == 0)
-		return;
-
-	if(isv4(ip)){
-		sendgarp(ifc, ip);
-		return;
-	}
-
-	if((lifc->type&Rv4) != 0)
-		return;
-
-	if(!lifc->tentative){
-		icmpna(f, lifc->local, v6allnodesL, ip, ifc->mac, 1<<5);
-		return;
-	}
-
-	if(ipcmp(lifc->local, ip) != 0)
-		return;
-
-	/* temporarily add route for duplicate address detection */
-	ipv62smcast(a, ip);
-	addroute(f, a, IPallbits, v6Unspecified, IPallbits, ip, Rmulti, ifc, tdad);
-	if(waserror()){
-		remroute(f, a, IPallbits, v6Unspecified, IPallbits, ip, Rmulti, ifc, tdad);
-		nexterror();
-	}
-	icmpns(f, 0, SRC_UNSPEC, ip, TARG_MULTI, ifc->mac);
-	poperror();
-	remroute(f, a, IPallbits, v6Unspecified, IPallbits, ip, Rmulti, ifc, tdad);
 }

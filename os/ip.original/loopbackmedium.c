@@ -28,12 +28,13 @@ loopbackbind(Ipifc *ifc, int, char**)
 	LB *lb;
 
 	lb = smalloc(sizeof(*lb));
-	lb->readp = (void*)-1;
 	lb->f = ifc->conv->p->f;
-	lb->q = qopen(1024*1024, Qmsg, nil, nil);
+	/* TO DO: make queue size a function of kernel memory */
+	lb->q = qopen(128*1024, Qmsg, nil, nil);
 	ifc->arg = lb;
+	ifc->mbps = 1000;
 
-	kproc("loopbackread", loopbackread, ifc);
+	kproc("loopbackread", loopbackread, ifc, 0);
 
 }
 
@@ -42,28 +43,12 @@ loopbackunbind(Ipifc *ifc)
 {
 	LB *lb = ifc->arg;
 
-	while(waserror())
-		;
-
-	/* wat for reader to start */
-	while(lb->readp == (void*)-1)
-		tsleep(&up->sleep, return0, 0, 300);
-		
-	if(lb->readp != nil)
+	if(lb->readp)
 		postnote(lb->readp, 1, "unbind", 0);
 
-	poperror();
-
-	wunlock(ifc);
-	while(waserror())
-		;
-
 	/* wait for reader to die */
-	while(lb->readp != nil)
+	while(lb->readp != 0)
 		tsleep(&up->sleep, return0, 0, 300);
-
-	poperror();
-	wlock(ifc);
 
 	/* clean up */
 	qfree(lb->q);
@@ -91,14 +76,23 @@ loopbackread(void *a)
 	ifc = a;
 	lb = ifc->arg;
 	lb->readp = up;	/* hide identity under a rock for unbind */
-	if(!waserror())
-	while((bp = qbread(lb->q, Maxtu)) != nil){
-		rlock(ifc);
+	if(waserror()){
+		lb->readp = 0;
+		pexit("hangup", 1);
+	}
+	for(;;){
+		bp = qbread(lb->q, Maxtu);
+		if(bp == nil)
+			continue;
+		ifc->in++;
+		if(!canrlock(ifc)){
+			freeb(bp);
+			continue;
+		}
 		if(waserror()){
 			runlock(ifc);
 			nexterror();
 		}
-		ifc->in++;
 		if(ifc->lifc == nil)
 			freeb(bp);
 		else
@@ -106,8 +100,6 @@ loopbackread(void *a)
 		runlock(ifc);
 		poperror();
 	}
-	lb->readp = nil;
-	pexit("hangup", 1);
 }
 
 Medium loopbackmedium =

@@ -49,13 +49,12 @@ netdevbind(Ipifc *ifc, int argc, char **argv)
 	mchan = namec(argv[2], Aopen, ORDWR, 0);
 
 	er = smalloc(sizeof(*er));
-	er->readp = (void*)-1;
 	er->mchan = mchan;
 	er->f = ifc->conv->p->f;
 
 	ifc->arg = er;
 
-	kproc("netdevread", netdevread, ifc);
+	kproc("netdevread", netdevread, ifc, 0);
 }
 
 /*
@@ -66,28 +65,12 @@ netdevunbind(Ipifc *ifc)
 {
 	Netdevrock *er = ifc->arg;
 
-	while(waserror())
-		;
-
-	/* wait for reader to start */
-	while(er->readp == (void*)-1)
-		tsleep(&up->sleep, return0, 0, 300);
-
 	if(er->readp != nil)
 		postnote(er->readp, 1, "unbind", 0);
 
-	poperror();
-
-	wunlock(ifc);
-	while(waserror())
-		;
-
-	/* wait for reader to die */
+	/* wait for readers to die */
 	while(er->readp != nil)
 		tsleep(&up->sleep, return0, 0, 300);
-
-	poperror();
-	wlock(ifc);
 
 	if(er->mchan != nil)
 		cclose(er->mchan);
@@ -103,6 +86,8 @@ netdevbwrite(Ipifc *ifc, Block *bp, int, uchar*)
 {
 	Netdevrock *er = ifc->arg;
 
+	if(bp->next)
+		bp = concatblock(bp);
 	if(BLEN(bp) < ifc->mintu)
 		bp = adjustblock(bp, ifc->mintu);
 
@@ -119,22 +104,34 @@ netdevread(void *a)
 	Ipifc *ifc;
 	Block *bp;
 	Netdevrock *er;
+	char *argv[1];
 
 	ifc = a;
 	er = ifc->arg;
 	er->readp = up;	/* hide identity under a rock for unbind */
-	if(!waserror())
+	if(waserror()){
+		er->readp = nil;
+		pexit("hangup", 1);
+	}
 	for(;;){
 		bp = devtab[er->mchan->type]->bread(er->mchan, ifc->maxtu, 0);
 		if(bp == nil){
+			/*
+			 * get here if mchan is a pipe and other side hangs up
+			 * clean up this interface & get out
+ZZZ is this a good idea?
+			 */
 			poperror();
-			if(!waserror()){
-				static char *argv[]  = { "unbind" };
+			er->readp = nil;
+			argv[0] = "unbind";
+			if(!waserror())
 				ifc->conv->p->ctl(ifc->conv, argv, 1);
-			}
-			break;
+			pexit("hangup", 1);
 		}
-		rlock(ifc);
+		if(!canrlock(ifc)){
+			freeb(bp);
+			continue;
+		}
 		if(waserror()){
 			runlock(ifc);
 			nexterror();
@@ -147,8 +144,6 @@ netdevread(void *a)
 		runlock(ifc);
 		poperror();
 	}
-	er->readp = nil;
-	pexit("hangup", 1);
 }
 
 void

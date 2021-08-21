@@ -7,94 +7,6 @@
 
 #include	"ip.h"
 
-typedef struct IP		IP;
-typedef struct Fragment4	Fragment4;
-typedef struct Fragment6	Fragment6;
-typedef struct Ipfrag		Ipfrag;
-
-enum
-{
-	IP4HDR		= 20,		/* sizeof(Ip4hdr) */
-	IP6HDR		= 40,		/* sizeof(Ip6hdr) */
-	IP_HLEN4	= 0x05,		/* Header length in words */
-	IP_DF		= 0x4000,	/* Don't fragment */
-	IP_MF		= 0x2000,	/* More fragments */
-	IP6FHDR		= 8, 		/* sizeof(Fraghdr6) */
-	IP_MAX		= 64*1024,	/* Maximum Internet packet size */
-};
-
-#define BLKIPVER(xp)	(((Ip4hdr*)((xp)->rp))->vihl&0xF0)
-
-/* MIB II counters */
-enum
-{
-	Forwarding,
-	DefaultTTL,
-	InReceives,
-	InHdrErrors,
-	InAddrErrors,
-	ForwDatagrams,
-	InUnknownProtos,
-	InDiscards,
-	InDelivers,
-	OutRequests,
-	OutDiscards,
-	OutNoRoutes,
-	ReasmTimeout,
-	ReasmReqds,
-	ReasmOKs,
-	ReasmFails,
-	FragOKs,
-	FragFails,
-	FragCreates,
-
-	Nstats,
-};
-
-struct Fragment4
-{
-	Block*	blist;
-	Fragment4*	next;
-	ulong 	src;
-	ulong 	dst;
-	ushort	id;
-	ulong 	age;
-};
-
-struct Fragment6
-{
-	Block*	blist;
-	Fragment6*	next;
-	uchar 	src[IPaddrlen];
-	uchar 	dst[IPaddrlen];
-	uint	id;
-	ulong 	age;
-};
-
-struct Ipfrag
-{
-	ushort	foff;
-	ushort	flen;
-};
-
-/* an instance of IP */
-struct IP
-{
-	ulong		stats[Nstats];
-
-	QLock		fraglock4;
-	Fragment4*	flisthead4;
-	Fragment4*	fragfree4;
-	Ref		id4;
-
-	QLock		fraglock6;
-	Fragment6*	flisthead6;
-	Fragment6*	fragfree6;
-	Ref		id6;
-
-	int		iprouting;	/* true if we route like a gateway */
-};
-
 static char *statnames[] =
 {
 [Forwarding]	"Forwarding",
@@ -118,45 +30,11 @@ static char *statnames[] =
 [FragCreates]	"FragCreates",
 };
 
-#define BLKIP(xp)	((Ip4hdr*)((xp)->rp))
-/*
- * This sleazy macro relies on the media header size being
- * larger than sizeof(Ipfrag). ipreassemble checks this is true
- */
-#define BKFG(xp)	((Ipfrag*)((xp)->base))
+static Block*		ip4reassemble(IP*, int, Block*);
+static void		ipfragfree4(IP*, Fragment4*);
+static Fragment4*	ipfragallo4(IP*);
 
-ushort		ipcsum(uchar*);
-Block*		ip4reassemble(IP*, int, Block*, Ip4hdr*);
-void		ipfragfree4(IP*, Fragment4*);
-Fragment4*	ipfragallo4(IP*);
-
-
-void
-ip_init_6(Fs *f)
-{
-	V6params *v6p;
-
-	v6p = smalloc(sizeof(V6params));
-	
-	v6p->rp.mflag		= 0;		// default not managed
-	v6p->rp.oflag		= 0;
-	v6p->rp.maxraint	= 600000;	// millisecs
-	v6p->rp.minraint	= 200000;
-	v6p->rp.linkmtu		= 0;		// no mtu sent
-	v6p->rp.reachtime	= 0;
-	v6p->rp.rxmitra		= 0;
-	v6p->rp.ttl		= MAXTTL;
-	v6p->rp.routerlt	= 3*(v6p->rp.maxraint);	
-
-	v6p->hp.rxmithost	= 1000;		// v6 RETRANS_TIMER
-
-	v6p->cdrouter 		= -1;
-
-	f->v6p			= v6p;
-
-}
-
-void
+static void
 initfrag(IP *ip, int size)
 {
 	Fragment4 *fq4, *eq4;
@@ -189,6 +67,7 @@ ip_init(Fs *f)
 	IP *ip;
 
 	ip = smalloc(sizeof(IP));
+	ip->stats[DefaultTTL] = MAXTTL;
 	initfrag(ip, 100);
 	f->ip = ip;
 
@@ -202,77 +81,52 @@ iprouting(Fs *f, int on)
 	if(f->ip->iprouting==0)
 		f->ip->stats[Forwarding] = 2;
 	else
-		f->ip->stats[Forwarding] = 1;	
+		f->ip->stats[Forwarding] = 1;
 }
 
 int
-ipoput4(Fs *f, Block *bp, int gating, int ttl, int tos, Conv *c)
+ipoput4(Fs *f, Block *bp, int gating, int ttl, int tos, Routehint *rh)
 {
 	Ipifc *ifc;
 	uchar *gate;
 	ulong fragoff;
 	Block *xp, *nb;
 	Ip4hdr *eh, *feh;
-	int lid, len, seglen, chunk, dlen, blklen, offset, medialen;
-	Route *r, *sr;
+	int lid, len, seglen, chunk, hlen, dlen, blklen, offset, medialen;
+	Route *r;
 	IP *ip;
 	int rv = 0;
 
 	ip = f->ip;
-
-	/* Fill out the ip header */
-	eh = (Ip4hdr*)(bp->rp);
-
 	ip->stats[OutRequests]++;
 
-	/* Number of uchars in data and ip header to write */
+	/* Fill out the ip header */
+	eh = (Ip4hdr*)bp->rp;
+	assert(BLEN(bp) >= IP4HDR);
 	len = blocklen(bp);
-
-	if(gating){
-		chunk = nhgets(eh->length);
-		if(chunk > len){
-			ip->stats[OutDiscards]++;
-			netlog(f, Logip, "short gated packet\n");
-			goto free;
-		}
-		if(chunk < len)
-			len = chunk;
-	}
 	if(len >= IP_MAX){
 		ip->stats[OutDiscards]++;
-		netlog(f, Logip, "exceeded ip max size %V\n", eh->dst);
+		netlog(f, Logip, "%V -> %V: exceeded ip max size: %d\n", eh->src, eh->dst, len);
 		goto free;
 	}
 
-	r = v4lookup(f, eh->dst, c);
-	if(r == nil){
+	r = v4lookup(f, eh->dst, eh->src, rh);
+	if(r == nil || (ifc = r->ifc) == nil){
 		ip->stats[OutNoRoutes]++;
-		netlog(f, Logip, "no interface %V\n", eh->dst);
+		netlog(f, Logip, "%V -> %V: no interface\n", eh->src, eh->dst);
 		rv = -1;
 		goto free;
 	}
 
-	ifc = r->ifc;
-	if(r->type & (Rifc|Runi))
+	if(r->type & (Rifc|Runi|Rbcast|Rmulti))
 		gate = eh->dst;
-	else
-	if(r->type & (Rbcast|Rmulti)) {
-		gate = eh->dst;
-		sr = v4lookup(f, eh->src, nil);
-		if(sr != nil && (sr->type & Runi))
-			ifc = sr->ifc;
-	}
 	else
 		gate = r->v4.gate;
 
-	if(!gating)
-		eh->vihl = IP_VER4|IP_HLEN4;
-	eh->ttl = ttl;
-	if(!gating)
-		eh->tos = tos;
-
-	if(!canrlock(ifc))
+	if(!canrlock(ifc)){
+		ip->stats[OutDiscards]++;
 		goto free;
+	}
 	if(waserror()){
 		runlock(ifc);
 		nexterror();
@@ -280,56 +134,57 @@ ipoput4(Fs *f, Block *bp, int gating, int ttl, int tos, Conv *c)
 	if(ifc->m == nil)
 		goto raise;
 
-	/* Output NAT */
-	if(nato(bp, ifc, f) != 0)
-		goto raise;
+	if(!gating){
+		eh->vihl = IP_VER4|IP_HLEN4;
+		eh->tos = tos;
+	}
+	eh->ttl = ttl;
 
 	/* If we dont need to fragment just send it */
 	medialen = ifc->maxtu - ifc->m->hsize;
 	if(len <= medialen) {
-		if(!gating)
-			hnputs(eh->id, incref(&ip->id4));
 		hnputs(eh->length, len);
 		if(!gating){
+			hnputs(eh->id, incref(&ip->id4));
 			eh->frag[0] = 0;
 			eh->frag[1] = 0;
 		}
 		eh->cksum[0] = 0;
 		eh->cksum[1] = 0;
 		hnputs(eh->cksum, ipcsum(&eh->vihl));
-		ifc->m->bwrite(ifc, bp, V4, gate);
+
+		ipifcoput(ifc, bp, V4, gate);
 		runlock(ifc);
 		poperror();
 		return 0;
 	}
 
-if((eh->frag[0] & (IP_DF>>8)) && !gating) print("%V: DF set\n", eh->dst);
-
 	if(eh->frag[0] & (IP_DF>>8)){
 		ip->stats[FragFails]++;
 		ip->stats[OutDiscards]++;
 		icmpcantfrag(f, bp, medialen);
-		netlog(f, Logip, "%V: eh->frag[0] & (IP_DF>>8)\n", eh->dst);
+		netlog(f, Logip, "%V -> %V: can't fragment with DF flag set\n", eh->src, eh->dst);
 		goto raise;
 	}
 
-	seglen = (medialen - IP4HDR) & ~7;
+	hlen = (eh->vihl & 0xF)<<2;
+	seglen = (medialen - hlen) & ~7;
 	if(seglen < 8){
 		ip->stats[FragFails]++;
 		ip->stats[OutDiscards]++;
-		netlog(f, Logip, "%V seglen < 8\n", eh->dst);
+		netlog(f, Logip, "%V -> %V: can't fragment with seglen < 8\n", eh->src, eh->dst);
 		goto raise;
 	}
 
-	dlen = len - IP4HDR;
+	dlen = len - hlen;
 	xp = bp;
 	if(gating)
 		lid = nhgets(eh->id);
 	else
 		lid = incref(&ip->id4);
 
-	offset = IP4HDR;
-	while(xp != nil && offset && offset >= BLEN(xp)) {
+	offset = hlen;
+	while(offset && offset >= BLEN(xp)) {
 		offset -= BLEN(xp);
 		xp = xp->next;
 	}
@@ -341,30 +196,30 @@ if((eh->frag[0] & (IP_DF>>8)) && !gating) print("%V: DF set\n", eh->dst);
 		fragoff = 0;
 	dlen += fragoff;
 	for(; fragoff < dlen; fragoff += seglen) {
-		nb = allocb(IP4HDR+seglen);
-		feh = (Ip4hdr*)(nb->rp);
+		nb = allocb(hlen+seglen);
+		feh = (Ip4hdr*)nb->rp;
 
-		memmove(nb->wp, eh, IP4HDR);
-		nb->wp += IP4HDR;
+		memmove(nb->wp, eh, hlen);
+		nb->wp += hlen;
 
 		if((fragoff + seglen) >= dlen) {
 			seglen = dlen - fragoff;
 			hnputs(feh->frag, fragoff>>3);
 		}
-		else	
+		else
 			hnputs(feh->frag, (fragoff>>3)|IP_MF);
 
-		hnputs(feh->length, seglen + IP4HDR);
+		hnputs(feh->length, seglen + hlen);
 		hnputs(feh->id, lid);
 
 		/* Copy up the data area */
 		chunk = seglen;
 		while(chunk) {
-			if(!xp) {
+			if(xp == nil) {
 				ip->stats[OutDiscards]++;
 				ip->stats[FragFails]++;
 				freeblist(nb);
-				netlog(f, Logip, "!xp: chunk %d\n", chunk);
+				netlog(f, Logip, "xp == nil: chunk %d\n", chunk);
 				goto raise;
 			}
 			blklen = chunk;
@@ -376,12 +231,13 @@ if((eh->frag[0] & (IP_DF>>8)) && !gating) print("%V: DF set\n", eh->dst);
 			chunk -= blklen;
 			if(xp->rp == xp->wp)
 				xp = xp->next;
-		} 
+		}
 
 		feh->cksum[0] = 0;
 		feh->cksum[1] = 0;
 		hnputs(feh->cksum, ipcsum(&feh->vihl));
-		ifc->m->bwrite(ifc, nb, V4, gate);
+
+		ipifcoput(ifc, nb, V4, gate);
 		ip->stats[FragCreates]++;
 	}
 	ip->stats[FragOKs]++;
@@ -396,17 +252,14 @@ free:
 void
 ipiput4(Fs *f, Ipifc *ifc, Block *bp)
 {
-	int hl;
-	int hop, tos, proto, olen;
+	int hl, len, hop, tos;
+	uchar v6dst[IPaddrlen];
+	ushort frag;
 	Ip4hdr *h;
 	Proto *p;
-	ushort frag;
-	int notforme;
-	uchar *dp, v6dst[IPaddrlen];
 	IP *ip;
-	Route *r;
 
-	if(BLKIPVER(bp) != IP_VER4) {
+	if((bp->rp[0]&0xF0) != IP_VER4) {
 		ipiput6(f, ifc, bp);
 		return;
 	}
@@ -430,108 +283,93 @@ ipiput4(Fs *f, Ipifc *ifc, Block *bp)
 			return;
 	}
 
-	h = (Ip4hdr*)(bp->rp);
-
-	/* Input NAT */
-	nati(bp, ifc);
-
-	/* dump anything that whose header doesn't checksum */
+	h = (Ip4hdr*)bp->rp;
+	hl = (h->vihl & 0xF)<<2;
+	if(hl < IP4HDR || hl > BLEN(bp)) {
+		ip->stats[InHdrErrors]++;
+		netlog(f, Logip, "%V -> %V: bad ip header length: %d\n", h->src, h->dst, hl);
+		goto drop;
+	}
 	if((bp->flag & Bipck) == 0 && ipcsum(&h->vihl)) {
 		ip->stats[InHdrErrors]++;
-		netlog(f, Logip, "ip: checksum error %V\n", h->src);
-		freeblist(bp);
+		netlog(f, Logip, "%V -> %V: bad ip header checksum\n", h->src, h->dst);
+		goto drop;
+	}
+	len = nhgets(h->length);
+	if(len < hl || (bp = trimblock(bp, 0, len)) == nil){
+		ip->stats[InHdrErrors]++;
+		netlog(f, Logip, "%V -> %V: bogus packet length: %d\n", h->src, h->dst, len);
+		if(bp != nil)
+			goto drop;
 		return;
 	}
-	v4tov6(v6dst, h->dst);
-	notforme = ipforme(f, v6dst) == 0;
-
-	/* Check header length and version */
-	if((h->vihl&0x0F) != IP_HLEN4) {
-		hl = (h->vihl&0xF)<<2;
-		if(hl < (IP_HLEN4<<2)) {
-			ip->stats[InHdrErrors]++;
-			netlog(f, Logip, "ip: %V bad hivl %ux\n", h->src, h->vihl);
-			freeblist(bp);
-			return;
-		}
-	  /* If this is not routed strip off the options */
-		if(notforme == 0) {
-			olen = nhgets(h->length);
-			dp = bp->rp + (hl - (IP_HLEN4<<2));
-			memmove(dp, h, IP_HLEN4<<2);
-			bp->rp = dp;
-			h = (Ip4hdr*)(bp->rp);
-			h->vihl = (IP_VER4|IP_HLEN4);
-			hnputs(h->length, olen-hl+(IP_HLEN4<<2));
-		}
-	}
+	h = (Ip4hdr*)bp->rp;
 
 	/* route */
-	if(notforme) {
-		Conv conv;
+	v4tov6(v6dst, h->dst);
+	if(!ipforme(f, v6dst)) {
+		Route *r;
+		Routehint rh;
+		Ipifc *nifc;
 
-		if(!ip->iprouting){
-			freeb(bp);
-			return;
-		}
+		if(!ip->iprouting)
+			goto drop;
 
 		/* don't forward to source's network */
-		conv.r = nil;
-		r = v4lookup(f, h->dst, &conv);
-		if(r == nil || r->ifc == ifc){
+		rh.r = nil;
+		r = v4lookup(f, h->dst, h->src, &rh);
+		if(r == nil || (nifc = r->ifc) == nil
+		|| (nifc == ifc && !ifc->reflect)){
 			ip->stats[OutDiscards]++;
-			freeblist(bp);
-			return;
+			goto drop;
 		}
 
 		/* don't forward if packet has timed out */
 		hop = h->ttl;
 		if(hop < 1) {
 			ip->stats[InHdrErrors]++;
-			icmpttlexceeded(f, ifc->lifc->local, bp);
-			freeblist(bp);
-			return;
+			icmpttlexceeded(f, ifc, bp);
+			goto drop;
 		}
 
 		/* reassemble if the interface expects it */
-if(r->ifc == nil) panic("nil route rfc");
-		if(r->ifc->reassemble){
+		if(nifc->reassemble){
 			frag = nhgets(h->frag);
-			if(frag) {
-				h->tos = 0;
-				if(frag & IP_MF)
-					h->tos = 1;
-				bp = ip4reassemble(ip, frag, bp, h);
+			if(frag & (IP_MF|IP_FO)) {
+				bp = ip4reassemble(ip, frag, bp);
 				if(bp == nil)
 					return;
-				h = (Ip4hdr*)(bp->rp);
+				h = (Ip4hdr*)bp->rp;
 			}
 		}
 
 		ip->stats[ForwDatagrams]++;
 		tos = h->tos;
 		hop = h->ttl;
-		ipoput4(f, bp, 1, hop - 1, tos, &conv);
+		ipoput4(f, bp, 1, hop - 1, tos, &rh);
 		return;
 	}
 
-	frag = nhgets(h->frag);
-	if(frag) {
-		h->tos = 0;
-		if(frag & IP_MF)
-			h->tos = 1;
-		bp = ip4reassemble(ip, frag, bp, h);
-		if(bp == nil)
-			return;
-		h = (Ip4hdr*)(bp->rp);
+	/* If this is not routed strip off the options */
+	if(hl > IP4HDR) {
+		hl -= IP4HDR;
+		len -= hl;
+		bp->rp += hl;
+		memmove(bp->rp, h, IP4HDR);
+		h = (Ip4hdr*)bp->rp;
+		h->vihl = IP_VER4|IP_HLEN4;
+		hnputs(h->length, len);
 	}
 
-	/* don't let any frag info go up the stack */
-	h->frag[0] = 0;
-	h->frag[1] = 0;
+	frag = nhgets(h->frag);
+	if(frag & (IP_MF|IP_FO)) {
+		bp = ip4reassemble(ip, frag, bp);
+		if(bp == nil)
+			return;
+		h = (Ip4hdr*)bp->rp;
+	}
 
-	proto = h->proto;
-	p = Fsrcvpcol(f, proto);
+	p = Fsrcvpcol(f, h->proto);
 	if(p != nil && p->rcv != nil) {
 		ip->stats[InDelivers]++;
 		(*p->rcv)(p, ifc, bp);
@@ -539,6 +377,7 @@ if(r->ifc == nil) panic("nil route rfc");
 	}
 	ip->stats[InDiscards]++;
 	ip->stats[InUnknownProtos]++;
+drop:
 	freeblist(bp);
 }
 
@@ -550,45 +389,43 @@ ipstats(Fs *f, char *buf, int len)
 	int i;
 
 	ip = f->ip;
-	ip->stats[DefaultTTL] = MAXTTL;
-
 	p = buf;
 	e = p+len;
-	for(i = 0; i < Nstats; i++)
-		p = seprint(p, e, "%s: %lud\n", statnames[i], ip->stats[i]);
+	for(i = 0; i < Nipstats; i++)
+		p = seprint(p, e, "%s: %llud\n", statnames[i], ip->stats[i]);
 	return p - buf;
 }
 
-Block*
-ip4reassemble(IP *ip, int offset, Block *bp, Ip4hdr *ih)
+static Block*
+ip4reassemble(IP *ip, int offset, Block *bp)
 {
-	int fend;
-	ushort id;
-	Fragment4 *f, *fnext;
+	int ovlap, fragsize, len;
 	ulong src, dst;
-	Block *bl, **l, *last, *prev;
-	int ovlap, len, fragsize, pktposn;
+	ushort id;
+	Block *bl, **l, *prev;
+	Fragment4 *f, *fnext;
+	Ipfrag *fp, *fq;
+	Ip4hdr *ih;
 
+	/*
+	 *  block lists are too hard, concatblock into a single block
+	 */
+	bp = concatblock(bp);
+
+	ih = (Ip4hdr*)bp->rp;
 	src = nhgetl(ih->src);
 	dst = nhgetl(ih->dst);
 	id = nhgets(ih->id);
-
-	/*
-	 *  block lists are too hard, pullupblock into a single block
-	 */
-	if(bp->next){
-		bp = pullupblock(bp, blocklen(bp));
-		ih = (Ip4hdr*)(bp->rp);
-	}
+	fragsize = BLEN(bp) - ((ih->vihl&0xF)<<2);
 
 	qlock(&ip->fraglock4);
 
 	/*
 	 *  find a reassembly queue for this fragment
 	 */
-	for(f = ip->flisthead4; f; f = fnext){
+	for(f = ip->flisthead4; f != nil; f = fnext){
 		fnext = f->next;	/* because ipfragfree4 changes the list */
-		if(f->src == src && f->dst == dst && f->id == id)
+		if(f->id == id && f->src == src && f->dst == dst)
 			break;
 		if(f->age < NOW){
 			ip->stats[ReasmTimeout]++;
@@ -601,22 +438,23 @@ ip4reassemble(IP *ip, int offset, Block *bp, Ip4hdr *ih)
 	 *  and get rid of any fragments that might go
 	 *  with it.
 	 */
-	if(!ih->tos && (offset & ~(IP_MF|IP_DF)) == 0) {
+	if((offset & (IP_MF|IP_FO)) == 0) {
 		if(f != nil) {
-			ipfragfree4(ip, f);
 			ip->stats[ReasmFails]++;
+			ipfragfree4(ip, f);
 		}
 		qunlock(&ip->fraglock4);
 		return bp;
 	}
 
-	if(bp->base+sizeof(Ipfrag) >= bp->rp){
-		bp = padblock(bp, sizeof(Ipfrag));
-		bp->rp += sizeof(Ipfrag);
+	if(bp->base+IPFRAGSZ > bp->rp){
+		bp = padblock(bp, IPFRAGSZ);
+		bp->rp += IPFRAGSZ;
 	}
 
-	BKFG(bp)->foff = offset<<3;
-	BKFG(bp)->flen = nhgets(ih->length)-IP4HDR;
+	fp = (Ipfrag*)bp->base;
+	fp->foff = (offset & IP_FO)<<3;
+	fp->flen = fragsize;
 
 	/* First fragment allocates a reassembly queue */
 	if(f == nil) {
@@ -627,8 +465,9 @@ ip4reassemble(IP *ip, int offset, Block *bp, Ip4hdr *ih)
 
 		f->blist = bp;
 
-		qunlock(&ip->fraglock4);
 		ip->stats[ReasmReqds]++;
+		qunlock(&ip->fraglock4);
+
 		return nil;
 	}
 
@@ -638,22 +477,23 @@ ip4reassemble(IP *ip, int offset, Block *bp, Ip4hdr *ih)
 	prev = nil;
 	l = &f->blist;
 	bl = f->blist;
-	while(bl != nil && BKFG(bp)->foff > BKFG(bl)->foff) {
+	while(bl != nil && fp->foff > ((Ipfrag*)bl->base)->foff) {
 		prev = bl;
 		l = &bl->next;
 		bl = bl->next;
 	}
 
 	/* Check overlap of a previous fragment - trim away as necessary */
-	if(prev) {
-		ovlap = BKFG(prev)->foff + BKFG(prev)->flen - BKFG(bp)->foff;
+	if(prev != nil) {
+		fq = (Ipfrag*)prev->base;
+		ovlap = fq->foff + fq->flen - fp->foff;
 		if(ovlap > 0) {
-			if(ovlap >= BKFG(bp)->flen) {
-				freeblist(bp);
+			if(ovlap >= fp->flen) {
 				qunlock(&ip->fraglock4);
+				freeb(bp);
 				return nil;
 			}
-			BKFG(prev)->flen -= ovlap;
+			fq->flen -= ovlap;
 		}
 	}
 
@@ -662,26 +502,26 @@ ip4reassemble(IP *ip, int offset, Block *bp, Ip4hdr *ih)
 	*l = bp;
 
 	/* Check to see if succeeding segments overlap */
-	if(bp->next) {
+	if(bp->next != nil) {
 		l = &bp->next;
-		fend = BKFG(bp)->foff + BKFG(bp)->flen;
+		offset = fp->foff + fp->flen;
 		/* Take completely covered segments out */
-		while(*l) {
-			ovlap = fend - BKFG(*l)->foff;
+		while((bl = *l) != nil) {
+			fq = (Ipfrag*)bl->base;
+			ovlap = offset - fq->foff;
 			if(ovlap <= 0)
 				break;
-			if(ovlap < BKFG(*l)->flen) {
-				BKFG(*l)->flen -= ovlap;
-				BKFG(*l)->foff += ovlap;
-				/* move up ih hdrs */
-				memmove((*l)->rp + ovlap, (*l)->rp, IP4HDR);
-				(*l)->rp += ovlap;
+			if(ovlap < fq->flen) {
+				/* move up ip header */
+				memmove(bl->rp + ovlap, bl->rp, BLEN(bl) - fq->flen);
+				bl->rp += ovlap;
+				fq->flen -= ovlap;
+				fq->foff += ovlap;
 				break;
 			}
-			last = (*l)->next;
-			(*l)->next = nil;
-			freeblist(*l);
-			*l = last;
+			*l = bl->next;
+			bl->next = nil;
+			freeb(bl);
 		}
 	}
 
@@ -689,35 +529,50 @@ ip4reassemble(IP *ip, int offset, Block *bp, Ip4hdr *ih)
 	 *  look for a complete packet.  if we get to a fragment
 	 *  without IP_MF set, we're done.
 	 */
-	pktposn = 0;
-	for(bl = f->blist; bl; bl = bl->next) {
-		if(BKFG(bl)->foff != pktposn)
+	offset = 0;
+	for(bl = f->blist; bl != nil; bl = bl->next, offset += fp->flen) {
+		fp = (Ipfrag*)bl->base;
+		if(fp->foff != offset)
 			break;
-		if((BLKIP(bl)->frag[0]&(IP_MF>>8)) == 0) {
-			bl = f->blist;
-			len = nhgets(BLKIP(bl)->length);
-			bl->wp = bl->rp + len;
 
-			/* Pullup all the fragment headers and
-			 * return a complete packet
-			 */
-			for(bl = bl->next; bl; bl = bl->next) {
-				fragsize = BKFG(bl)->flen;
-				len += fragsize;
-				bl->rp += IP4HDR;
-				bl->wp = bl->rp + fragsize;
-			}
+		ih = (Ip4hdr*)bl->rp;
+		if(ih->frag[0]&(IP_MF>>8))
+			continue;
 
-			bl = f->blist;
-			f->blist = nil;
-			ipfragfree4(ip, f);
-			ih = BLKIP(bl);
-			hnputs(ih->length, len);
-			qunlock(&ip->fraglock4);
-			ip->stats[ReasmOKs]++;
-			return bl;		
+		bl = f->blist;
+		len = BLEN(bl);
+
+		/*
+		 * Pullup all the fragment headers and
+		 * return a complete packet
+		 */
+		for(bl = bl->next; bl != nil && len < IP_MAX; bl = bl->next) {
+			fq = (Ipfrag*)bl->base;
+			fragsize = fq->flen;
+			bl->rp = bl->wp - fragsize;
+			len += fragsize;
 		}
-		pktposn += BKFG(bl)->flen;
+
+		if(len >= IP_MAX){
+			ipfragfree4(ip, f);
+			ip->stats[ReasmFails]++;
+			qunlock(&ip->fraglock4);
+			return nil;
+		}
+
+		bl = f->blist;
+		f->blist = nil;
+		ipfragfree4(ip, f);
+
+		ih = (Ip4hdr*)bl->rp;
+		ih->frag[0] = 0;
+		ih->frag[1] = 0;
+		hnputs(ih->length, len);
+
+		ip->stats[ReasmOKs]++;
+		qunlock(&ip->fraglock4);
+
+		return bl;
 	}
 	qunlock(&ip->fraglock4);
 	return nil;
@@ -726,20 +581,20 @@ ip4reassemble(IP *ip, int offset, Block *bp, Ip4hdr *ih)
 /*
  * ipfragfree4 - Free a list of fragments - assume hold fraglock4
  */
-void
+static void
 ipfragfree4(IP *ip, Fragment4 *frag)
 {
 	Fragment4 *fl, **l;
 
-	if(frag->blist)
+	if(frag->blist != nil)
 		freeblist(frag->blist);
-
-	frag->src = 0;
-	frag->id = 0;
 	frag->blist = nil;
+	frag->id = 0;
+	frag->src = 0;
+	frag->dst = 0;
 
 	l = &ip->flisthead4;
-	for(fl = *l; fl; fl = fl->next) {
+	for(fl = *l; fl != nil; fl = fl->next) {
 		if(fl == frag) {
 			*l = frag->next;
 			break;
@@ -755,14 +610,14 @@ ipfragfree4(IP *ip, Fragment4 *frag)
 /*
  * ipfragallo4 - allocate a reassembly queue - assume hold fraglock4
  */
-Fragment4 *
+static Fragment4*
 ipfragallo4(IP *ip)
 {
 	Fragment4 *f;
 
 	while(ip->fragfree4 == nil) {
 		/* free last entry on fraglist */
-		for(f = ip->flisthead4; f->next; f = f->next)
+		for(f = ip->flisthead4; f->next != nil; f = f->next)
 			;
 		ipfragfree4(ip, f);
 	}

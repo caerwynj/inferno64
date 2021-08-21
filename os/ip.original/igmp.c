@@ -1,7 +1,3 @@
-/*
- * igmp - internet group management protocol
- * unfinished.
- */
 #include "u.h"
 #include "../port/lib.h"
 #include "mem.h"
@@ -44,11 +40,7 @@ struct IGMPpkt
 	uchar	unused;
 	uchar	igmpcksum[2];		/* checksum of igmp portion */
 	uchar	group[IPaddrlen];	/* multicast group */
-
-	uchar	payload[];
 };
-
-#define IGMPPKTSZ offsetof(IGMPpkt, payload[0])
 
 /*
  *  lists for group reports
@@ -57,7 +49,7 @@ typedef struct IGMPrep IGMPrep;
 struct IGMPrep
 {
 	IGMPrep		*next;
-	Medium		*m;
+	Media		*m;
 	int		ticks;
 	Multicast	*multi;
 };
@@ -84,17 +76,19 @@ static struct Stats
 } stats;
 
 void
-igmpsendreport(Medium *m, uchar *addr)
+igmpsendreport(Media *m, uchar *addr)
 {
 	IGMPpkt *p;
 	Block *bp;
 
 	bp = allocb(sizeof(IGMPpkt));
+	if(bp == nil)
+		return;
 	p = (IGMPpkt*)bp->wp;
 	p->vihl = IP_VER4;
-	bp->wp += IGMPPKTSZ;
-	memset(bp->rp, 0, IGMPPKTSZ);
-	hnputl(p->src, Mediumgetaddr(m));
+	bp->wp += sizeof(IGMPpkt);
+	memset(bp->rp, 0, sizeof(IGMPpkt));
+	hnputl(p->src, Mediagetaddr(m));
 	hnputl(p->dst, Ipallsys);
 	p->vertype = (1<<4) | IGMPreport;
 	p->proto = IP_IGMPPROTO;
@@ -172,7 +166,7 @@ igmpproc(void *a)
 }
 
 void
-igmpiput(Medium *m, Ipifc *, Block *bp)
+igmpiput(Media *m, Ipifc *, Block *bp)
 {
 	int n;
 	IGMPpkt *ghp;
@@ -212,7 +206,7 @@ igmpiput(Medium *m, Ipifc *, Block *bp)
 		if(rp != nil)
 			break;	/* already reporting */
 
-		mp = Mediumcopymulti(m);
+		mp = Mediacopymulti(m);
 		if(mp == nil)
 			break;
 
@@ -291,7 +285,7 @@ igmpinit(Fs *fs)
 	igmp.ptclsize = 0;
 
 	igmpreportfn = igmpsendreport;
-	kproc("igmpproc", igmpproc, 0);
+	kproc("igmpproc", igmpproc, 0, 0);
 
 	Fsproto(fs, &igmp);
 }

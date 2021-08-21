@@ -16,10 +16,10 @@ static void	pktin(Fs*, Ipifc*, Block*);
 Medium pktmedium =
 {
 .name=		"pkt",
-.hsize=		0,
-.mintu=		0,
+.hsize=		14,
+.mintu=		40,
 .maxtu=		4*1024,
-.maclen=	0,
+.maclen=	6,
 .bind=		pktbind,
 .unbind=	pktunbind,
 .bwrite=	pktbwrite,
@@ -28,13 +28,12 @@ Medium pktmedium =
 };
 
 /*
- *  called to bind an IP ifc to an packet device
+ *  called to bind an IP ifc to an ethernet device
  *  called with ifc wlock'd
  */
 static void
-pktbind(Ipifc*, int argc, char **argv)
+pktbind(Ipifc*, int, char**)
 {
-	USED(argc, argv);
 }
 
 /*
@@ -52,6 +51,7 @@ static void
 pktbwrite(Ipifc *ifc, Block *bp, int, uchar*)
 {
 	/* enqueue onto the conversation's rq */
+	bp = concatblock(bp);
 	if(ifc->conv->snoopers.ref > 0)
 		qpass(ifc->conv->sq, copyblock(bp, BLEN(bp)));
 	qpass(ifc->conv->rq, bp);

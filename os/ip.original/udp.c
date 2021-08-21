@@ -24,6 +24,7 @@ enum
 
 	IP_UDPPROTO	= 17,
 	UDP_USEAD7	= 52,
+	UDP_USEAD6	= 36,
 
 	Udprxms		= 200,
 	Udptickms	= 100,
@@ -39,7 +40,7 @@ struct Udp4hdr
 	uchar	length[2];	/* packet length */
 	uchar	id[2];		/* Identification */
 	uchar	frag[2];	/* Fragment information */
-	uchar	Unused;
+	uchar	Unused;	
 	uchar	udpproto;	/* Protocol */
 	uchar	udpplen[2];	/* Header plus data length */
 	uchar	udpsrc[IPv4addrlen];	/* Ip source */
@@ -72,10 +73,10 @@ struct Udp6hdr {
 typedef struct Udpstats Udpstats;
 struct Udpstats
 {
-	uvlong	udpInDatagrams;
+	ulong	udpInDatagrams;
 	ulong	udpNoPorts;
 	ulong	udpInErrors;
-	uvlong	udpOutDatagrams;
+	ulong	udpOutDatagrams;
 };
 
 typedef struct Udppriv Udppriv;
@@ -100,6 +101,7 @@ void udpkick(void *x, Block *bp);
 typedef struct Udpcb Udpcb;
 struct Udpcb
 {
+	QLock;
 	uchar	headers;
 };
 
@@ -123,7 +125,7 @@ udpconnect(Conv *c, char **argv, int argc)
 static int
 udpstate(Conv *c, char *state, int n)
 {
-	return snprint(state, n, "%s qin %d qout %d\n",
+	return snprint(state, n, "%s qin %d qout %d",
 		c->inuse ? "Open" : "Closed",
 		c->rq ? qlen(c->rq) : 0,
 		c->wq ? qlen(c->wq) : 0
@@ -149,7 +151,7 @@ udpannounce(Conv *c, char** argv, int argc)
 static void
 udpcreate(Conv *c)
 {
-	c->rq = qopen(512*1024, Qmsg, 0, 0);
+	c->rq = qopen(64*1024, Qmsg, 0, 0);
 	c->wq = qbypass(udpkick, c);
 }
 
@@ -173,6 +175,8 @@ udpclose(Conv *c)
 
 	ucb = (Udpcb*)c->ptcl;
 	ucb->headers = 0;
+
+	qunlock(c);
 }
 
 void
@@ -188,13 +192,12 @@ udpkick(void *x, Block *bp)
 	Udppriv *upriv;
 	Fs *f;
 	int version;
-	Routehint *rh;
-	ushort csum;
+	Conv *rc;
 
 	upriv = c->p->priv;
 	f = c->p->f;
 
-//	netlog(c->p->f, Logudp, "udp: kick\n");	/* frequent and uninteresting */
+	netlog(c->p->f, Logudp, "udp: kick\n");
 	if(bp == nil)
 		return;
 
@@ -216,18 +219,39 @@ udpkick(void *x, Block *bp)
 		rport = nhgets(bp->rp);
 		bp->rp += 2+2;			/* Ignore local port */
 		break;
+	case 6:
+		/* get user specified addresses */
+		bp = pullupblock(bp, UDP_USEAD6);
+		if(bp == nil)
+			return;
+		ipmove(raddr, bp->rp);
+		bp->rp += IPaddrlen;
+		ipmove(laddr, bp->rp);
+		bp->rp += IPaddrlen;
+		/* pick interface closest to dest */
+		if(ipforme(f, laddr) != Runi)
+			findlocalip(f, laddr, raddr);
+		rport = nhgets(bp->rp);
+		bp->rp += 2+2;			/* Ignore local port */
+		break;
 	default:
 		rport = 0;
 		break;
 	}
 
 	if(ucb->headers) {
-		if(isv4(laddr) || ipcmp(laddr, IPnoaddr) == 0)
+		if(memcmp(laddr, v4prefix, IPv4off) == 0 ||
+		    ipcmp(laddr, IPnoaddr) == 0)
 			version = V4;
 		else
 			version = V6;
 	} else {
-		version = convipvers(c);
+		if( (memcmp(c->raddr, v4prefix, IPv4off) == 0 &&
+			memcmp(c->laddr, v4prefix, IPv4off) == 0)
+			|| ipcmp(c->raddr, IPnoaddr) == 0)
+			version = V4;
+		else
+			version = V6;
 	}
 
 	dlen = blocklen(bp);
@@ -236,6 +260,9 @@ udpkick(void *x, Block *bp)
 	switch(version){
 	case V4:
 		bp = padblock(bp, UDP4_IPHDR_SZ+UDP_UDPHDR_SZ);
+		if(bp == nil)
+			return;
+
 		uh4 = (Udp4hdr *)(bp->rp);
 		ptcllen = dlen + UDP_UDPHDR_SZ;
 		uh4->Unused = 0;
@@ -247,33 +274,32 @@ udpkick(void *x, Block *bp)
 			v6tov4(uh4->udpdst, raddr);
 			hnputs(uh4->udpdport, rport);
 			v6tov4(uh4->udpsrc, laddr);
-			rh = nil;
+			rc = nil;
 		} else {
 			v6tov4(uh4->udpdst, c->raddr);
 			hnputs(uh4->udpdport, c->rport);
 			if(ipcmp(c->laddr, IPnoaddr) == 0)
 				findlocalip(f, c->laddr, c->raddr);
 			v6tov4(uh4->udpsrc, c->laddr);
-			rh = c;
+			rc = c;
 		}
 		hnputs(uh4->udpsport, c->lport);
 		hnputs(uh4->udplen, ptcllen);
 		uh4->udpcksum[0] = 0;
 		uh4->udpcksum[1] = 0;
-		csum = ptclcsum(bp, UDP4_PHDR_OFF, dlen+UDP_UDPHDR_SZ+UDP4_PHDR_SZ);
-		if(csum == 0)
-			csum = 0xffff;	/* -0 */
-		hnputs(uh4->udpcksum, csum);
+		hnputs(uh4->udpcksum, 
+		       ptclcsum(bp, UDP4_PHDR_OFF, dlen+UDP_UDPHDR_SZ+UDP4_PHDR_SZ));
 		uh4->vihl = IP_VER4;
-		ipoput4(f, bp, 0, c->ttl, c->tos, rh);
+		ipoput4(f, bp, 0, c->ttl, c->tos, rc);
 		break;
 
 	case V6:
-		/*
-		 * using the v6 ip header to create pseudo header
-		 * first then reset it to the normal ip header
-		 */
 		bp = padblock(bp, UDP6_IPHDR_SZ+UDP_UDPHDR_SZ);
+		if(bp == nil)
+			return;
+
+		// using the v6 ip header to create pseudo header 
+		// first then reset it to the normal ip header
 		uh6 = (Udp6hdr *)(bp->rp);
 		memset(uh6, 0, 8);
 		ptcllen = dlen + UDP_UDPHDR_SZ;
@@ -283,28 +309,26 @@ udpkick(void *x, Block *bp)
 			ipmove(uh6->udpdst, raddr);
 			hnputs(uh6->udpdport, rport);
 			ipmove(uh6->udpsrc, laddr);
-			rh = nil;
+			rc = nil;
 		} else {
 			ipmove(uh6->udpdst, c->raddr);
 			hnputs(uh6->udpdport, c->rport);
 			if(ipcmp(c->laddr, IPnoaddr) == 0)
 				findlocalip(f, c->laddr, c->raddr);
 			ipmove(uh6->udpsrc, c->laddr);
-			rh = c;
+			rc = c;
 		}
 		hnputs(uh6->udpsport, c->lport);
 		hnputs(uh6->udplen, ptcllen);
 		uh6->udpcksum[0] = 0;
 		uh6->udpcksum[1] = 0;
-		csum = ptclcsum(bp, UDP6_PHDR_OFF, dlen+UDP_UDPHDR_SZ+UDP6_PHDR_SZ);
-		if(csum == 0)
-			csum = 0xffff;	/* -0 */
-		hnputs(uh6->udpcksum, csum);
+		hnputs(uh6->udpcksum, 
+		       ptclcsum(bp, UDP6_PHDR_OFF, dlen+UDP_UDPHDR_SZ+UDP6_PHDR_SZ));
 		memset(uh6, 0, 8);
 		uh6->viclfl[0] = IP_VER6;
 		hnputs(uh6->len, ptcllen);
 		uh6->nextheader = IP_UDPPROTO;
-		ipoput6(f, bp, 0, c->ttl, c->tos, rh);
+		ipoput6(f, bp, 0, c->ttl, c->tos, rc);
 		break;
 
 	default:
@@ -336,8 +360,10 @@ udpiput(Proto *udp, Ipifc *ifc, Block *bp)
 	uh4 = (Udp4hdr*)(bp->rp);
 	version = ((uh4->vihl&0xF0)==IP_VER6) ? V6 : V4;
 
-	/* Put back pseudo header for checksum
-	 * (remember old values for icmpnoconv()) */
+	/*
+	 * Put back pseudo header for checksum 
+	 * (remember old values for icmpnoconv())
+	 */
 	switch(version) {
 	case V4:
 		ottl = uh4->Unused;
@@ -397,7 +423,7 @@ udpiput(Proto *udp, Ipifc *ifc, Block *bp)
 
 	c = iphtlook(&upriv->ht, raddr, rport, laddr, lport);
 	if(c == nil){
-		/* no conversation found */
+		/* no converstation found */
 		upriv->ustats.udpNoPorts++;
 		qunlock(udp);
 		netlog(f, Logudp, "udp: no conv %I!%d -> %I!%d\n", raddr, rport,
@@ -408,7 +434,7 @@ udpiput(Proto *udp, Ipifc *ifc, Block *bp)
 			icmpnoconv(f, bp);
 			break;
 		case V6:
-			icmphostunr6(f, ifc, bp, Icmp6_port_unreach, 0);
+			icmphostunr(f, ifc, bp, icmp6_port_unreach, 0);
 			break;
 		default:
 			panic("udpiput2: version %d", version);
@@ -422,8 +448,18 @@ udpiput(Proto *udp, Ipifc *ifc, Block *bp)
 	if(c->state == Announced){
 		if(ucb->headers == 0){
 			/* create a new conversation */
-			if(ipforme(f, laddr) != Runi)
-				ipv6local(ifc, laddr, 0, raddr);
+			if(ipforme(f, laddr) != Runi) {
+				switch(version){
+				case V4:
+					v4tov6(laddr, ifc->lifc->local);
+					break;
+				case V6:
+					ipmove(laddr, ifc->lifc->local);
+					break;
+				default:
+					panic("udpiput3: version %d", version);
+				}
+			}
 			c = Fsnewcall(c, raddr, rport, laddr, lport, version);
 			if(c == nil){
 				qunlock(udp);
@@ -471,21 +507,33 @@ udpiput(Proto *udp, Ipifc *ifc, Block *bp)
 		p = bp->rp;
 		ipmove(p, raddr); p += IPaddrlen;
 		ipmove(p, laddr); p += IPaddrlen;
-		if(!ipv6local(ifc, p, 0, raddr))
-			ipmove(p, ifc->lifc != nil ? ifc->lifc->local : IPnoaddr);
-		p += IPaddrlen;
+		ipmove(p, ifc->lifc->local); p += IPaddrlen;
+		hnputs(p, rport); p += 2;
+		hnputs(p, lport);
+		break;
+	case 6:
+		/* pass the src address */
+		bp = padblock(bp, UDP_USEAD6);
+		p = bp->rp;
+		ipmove(p, raddr); p += IPaddrlen;
+		ipmove(p, ipforme(f, laddr)==Runi ? laddr : ifc->lifc->local); p += IPaddrlen;
 		hnputs(p, rport); p += 2;
 		hnputs(p, lport);
 		break;
 	}
 
+	if(bp->next)
+		bp = concatblock(bp);
+
 	if(qfull(c->rq)){
-		netlog(f, Logudp, "udp: qfull %I.%d -> %I.%d\n",
-			raddr, rport, laddr, lport);
+		qunlock(c);
+		netlog(f, Logudp, "udp: qfull %I.%d -> %I.%d\n", raddr, rport,
+		       laddr, lport);
 		freeblist(bp);
-	} else {
-		qpass(c->rq, concatblock(bp));
+		return;
 	}
+
+	qpass(c->rq, bp);
 	qunlock(c);
 
 }
@@ -497,13 +545,11 @@ udpctl(Conv *c, char **f, int n)
 
 	ucb = (Udpcb*)c->ptcl;
 	if(n == 1){
-		if(strcmp(f[0], "hangup") == 0){
-			qhangup(c->rq, nil);
-			qhangup(c->wq, nil);
+		if(strcmp(f[0], "oldheaders") == 0){
+			ucb->headers = 6;
 			return nil;
-		}
-		if(strcmp(f[0], "headers") == 0){
-			ucb->headers = 7;	/* new headers format */
+		} else if(strcmp(f[0], "headers") == 0){
+			ucb->headers = 7;
 			return nil;
 		}
 	}
@@ -518,25 +564,34 @@ udpadvise(Proto *udp, Block *bp, char *msg)
 	uchar source[IPaddrlen], dest[IPaddrlen];
 	ushort psource, pdest;
 	Conv *s, **p;
+	int version;
 
 	h4 = (Udp4hdr*)(bp->rp);
-	h6 = (Udp6hdr*)(bp->rp);
+	version = ((h4->vihl&0xF0)==IP_VER6) ? V6 : V4;
 
-	if((h4->vihl&0xF0)==IP_VER4) {
+	switch(version) {
+	case V4:
 		v4tov6(dest, h4->udpdst);
 		v4tov6(source, h4->udpsrc);
 		psource = nhgets(h4->udpsport);
 		pdest = nhgets(h4->udpdport);
-	} else {
+		break;
+	case V6:
+		h6 = (Udp6hdr*)(bp->rp);
 		ipmove(dest, h6->udpdst);
 		ipmove(source, h6->udpsrc);
 		psource = nhgets(h6->udpsport);
 		pdest = nhgets(h6->udpdport);
+		break;
+	default:
+		panic("udpadvise: version %d", version);
+		return;  /* to avoid a warning */
 	}
 
 	/* Look for a connection */
 	qlock(udp);
-	for(p = udp->conv; (s = *p) != nil; p++) {
+	for(p = udp->conv; *p; p++) {
+		s = *p;
 		if(s->rport == pdest)
 		if(s->lport == psource)
 		if(ipcmp(s->raddr, dest) == 0)
@@ -562,12 +617,17 @@ udpstats(Proto *udp, char *buf, int len)
 	Udppriv *upriv;
 
 	upriv = udp->priv;
-	return snprint(buf, len, "InDatagrams: %llud\nNoPorts: %lud\n"
-		"InErrors: %lud\nOutDatagrams: %llud\n",
+	return snprint(buf, len, "InDatagrams: %lud\nNoPorts: %lud\nInErrors: %lud\nOutDatagrams: %lud\n",
 		upriv->ustats.udpInDatagrams,
 		upriv->ustats.udpNoPorts,
 		upriv->ustats.udpInErrors,
 		upriv->ustats.udpOutDatagrams);
+}
+
+int
+udpgc(Proto *udp)
+{
+	return natgc(udp->ipproto);
 }
 
 void
@@ -587,6 +647,7 @@ udpinit(Fs *fs)
 	udp->rcv = udpiput;
 	udp->advise = udpadvise;
 	udp->stats = udpstats;
+	udp->gc = udpgc;
 	udp->ipproto = IP_UDPPROTO;
 	udp->nc = Nchans;
 	udp->ptclsize = sizeof(Udpcb);

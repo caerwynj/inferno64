@@ -189,7 +189,7 @@ struct Ilpriv
 {
 	Ipht	ht;
 
-	uvlong	stats[Nstats];
+	ulong	stats[Nstats];
 
 	ulong	csumerr;		/* checksum errors */
 	ulong	hlenerr;		/* header length error */
@@ -208,7 +208,7 @@ struct Ilpriv
 
 
 void	ilrcvmsg(Conv*, Block*);
-int	ilsendctl(Conv*, Ilhdr*, int, ulong, ulong, int);
+void	ilsendctl(Conv*, Ilhdr*, int, ulong, ulong, int);
 void	ilackq(Ilcb*, Block*);
 void	ilprocess(Conv*, Ilhdr*, Block*);
 void	ilpullup(Conv*);
@@ -251,9 +251,6 @@ ilconnect(Conv *c, char **argv, int argc)
 	e = Fsstdconnect(c, argv, argc);
 	if(e != nil)
 		return e;
-	if(c->ipversion != V4)
-		return "only IP version 4 supported";
-		
 	return ilstart(c, IL_CONNECT, fast);
 }
 
@@ -263,7 +260,7 @@ ilstate(Conv *c, char *state, int n)
 	Ilcb *ic;
 
 	ic = (Ilcb*)(c->ptcl);
-	return snprint(state, n, "%s qin %d qout %d del %5.5d Br %5.5d md %5.5d una %5.5lud rex %5.5d rxq %5.5d max %5.5d\n",
+	return snprint(state, n, "%s qin %d qout %d del %5.5d Br %5.5d md %5.5d una %5.5lud rex %5.5d rxq %5.5d max %5.5d",
 		ilstates[ic->state],
 		c->rq ? qlen(c->rq) : 0,
 		c->wq ? qlen(c->wq) : 0,
@@ -437,7 +434,7 @@ ilxstats(Proto *il, char *buf, int len)
 	p = buf;
 	e = p+len;
 	for(i = 0; i < Nstats; i++)
-		p = seprint(p, e, "%s: %llud\n", statnames[i], priv->stats[i]);
+		p = seprint(p, e, "%s: %lud\n", statnames[i], priv->stats[i]);
 	return p - buf;
 }
 
@@ -551,9 +548,6 @@ iliput(Proto *il, Ipifc*, Block *bp)
 
 	ih = (Ilhdr *)bp->rp;
 	plen = blocklen(bp);
-	if(plen > 0 && (ih->vihl&0xF0)!=IP_VER4)
-		goto raise;	/* ignore non V4 packets */
-
 	if(plen < IL_IPSIZE+IL_HDRSIZE){
 		netlog(il->f, Logil, "il: hlenerr\n");
 		ipriv->stats[HlenErrs]++;
@@ -578,7 +572,7 @@ iliput(Proto *il, Ipifc*, Block *bp)
 		else
 			st = iltype[ih->iltype];
 		ipriv->stats[CsumErrs]++;
-		netlog(il->f, Logil, "il: cksum %ux %s, pkt(%ux id %ud ack %I/%d->%d)\n",
+		netlog(il->f, Logil, "il: cksum %ux %ux, pkt(%s id %lud ack %lud %I/%d->%d)\n",
 			csum, st, nhgetl(ih->ilid), nhgetl(ih->ilack), raddr, sp, dp);
 		goto raise;
 	}
@@ -601,7 +595,7 @@ iliput(Proto *il, Ipifc*, Block *bp)
 			else
 				st = iltype[ih->iltype];
 			ilreject(il->f, ih);		/* no channel and not sync */
-			netlog(il->f, Logil, "il: no channel, pkt(%s id %ud ack %ud %I/%ud->%ud)\n",
+			netlog(il->f, Logil, "il: no channel, pkt(%s id %lud ack %lud %I/%ud->%ud)\n",
 				st, nhgetl(ih->ilid), nhgetl(ih->ilack), raddr, sp, dp); 
 			goto raise;
 		}
@@ -835,7 +829,7 @@ ilrexmit(Ilcb *ic)
 
 	c = ic->conv;
 	id = nhgetl(h->ilid);
-	netlog(c->p->f, Logil, "il: rexmit %lud %lud: %d %lud: %I %d/%d\n", id, ic->recvd,
+	netlog(c->p->f, Logil, "il: rexmit %d %ud: %d %d: %i %d/%d\n", id, ic->recvd,
 		ic->rexmit, ic->timeout,
 		c->raddr, c->lport, c->rport);
 
@@ -858,14 +852,14 @@ ilprocess(Conv *s, Ilhdr *h, Block *bp)
 	ic = (Ilcb*)s->ptcl;
 
 	USED(ic);
-	netlog(s->p->f, Logilmsg, "%11s rcv %lud/%lud snt %lud/%lud pkt(%s id %d ack %ud %ud->%ud) ",
+	netlog(s->p->f, Logilmsg, "%11s rcv %d/%d snt %d/%d pkt(%s id %d ack %d %d->%d) ",
 		ilstates[ic->state],  ic->rstart, ic->recvd, ic->start, 
 		ic->next, iltype[h->iltype], nhgetl(h->ilid), 
 		nhgetl(h->ilack), nhgets(h->ilsrc), nhgets(h->ildst));
 
 	_ilprocess(s, h, bp);
 
-	netlog(s->p->f, Logilmsg, "%11s rcv %lud snt %lud\n", ilstates[ic->state], ic->recvd, ic->next);
+	netlog(s->p->f, Logilmsg, "%11s rcv %d snt %d\n", ilstates[ic->state], ic->recvd, ic->next);
 }
 
 void
@@ -923,12 +917,17 @@ ilpullup(Conv *s)
 		bp->list = nil;
 		dlen = nhgets(oh->illen)-IL_HDRSIZE;
 		bp = trimblock(bp, IL_IPSIZE+IL_HDRSIZE, dlen);
-			
 		/*
 		 * Upper levels don't know about multiple-block
 		 * messages so copy all into one (yick).
 		 */
-		qpass(s->rq, packblock(concatblock(bp)));
+		bp = concatblock(bp);
+		if(bp == 0)
+			panic("ilpullup");
+		bp = packblock(bp);
+		if(bp == 0)
+			panic("ilpullup2");
+		qpass(s->rq, bp);
 	}
 	qunlock(&ic->outo);
 }
@@ -949,7 +948,7 @@ iloutoforder(Conv *s, Ilhdr *h, Block *bp)
 	id = nhgetl(h->ilid);
 	/* Window checks */
 	if(id <= ic->recvd || id > ic->recvd+ic->window) {
-		netlog(s->p->f, Logil, "il: message outside window %lud <%lud-%lud>: %I %d/%d\n",
+		netlog(s->p->f, Logil, "il: message outside window %ud <%ud-%ud>: %i %d/%d\n",
 			id, ic->recvd, ic->recvd+ic->window, s->raddr, s->lport, s->rport);
 		freeblist(bp);
 		return;
@@ -984,7 +983,7 @@ iloutoforder(Conv *s, Ilhdr *h, Block *bp)
 	qunlock(&ic->outo);
 }
 
-int
+void
 ilsendctl(Conv *ipc, Ilhdr *inih, int type, ulong id, ulong ack, int ilspec)
 {
 	Ilhdr *ih;
@@ -1035,7 +1034,7 @@ ilsendctl(Conv *ipc, Ilhdr *inih, int type, ulong id, ulong ack, int ilspec)
 		hnputs(ih->ilsum, ptclcsum(bp, IL_IPSIZE, IL_HDRSIZE));
 
 if(ipc==nil)
-	panic("ipc is nil caller is %#p", getcallerpc(&ipc));
+	panic("ipc is nil caller is %.8lux", getcallerpc(&ipc));
 if(ipc->p==nil)
 	panic("ipc->p is nil");
 
@@ -1043,7 +1042,7 @@ if(ipc->p==nil)
 		iltype[ih->iltype], nhgetl(ih->ilid), nhgetl(ih->ilack), 
 		nhgets(ih->ilsrc), nhgets(ih->ildst));
 
-	return ipoput4(ipc->p->f, bp, 0, ttl, tos, ipc);
+	ipoput4(ipc->p->f, bp, 0, ttl, tos, ipc);
 }
 
 void
@@ -1146,8 +1145,6 @@ ilackproc(void *x)
 
 	il = x;
 
-	while(waserror())
-		;
 loop:
 	tsleep(&up->sleep, return0, 0, Iltickms);
 	for(s = il->conv; s && *s; s++) {
@@ -1251,7 +1248,7 @@ ilstart(Conv *c, int type, int fasttimeout)
 		qlock(&ipriv->apl);
 		if(ipriv->ackprocstarted == 0){
 			sprint(kpname, "#I%dilack", c->p->f->dev);
-			kproc(kpname, ilackproc, c->p);
+			kproc(kpname, ilackproc, c->p, 0);
 			ipriv->ackprocstarted = 1;
 		}
 		qunlock(&ipriv->apl);
@@ -1283,8 +1280,7 @@ ilstart(Conv *c, int type, int fasttimeout)
 	case IL_CONNECT:
 		ic->state = Ilsyncer;
 		iphtadd(&ipriv->ht, c);
-		if(ilsendctl(c, nil, Ilsync, ic->start, ic->recvd, 0) < 0)
-			ilhangup(c, "no route");
+		ilsendctl(c, nil, Ilsync, ic->start, ic->recvd, 0);
 		break;
 	}
 
@@ -1336,8 +1332,6 @@ iladvise(Proto *il, Block *bp, char *msg)
 		if(s->lport == psource)
 		if(ipcmp(s->laddr, source) == 0)
 		if(ipcmp(s->raddr, dest) == 0){
-			if(s->ignoreadvice)
-				break;
 			qunlock(il);
 			ic = (Ilcb*)s->ptcl;
 			switch(ic->state){
@@ -1386,6 +1380,12 @@ inittimescale(void)
 	}
 }
 
+int
+ilgc(Proto *il)
+{
+	return natgc(il->ipproto);
+}
+
 void
 ilinit(Fs *f)
 {
@@ -1406,7 +1406,7 @@ ilinit(Fs *f)
 	il->advise = iladvise;
 	il->stats = ilxstats;
 	il->inuse = ilinuse;
-	il->gc = nil;
+	il->gc = ilgc;
 	il->ipproto = IP_ILPROTO;
 	il->nc = scalednconv();
 	il->ptclsize = sizeof(Ilcb);
