@@ -570,6 +570,12 @@ udpstats(Proto *udp, char *buf, int len)
 		upriv->ustats.udpOutDatagrams);
 }
 
+int
+udpgc(Proto *udp)
+{
+	return natgc(udp->ipproto);
+}
+
 extern void
 udpinit(Fs *fs)
 {
@@ -587,6 +593,7 @@ udpinit(Fs *fs)
 	udp->rcv = udpiput;
 	udp->advise = udpadvise;
 	udp->stats = udpstats;
+	udp->gc = udpgc;
 	udp->ipproto = IP_UDPPROTO;
 	udp->nc = Nchans;
 	udp->ptclsize = sizeof(Udpcb);

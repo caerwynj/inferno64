@@ -665,6 +665,12 @@ rudpstats(Proto *rudp, char *buf, int len)
 		upriv->orders);
 }
 
+int
+rudpgc(Proto *rudp)
+{
+	return natgc(rudp->ipproto);
+}
+
 void
 rudpinit(Fs *fs)
 {
@@ -683,6 +689,7 @@ rudpinit(Fs *fs)
 	rudp->rcv = rudpiput;
 	rudp->advise = rudpadvise;
 	rudp->stats = rudpstats;
+	rudp->gc = rudpgc;
 	rudp->ipproto = IP_UDPPROTO;
 	rudp->nc = 32;
 	rudp->ptclsize = sizeof(Rudpcb);

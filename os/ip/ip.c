@@ -134,6 +134,10 @@ ipoput4(Fs *f, Block *bp, int gating, int ttl, int tos, Routehint *rh)
 	if(ifc->m == nil)
 		goto raise;
 
+	/* Output NAT */
+	if(nato(bp, ifc, f) != 0)
+		goto raise;
+
 	if(!gating){
 		eh->vihl = IP_VER4|IP_HLEN4;
 		eh->tos = tos;
@@ -304,6 +308,9 @@ ipiput4(Fs *f, Ipifc *ifc, Block *bp)
 		return;
 	}
 	h = (Ip4hdr*)bp->rp;
+
+	/* Input NAT */
+	nati(bp, ifc);
 
 	/* route */
 	v4tov6(v6dst, h->dst);

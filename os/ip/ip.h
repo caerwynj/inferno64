@@ -38,7 +38,7 @@ enum
 	Addrlen=	64,
 	Maxproto=	20,
 	Maxincall=	10,
-	Nchans=		1024,
+	Nchans=		1024	/* TODO 9legacy uses 16383 tcp uses Nchans*4 and udp Nchans */,
 	MAClen=		8,		/* longest mac address */
 
 	MAXTTL=		255,
@@ -482,6 +482,7 @@ enum
 	Logrudpmsg=	1<<16,
 	Logesp=		1<<17,
 	Logtcpwin=	1<<18,
+	Lognat=		1<<19,
 };
 
 void	netloginit(Fs*);
@@ -588,6 +589,7 @@ struct IPaux
 };
 
 extern IPaux*	newipaux(char*, char*);
+extern char*    setlport(Conv*);
 
 /*
  *  arp.c
@@ -637,6 +639,9 @@ extern int	convipvers(Conv *c);
 
 #define	ipmove(x, y) memmove(x, y, IPaddrlen)
 #define	ipcmp(x, y) ( (x)[IPaddrlen-1] != (y)[IPaddrlen-1] || memcmp(x, y, IPaddrlen) )
+ 
+#define	ip4move(x, y) memmove(x, y, IPv4addrlen)
+#define	ip4cmp(x, y) ( (x)[IPv4addrlen-1] != (y)[IPv4addrlen-1] || memcmp(x, y, IPv4addrlen) )
 
 extern uchar IPv4bcast[IPaddrlen];
 extern uchar IPv4bcastobs[IPaddrlen];
@@ -716,3 +721,15 @@ extern Chan*	chandial(char*, char*, char*, Chan**);
  *  global to all of the stack
  */
 extern void	(*igmpreportfn)(Ipifc*, uchar*);
+
+/*
+ * nat.c
+ */
+extern int	nato(Block*, Ipifc*, Fs*);
+extern void	nati(Block*, Ipifc*);
+extern int	natgc(uchar);
+
+extern int	addnataddr(uchar*, uchar*, Iplifc*);
+extern int	removenataddr(uchar*, uchar*, Iplifc*);
+extern void	shownataddr(void);
+extern void flushnataddr(void);

@@ -1386,6 +1386,12 @@ inittimescale(void)
 	}
 }
 
+int
+ilgc(Proto *il)
+{
+	return natgc(il->ipproto);
+}
+
 void
 ilinit(Fs *f)
 {
@@ -1406,7 +1412,7 @@ ilinit(Fs *f)
 	il->advise = iladvise;
 	il->stats = ilxstats;
 	il->inuse = ilinuse;
-	il->gc = nil;
+	il->gc = ilgc;
 	il->ipproto = IP_ILPROTO;
 	il->nc = scalednconv();
 	il->ptclsize = sizeof(Ilcb);

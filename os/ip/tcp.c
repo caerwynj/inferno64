@@ -2966,7 +2966,7 @@ tcptimeout(void *arg)
 			localclose(s, Etimedout);
 			break;
 		}
-		netlog(s->p->f, Logtcprxmt, "rxm %d/%d %ldms %lud rto %d %lud %s\n",
+		netlog(s->p->f, Logtcprxmt, "rxm %d/%d %lldms %lud rto %d %lud %s\n",
 			tcb->srtt, tcb->mdev, NOW-tcb->time,
 			tcb->snd.una-tcb->timeuna, tcb->snd.rto, tcb->snd.ptr,
 			tcpstates[s->state]);
@@ -3331,7 +3331,7 @@ tcpgc(Proto *tcp)
 	Tcpctl *tcb;
 
 
-	n = 0;
+	n = natgc(tcp->ipproto);
 	ep = &tcp->conv[tcp->nc];
 	for(pp = tcp->conv; pp < ep; pp++) {
 		c = *pp;

@@ -813,6 +813,50 @@ ipifcra6(Ipifc *ifc, char **argv, int argc)
 	return nil;
 }
 
+char*
+ipifcnat(Ipifc *ifc, char **argv, int argc)
+{
+	uchar src[IPaddrlen], mask[IPaddrlen], dst[IPaddrlen];
+	Iplifc *lifc;
+
+	if(argc == 2){
+		if((strcmp(argv[1], "show") == 0)){
+			shownataddr();
+			return nil;
+		}else if((strcmp(argv[1], "flush") == 0)){
+			flushnataddr();
+			return nil;
+		}else
+			return Ebadarg;
+	}
+
+	if(argc != 5)
+		return Ebadarg;
+
+	if (parseip(src, argv[2]) == -1)
+		return Ebadip;
+
+	if (parseipmask(mask, argv[3], 1) == -1)
+		return Ebadip;
+
+	if (parseip(dst, argv[4]) == -1)
+		return Ebadip;
+
+	if((lifc=iplocalonifc(ifc, dst)) == nil)
+		return Ebadip;
+
+	if(strcmp(argv[1], "add") == 0){
+		if(addnataddr(src, mask, lifc) != 0)
+			return Ebadarg;
+	}else if(strcmp(argv[1], "remove") == 0){
+		if(removenataddr(src, mask, lifc) != 0)
+			return Ebadarg;
+	}else
+		return Ebadarg;
+
+	return nil;
+}
+
 /*
  *  non-standard control messages.
  */
@@ -857,6 +901,8 @@ ipifcctl(Conv* c, char **argv, int argc)
 		return ipifcremove6(ifc, argv, argc);
 	else if(strcmp(argv[0], "ra6") == 0)
 		return ipifcra6(ifc, argv, argc);
+	else if(strcmp(argv[0], "nat") == 0)
+		return ipifcnat(ifc, argv, argc);
 	return "unsupported ctl";
 }
 

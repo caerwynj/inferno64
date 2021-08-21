@@ -475,6 +475,12 @@ icmpstats(Proto *icmp, char *buf, int len)
 	}
 	return p - buf;
 }
+
+int
+icmpgc(Proto *icmp)
+{
+	return natgc(icmp->ipproto);
+}
 	
 extern void
 icmpinit(Fs *fs)
@@ -493,7 +499,7 @@ icmpinit(Fs *fs)
 	icmp->stats = icmpstats;
 	icmp->ctl = nil;
 	icmp->advise = icmpadvise;
-	icmp->gc = nil;
+	icmp->gc = icmpgc;
 	icmp->ipproto = IP_ICMPPROTO;
 	icmp->nc = 128;
 	icmp->ptclsize = 0;
