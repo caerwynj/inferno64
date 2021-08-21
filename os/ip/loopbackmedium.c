@@ -33,7 +33,7 @@ loopbackbind(Ipifc *ifc, int, char**)
 	lb->q = qopen(1024*1024, Qmsg, nil, nil);
 	ifc->arg = lb;
 
-	kproc("loopbackread", loopbackread, ifc);
+	kproc("loopbackread", loopbackread, ifc, 0);
 
 }
 

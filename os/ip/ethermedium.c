@@ -205,9 +205,9 @@ etherbind(Ipifc *ifc, int argc, char **argv)
 
 	ifc->arg = er;
 
-	kproc("etherread4", etherread4, ifc);
-	kproc("etherread6", etherread6, ifc);
-	kproc("recvarpproc", recvarpproc, ifc);
+	kproc("etherread4", etherread4, ifc, 0);
+	kproc("etherread6", etherread6, ifc, 0);
+	kproc("recvarpproc", recvarpproc, ifc, 0);
 }
 
 /*

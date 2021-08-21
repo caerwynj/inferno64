@@ -1555,7 +1555,7 @@ ipifcaddmulti(Conv *c, uchar *ma, uchar *ia)
 /*
  *  remove a multicast address from an interface, called with c locked
  */
-void
+extern void
 ipifcremmulti(Conv *c, uchar *ma, uchar *ia)
 {
 	Ipmulti *multi, **l;

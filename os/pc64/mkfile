@@ -53,7 +53,7 @@ HFILES=\
 	fns.h\
 	io.h\
 
-CFLAGS=-wFVT -I$ROOT/Inferno/$OBJTYPE/include -I$ROOT/include -I$ROOT/libinterp -I../port
+CFLAGS=-wFVT -I$ROOT/Inferno/$OBJTYPE/include -I$ROOT/include -I$ROOT/libinterp -I$ROOT/libip -I../port
 KERNDATE=`{$NDATE}
 
 default:V: i$CONF

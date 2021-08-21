@@ -510,7 +510,7 @@ ipifcadd(Ipifc *ifc, char **argv, int argc, int tentative, Iplifc *lifcp)
 	f = ifc->conv->p->f;
 	if(waserror()){
 		wunlock(ifc);
-		return up->errstr;
+		return up->env->errstr;
 	}
 
 	if(mtu > 0)
@@ -866,7 +866,7 @@ ipifcstats(Proto *ipifc, char *buf, int len)
 	return ipstats(ipifc->f, buf, len);
 }
 
-void
+extern void
 ipifcinit(Fs *f)
 {
 	Proto *ipifc;
@@ -1100,7 +1100,7 @@ out:
 	qunlock(f->self);
 }
 
-long
+extern long
 ipselftabread(Fs *f, char *cp, ulong offset, int n)
 {
 	int i, m, nifc, off;
@@ -1375,7 +1375,7 @@ ipv6local(Ipifc *ifc, uchar *local, int prefixlen, uchar *remote)
 /*
  *  find the local address for a remote destination
  */
-void
+extern void
 findlocalip(Fs *f, uchar *local, uchar *remote)
 {
 	if(isv4(remote)) {
@@ -1528,7 +1528,7 @@ static void
 ipifcregisteraddr(Fs *f, Ipifc *ifc, Iplifc *lifc, uchar *ip)
 {
 	if(waserror()){
-		print("ipifcregisteraddr %s %I %I: %s\n", ifc->dev, lifc->local, ip, up->errstr);
+		print("ipifcregisteraddr %s %I %I: %s\n", ifc->dev, lifc->local, ip, up->env->errstr);
 		return;
 	}
 	if(ifc->m != nil && ifc->m->areg != nil)

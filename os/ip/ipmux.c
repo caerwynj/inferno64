@@ -815,7 +815,7 @@ ipmuxstats(Proto *p, char *buf, int len)
 	return n;
 }
 
-void
+extern void
 ipmuxinit(Fs *f)
 {
 	Proto *ipmux;

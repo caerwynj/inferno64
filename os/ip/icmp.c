@@ -476,7 +476,7 @@ icmpstats(Proto *icmp, char *buf, int len)
 	return p - buf;
 }
 	
-void
+extern void
 icmpinit(Fs *fs)
 {
 	Proto *icmp;

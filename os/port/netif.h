@@ -87,8 +87,8 @@ struct Netif
 
 	/* statistics */
 	int	misses;
-	int	inpackets;
-	int	outpackets;
+	uvlong	inpackets;
+	uvlong	outpackets;
 	int	crcs;		/* input crc errors */
 	int	oerrs;		/* output errors */
 	int	frames;		/* framing errors */
@@ -123,6 +123,11 @@ enum
 	ETHERMINTU =	60,		/* minimum transmit size */
 	ETHERMAXTU =	1514,		/* maximum transmit size */
 	ETHERHDRSIZE =	14,		/* size of an ethernet header */
+
+	/* ethernet packet types */
+	ETARP		= 0x0806,
+	ETIP4		= 0x0800,
+	ETIP6		= 0x86DD,
 };
 
 struct Etherpkt

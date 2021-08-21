@@ -1,0 +1,20 @@
+<../mkconfig
+
+LIB=libip.a
+OFILES=\
+	eipfmt.$O\
+	equivip.$O\
+	parseip.$O\
+	parseether.$O\
+	myetheraddr.$O\
+	myipaddr.$O\
+	classmask.$O\
+	bo.$O\
+	readipifc.$O\
+	ipaux.$O\
+	ptclbsum.$O\
+
+HFILES=\
+	$ROOT/include/ip.h\
+
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE

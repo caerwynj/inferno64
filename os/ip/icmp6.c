@@ -849,7 +849,7 @@ icmpclose6(Conv *c)
 	icmpclose(c);
 }
 
-void
+extern void
 icmp6init(Fs *fs)
 {
 	Proto *icmp6 = smalloc(sizeof(Proto));

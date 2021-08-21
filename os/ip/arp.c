@@ -58,7 +58,7 @@ arpinit(Fs *f)
 	f->arp->f = f;
 	f->arp->rxmt = nil;
 	f->arp->dropf = f->arp->dropl = nil;
-	kproc("rxmitproc", rxmitproc, f->arp);
+	kproc("rxmitproc", rxmitproc, f->arp, 0);
 }
 
 static void

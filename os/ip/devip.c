@@ -183,7 +183,7 @@ ipgen(Chan *c, char*, Dirtab*, int, int s, Dir *dp)
 	case Qtopdir:
 		if(s == DEVDOTDOT){
 			mkqid(&q, QID(0, 0, Qtopdir), 0, QTDIR);
-			snprint(up->genbuf, sizeof up->genbuf, "#I%lud", c->dev);
+			snprint(up->genbuf, sizeof up->genbuf, "#I%ud", c->dev);
 			devdir(c, q, up->genbuf, 0, network, 0555, dp);
 			return 1;
 		}
@@ -206,7 +206,7 @@ ipgen(Chan *c, char*, Dirtab*, int, int s, Dir *dp)
 	case Qprotodir:
 		if(s == DEVDOTDOT){
 			mkqid(&q, QID(0, 0, Qtopdir), 0, QTDIR);
-			snprint(up->genbuf, sizeof up->genbuf, "#I%lud", c->dev);
+			snprint(up->genbuf, sizeof up->genbuf, "#I%ud", c->dev);
 			devdir(c, q, up->genbuf, 0, network, 0555, dp);
 			return 1;
 		}
@@ -306,7 +306,7 @@ ipattach(char* spec)
 }
 
 static Walkqid*
-ipwalk(Chan* c, Chan *nc, char **name, int nname)
+ipwalk(Chan* c, Chan *nc, char **name, s32 nname)
 {
 	IPaux *a = c->aux;
 	Walkqid* w;
@@ -318,8 +318,8 @@ ipwalk(Chan* c, Chan *nc, char **name, int nname)
 }
 
 
-static int
-ipstat(Chan* c, uchar* db, int n)
+static s32
+ipstat(Chan* c, uchar* db, s32 n)
 {
 	return devstat(c, db, n, nil, 0, ipgen);
 }
@@ -340,7 +340,7 @@ static int m2p[] = {
 };
 
 static Chan*
-ipopen(Chan* c, int omode)
+ipopen(Chan* c, u32 omode)
 {
 	Conv *cv, *nc;
 	Proto *p;
@@ -484,21 +484,14 @@ ipopen(Chan* c, int omode)
 	return c;
 }
 
-static Chan*
-ipcreate(Chan*, char*, int, ulong)
-{
-	error(Eperm);
-	return 0;
-}
-
 static void
 ipremove(Chan*)
 {
 	error(Eperm);
 }
 
-static int
-ipwstat(Chan *c, uchar *dp, int n)
+static s32
+ipwstat(Chan *c, uchar *dp, s32 n)
 {
 	Dir *dir;
 	Conv *cv;
@@ -613,8 +606,8 @@ enum
 	Statelen=	32*1024,
 };
 
-static long
-ipread(Chan *ch, void *a, long n, vlong off)
+static s32
+ipread(Chan *ch, void *a, s32 n, s64 off)
 {
 	Conv *c;
 	Proto *x;
@@ -636,7 +629,7 @@ ipread(Chan *ch, void *a, long n, vlong off)
 	case Qarp:
 		return arpread(f->arp, a, offset, n);
  	case Qbootp:
- 		return bootpread(a, offset, n);
+ 		return 0 /*TODO bootpread(a, offset, n)*/;
  	case Qndb:
 		return readstr(offset, a, n, f->ndb);
 	case Qiproute:
@@ -705,7 +698,7 @@ ipread(Chan *ch, void *a, long n, vlong off)
 }
 
 static Block*
-ipbread(Chan* ch, long n, ulong offset)
+ipbread(Chan* ch, s32 n, u32 offset)
 {
 	Conv *c;
 	Proto *x;
@@ -1077,8 +1070,8 @@ ttlctlmsg(Conv *c, Cmdbuf *cb)
 		c->ttl = atoi(cb->f[1]);
 }
 
-static long
-ipwrite(Chan* ch, void *v, long n, vlong off)
+static s32
+ipwrite(Chan* ch, void *v, s32 n, s64 off)
 {
 	Conv *c;
 	Proto *x;
@@ -1177,8 +1170,8 @@ ipwrite(Chan* ch, void *v, long n, vlong off)
 	return n;
 }
 
-static long
-ipbwrite(Chan* ch, Block* bp, ulong offset)
+static s32
+ipbwrite(Chan* ch, Block* bp, u32 offset)
 {
 	Conv *c;
 	Proto *x;
@@ -1210,7 +1203,7 @@ Dev ipdevtab = {
 	ipwalk,
 	ipstat,
 	ipopen,
-	ipcreate,
+	devcreate,
 	ipclose,
 	ipread,
 	ipbread,
@@ -1449,7 +1442,7 @@ ndbwrite(Fs *f, char *a, ulong off, int n)
 ulong
 scalednconv(void)
 {
-	if(cpuserver && conf.npage*BY2PG >= 128*MB)
+	if(conf.npage*BY2PG >= 128*MB)
 		return Nchans*4;
 	return Nchans;
 }

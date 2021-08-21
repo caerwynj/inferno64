@@ -55,7 +55,7 @@ netdevbind(Ipifc *ifc, int argc, char **argv)
 
 	ifc->arg = er;
 
-	kproc("netdevread", netdevread, ifc);
+	kproc("netdevread", netdevread, ifc, 0);
 }
 
 /*

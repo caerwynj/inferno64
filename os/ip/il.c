@@ -1251,7 +1251,7 @@ ilstart(Conv *c, int type, int fasttimeout)
 		qlock(&ipriv->apl);
 		if(ipriv->ackprocstarted == 0){
 			sprint(kpname, "#I%dilack", c->p->f->dev);
-			kproc(kpname, ilackproc, c->p);
+			kproc(kpname, ilackproc, c->p, 0);
 			ipriv->ackprocstarted = 1;
 		}
 		qunlock(&ipriv->apl);

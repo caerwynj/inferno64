@@ -964,7 +964,7 @@ tcpstart(Conv *s, int mode)
 		qlock(&tpriv->apl);
 		if(tpriv->ackprocstarted == 0){
 			snprint(kpname, sizeof(kpname), "#I%dtcpack", s->p->f->dev);
-			kproc(kpname, tcpackproc, s->p);
+			kproc(kpname, tcpackproc, s->p, 0);
 			tpriv->ackprocstarted = 1;
 		}
 		qunlock(&tpriv->apl);
@@ -3376,7 +3376,7 @@ tcpsettimer(Tcpctl *tcb)
 	tcb->timer.start = x;
 }
 
-void
+extern void
 tcpinit(Fs *fs)
 {
 	Proto *tcp;

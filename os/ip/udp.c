@@ -570,7 +570,7 @@ udpstats(Proto *udp, char *buf, int len)
 		upriv->ustats.udpOutDatagrams);
 }
 
-void
+extern void
 udpinit(Fs *fs)
 {
 	Proto *udp;

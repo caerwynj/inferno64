@@ -6,6 +6,7 @@ LIB=lib9.a
 # files used by all models
 #
 COMMONFILES=\
+	ctype.$O\
 	convD2M.$O\
 	convM2D.$O\
 	convM2S.$O\
