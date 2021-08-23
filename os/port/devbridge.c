@@ -221,7 +221,7 @@ bridgestat(Chan* c, uchar* db, int n)
 }
 
 static Chan*
-bridgeopen(Chan* c, int omode)
+bridgeopen(Chan* c, uint omode)
 {
 	int perm;
 	Bridge *b;
@@ -266,8 +266,8 @@ bridgeclose(Chan* c)
 	}
 }
 
-static long
-bridgeread(Chan *c, void *a, long n, vlong off)
+static s32
+bridgeread(Chan *c, void *a, s32 n, s64 off)
 {
 	char buf[256];
 	Bridge *b = bridgetab + c->dev;
@@ -345,8 +345,8 @@ bridgeoption(Bridge *b, char *option, int value)
 }
 
 
-static long
-bridgewrite(Chan *c, void *a, long n, vlong off)
+static s32
+bridgewrite(Chan *c, void *a, s32 n, s64 off)
 {
 	Bridge *b = bridgetab + c->dev;
 	Cmdbuf *cb;
@@ -372,7 +372,7 @@ bridgewrite(Chan *c, void *a, long n, vlong off)
 		} else if(strcmp(arg0, "unbind") == 0) {
 			portunbind(b, cb->nf-1, cb->f+1);
 		} else if(strcmp(arg0, "cacheflush") == 0) {
-			log(b, Logcache, "cache flush\n");
+			logb(b, Logcache, "cache flush\n");
 			memset(b->cache, 0, CacheSize*sizeof(Centry));
 		} else if(strcmp(arg0, "set") == 0) {
 			if(cb->nf != 2)
@@ -415,12 +415,12 @@ bridgegen(Chan *c, char *, Dirtab*, int, int s, Dir *dp)
 		switch(TYPE(c->qid)){
 		case Qtopdir:
 		case Qbridgedir:
-			snprint(up->genbuf, sizeof(up->genbuf), "#B%ld", c->dev);
+			snprint(up->genbuf, sizeof(up->genbuf), "#B%lud", c->dev);
 			mkqid(&qid, Qtopdir, 0, QTDIR);
 			devdir(c, qid, up->genbuf, 0, eve, 0555, dp);
 			break;
 		case Qportdir:
-			snprint(up->genbuf, sizeof(up->genbuf), "bridge%ld", c->dev);
+			snprint(up->genbuf, sizeof(up->genbuf), "bridge%lud", c->dev);
 			mkqid(&qid, Qbridgedir, 0, QTDIR);
 			devdir(c, qid, up->genbuf, 0, eve, 0555, dp);
 			break;
@@ -445,7 +445,7 @@ bridgegen(Chan *c, char *, Dirtab*, int, int s, Dir *dp)
 	case Qtopdir:
 		if(s != 0)
 			return -1;
-		snprint(up->genbuf, sizeof(up->genbuf), "bridge%ld", c->dev);
+		snprint(up->genbuf, sizeof(up->genbuf), "bridge%lud", c->dev);
 		mkqid(&qid, QID(0, Qbridgedir), 0, QTDIR);
 		devdir(c, qid, up->genbuf, 0, eve, 0555, dp);
 		return 1;
@@ -606,7 +606,7 @@ portbind(Bridge *b, int argc, char *argv[])
 	// assumes kproc always succeeds
 	incref(port);
 	snprint(buf, sizeof(buf), "bridge:%s", dev);
-	kproc(buf, etherread, port);
+	kproc(buf, etherread, port, 0);
 }
 
 // assumes b is locked
@@ -684,7 +684,7 @@ cachelookup(Bridge *b, uchar d[Eaddrlen])
 		if(memcmp(d, p->d, Eaddrlen) == 0) {
 			p->dst++;
 			if(sec >= p->expire) {
-				log(b, Logcache, "expired cache entry: %E %d\n",
+				logb(b, Logcache, "expired cache entry: %E %d\n",
 					d, p->port);
 				return nil;
 			}
@@ -692,7 +692,7 @@ cachelookup(Bridge *b, uchar d[Eaddrlen])
 			return p;
 		}
 	}
-	log(b, Logcache, "cache miss: %E\n", d);
+	logb(b, Logcache, "cache miss: %E\n", d);
 	return nil;
 }
 
@@ -707,7 +707,7 @@ cacheupdate(Bridge *b, uchar d[Eaddrlen], int port)
 
 	// dont cache multicast or broadcast
 	if(d[0] & 1) {
-		log(b, Logcache, "bad source address: %E\n", d);
+		logb(b, Logcache, "bad source address: %E\n", d);
 		return;
 	}
 	
@@ -726,7 +726,7 @@ cacheupdate(Bridge *b, uchar d[Eaddrlen], int port)
 		if(memcmp(p->d, d, Eaddrlen) == 0) {
 			p->expire = TK2SEC(m->ticks) + CacheTimeout;
 			if(p->port != port) {
-				log(b, Logcache, "NIC changed port %d->%d: %E\n",
+				logb(b, Logcache, "NIC changed port %d->%d: %E\n",
 					p->port, port, d);
 				p->port = port;
 			}
@@ -739,13 +739,13 @@ cacheupdate(Bridge *b, uchar d[Eaddrlen], int port)
 		}
 	}
 	if(pp->expire != 0)
-		log(b, Logcache, "bumping from cache: %E %d\n", pp->d, pp->port);
+		logb(b, Logcache, "bumping from cache: %E %d\n", pp->d, pp->port);
 	pp->expire = TK2SEC(m->ticks) + CacheTimeout;
 	memmove(pp->d, d, Eaddrlen);
 	pp->port = port;
 	pp->src = 1;
 	pp->dst = 0;
-	log(b, Logcache, "adding to cache: %E %d\n", pp->d, pp->port);
+	logb(b, Logcache, "adding to cache: %E %d\n", pp->d, pp->port);
 }
 
 // assumes b is locked
@@ -955,7 +955,7 @@ etherread(void *a)
 		// release lock to read - error means it is time to quit
 		qunlock(b);
 		if(waserror()) {
-			print("etherread read error: %s\n", up->errstr);
+			print("etherread read error: %s\n", up->env->errstr);
 			qlock(b);
 			break;
 		}
@@ -993,7 +993,7 @@ etherread(void *a)
 		poperror();	/* must now dispose of bp */
 
 		if(ep->d[0] & 1) {
-			log(b, Logmcast, "multicast: port=%d src=%E dst=%E type=%#.4ux\n",
+			logb(b, Logmcast, "multicast: port=%d src=%E dst=%E type=%#.4ux\n",
 				port->id, ep->s, ep->d, ep->type[0]<<8|ep->type[1]);
 			port->inmulti++;
 			ethermultiwrite(b, bp, port);

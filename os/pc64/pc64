@@ -14,7 +14,7 @@ dev
 	cap
 
 	ether		netif ethermedium
-#	bridge		netif log
+	bridge		netif log
 	ip	ip ipv6 ipaux iproute arp chandial netlog plan9 nullmedium pktmedium nat
 
 	draw	screen vga vgax cga
