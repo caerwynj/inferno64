@@ -1779,7 +1779,7 @@ xec(Prog *p)
 		DP("state %d", p->state);
 		DP(" %4zd", R.PC-R.M->prog);
 		DP(" %D:\t", R.PC);
-		DP("R.PC->op=0x%x ", R.PC->op, R.PC->add);
+		DP("R.PC->op=0x%x ", R.PC->op);
 		DP("R.PC->add=0x%x\n", R.PC->add);
 	} while(--R.IC != 0);
 
