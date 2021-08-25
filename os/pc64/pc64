@@ -13,9 +13,9 @@ dev
 	ssl
 	cap
 
-	ether		netif ethermedium
+	ether		netif
 	bridge		netif log
-	ip	ip ipv6 ipaux iproute arp chandial netlog plan9 nullmedium pktmedium nat
+	ip	ip ipv6 ipaux iproute arp chandial netlog ethermedium plan9 nullmedium pktmedium nat
 
 	draw	screen vga vgax cga
 #	mouse		mouse
@@ -64,6 +64,7 @@ link
 #	ps2mouse
 	ethermedium
 ##	pppmedium ppp compress
+	netdevmedium
 	ether8169	pci ethermii
 	ether82563	pci
 	etherx550	pci
@@ -238,8 +239,9 @@ root
 # for factotum
 	/mnt
 
-bootdir
-	/$objtype/bin/paqfs
-	/$objtype/bin/auth/factotum
-	bootfs.paq
-	boot
+# obsolete?
+#bootdir
+#	/$objtype/bin/paqfs
+#	/$objtype/bin/auth/factotum
+#	bootfs.paq
+#	boot
