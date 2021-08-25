@@ -52,7 +52,7 @@ struct Ipv6rp
 struct Ipifc
 {
 	Ipifc	*next;
-	Iplifc	*lifc;
+	Iplifc	*lifc;		/* linked list of local addresses */
 
 	/* per ip interface */
 	int	index;			/* number of interface in ipifc dir */
