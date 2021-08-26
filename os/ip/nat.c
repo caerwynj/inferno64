@@ -128,8 +128,8 @@ nato(Block *b, Ipifc *ifc, Fs *f)
 	if(ip4cmp(h->src, laddr) != 0){
 		if((np=parseproto(h->proto)) != nil){
 			/* Protocol layer */
-			sport = (b->rp)+sizeof(Ip4hdr)+np->sport;
-			cksum = (b->rp)+sizeof(Ip4hdr)+np->cksum;
+			sport = (b->rp)+IP4HDR+np->sport;
+			cksum = (b->rp)+IP4HDR+np->cksum;
 			if((n = natlport(p, h, sport)) == nil)
 				return -1;
 			memmove(sport, n->lport, 2);
@@ -171,10 +171,10 @@ nati(Block *b, Ipifc *ifc)
 		return;
 
 	if((np=parseproto(h->proto)) != nil){
-		lport = (b->rp)+sizeof(Ip4hdr)+np->dport;
+		lport = (b->rp)+IP4HDR+np->dport;
 		if((n=natexistin(h->proto, lport)) != nil){
 			/* Protocol layer */
-			cksum = (b->rp)+sizeof(Ip4hdr)+np->cksum;
+			cksum = (b->rp)+IP4HDR+np->cksum;
 			checksumadjust(cksum, lport, 2, n->sport, 2);
 			memmove(lport, n->sport, 2);
 			if(np->proto != 1)
