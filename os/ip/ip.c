@@ -253,6 +253,50 @@ free:
 	return rv;
 }
 
+/* code for debugging */
+typedef struct Udp4hdr Udp4hdr;
+struct Udp4hdr
+{
+	/* ip header */
+	uchar	vihl;		/* Version and header length */
+	uchar	tos;		/* Type of service */
+	uchar	length[2];	/* packet length */
+	uchar	id[2];		/* Identification */
+	uchar	frag[2];	/* Fragment information */
+	uchar	Unused;
+	uchar	udpproto;	/* Protocol */
+	uchar	udpplen[2];	/* Header plus data length */
+	uchar	udpsrc[IPv4addrlen];	/* Ip source */
+	uchar	udpdst[IPv4addrlen];	/* Ip destination */
+
+	/* udp header */
+	uchar	udpsport[2];	/* Source port */
+	uchar	udpdport[2];	/* Destination port */
+	uchar	udplen[2];	/* data length */
+	uchar	udpcksum[2];	/* Checksum */
+};
+void
+showudp(char *msg, Ip4hdr *p)
+{
+	Udp4hdr *udphdr;
+
+	if(p->proto != 17)
+		return;
+	udphdr = (Udp4hdr *)p;
+	print("%s Ip4hdr vihl 0x%x tos 0x%x length 0 0x%x %d 1 0x%x %d id 0 0x%x %d 1 0x%x %d\n"
+			"	 frag 0 0x%x %d 1 0x%x %d ttl 0x%x %d proto 0x%x %d\n"
+			"	 cksum 0 0x%x %d 1 0x%x %d src %V dst %V\n",
+			msg, p->vihl, p->tos, p->length[0], p->length[0],  p->length[1], p->length[1], p->id[0], p->id[0],  p->id[1], p->id[1],
+				 p->frag[0], p->frag[0],  p->frag[1], p->frag[1], p->ttl, p->ttl, p->proto, p->proto,
+				 p->cksum[0], p->cksum[0],  p->cksum[1], p->cksum[1], p->src, p->dst);
+	print("	Udp4hdr sport 0 0x%x %d 1 0x%x %d dport 0 0x%x %d 1 0x%x %d\n"
+			"	 len 0 0x%x %d 1 0x%x %d\n"
+			"	 cksum 0 0x%x %d 1 0x%x %d\n",
+				udphdr->udpsport[0], udphdr->udpsport[0],  udphdr->udpsport[1], udphdr->udpsport[1], udphdr->udpdport[0], udphdr->udpdport[0],  udphdr->udpdport[1], udphdr->udpdport[1],
+				 udphdr->udplen[0], udphdr->udplen[0],  udphdr->udplen[1], udphdr->udplen[1],
+				 udphdr->udpcksum[0], udphdr->udpcksum[0],  udphdr->udpcksum[1], udphdr->udpcksum[1]);
+}
+
 void
 ipiput4(Fs *f, Ipifc *ifc, Block *bp)
 {
