@@ -329,7 +329,7 @@ OP(mnewz)
 
 	ml = *(Modlink**)R.s;
 	if(ml == H)
-		error(exModule);
+		errorf("mnewz: %s", exModule);
 	h = heapz(ml->type[W(m)]);
 	wp = R.d;
 	t = *wp;
@@ -373,7 +373,7 @@ OP(mframe)
 
 	ml = *(Modlink**)R.s;
 	if(ml == H)
-		error(exModule);
+                errorf("mframe: %s", exModule);
 
 	o = W(m);
 	if(o >= 0){
@@ -690,7 +690,7 @@ OP(mspawn)
 
 	ml = *(Modlink**)R.d;
 	if(ml == H)
-		error(exModule);
+                errorf("mspawn: %s", exModule);
 	if(ml->prog == nil)
 		error(exSpawn);
 	p = newprog(currun(), ml);
@@ -800,7 +800,7 @@ OP(mcall)
 
 	ml = *(Modlink**)R.d;
 	if(ml == H)
-		error(exModule);
+                errorf("mcall: %s", exModule);
 	f = T(s);
 	f->lr = R.PC;
 	f->fp = R.FP;
