@@ -1,0 +1,215 @@
+This is a NAT implementation for Plan 9 from Bell Labs.
+
+* Introduction
+
+This is a NAPT (Network Address Port Translation) implementation,
+also known under the name "IP masquerade".
+
+This is an early work, don't expect too much from it. Improvements
+will come in the next future.
+
+* Installation
+
+First, apply the patches with the "apply" script:
+
+/n/sources/contrib/djc/nat/apply
+
+Then, add "nat" to you kernel configuration file, under
+section dev/ip.
+
+Finally, compile and install your kernel.
+
+* Documentation
+
+First, enable routing:
+
+echo iprouting > /net/ipifc/clone
+
+Then, enable NAT:
+
+echo nat add <src> <mask> <dst> > /net/ipifc/<ifc>/ctl
+
+Where:
+ - <src> is the address of the source network or machine
+   allowed to pass through the NAT
+ - <mask> is the corresponding mask
+ - <dst> is the address to be translated to, which must
+   exist on the specified interface
+ - <ifc> is your network physical interface number.
+
+You can add or remove any NAT rule you want.
+
+* Performance
+
+The current implementation can handle up to 800 TCP connections
+per second on a Soekris net5501-70, but the performance quickly
+decrease as the table grows.
+
+* Future
+
+We plan to implement the following features in the next future:
+
+ - improve performance
+ - improve garbage collector
+ - handling of TCP and IL connection states
+ - IPv6 support
+ - port forwarding (you can currently use trampoline(8) instead)
+ - FTP proxy
+ - statistics
+
+* History
+
+The work began in June 2010 and quickly evolved to the current state.
+Erik Quanstrom offered his help in March 2011 with code review
+and suggestions. We thank him much.
+
+* Contact
+
+David du Colombier <0intro@gmail.com>
+With the help of Jean-Baptiste Campesato <camjelemon@gmail.com>
+
+> But, I could not get the routing to work. Just want to check if you do
+> not mind sharing the ip configuration that made the patch work.
+>
+> Thanks so much for the patch,
+
+Personally, on my NAT gateway, I was running:
+
+bind -a '#'l1 /net
+ip/ipconfig ether /net/ether1 <dst> 255.255.255.0
+echo iprouting > /net/ipifc/clone
+
+Where #l1 (which provides /net/ether1) is the internal LAN
+interface and <dst> is the public WAN address (on /net/ether0).
+
+Then, you have to enable iprouting, so the packets can pass
+through the NAT.
+
+==================
+my notes from here
+
+different ip stacks - working, can see the traffic going out from /net/ether0
+-------------------
+#I0 /net
+	0/ bind ether /net/ether0, dhcp
+		adds 192.168.88.2 /96 192.168.88.1 # from dhcp
+			default route all traffic to gateway added by dhcp
+				0.0.0.0 /96 192.168.88.1
+	1/ bind pkt
+		add 192.168.1.1 /120 192.168.1.2 - local address of the bind packet
+		192.168.89.0 /120 192.168.1.2
+			traffic to 192.168.89.0/120 network to the /net.alt ether ipifc			
+		iprouting 1
+#I1 /net.alt
+	0/ bind ether /net.alt/ether1, manual address
+		add 192.168.89.1 /120
+		#192.168.89.0 /120 192.168.89.1 - not needed? default remote adds this?
+		#	traffic to 192.168.89.0 network through 192.168.89.1
+	1/ bind netdev /net/ipifc/1/data
+		add 192.168.1.2 /120 192.168.1.1
+		0.0.0.0/96 192.168.1.1
+			default route for all traffic to /net ether ipifc
+			traffic to 192.168.88.2 goes through this interface
+		iprouting 1
+
+nat traffic going out of 192.168.88.2 with a source of 192.168.89.0/120
+echo nat add 192.168.89.0 /120 192.168.88.2 > /net/ipifc/0/ctl
+
+crude test
+ip/ping -n 1 192.168.88.1
+ip/ping -n 1 192.168.89.1
+ip/ping -n 1 1.1.1.1
+
+script to do the above
+
+	<>/net/ipifc/clone {
+		x=`{read}
+		{
+			echo bind ether /net/ether0
+			echo iprouting 1
+		}> /net/ipifc/^$x^/ctl
+		ip/dhcp -p -g 192.168.88.1 -h $sysname -x /net /net/ipifc/$x 192.168.88.2
+	}
+	cat /net/iproute
+
+	bind -a '#I1' /net.alt
+	bind -a '#l1' /net.alt
+	<>/net.alt/ipifc/clone {
+		y=`{read};
+		echo $y;
+		{
+			echo bind ether /net.alt/ether1 ;
+			echo iprouting 1;
+			echo add 192.168.89.1 /120
+		}> /net.alt/ipifc/$y/ctl
+	}
+	cat /net.alt/iproute
+
+	# need to bind the netdev while holding the bind pkt clone open
+	#	else, the ipifc will be unbound as none of it's files are being read
+	<>/net/ipifc/clone {
+		x=`{read};
+		echo $x;
+		{
+			echo bind pkt;
+			echo iprouting 1;
+			echo add 192.168.1.1 /120 192.168.1.2
+		}> /net/ipifc/$x/ctl
+		<>/net.alt/ipifc/clone {
+			y=`{read};
+			echo $y;
+			{
+				echo bind netdev /net/ipifc/$x/data ;
+				echo iprouting 1;
+				echo add 192.168.1.2 /120 192.168.1.1
+			}> /net.alt/ipifc/$y/ctl
+			echo add 192.168.89.0 /120 192.168.1.2 > /net/iproute
+			echo add 0.0.0.0 /96 192.168.1.1 > /net.alt/iproute
+		}
+	}
+	echo nat add 192.168.89.0 /120 192.168.88.2 > /net/ipifc/0/ctl
+	echo route after bind packet
+	cat /net/iproute
+	echo route after bind packet
+	cat /net.alt/iproute
+
+-------------------
+TODO below does not work yet:
+
+same ip stack
+-------------
+/net/ipifc/0/	ip=192.168.88.2/96 gateway=192.168.88.1
+	bind ether /net/ether0
+/net/ipifc/1/	ip=192.168.88.2/96 gateway=192.168.88.1
+	bind ether /net/ether1
+
+x=`{cat /net/ipifc/clone}
+echo bind ether /net/ether1 >/net/ipifc/$x/cl
+echo iprouting 1 > /net/ipifc/$x/ctl
+echo add 192.168.88.2 255.255.255.0 >/net/ipifc/$x/ctl
+echo nat add 192.168.89.2 255.255.255.0 192.168.88.2 > /net/ipifc/$x/ctl
+
+connect a physical machine to /net/ether1
+	set  static ip to 192.168.89.2 and gateway to 192.168.88.2
+	ping from this machine
+
+cannot ping 192.168.89.2 or 192.168.88.2 from the client machine
+
+another approach
+echo remove 192.168.89.1 255.255.255.0 >/net.alt/ipifc/0/ctl
+echo unbind >/net.alt/ipifc/0/ctl
+unmount '#l1' /net.alt
+unmount '#I1' /net.alt
+
+x=`{cat /net/ipifc/clone}
+echo bind ether /net/ether1 >/net/ipifc/$x/cl
+echo iprouting 1 > /net/ipifc/$x/ctl
+echo add 0.0.0.0 255.255.255.0 192.168.88.2 >/net/ipifc/$x/ctl
+echo nat add 192.168.89.0 255.255.255.0 192.168.88.2 > /net/ipifc/$x/ctl
+
+connect a physical machine to /net/ether1
+	set  static ip to 192.168.89.2 and gateway to 192.168.88.2
+	ping from this machine
+
+cannot ping 192.168.89.2 or 192.168.88.2 from the client machine
+
