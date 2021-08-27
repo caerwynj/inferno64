@@ -733,3 +733,8 @@ extern int	addnataddr(uchar*, uchar*, Iplifc*);
 extern int	removenataddr(uchar*, uchar*, Iplifc*);
 extern void	shownataddr(void);
 extern void flushnataddr(void);
+
+/*
+ * for debugging
+ */
+void showudp(char *msg, Ip4hdr *p);
