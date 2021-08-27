@@ -82,17 +82,17 @@ wreply(wc: chan of (int, string), reply: (int, string))
 	}
 }
 
-reads(str: string, off, nbytes: int): (array of byte, string)
+reads(str: string, off: big, nbytes: int): (array of byte, string)
 {
 	bstr := array of byte str;
 	slen := len bstr;
-	if(off < 0 || off >= slen)
+	if(off < big 0 || off >= big slen)
 		return (nil, nil);
-	if(off + nbytes > slen)
-		nbytes = slen - off;
+	if(off + big nbytes > big slen)
+		nbytes = slen - int off; # TODO potential bug truncating big to int
 	if(nbytes <= 0)
 		return (nil, nil);
-	return (bstr[off:off+nbytes], nil);
+	return (bstr[int off:int off+nbytes], nil); # TODO potential bug truncating big to int
 }
 
 export(exportfd: ref Sys->FD, dir: string, done: chan of int)

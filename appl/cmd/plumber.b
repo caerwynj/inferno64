@@ -237,7 +237,7 @@ receiver(input: ref Input)
 
 sender(input: ref Input, output: array of ref Output)
 {
-	outputc := array[len output] of chan of (int, int, int, Sys->Rread);
+	outputc := array[len output] of chan of (big, int, int, Sys->Rread);
 
 	for(;;){
 		alt{

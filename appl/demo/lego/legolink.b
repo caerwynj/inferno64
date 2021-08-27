@@ -69,9 +69,9 @@ srvlink(f2c : ref Sys->FileIO, send, recv : chan of array of byte)
 	buffer := array [256] of byte;
 	bix := 0;
 
-	rdblk := chan of (int, int, int, Sys->Rread);
+	rdblk := chan of (big, int, int, Sys->Rread);
 	readreq := rdblk;
-	wrblk := chan of (int, array of byte, int, Sys->Rwrite);
+	wrblk := chan of (big, array of byte, int, Sys->Rwrite);
 	writereq := f2c.write;
 	wrreply : Sys->Rwrite;
 	sendblk := chan of array of byte;

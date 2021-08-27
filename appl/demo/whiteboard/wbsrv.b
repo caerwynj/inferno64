@@ -79,11 +79,11 @@ srv(wb: ref Image, bit, strokes: ref Sys->FileIO)
 			wb.readpixels(wb.r, data[len bithdr:]);
 			c.bitdata = data;
 		}
-		if (offset >= len c.bitdata) {
+		if (offset >= big len c.bitdata) {
 			rreply(r, (nil, nil));
 			continue;
 		}
-		rreply(r, (c.bitdata[offset:], nil));
+		rreply(r, (c.bitdata[int offset:], nil)); # TODO potential bug truncating big to int
 
 	(offset, data, fid, w) := <-bit.write =>
 		if (w != nil)

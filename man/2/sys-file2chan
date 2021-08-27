@@ -10,8 +10,8 @@ Rread:  type chan of (array of byte, string);
 Rwrite: type chan of (int, string);
 FileIO: adt
 {
-    read:   chan of (int, int, int, Rread);
-    write:  chan of (int, array of byte, int, Rwrite);
+    read:   chan of (big, int, int, Rread);
+    write:  chan of (big, array of byte, int, Rwrite);
 };
 
 file2chan:  fn(dir, file: string): ref FileIO;

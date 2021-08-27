@@ -146,19 +146,19 @@ infofile(fileio: ref Sys->FileIO, sync: chan of int)
 	(off, nbytes, nil, rc) := <-fileio.read =>
 		if(rc == nil)
 			break;
-		if(off > len infodata){
+		if(off > big len infodata){
 			rc <-= (nil, nil);
 		} else {
-			if(off + nbytes > len infodata)
-				nbytes = len infodata - off;
-			rc <-= (infodata[off:off+nbytes], nil);
+			if(off + big nbytes > big len infodata)
+				nbytes = len infodata - int off; # TODO potential bug truncating off to int from big
+			rc <-= (infodata[int off:int off+nbytes], nil); # TODO potential bug truncating to int from big
 		}
 
 	(off, data, nil, wc) := <-fileio.write =>
 		if(wc == nil)
 			break;
 
-		if(off != len infodata){
+		if(off != big len infodata){
 			wc <-= (0, "cannot be rewritten");
 		} else {
 			nid := array[len infodata+len data] of byte;

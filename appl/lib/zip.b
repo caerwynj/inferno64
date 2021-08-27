@@ -632,7 +632,7 @@ pushbuf0(fd: ref Sys->FD, off: big, n: int, fdc: chan of ref Sys->FD, hdrcrc: bi
 	if(rfd == nil)
 		return;
 
-	prevoff := 0;
+	prevoff := big 0;
 	docrc := 1;
 	crc := ~0;
 	end := off+big n;
@@ -659,7 +659,7 @@ Fio:
 				rc <-= (nil, sprint("crc mismatch, expected %bux, calculated %ux", hdrcrc, ~crc));
 				break Fio;
 			}
-			prevoff += nn;
+			prevoff += big nn;
 		}
 		rc <-= (buf[:nn], nil);
 	}
@@ -688,7 +688,7 @@ pushfilter0(fd: ref Sys->FD, off: big, n: int, fdc: chan of ref Sys->FD, hdrcrc:
 	}
 
 	crc := ~0;
-	poff := 0;  # previous offset read
+	poff := big 0;  # previous offset read
 	buf := array[0] of byte;
 Fio:
 	for(;;) {
@@ -746,7 +746,7 @@ Fio:
 			give = len buf;
 		r := buf[:give];
 		buf = buf[give:];
-		poff += give;
+		poff += big give;
 		rc <-= (r, nil);
 	}
 	kill(pid);

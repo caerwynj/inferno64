@@ -13,7 +13,8 @@ include "sh.m";
 
 Tag: adt {
 	tagid, blocked: int;
-	offset, fid: int;
+	offset: big;
+	fid: int;
 	pick {
 	Read =>
 		count: int;
@@ -137,7 +138,8 @@ srv(sync: chan of int, ctxt: ref Context,
 	ctxt = ctxt.copy(1);
 	sync <-= sys->pctl(0, nil);
 	for (;;) {
-		fid, offset, count: int;
+		fid, count: int;
+		offset: big;
 		rc: Sys->Rread;
 		wc: Sys->Rwrite;
 		d: array of byte;
@@ -177,7 +179,7 @@ srv(sync: chan of int, ctxt: ref Context,
 				deltag(t.tagid);
 			ctxt.setlocal("tag", nil);
 		} else if (ccmd != nil) {
-			t = ref Tag.Read(0, 0, -1, fid, -1, nil);
+			t = ref Tag.Read(0, 0, big -1, fid, -1, nil);
 			addtag(t);
 			ctxt.setlocal("tag", ref Listnode(nil, string t.tagid) :: nil);
 			ctxt.run(ccmd :: nil, 0);
@@ -203,10 +205,10 @@ builtin_rread(ctxt: ref Context, argv: list of ref Listnode, one: int): string
 	arg := word(hd argv);
 	d := array of byte arg;
 	if (one) {
-		if (mt.offset >= len d)
+		if (mt.offset >= big len d)
 			d = nil;
 		else
-			d = d[mt.offset:];
+			d = d[int mt.offset:]; # TODO pontential bug truncating to int
 	}
 	if (len d > mt.count)
 		d = d[0:mt.count];

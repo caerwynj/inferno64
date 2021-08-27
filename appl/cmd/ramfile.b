@@ -54,27 +54,27 @@ server(fio: ref Sys->FileIO, data: array of byte)
 	for (;;) alt {
 	(offset, count, nil, rc) := <-fio.read =>
 		if (rc != nil) {
-			if (offset > len data)
+			if (offset > big len data)
 				rc <-= (nil, nil);
 			else {
-				end := offset + count;
-				if (end > len data)
-					end = len data;
-				rc <-= (data[offset:end], nil);
+				end := big offset + big count;
+				if (end > big len data)
+					end = big len data;
+				rc <-= (data[int offset:int end], nil); # TODO potential bug truncating big to int
 			}
 		}
 	(offset, d, nil, wc) := <-fio.write =>
 		if (wc != nil) {
-			if (offset == 0)
+			if (offset == big 0)
 				data = array[0] of byte;
-			end := offset + len d;
-			if (end > len data) {
-				ndata := array[end] of byte;
+			end := offset + big len d;
+			if (end > big len data) {
+				ndata := array[int end] of byte; # TODO potential bug truncating big to int
 				ndata[0:] = data;
 				data = ndata;
 				ndata = nil;
 			}
-			data[offset:] = d;
+			data[int offset:] = d; # TODO potential bug truncating big to int
 			wc <-= (len d, nil);
 		}
 	}

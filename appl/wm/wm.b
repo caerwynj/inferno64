@@ -189,10 +189,10 @@ init(ctxt: ref Draw->Context, argv: list of string)
 		if(rc == nil)
 			break;
 		d := array of byte r2s(screen.image.r);
-		if(off > len d)
-			off = len d;
+		if(off > big len d)
+			off = big len d;
 		alt{
-		rc <-= (d[off:], nil) =>;
+		rc <-= (d[int off:], nil) =>; # TODO potential bug truncating big to int
 		* =>;
 		}
 	}

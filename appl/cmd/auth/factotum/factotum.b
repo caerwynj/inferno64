@@ -342,17 +342,17 @@ privacy()
 		sys->fprint(sys->fildes(2), "factotum: warning: unable to make memory private: %r\n");
 }
 
-reads(str: string, off, nbytes: int): (array of byte, string)
+reads(str: string, off: big, nbytes: int): (array of byte, string)
 {
 	bstr := array of byte str;
 	slen := len bstr;
-	if(off < 0 || off >= slen)
+	if(off < big 0 || off >= big slen)
 		return (nil, nil);
-	if(off + nbytes > slen)
-		nbytes = slen - off;
+	if(off + big nbytes > big slen)
+		nbytes = slen - int off; # TODO potential bug truncating off to int from big
 	if(nbytes <= 0)
 		return (nil, nil);
-	return (bstr[off:off+nbytes], nil);
+	return (bstr[int off:int off+nbytes], nil); # TODO potential bug truncating off to int from big
 }
 
 readprotos(): string
@@ -566,7 +566,7 @@ needkey(rpc: ref Rpc, attrs: list of ref Attr)
 
 reply(rpc: ref Rpc, s: string)
 {
-	rpc.rc <-= reads(s, 0, rpc.nbytes);
+	rpc.rc <-= reads(s, big 0, rpc.nbytes);
 }
 
 puta(a: array of byte, n: int, v: array of byte): int

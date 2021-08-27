@@ -24,7 +24,7 @@ Hcmd: adt
 Reader: adt
 {
 	fid:	int;
-	offset:	int;
+	offset:	big;
 	hint:	int;
 	next:	cyclic ref Reader;
 };
@@ -104,44 +104,44 @@ getfid(fid: int, del: int): ref Reader
 		}
 		prev = r;
 	}
-	o := 0;
+	o := big 0;
 	if (nhist > 0)
-		o = history[0].seek;
+		o = big history[0].seek;
 	return readers = ref Reader(fid, o, 0, readers);
 }
 
-readhist(off, count, fid: int): (array of byte, string)
+readhist(off: big, count, fid: int): (array of byte, string)
 {
 	r := getfid(fid, 0);
 	off += r.offset;
-	if (nhist == 0 || off >= seek)
+	if (nhist == 0 || off >= big seek)
 		return (eof, nil);
 	i := r.hint;
 	if (i >= nhist)
 		i = nhist - 1;
 	s := history[i].seek;
-	if (off == s) {
+	if (off == big s) {
 		r.hint = i + 1;
 		return (history[i].text, nil);
 	}
-	if (off > s) {
+	if (off > big s) {
 		do {
 			if (++i == nhist)
 				break;
 			s = history[i].seek;
-		} while (off >= s);
+		} while (off >= big s);
 		i--;
 	} else {
 		do {
 			if (--i < 0)
 				return (eof, "data truncated");
 			s = history[i].seek;
-		} while (off < s);
+		} while (off < big s);
 	}
 	r.hint = i + 1;
 	b := history[i].text;
-	if (off != s)
-		b = b[off - s:];
+	if (off != big s)
+		b = b[int off - s:]; # TODO potential bug truncating big to int
 	return (b, nil);
 }
 

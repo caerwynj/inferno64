@@ -36,11 +36,11 @@ reader(pidc: chan of int, fileio: ref Sys->FileIO)
 	for(;;) alt{
 	(offset, count, nil, rc) := <-fileio.read =>
 		if (rc != nil) {
-			if (offset%blocksize || count%blocksize) {
+			if (int (offset%big blocksize) || count%blocksize) {
 				rc <- = (nil, "unaligned read");
 				continue;
 			}
-			offset /= blocksize;
+			offset /= big blocksize;
 			count /= blocksize;
 			buf := array [count * blocksize] of byte;
 			if (scsiread10(lun, offset, count, buf) < 0) {
@@ -53,11 +53,11 @@ reader(pidc: chan of int, fileio: ref Sys->FileIO)
 	(offset, data, nil, wc) := <-fileio.write =>
 		if(wc != nil){
 			count := len data;
-			if(offset%blocksize || count%blocksize){
+			if(int (offset%big blocksize) || count%blocksize){
 				wc <-= (0, "unaligned write");
 				continue;
 			}
-			offset /= blocksize;
+			offset /= big blocksize;
 			count /= blocksize;
 			if(scsiwrite10(lun, offset, count, data) < 0){
 				scsirequestsense(lun);
@@ -315,12 +315,12 @@ scsirequestsense(lun: int): int
 	return 0;
 }
 
-scsiread10(lun: int, offset, count: int, buf: array of byte): int
+scsiread10(lun: int, offset: big, count: int, buf: array of byte): int
 {
 	cmd := array [10] of byte;
 	cmd[0] = byte 16r28;
 	cmd[1] = byte (lun << 5);
-	usb->bigput4(cmd[2:], offset);
+	usb->bigput4(cmd[2:], int offset); # TODO potential bug truncating big to int
 	cmd[6] = byte 0;
 	usb->bigput2(cmd[7:], count);
 	cmd[9] = byte 0;
@@ -330,12 +330,12 @@ scsiread10(lun: int, offset, count: int, buf: array of byte): int
 	return 0;
 }
 
-scsiwrite10(lun: int, offset, count: int, buf: array of byte): int
+scsiwrite10(lun: int, offset: big, count: int, buf: array of byte): int
 {
 	cmd := array [10] of byte;
 	cmd[0] = byte 16r2A;
 	cmd[1] = byte (lun << 5);
-	usb->bigput4(cmd[2:], offset);
+	usb->bigput4(cmd[2:], int offset); # TODO potential bug truncating big to int
 	cmd[6] = byte 0;
 	usb->bigput2(cmd[7:], count);
 	cmd[9] = byte 0;
