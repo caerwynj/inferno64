@@ -507,7 +507,6 @@ extern	void		retstr(char*, String**);
 extern	void		rungc(Prog*);
 extern	void		runtime(Module*, Link*, char*, int, void(*)(void*), Type*);
 extern	void		safemem(void*, Type*, void (*)(void*));
-extern	int		segflush(void *, ulong);
 extern	void		isend(void);
 extern	void	setdbreg(uchar*);
 extern	uchar*	setdbloc(uchar*);
