@@ -4,6 +4,7 @@ DIRS=\
 	prep\
 
 TARG=\
+	kfs64.dis\
 	kfs.dis\
 	mbr.dis\
 	mkext.dis\
