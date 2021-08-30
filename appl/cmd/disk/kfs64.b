@@ -197,9 +197,11 @@ File: adt
 	wpath:	ref Wpath;
 	tlock:	cyclic ref Tlock;		# if file is locked
 	fs:	ref Device;
-	addr:	big;		# block number, not the actual block address on the disk
-	slot:	int;		# only useful when DIRPERBUF > 1
-	lastra:	big;		# read ahead address, block number
+		# Dentry is in this relative block number of parent directorys' blocks
+	addr:	big;	#	addr name is misleading
+					#	it is not the actual block address on the disk
+	slot:	int;	# only useful when DIRPERBUF > 1 for the index in block
+	lastra:	big;	# read ahead address, block number
 	fid:	int;
 	uid:	int;
 	open:	int;
@@ -374,15 +376,15 @@ BUFSIZE		:= 500; # RBUFSIZE-Tagsize; # usable block size
 DIRPERBUF	:= 1;				# number of Dentries per block
 INDPERBUF	:= big 62; # BUFSIZE/8; # number of pointers in a block
 	# number of blocks representable by a double indirect block of pointers
-INDPERBUF2	:= big 3844; # INDPERBUF^2;
+INDPERBUF2	:= big 3844; # INDPERBUF*INDPERBUF;
 	# number of blocks representable by a triple indirect block of pointers
-INDPERBUF3	:= big 238328; # INDPERBUF^3;
+INDPERBUF3	:= big 238328; # INDPERBUF*INDPERBUF*INDPERBUF;
 	# number of blocks representable by a quadruple indirect block of pointers
-INDPERBUF4	:= big 14776336; # INDPERBUF^4;
+INDPERBUF4	:= big 14776336; # INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF;
 	# number of blocks representable by a quintuple indirect block of pointers
-INDPERBUF5	:= big 916132832; # INDPERBUF^5;
+INDPERBUF5	:= big 916132832; # INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF;
 	# number of blocks representable by a sextuple indirect block of pointers
-INDPERBUF6	:= big 56800235584; # INDPERBUF^6;
+INDPERBUF6	:= big 56800235584; # INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF;
 	# -4 for the nfree[4] of Fbuf
 	# list of free blocks maintained in a Tfree block
 FEPERBUF	:= 57; # (BUFSIZE - Super1size -4)/8;
@@ -469,15 +471,15 @@ init(nil: ref Draw->Context, args: list of string)
 	DIRPERBUF = BUFSIZE / Dentrysize;
 	INDPERBUF = big (BUFSIZE/8); # number of pointers in a block
 		# number of blocks representable by a double indirect block of pointers
-	INDPERBUF2 = INDPERBUF^ big 2;
+	INDPERBUF2 = INDPERBUF*INDPERBUF;
 		# number of blocks representable by a triple indirect block of pointers
-	INDPERBUF3 = INDPERBUF^ big 3;
+	INDPERBUF3 = INDPERBUF*INDPERBUF*INDPERBUF;
 		# number of blocks representable by a quadruple indirect block of pointers
-	INDPERBUF4 = INDPERBUF^ big 4;
+	INDPERBUF4 = INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF;
 		# number of blocks representable by a quintuple indirect block of pointers
-	INDPERBUF5 = INDPERBUF^ big 5;
+	INDPERBUF5 = INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF;
 		# number of blocks representable by a sextuple indirect block of pointers
-	INDPERBUF6 = INDPERBUF^ big 6;
+	INDPERBUF6 = INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF;
 		# -4 for the nfree[4] of Fbuf
 		# number of possible free block pointers in super block 
 		# the -4 to store the number of freeblockpointers
@@ -485,9 +487,16 @@ init(nil: ref Draw->Context, args: list of string)
 	emptyblock = array[RBUFSIZE] of {* => byte 0};
 
 	if(debug){
-		sys->print("QPDIR 0x%bx %bd QPNONE %bx QPROOT %bx QPSUPER %bx\n", QPDIR, QPDIR, QPNONE, QPROOT, QPSUPER);
-		sys->print("RBUFSIZE %d Tagsize %d BUFSIZE %d Dentrysize %d\n	DIRPERBUF %d INDPERBUF %bd FEPERBUF %d\n",
-					RBUFSIZE, Tagsize, BUFSIZE, Dentrysize, DIRPERBUF, INDPERBUF, FEPERBUF);
+		sys->print("QPDIR 0x%bx %bd	QPNONE %bx	QPROOT %bx	QPSUPER %bx\n",
+					QPDIR, QPDIR, QPNONE, QPROOT, QPSUPER);
+		sys->print("RBUFSIZE %d	Tagsize %d	BUFSIZE %d	Dentrysize %d\n",
+					RBUFSIZE, Tagsize, BUFSIZE, Dentrysize);
+		sys->print("DIRPERBUF %d	INDPERBUF %bd	FEPERBUF %d\n",
+					DIRPERBUF, INDPERBUF, FEPERBUF);
+		sys->print("INDPERBUF2 %bd	INDPERBUF3 %bd	INDPERBUF4 %bd\n",
+					INDPERBUF2, INDPERBUF3, INDPERBUF4);
+		sys->print("INDPERBUF5 %bd	INDPERBUF6 %bd\n",
+					INDPERBUF5, INDPERBUF6);
 	}
 	iobufinit(30);	# initialize buffer pool of 30 buffers in groups of 5
 
@@ -514,7 +523,7 @@ init(nil: ref Draw->Context, args: list of string)
 	if(e != nil)
 		error("bad root: "+e);
 	if(debug)
-		d.print();
+		d.print("root");
 	d.put();
 
 	sys->pctl(Sys->FORKFD|Sys->NEWPGRP, nil);
@@ -1592,11 +1601,11 @@ rread(cp: ref Chan, f: ref Tmsg.Read): ref Rmsg
 			if(d == nil)
 				return ferr(f, e, file, nil);
 		}
-		addr := offset / big BUFSIZE;
+		addr := (offset-big Dentrydatasize) / big BUFSIZE;
 		if(addr == file.lastra+big 1)
 			;	# dbufread(p, d, addr+1);
 		file.lastra = addr;
-		o := int (offset % big BUFSIZE);
+		o := int ((offset-big Dentrydatasize) % big BUFSIZE);
 		n := BUFSIZE - o;
 		if(n > count)
 			n = count;
@@ -1686,8 +1695,8 @@ rwrite(cp: ref Chan, f: ref Tmsg.Write): ref Rmsg
 			if(d == nil)
 				return ferr(f, e, file, nil);
 		}
-		addr := offset / big BUFSIZE;
-		o := int (offset % big BUFSIZE);
+		addr := (offset-big Dentrydatasize) / big BUFSIZE;
+		o := int ((offset-big Dentrydatasize) % big BUFSIZE);
 		n := BUFSIZE - o;
 		if(n > count)
 			n = count;
@@ -1970,7 +1979,7 @@ rwstat(cp: ref Chan, f: ref Tmsg.Wstat): ref Rmsg
 
 	# if rename,
 	# must have write permission in parent
-	# TODO if NAMELEN is variable, this has to be changed to a mv or cp
+	# TODO if NAMELEN is variable, this has to be changed to a mv or cp for files
 	while(d.name != dir.name){
 
 		# drop entry to prevent deadlock, then
@@ -2525,7 +2534,7 @@ Dentry.rel2abs(d: self ref Dentry, a: big, tag: int, putb: int): big
 	}
 	if(putb)
 		d.release();
-	sys->print("Dentry.buf: trip indirect a %bd tag %d putb %d\n", a, tag, putb);
+	sys->print("Dentry.buf: trip indirect a %bd tag %d %s putb %d\n", a, tag, tagname(tag),putb);
 	return big 0;
 }
 
