@@ -8,10 +8,8 @@ implement Kfs64;
 # Differences from kfs
 #	updating all file offsets, sizes and block numbers to 64 bits
 #	triple, quadruple, quintiple and sextuple-indirect blocks
-#	filename size 228 bytes TODO variable
-#	store 128 bytes of data in Dentry
+#	filename size 102 bytes
 #	using a default bufsize of 512 bytes, small but not too small
-#	as locks are per block, do not have to worry about locking out other files' access
 
 include "sys.m";
 	sys: Sys;
@@ -44,7 +42,7 @@ MAXBUFSIZE:	con 16*1024;
 #  fundamental constants
 #
 	# keeping Dentrysize to 512 and 128 bytes for data in Dentry leaves 228 bytes
-NAMELEN:	con 224; # ext2, ext3, ext4, zfs - 255 bytes
+NAMELEN:	con 102; # ext2, ext3, ext4, zfs - 255 bytes
 NDBLOCK:	con 8;	# number of direct blocks in Dentry
 NIBLOCK:	con 6;	# max depth of indirect blocks in Dentry - sextuple-indirect blocks
 MAXFILESIZE:	con big 16r7FFFFFFFFFFFFFFF;	# Plan 9's limit (kfs's size is signed)
@@ -206,6 +204,7 @@ File: adt
 	uid:	int;
 	open:	int;
 	cons:	int;	# if opened by console
+		# d* fields for maintaining state while traversing directories
 	doffset: big;	# directory reading
 	dvers:	int;
 	daddr:	big;	# state for next read, different from kfs
@@ -373,7 +372,7 @@ MAXTAG: con iota;
 #	BUF = block in these variables
 RBUFSIZE	:= 512;				# block size, real block size
 BUFSIZE		:= 500; # RBUFSIZE-Tagsize; # usable block size
-DIRPERBUF	:= 1;				# number of Dentries per block
+DIRPERBUF	:= 2;				# number of Dentries per block
 INDPERBUF	:= big 62; # BUFSIZE/8; # number of pointers in a block
 	# number of blocks representable by a double indirect block of pointers
 INDPERBUF2	:= big 3844; # INDPERBUF*INDPERBUF;
@@ -1580,20 +1579,6 @@ rread(cp: ref Chan, f: ref Tmsg.Read): ref Rmsg
 		if(d == nil)
 			return ferr(f, e, file, nil);
 	}
-	# read data in Dentry
-	if(offset < big Dentrydatasize){
-		if(offset + big count <= big Dentrydatasize){
-			nread = int offset+count;
-			data[0:] = d.buf[Odata+int offset:Odata+nread];
-			count -= nread;
-			offset += big nread;
-		}else{
-			nread = Dentrydatasize-int offset;
-			data[0:] = d.buf[Odata+int offset:Odata+Dentrydatasize];
-			count -= nread;
-			offset += big nread;
-		}
-	}
 	while(count > 0){
 		if(d.iob == nil){
 			# must check and reacquire entry
@@ -1601,11 +1586,11 @@ rread(cp: ref Chan, f: ref Tmsg.Read): ref Rmsg
 			if(d == nil)
 				return ferr(f, e, file, nil);
 		}
-		addr := (offset-big Dentrydatasize) / big BUFSIZE;
+		addr := offset / big BUFSIZE;
 		if(addr == file.lastra+big 1)
 			;	# dbufread(p, d, addr+1);
 		file.lastra = addr;
-		o := int ((offset-big Dentrydatasize) % big BUFSIZE);
+		o := int (offset % big BUFSIZE);
 		n := BUFSIZE - o;
 		if(n > count)
 			n = count;
@@ -1668,26 +1653,6 @@ rwrite(cp: ref Chan, f: ref Tmsg.Write): ref Rmsg
 	d.update();
 
 	nwrite := 0;
-	# write data to Dentry
-	if(d.iob == nil){
-		# must check and reacquire entry
-		(d, e) = Dentry.getd(file, Bread|Bmod);
-		if(d == nil)
-			return ferr(f, e, file, nil);
-	}
-	if(offset < big Dentrydatasize){
-		if(offset + big count <= big Dentrydatasize){
-			nwrite = int offset+count;
-			d.buf[Odata+int offset:] = f.data[0:nwrite];
-			count -= nwrite;
-			offset += big nwrite;
-		}else{
-			nwrite = Dentrydatasize-int offset;
-			d.buf[Odata+int offset:] = f.data[0:nwrite];
-			count -= nwrite;
-			offset += big nwrite;
-		}
-	}
 	while(count > 0){
 		if(d.iob == nil){
 			# must check and reacquire entry
@@ -1695,8 +1660,8 @@ rwrite(cp: ref Chan, f: ref Tmsg.Write): ref Rmsg
 			if(d == nil)
 				return ferr(f, e, file, nil);
 		}
-		addr := (offset-big Dentrydatasize) / big BUFSIZE;
-		o := int ((offset-big Dentrydatasize) % big BUFSIZE);
+		addr := offset / big BUFSIZE;
+		o := int (offset % big BUFSIZE);
 		n := BUFSIZE - o;
 		if(n > count)
 			n = count;
@@ -1979,7 +1944,6 @@ rwstat(cp: ref Chan, f: ref Tmsg.Wstat): ref Rmsg
 
 	# if rename,
 	# must have write permission in parent
-	# TODO if NAMELEN is variable, this has to be changed to a mv or cp for files
 	while(d.name != dir.name){
 
 		# drop entry to prevent deadlock, then
@@ -2282,8 +2246,8 @@ Dentry.getd(file: ref File, mode: int): (ref Dentry, string)
 #	u64	iblock[NIBLOCK];[8*6]	140
 #	u32	atime;					144
 #	u32	mtime;					148
-#	u8	name[NAMELEN];
-#	u8 data in Dentry size = 512 RBUFSIZE - 224 NAMELEN - 148 -Tagsize = 128
+#	u8	name[NAMELEN];	moved this to the end to make it easier to increase if need to
+#	Dentry size = (512 RBUFSIZE -Tagsize - 148 - 102 NAMELEN)/2= 250
 
 Ouid: con 0;
 Ogid: con Ouid+2;
@@ -2297,9 +2261,7 @@ Oiblock: con Odblock+NDBLOCK*8;
 Oatime: con Oiblock+NIBLOCK*8;
 Omtime: con Oatime+4;
 Oname: con Omtime+4;
-Odata: con Oname+NAMELEN;
-Dentrydatasize: con 128;
-Dentrysize: con Odata+Dentrydatasize;	# should be 500 = BUFSIZE = RBUFSIZE - Tagsize
+Dentrysize: con Oname+NAMELEN; # kept to 250 = BUFSIZE/2 = (RBUFSIZE -Tagsize)/2
 
 Dentry.unpack(a: array of byte): ref Dentry
 {
@@ -2402,6 +2364,8 @@ Dentry.release(d: self ref Dentry)
 	}
 }
 
+# get the a'th block number
+#	when tag != 0, allocate a'th block if empty
 Dentry.getblk(d: self ref Dentry, a: big, tag: int): ref Iobuf
 {
 	addr := d.rel2abs(a, tag, 0);
