@@ -409,6 +409,8 @@ kfsname: string;
 consoleout: chan of string;
 mainlock: ref Lock;
 pids: list of int;
+stdout : ref Sys->FD;
+progresslen := 0;
 
 noqid: Qid;
 
@@ -500,6 +502,8 @@ init(nil: ref Draw->Context, args: list of string)
 	iobufinit(30);	# initialize buffer pool of 30 buffers in groups of 5
 
 	if(ream){
+		if(debug)
+			sys->print("started reaming\n");
 		superream(thedevice, SUPERADDR);
 		rootream(thedevice, ROOTADDR);
 		wstatallow = writeallow = 1;
@@ -561,6 +565,15 @@ panic(s: string)
 	for(; pids != nil; pids = tl pids)
 		kill(hd pids);
 	raise "panic";
+}
+
+progress(s: string)
+{
+	bs := array[1] of { byte 16r8 };
+	for(i:=0; i<progresslen; i++)
+		sys->write(stdout,bs,1);
+	sys->print("%s",s);
+	progresslen = len s;
 }
 
 syncproc(c: chan of int)
@@ -3155,6 +3168,7 @@ superream(dev: ref Device, addr: big)
 	fsize := wrensize(dev);
 	if(fsize <= big 0)
 		panic("file system device size");
+	sys->print("kfs: ream %bd blocks ", fsize);
 	p := Iobuf.get(dev, addr, Bmod|Bimm);
 	p.iobuf[0:] = emptyblock;
 	p.settag(Tsuper, QPSUPER);
@@ -3167,10 +3181,16 @@ superream(dev: ref Device, addr: big)
 	sb.fsok = 0;
 	sb.fbuf = p.iobuf[Super1size:];
 	put4(sb.fbuf, 0, 1);	# nfree = 1
+	msg := "";
 	for(i := fsize-big 1; i>=addr+big 2; i--){
 		#sys->print("superream i %bd\n", i);
+		if(debug){
+			msg = sys->sprint(" %bd ", i);
+			progress(msg);
+		}
 		addfree(dev, i, sb); # what does this do?
 	}
+	sys->print("done\n");
 	sb.put();
 }
 
