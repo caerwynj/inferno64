@@ -377,13 +377,13 @@ INDPERBUF	:= big 62; # BUFSIZE/8; # number of pointers in a block
 	# number of blocks representable by a double indirect block of pointers
 INDPERBUF2	:= big 3844; # INDPERBUF*INDPERBUF;
 	# number of blocks representable by a triple indirect block of pointers
-INDPERBUF3	:= big 238328; # INDPERBUF*INDPERBUF*INDPERBUF;
+INDPERBUF3	:= big 238328; # INDPERBUF*INDPERBUF2;
 	# number of blocks representable by a quadruple indirect block of pointers
-INDPERBUF4	:= big 14776336; # INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF;
+INDPERBUF4	:= big 14776336; # INDPERBUF*INDPERBUF3;
 	# number of blocks representable by a quintuple indirect block of pointers
-INDPERBUF5	:= big 916132832; # INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF;
+INDPERBUF5	:= big 916132832; # INDPERBUF*INDPERBUF4;
 	# number of blocks representable by a sextuple indirect block of pointers
-INDPERBUF6	:= big 56800235584; # INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF;
+INDPERBUF6	:= big 56800235584; # INDPERBUF*INDPERBUF5;
 	# -4 for the nfree[4] of Fbuf
 	# list of free blocks maintained in a Tfree block
 FEPERBUF	:= 57; # (BUFSIZE - Super1size -4)/8;
@@ -474,13 +474,13 @@ init(nil: ref Draw->Context, args: list of string)
 		# number of blocks representable by a double indirect block of pointers
 	INDPERBUF2 = INDPERBUF*INDPERBUF;
 		# number of blocks representable by a triple indirect block of pointers
-	INDPERBUF3 = INDPERBUF*INDPERBUF*INDPERBUF;
+	INDPERBUF3 = INDPERBUF*INDPERBUF2;
 		# number of blocks representable by a quadruple indirect block of pointers
-	INDPERBUF4 = INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF;
+	INDPERBUF4 = INDPERBUF*INDPERBUF3;
 		# number of blocks representable by a quintuple indirect block of pointers
-	INDPERBUF5 = INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF;
+	INDPERBUF5 = INDPERBUF*INDPERBUF4;
 		# number of blocks representable by a sextuple indirect block of pointers
-	INDPERBUF6 = INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF*INDPERBUF;
+	INDPERBUF6 = INDPERBUF*INDPERBUF5;
 		# -4 for the nfree[4] of Fbuf
 		# number of possible free block pointers in super block 
 		# the -4 to store the number of freeblockpointers
@@ -2272,6 +2272,7 @@ Dentry.getd(file: ref File, mode: int): (ref Dentry, string)
 }
 
 #  this is the disk structure:
+#	u8	name[NAMELEN];
 #	u16	uid;
 #	u16	gid;		[2*2]
 #	u16	mode;
@@ -2290,10 +2291,10 @@ Dentry.getd(file: ref File, mode: int): (ref Dentry, string)
 #	u64	iblock[NIBLOCK];[8*6]	140
 #	u32	atime;					144
 #	u32	mtime;					148
-#	u8	name[NAMELEN];	moved this to the end to make it easier to increase if need to
 #	Dentry size = (512 RBUFSIZE -Tagsize - 148 - 102 NAMELEN)/2= 250
 
-Ouid: con 0;
+Oname: con 0;
+Ouid: con Oname+NAMELEN;
 Ogid: con Ouid+2;
 Omode: con Ogid+2;
 Omuid: con Omode+2;
@@ -2304,8 +2305,7 @@ Odblock: con Osize+8;
 Oiblock: con Odblock+NDBLOCK*8;
 Oatime: con Oiblock+NIBLOCK*8;
 Omtime: con Oatime+4;
-Oname: con Omtime+4;
-Dentrysize: con Oname+NAMELEN; # kept to 250 = BUFSIZE/2 = (RBUFSIZE -Tagsize)/2
+Dentrysize: con Omtime+4; # kept to 250 = BUFSIZE/2 = (RBUFSIZE -Tagsize)/2
 
 Dentry.unpack(a: array of byte): ref Dentry
 {
@@ -2597,6 +2597,7 @@ balloc(dev: ref Device, tag: int, qpath: big): big
 		}
 		bp := Iobuf.get(dev, a, Bread);
 		if(bp == nil || bp.checktag(Tfree, QPNONE)){
+			# no more free space
 			if(bp != nil)
 				bp.put();
 			sb.put();
@@ -2988,6 +2989,8 @@ tagname(t: int): string
 	}
 }
 
+# should be called nottag
+#	returns a +ve value if the tag or qpath do not match
 Iobuf.checktag(p: self ref Iobuf, tag: int, qpath: big): int
 {
 	t := Tag.unpack(p.iobuf[BUFSIZE:]);
