@@ -10,6 +10,10 @@ implement Kfs64;
 #	triple, quadruple, quintiple and sextuple-indirect blocks
 #	filename size 102 bytes
 #	using a default bufsize of 512 bytes, small but not too small
+#	added halt to shutdown using disk/kfscmd
+#	using hwblock to represent the highest touched block number
+#		to avoid reaming all the free space at once
+#		only ream some more blocks after hwblock, when we need space
 
 include "sys.m";
 	sys: Sys;
@@ -41,8 +45,8 @@ MAXBUFSIZE:	con 16*1024;
 #
 #  fundamental constants
 #
-	# keeping Dentrysize to 512 and 128 bytes for data in Dentry leaves 228 bytes
-NAMELEN:	con 102; # ext2, ext3, ext4, zfs - 255 bytes
+	# keeps Dentrysize to 250
+NAMELEN:	con 102; # ext2, ext3, ext4, zfs - 255 bytes, kfs - 28, cwfs - 144
 NDBLOCK:	con 8;	# number of direct blocks in Dentry
 NIBLOCK:	con 6;	# max depth of indirect blocks in Dentry - sextuple-indirect blocks
 MAXFILESIZE:	con big 16r7FFFFFFFFFFFFFFF;	# Plan 9's limit (kfs's size is signed)
@@ -152,6 +156,7 @@ Superb: adt
 	fsize:	big;	# size in blocks
 	tfree:	big;	# total number of free blocks
 	qidgen:	big;	# generator for unique ids
+	hwblock: big;	# highest touched block number, high water block number
 
 	fsok:	int;
 
@@ -824,8 +829,6 @@ kfs(rfd: ref Sys->FD, cmdchan: chan of int)
 			if(t == nil)
 				break loop;
 			else{
-				if(debug)
-					sys->print("<- %s\n", t.text());
 				r := apply(cp, t);
 				pick m := r {
 				Error =>
@@ -2190,6 +2193,7 @@ Superb.put(sb: self ref Superb)
 #	u64	fsize;		# total number of blocks on this device
 #	u64	tfree;		# total number of free blocks on this device
 #	u64	qidgen;		# generator for unique ids
+#	u64	hwblock;	# highest touched block number, high water block number
 #	s32	fsok;		# file system ok
 #	u64	roraddr;	# dump root addr 		- obsolete, unused in this program
 #	u64	last;		# last super block addr	- obsolete, unused in this program
@@ -2199,7 +2203,8 @@ Ofstart: con 0;
 Ofsize: con Ofstart+8;
 Otfree: con Ofsize+8;
 Oqidgen: con Otfree+8;
-Ofsok: con Oqidgen+8;
+Ohwblock: con Oqidgen+8;
+Ofsok: con Ohwblock+8;
 #	Ororaddr: con Ofsok+8;
 #	Olast: con Ororaddr+8;
 #	Onext: con Olast+8;
@@ -2212,6 +2217,7 @@ Superb.unpack(a: array of byte): ref Superb
 	s.fsize = get8(a, Ofsize);
 	s.tfree = get8(a, Otfree);
 	s.qidgen = get8(a, Oqidgen);
+	s.hwblock = get8(a, Ohwblock);
 	s.fsok = get4(a, Ofsok);
 	s.fbuf = a[Super1size:];
 	return s;
@@ -2223,13 +2229,14 @@ Superb.pack(s: self ref Superb, a: array of byte)
 	put8(a, Ofsize, s.fsize);
 	put8(a, Otfree, s.tfree);
 	put8(a, Oqidgen, s.qidgen);
+	put8(a, Ohwblock, s.hwblock);
 	put4(a, Ofsok, s.fsok);
 }
 
 Superb.print(sb: self ref Superb)
 {
-	sys->print("fstart=%bud fsize=%bud tfree=%bud qidgen=%bud fsok=%d\n",
-		sb.fstart, sb.fsize, sb.tfree, sb.qidgen, sb.fsok);
+	sys->print("fstart=%bud fsize=%bud tfree=%bud qidgen=%bud hwblock=%bud fsok=%d\n",
+		sb.fstart, sb.fsize, sb.tfree, sb.qidgen, sb.hwblock, sb.fsok);
 }
 
 Dentry.get(p: ref Iobuf, slot: int): ref Dentry
@@ -2575,7 +2582,7 @@ indfetch(dev: ref Device, path: big, addr: big, a: big, itag: int, tag: int): bi
 	return addr;
 }
 
-# buffer pool management routines
+# allocate a disk block
 balloc(dev: ref Device, tag: int, qpath: big): big
 {
 	# TO DO: cache superblock to reduce pack/unpack
@@ -2587,11 +2594,32 @@ balloc(dev: ref Device, tag: int, qpath: big): big
 	sb.tfree--;
 	if(n < 0 || n >= FEPERBUF)
 		panic("balloc: bad freelist");
+	if(sb.hwblock <= big 0)
+		panic(sys->sprint("balloct bad hwblock <= 0: %bd", sb.hwblock));
 	a := get8(sb.fbuf, 4+n*8);
 	if(n == 0){
 		if(a == big 0){
+			# out of free space within hwblock blocks
+			#	extend hwblock and add those new blocks as free space
+			if(sb.hwblock < sb.fsize-big 1){
+				end := sb.hwblock+big FEPERBUF**2;
+				if(end > sb.fsize -big 1)
+					end = sb.fsize -big 1;
+				if(debug)
+					sys->print("balloc: used up all free space, allocating upto %bd\n", end);
+				for(i := end; i>sb.hwblock; i--){
+					addfree(dev, i, sb);
+				}
+				sb.hwblock = end;
+				sb.touched();
+				sb.print();
+				sb.put();
+				return balloc(dev, tag, qpath);
+			}
 			sb.tfree = big 0;
 			sb.touched();
+			if(debug)
+				sb.print();
 			sb.put();
 			return big 0;
 		}
@@ -2621,7 +2649,7 @@ balloc(dev: ref Device, tag: int, qpath: big): big
 	sb.put();
 	return a;
 }
-
+# add a freed block to the list of free blocks
 bfree(dev: ref Device, addr: big, d: int)
 {
 	if(addr == big 0)
@@ -2651,7 +2679,7 @@ bfree(dev: ref Device, addr: big, d: int)
 	addfree(dev, addr, s);
 	s.put();
 }
-
+# add the freed block to the list of free blocks in super block
 addfree(dev: ref Device, addr: big, sb: ref Superb)
 {
 	if(addr >= sb.fsize){
@@ -3202,7 +3230,6 @@ superream(dev: ref Device, addr: big)
 	fsize := wrensize(dev);
 	if(fsize <= big 0)
 		panic("file system device size");
-	sys->print("kfs: ream %bd blocks ", fsize);
 	p := Iobuf.get(dev, addr, Bmod|Bimm);
 	p.iobuf[0:] = emptyblock;
 	p.settag(Tsuper, QPSUPER);
@@ -3212,11 +3239,20 @@ superream(dev: ref Device, addr: big)
 	sb.fsize = fsize;
 	sb.qidgen = big 10;
 	sb.tfree = big 0;
+	sb.hwblock = big 2; # 0th block left out, super block at 1, root block at 2
 	sb.fsok = 0;
 	sb.fbuf = p.iobuf[Super1size:];
 	put4(sb.fbuf, 0, 1);	# nfree = 1
 	msg := "";
-	for(i := fsize-big 1; i>=addr+big 2; i--){
+#	this is taking forever.
+#		Check my notes in the kfs paper and inferno.notes
+#		it is more efficient to do this when needed
+#	for(i := fsize-big 1; i>=addr+big 2; i--){
+	end := sb.fstart+big FEPERBUF**2;
+	if(end > sb.fsize -big 1)
+		end = sb.fsize -big 1;
+	sys->print("kfs: ream %bd out of %bd blocks now:", end, fsize);
+	for(i := end; i>=addr+big 2; i--){
 		#sys->print("superream i %bd\n", i);
 		if(debug){
 			msg = sys->sprint(" %bd ", i);
@@ -3224,6 +3260,7 @@ superream(dev: ref Device, addr: big)
 		}
 		addfree(dev, i, sb); # what does this do?
 	}
+	sb.hwblock = big end;
 	sys->print("done\n");
 	sb.put();
 }
@@ -3905,7 +3942,9 @@ Check.mkfreelist(c: self ref Check, sb: ref Superb)
 	sb.fbuf[0:] = emptyblock[0:4+FEPERBUF*8];
 	sb.tfree = big 0;
 	put4(sb.fbuf, 0, 1);	# nfree = 1
-	for(a:=sb.fsize-sb.fstart-big 1; a >= big 0; a--){
+	if(sb.hwblock <= big 0)
+		panic(sys->sprint("Check.mkfreelist bad hwblock <= 0: %bd", sb.hwblock));
+	for(a:=sb.hwblock-sb.fstart-big 1; a >= big 0; a--){
 		i := a>>3;
 		if(i < big 0 || i >= big len c.amap.bits)
 			continue;
