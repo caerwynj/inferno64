@@ -543,12 +543,13 @@ init(nil: ref Draw->Context, args: list of string)
 		if(pid)
 			pids = pid :: pids;
 	}
-	spawn consinit(c);
+	cmdchan := chan of int;
+	spawn consinit(c, cmdchan);
 	pid := <- c;
 	if(pid)
 		pids = pid :: pids;
 
-	spawn kfs(sys->fildes(0));
+	spawn kfs(sys->fildes(0), cmdchan);
 }
 
 error(s: string)
@@ -672,7 +673,7 @@ Req: adt {
 	rc:	chan of (array of byte, string);
 };
 
-consinit(c: chan of int)
+consinit(c: chan of int, cmdchan: chan of int)
 {
 	kattach(FID1);
 	userinit();
@@ -763,6 +764,9 @@ consinit(c: chan of int)
 		"allowoff" or "disallow" =>
 			wstatallow = writeallow = 0;
 			wc <-= (len data, nil);
+		"halt" =>
+			cmdchan <-= 0;
+			wc <-= (len data, nil);
 		* =>
 			wc <-= (0, "unknown kfs request");
 			continue;
@@ -804,26 +808,53 @@ checkproc(c: chan of int, flags: int)
 #
 # normal kfs service
 #
-kfs(rfd: ref Sys->FD)
+kfs(rfd: ref Sys->FD, cmdchan: chan of int)
 {
 	cp := Chan.new(rfd);
-	while((t := Tmsg.read(rfd, cp.msize)) != nil){
-		if(debug)
-			sys->print("<- %s\n", t.text());
-		r := apply(cp, t);
-		pick m := r {
-		Error =>
-			r.tag = t.tag;
+	tmsgchan := chan of ref Tmsg;
+	msizechan := chan of int;
+	spawn tmsgreader(rfd, tmsgchan, msizechan);
+	msizechan <- = cp.msize;
+	loop: for(;;)
+	alt
+	{
+		<- cmdchan => break loop;
+		t := <- tmsgchan =>
+		{
+			if(t == nil)
+				break loop;
+			else{
+				if(debug)
+					sys->print("<- %s\n", t.text());
+				r := apply(cp, t);
+				pick m := r {
+				Error =>
+					r.tag = t.tag;
+				}
+				if(debug)
+					sys->print("-> %s\n", r.text());
+				rbuf := r.pack();
+				if(rbuf == nil)
+					panic("Rmsg.pack");
+				if(sys->write(rfd, rbuf, len rbuf) != len rbuf)
+					panic("mount write");
+			}
+			msizechan <- = cp.msize;
 		}
-		if(debug)
-			sys->print("-> %s\n", r.text());
-		rbuf := r.pack();
-		if(rbuf == nil)
-			panic("Rmsg.pack");
-		if(sys->write(rfd, rbuf, len rbuf) != len rbuf)
-			panic("mount write");
 	}
 	shutdown();
+}
+tmsgreader(rfd: ref Sys->FD, tmsgchan: chan of ref Tmsg, msizechan: chan of int)
+{
+	msize := <- msizechan;
+	while((t := Tmsg.read(rfd, msize)) != nil){
+		if(debug)
+			sys->print("<- %s\n", t.text());
+		tmsgchan <- = t;
+		msize = <- msizechan;
+		t = nil;
+	}
+	tmsgchan <- = t;
 }
 
 apply(cp: ref Chan, t: ref Tmsg): ref Rmsg
