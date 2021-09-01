@@ -7,3 +7,6 @@ The system can be used to build portable client and server applications. It make
 Inferno can run 'native' on various ARM, PowerPC, SPARC and x86 platforms but also 'hosted', under an existing operating system (including AIX, FreeBSD, Irix, Linux, MacOS X, Plan 9, and Solaris), again on various processor types.
 
 This project includes source for the basic applications, Inferno itself (hosted and native), all supporting software, including the native compiler suite, essential executables and supporting files.
+
+How this fork differs: 9boot instead of 9load, amd64 hosted (OpenBSD, Linux, 9front) and native (shell prompt) support, kfs64, NAPT (Network address and port translation), 9front drivers and ip stack.
+
