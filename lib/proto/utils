@@ -36,7 +36,6 @@ lib9
 	fmtvprint.c
 	fprint.c
 	getcallerpc-FreeBSD-386.S
-	getcallerpc-Hp-s800.s
 	getcallerpc-Irix-mips.s
 	getcallerpc-Linux-386.S
 	getcallerpc-Linux-arm.S
@@ -52,7 +51,6 @@ lib9
 	getwd-Nt.c
 	getwd-posix.c
 	lock.c
-	lock-Hp-s800.s
 	lock-Irix-mips.s
 	lock-MacOSX-power.s
 	lock-Nt-386.c
@@ -142,9 +140,6 @@ utils
 		txt.c
 		v.out.h
 	0l
-		Plan9.c
-		Nt.c
-		Posix.c
 		asm.c
 		enam.c
 		l.h
@@ -155,68 +150,6 @@ utils
 		optab.c
 		pass.c
 		sched.c
-		span.c
-	1a
-		a.h
-		a.y
-		l.s
-		lex.c
-		mkfile
-	1c
-		cgen.c
-		enam.c
-		gc.h
-		list.c
-		mkfile
-		mul.c
-		peep.c
-		reg.c
-		sgen.c
-		swt.c
-		txt.c
-	1l
-		Plan9.c
-		Nt.c
-		Posix.c
-		asm.c
-		l.h
-		list.c
-		mkfile
-		obj.c
-		optab.c
-		pass.c
-		span.c
-	2a
-		a.h
-		a.y
-		l.s
-		lex.c
-		mkfile
-	2c
-		2.out.h
-		Update
-		cgen.c
-		enam.c
-		gc.h
-		list.c
-		mkfile
-		mul.c
-		peep.c
-		reg.c
-		sgen.c
-		swt.c
-		txt.c
-	2l
-		Plan9.c
-		Nt.c
-		Posix.c
-		asm.c
-		l.h
-		list.c
-		mkfile
-		obj.c
-		optab.c
-		pass.c
 		span.c
 	5a
 		a.h
@@ -249,9 +182,6 @@ utils
 		mkfile
 		readcoff.c
 	5l
-		Plan9.c
-		Nt.c
-		Posix.c
 		asm.c
 		l.h
 		list.c
@@ -261,7 +191,6 @@ utils
 		optab.c
 		pass.c
 		span.c
-		thumb.c
 	6c
 		6.out.h
 	8a
@@ -288,9 +217,6 @@ utils
 		swt.c
 		txt.c
 	8l
-		Plan9.c
-		Nt.c
-		Posix.c
 		asm.c
 		l.h
 		list.c
@@ -397,7 +323,7 @@ utils
 		lexbody
 		mac.c
 		macbody
-		machcap.c
+		omachcap.c
 		mkfile
 		mpatof.c
 		pickle.c
@@ -457,9 +383,6 @@ utils
 		swt.c
 		txt.c
 	kl
-		Plan9.c
-		Nt.c
-		Posix.c
 		asm.c
 		foo.c
 		l.h
@@ -485,9 +408,6 @@ utils
 		yaccpar
 	libmach
 		NOTICE
-		2.c
-		2db.c
-		2obj.c
 		4.c
 		4db.c
 		5.c
@@ -498,16 +418,13 @@ utils
 		8.c
 		8db.c
 		8obj.c
-		a.out.h
 		access.c
-		ar.h
 		bootexec.h
 		elf.h
 		executable.c
 		k.c
 		kdb.c
 		kobj.c
-		mach.h
 		machdata.c
 		map.c
 		mkfile
@@ -521,9 +438,7 @@ utils
 		sym.c
 		t.c
 		tdb.c
-		tobj.c
 		uregt.h
-		ureg2.h
 		ureg4.h
 		ureg5.h
 		ureg6.h
@@ -612,10 +527,8 @@ utils
 		mkfile
 		nm.c
 	qa
-		Ins
 		a.h
 		a.y
-		branch
 		lex.c
 		mkfile
 	qc
@@ -633,11 +546,6 @@ utils
 		swt.c
 		txt.c
 	ql
-		Plan9.c
-		Ins
-		Notes
-		Nt.c
-		Posix.c
 		asm.c
 		asmout.c
 		cnam.c
@@ -716,7 +624,6 @@ utils
 		l.s
 		lex.c
 		mkfile
-		note
 	vc
 		cgen.c
 		enam.c
@@ -732,9 +639,6 @@ utils
 		txt.c
 		v.out.h
 	vl
-		Plan9.c
-		Nt.c
-		Posix.c
 		asm.c
 		compat.c
 		l.h

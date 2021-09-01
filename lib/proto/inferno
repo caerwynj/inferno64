@@ -1,13 +1,7 @@
 CHANGES
-LICENCE
 NOTICE
 FreeBSD
 	386
-		bin
-		include
-		lib
-Hp
-	s800
 		bin
 		include
 		lib
@@ -408,7 +402,6 @@ appl
 		basename.b
 		bind.b
 		bit2gif.b
-		broke.b
 		bytes.b
 		cal.b
 		calc.b
@@ -467,7 +460,6 @@ appl
 		fc.b
 		fcp.b
 		fmt.b
-		fone.b
 		fortune.b
 		freq.b
 		fs.b
@@ -783,7 +775,6 @@ appl
 		wmexport.b
 		xargs.b
 		xd.b
-		xmount.b
 		yacc.b
 		zeros.b
 	collab
@@ -1011,7 +1002,6 @@ appl
 		fsfilter.b
 		fslib.b
 		fsproto.b
-		gamer.b
 		hash.b
 		html.b
 		ida
@@ -1074,7 +1064,6 @@ appl
 		readpng.b
 		readxbitmap.b
 		regex.b
-		regexutils.b
 		registries.b
 		rfc822.b
 		riff.b
@@ -1367,19 +1356,6 @@ appl
 		mand.b
 		mash.b
 		memory.b
-		minitel
-			README
-			event.b
-			event.m
-			keyb.b
-			miniterm.b
-			miniterm.m
-			mkfile
-			modem.b
-			screen.b
-			socket.b
-			swkeyb.b
-			swkeyb.m
 		mkfile
 		mpeg.b
 		mpeg
@@ -1499,7 +1475,6 @@ dis
 		+
 	basename.dis
 	bind.dis
-	broke.dis
 	bytes.dis
 	cal.dis
 	calc.dis
@@ -1546,7 +1521,6 @@ dis
 	fc.dis
 	fcp.dis
 	fmt.dis
-	fone.dis
 	fortune.dis
 	freq.dis
 	fs.dis
@@ -1627,7 +1601,6 @@ dis
 		fsproto.dis
 		ftree
 			+
-		gamer.dis
 		hash.dis
 		html.dis
 		ida
@@ -1681,7 +1654,6 @@ dis
 		readpng.dis
 		readxbitmap.dis
 		regex.dis
-		regexutils.dis
 		registries.dis
 		rfc822.dis
 		riff.dis
@@ -1899,8 +1871,6 @@ dis
 		mand.dis
 		mash.dis
 		memory.dis
-		minitel
-			*
 		mpeg.dis
 		mprof.dis
 		pen.dis
@@ -1932,7 +1902,6 @@ dis
 	wmexport.dis
 	xargs.dis
 	xd.dis
-	xmount.dis
 	yacc.dis
 	zeros.dis
 doc
@@ -1994,7 +1963,6 @@ doc
 	limbotk
 		tk.ms
 		tk.pdf
-	manhow.pdf
 	mk.ms
 	mk.pdf
 	perform
@@ -2075,7 +2043,6 @@ lib
 		*
 	proto
 		FreeBSD
-		Hp
 		Irix
 		Linux
 		MacOSX
@@ -2099,7 +2066,6 @@ lib
 		+
 	units
 	usbdb
-	video.specs
 	wmcharon
 	wmsetup
 	wmsetup.grid
@@ -2265,7 +2231,6 @@ module
 	freetype.m
 	fslib.m
 	fsproto.m
-	gamer.m
 	gr.m
 	grid
 		announce.m
@@ -2324,7 +2289,6 @@ module
 	rand.m
 	readdir.m
 	regex.m
-	regexutils.m
 	registries.m
 	rfc822.m
 	riff.m

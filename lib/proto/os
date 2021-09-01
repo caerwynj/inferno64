@@ -77,7 +77,6 @@ libkern
 	fmtstr.c
 	fmtvprint.c
 	frexp-386.c
-	frexp-68000.c
 	frexp-arm.c
 	frexp-mips.c
 	frexp-power.c
@@ -85,7 +84,6 @@ libkern
 	frexp-spim.c
 	frexp-thumb.c
 	getfcr-386.s
-	getfcr-68000.s
 	getfcr-arm.s
 	getfcr-mips.s
 	getfcr-power.s
@@ -101,7 +99,6 @@ libkern
 	memcmp.c
 	memmove.c
 	memmove-386.s
-	memmove-68000.s
 	memmove-arm.s
 	memmove-mips.s
 	memmove-power.s
@@ -109,7 +106,6 @@ libkern
 	memmove-sparc.s
 	memmove-thumb.s
 	memset-386.s
-	memset-68000.s
 	memset-arm.s
 	memset-mips.s
 	memset-power.s
@@ -119,16 +115,13 @@ libkern
 	memset.c
 	mkfile
 	mkfile-386
-	mkfile-68000
 	mkfile-arm
 	mkfile-mips
 	mkfile-power
 	mkfile-sparc
 	mkfile-spim
 	mkfile-thumb
-	muldiv-68000.s
 	nan-386.c
-	nan-68000.c
 	nan-arm.c
 	nan-mips.c
 	nan-power.c
@@ -148,9 +141,7 @@ libkern
 	sqrt.c
 	strcat.c
 	strchr-386.s
-	strchr-68000.s
 	strchr-arm.s
-	strchr-mips.c
 	strchr-mips.s
 	strchr-power.s
 	strchr-sparc.s
@@ -191,7 +182,6 @@ libkern
 	vlop-spim.s
 	vlop-thumb.s
 	vlrt-386.c
-	vlrt-68000.c
 	vlrt-arm.c
 	vlrt-mips.c
 	vlrt-power.c
@@ -354,7 +344,6 @@ os
 			zqs.c
 		pc
 			8250.c
-			LICENCE
 			NOTICE
 			ahci.h
 			alarm.c
@@ -750,7 +739,6 @@ os
 		devfpga.c
 		flash28f320b3b.c
 		fns.h
-		fpga
 		io.h
 		ipe
 		main.c

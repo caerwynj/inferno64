@@ -1,13 +1,6 @@
 INSTALL
 include
 	styxserver.h
-asm
-	NOTICE
-	asm.h
-	asm.y
-	assem.c
-	lex.c
-	mkfile
 emu
 	NOTICE
 	mkfile
@@ -27,8 +20,6 @@ emu
 		os.c
 		win.c
 	FreeBSD
-		+
-	Hp
 		+
 	Irix
 		+
@@ -112,7 +103,6 @@ libdraw
 libdynld
 	NOTICE
 	dynld-386.c
-	dynld-68000.c
 	dynld-arm.c
 	dynld-mips.c
 	dynld-power.c
@@ -395,26 +385,19 @@ libinterp
 	README
 	alt.c
 	comp-386.c
-	comp-68020.c
 	comp-arm.c
 	comp-mips.c
 	comp-power.c
-	comp-s800.c
 	comp-sparc.c
 	comp-spim.c
-	comp-thumb.c
 	conv.c
 	das-386.c
-	das-68000.c
-	das-68020.c
 	das-arm.c
 	das-mips.c
 	das-power.c
-	das-s800.c
 	das-sparc.c
 	das-stub.c
 	das-spim.c
-	das-thumb.c
 	dec.c
 	decgen.c
 	dlm-Inferno.c
@@ -662,7 +645,6 @@ limbo
 	nodes.c
 	optab.c
 	optim.c
-	runt.h
 	sbl.c
 	stubs.c
 	typecheck.c
@@ -670,7 +652,6 @@ limbo
 libmath
 	NOTICE
 	FPcontrol-FreeBSD.c
-	FPcontrol-Hp.c
 	FPcontrol-Inferno.c
 	FPcontrol-Irix.c
 	FPcontrol-Linux.c
@@ -745,7 +726,6 @@ libmemlayer
 	ltorear.c
 	mkfile
 	mkfile-FreeBSD
-	mkfile-Hp
 	mkfile-Inferno
 	mkfile-Irix
 	mkfile-Linux
