@@ -436,6 +436,7 @@ appl
 			format.b
 			ftl.b
 			kfs.b
+			kfs64.b
 			kfscmd.b
 			mbr.b
 			mkext.b

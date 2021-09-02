@@ -199,6 +199,7 @@ root
 # for installing to disk
 	/dis/disk/fdisk.dis
 	/dis/disk/kfs.dis
+	/dis/disk/kfs64.dis
 	/dis/disk/kfscmd.dis
 	/dis/disk/prep.dis
 # for network connectivity
