@@ -2377,6 +2377,7 @@ services
 		inferno.gif
 		start.html
 		vnlogo.gif
+	dhcpd
 src
 sys
 #mux

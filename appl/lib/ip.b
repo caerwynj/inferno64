@@ -308,7 +308,7 @@ parsemask(s: string, abits: int): (int, IPaddr)
 		if(ok < 0)
 			return (0, m);
 		if(a.isv4())
-			a.a[0:] = m.a[0:IPv4off];
+			a.a[0:] = a.a[0:IPv4off];
 		return (0, a);
 	}
 	if(len s == 1)

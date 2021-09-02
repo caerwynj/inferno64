@@ -87,7 +87,13 @@ dhcp->Otftpservername	=> "tftp",
 dhcp->Obootfile		=> "bootf",
 };
 
-
+# TODO -l is a temporary hack
+# BUG is using the sysname to find the ip from the ndb
+#	sysname could be used for the interface bound to /net
+#	and dhcpd might be using -x /net.alt
+# 9front's dhcpd finds the relevant ip using the argument ip address
+# until that functionality is added, use -l argument to set the
+#	local ip address
 init(nil: ref Draw->Context, args: list of string)
 {
 	sys = load Sys Sys->PATH;
@@ -106,15 +112,17 @@ init(nil: ref Draw->Context, args: list of string)
 	dhcp = load Dhcpserver Dhcpserver->PATH;
 	dhcp->init();
 	ipval = load Ipval Ipval->PATH;
+	ipaddr : string;
 
 	arg->init(args);
-	arg->setusage(arg->progname()+" [-ds] [-f file] [-x network] [ipaddr n ...]");
+	arg->setusage(arg->progname()+" [-ds] [-f file] [-x network] [-l ipaddr] [ipaddr n ...]");
 	while((o := arg->opt()) != 0)
 		case o {
 		'd' =>	dflag++;
 		's' =>	sflag++;
 		'x' =>	net = arg->earg();
 		'f' =>	ndbfile = arg->earg();
+		'l' =>	ipaddr = arg->earg();
 		* =>	arg->usage();
 		}
 	args = arg->argv();
@@ -133,13 +141,15 @@ init(nil: ref Draw->Context, args: list of string)
 		if(ndb == nil)
 			fail(sprint("db open %q: %r", ndbfile));
 
-		sysname = readfile("/dev/sysname");
-		if(sysname == nil)
-			fail("could not determine system name, /dev/sysname");
+		if(ipaddr == nil){
+			sysname = readfile("/dev/sysname");
+			if(sysname == nil)
+				fail("could not determine system name, /dev/sysname");
 
-		(e, nil) := ndb.findbyattr(nil, "sys", sysname, "ip");
-		if(e != nil)
-			ipaddr := e.findfirst("ip");
+			(e, nil) := ndb.findbyattr(nil, "sys", sysname, "ip");
+			if(e != nil)
+				ipaddr = e.findfirst("ip");
+		}
 		ok: int;
 		(ok, siaddr) = IPaddr.parse(ipaddr);
 		if(ok < 0 || !siaddr.isv4() || siaddr.eq(ip->v4noaddr))
@@ -294,10 +304,13 @@ pooldump()
 server()
 {
 	buf := array[2048] of byte;
+	say("starting server loop");
+	say("server <-> client");
 	for(;;) {
 		n := sys->read(bootpfd, buf, len buf);
 		if(n < 0)
 			return warn(sprint("read packet: %r"));
+		say(sprint("read packet: %d bytes", n));
 		serve(buf[:n]);
 	}
 }
@@ -332,11 +345,14 @@ serve(buf: array of byte)
 		say("bootp request");
 	} else {
 		say("dhcp request");
+			# server <- client
+		say("<- "+im.text()); # 9p debug message direction
 		om = dhcpsrv(t, im);
 	}
 
 	if(om != nil) {
-		say("<- "+om.text());
+			# server -> client
+		say("-> "+om.text()); # 9p debug message direction
 		obuf := om.pack();
 
 		ipdest := im.giaddr;
@@ -526,7 +542,8 @@ putlease(aa: ref Addr, hwaddr, clientid: array of byte, leasetime: int, hostname
 findlease(ipa: IPaddr, hwaddr, clientid: array of byte): ref Addr
 {
 	match := etheripmatch(hwaddr, ipa);
-say(sprint("findlease, ip %s, hwaddr %s clientid %s, match %d (none,hit,bad)", ipa.text(), hex(hwaddr), hex(clientid), match));
+	say(sprint("findlease, ip %s, hwaddr %s clientid %s, match %d (none,hit,bad)",
+			ipa.text(), hex(hwaddr), hex(clientid), match));
 	case match {
 	Bad =>	return nil;
 	None =>	break;
@@ -582,10 +599,14 @@ Config: adt {
 getconfig(ipaddr: string, req: array of byte, leasetimes: int): ref Config
 {
 	rattrs: list of string;
+	say(sprint("getconfig ipaddr %s", ipaddr));
 	for(i := 0; i < len req; i++) {
 		r := int req[i];
-		if(r >= 0 && r < len optattrs && optattrs[r] != nil)
+		say(sprint("getconfig r %d", r));
+		if(r >= 0 && r < len optattrs && optattrs[r] != nil){
+			say(sprint("getconfig r %d %s", r, optattrs[r]));
 			rattrs = optattrs[r]::rattrs;
+		}
 	}
 	leasetime0 := leasetime;
 	if(leasetimes)
@@ -597,12 +618,18 @@ getconfig(ipaddr: string, req: array of byte, leasetimes: int): ref Config
 	# xxx for dns we should get all matches, not just a single dns server
 	opts: list of ref Opt;
 	(r, err) := ipval->findvals(ndb, ipaddr, rattrs);
-	if(err != nil)
+	if(err != nil){
+		say(sprint("getconfig ipval->findvals(ndb, ipaddr, rattrs) returns err %s", err));
 		return nil;
+	}
 	for(; r != nil; r = tl r) {
 		(k, v) := hd r;
-		if(v == nil)
+		say(sprint("getconfig k %s v %s", k, v));
+		if(v == nil){
+			say(sprint("getconfig k %s v == nil\n", k));
 			continue;
+		}
+		say(sprint("getconfig k %s v %s", k, v));
 		o: ref Opt;
 		case k {
 		"sys" =>	o = ref Opt (dhcp->Ohostname, array of byte v);
