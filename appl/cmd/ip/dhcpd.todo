@@ -1,0 +1,51 @@
+# status
+
+dhcp is implemented and lightly tested.  bootp is not yet implemented.  enough room for improvement.
+
+
+# about
+
+ip/dhcpd is a dhcpd (it also speaks bootp).  see the manual page for more information.
+
+
+# install
+
+make sure you have $ROOT set.  now run "mk install" to compile and
+install the files.
+
+when building from within inferno, insert SYSHOST=Inferno and ROOT=
+in the mk invocations to override the values in the mkconfig.
+
+
+# latest version
+
+the latest version can be found at:
+
+        http://www.ueber.net/code/r/dhcpd
+
+
+# licence & author
+
+this code was started as an extension to inferno's ip/bootpd, but has
+been rewritten completely.
+
+all files are in the public domain.  this code has been written by
+mechiel lukkien, reachable at mechiel@ueber.net or mechiel@xs4all.nl.
+
+
+# todo
+- figure out the local ip address from the argument ip address.
+- make Dhcpmsg less ugly
+- check that we are serverid from request?
+- return multiple dns servers when configured
+- if a lease time is requested, and it's lower than the server-assigned (and reasonable), use the clients lease
+- honour max message size in request?
+- logging?
+- implement bootp requests
+- dhcp message option overload, for parsing
+- respond with unicast in same cases (unless broadcast flag is set)
+- broadcast flag must be set for some cases when sending to giaddr
+- if giaddr is set in request, allocate address from that subnet?  or at least document that we're not doing that.
+- test with various dhcp/bootp clients
+- probe to-be-handed-out addresses to verify that they really are free?
+- make more like plan 9's dhcpd?  e.g. dhcp option names.
