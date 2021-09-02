@@ -188,6 +188,7 @@ root
 	/dis/mntgen.dis
 	/dis/mount.dis
 	/dis/ns.dis
+	/dis/ps.dis
 	/dis/pwd.dis
 	/dis/read.dis
 	/dis/sh.dis
