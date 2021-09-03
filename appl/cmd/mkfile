@@ -163,6 +163,7 @@ TARG=\
 	touchcal.dis\
 	tokenize.dis\
 	tr.dis\
+	trampoline.dis\
 	trfs.dis\
 	tsort.dis\
 	ttffs.dis\
