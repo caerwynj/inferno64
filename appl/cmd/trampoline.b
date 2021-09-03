@@ -18,12 +18,6 @@ Trampoline: module
 	init:	fn(nil: ref Draw->Context, nil: list of string);
 };
 
-File: adt
-{
-	fd:	ref Sys->FD;
-	name:	string;
-};
-
 usage()
 {
 	sys->fprint(sys->fildes(2), "Usage: trampoline addr\n");
