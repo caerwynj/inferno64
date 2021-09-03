@@ -72,6 +72,7 @@ xfer(rfd, wfd: ref Sys->FD, c: chan of int)
 		if(w != r)
 			error(sys->sprint("xfer r %d w %d\n", r, w));
 	}
+	c <- 0;
 }
 
 error(s: string)
