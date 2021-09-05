@@ -136,13 +136,14 @@ Uname, Uids, Umode, Uqid, Usize, Utime: con 1<<iota;	# Dentry.mod
 
 #
 # disc structure:
-#	Tag:	pad[2] tag[2] path[8] TODO change pad?
-Tagsize: con 2+2+8;
+#	Tag:	pad[2] tag[2] path[8] cksum[4]
+Tagsize: con 2+2+8+4;
 
 Tag: adt
 {
 	tag:	int;
 	path:	big;
+	cksum:	int;
 
 	unpack:	fn(a: array of byte): Tag;
 	pack:	fn(t: self Tag, a: array of byte);
@@ -2141,7 +2142,7 @@ put8(a: array of byte, o: int, v: big)
 
 Tag.unpack(a: array of byte): Tag
 {
-	return Tag(get2(a,2), get8(a,4));
+	return Tag(get2(a,2), get8(a,4), get4(a,12));
 }
 
 Tag.pack(t: self Tag, a: array of byte)
@@ -2150,6 +2151,7 @@ Tag.pack(t: self Tag, a: array of byte)
 	put2(a, 2, t.tag);
 	if(t.path != QPNONE)
 		put8(a, 4, t.path & ~QPDIR);
+	put4(a, 12, t.cksum);
 }
 
 Superb.get(dev: ref Device, flags: int): ref Superb
@@ -2922,6 +2924,12 @@ Search:
 			p.unlock();
 			return nil;
 		}
+		cksum := checksum(p.iobuf);
+		ocksum := get4(p.iobuf, RBUFSIZE-4);
+		if(cksum != ocksum){
+			eprint(sys->sprint("block %bud: checksum failed cksum 0x%bux ocksum 0x%bux", addr, big cksum, big ocksum));
+			return nil;
+		}
 	}
 	return p;
 }
@@ -2933,6 +2941,8 @@ Iobuf.put(p: self ref Iobuf)
 	if(p.flags & Bimm){
 		if(!(p.flags & Bmod))
 			eprint(sys->sprint("imm and no mod (%bd)", p.addr));
+		cksum := checksum(p.iobuf);
+		put4(p.iobuf, RBUFSIZE-4, cksum);
 		if(!wrenwrite(p.dev.fd, p.addr, p.iobuf))
 			p.flags &= ~(Bmod|Bimm);
 		else
@@ -3042,9 +3052,47 @@ Iobuf.checktag(p: self ref Iobuf, tag: int, qpath: big): int
 	return 0;
 }
 
+# using an array of big instead of int to keep it fast
+#	ignoring the last 4 bytes before tag from the checksum calculation
+# using 1's complement addition from
+#	https://barrgroup.com/embedded-systems/how-to/additive-checksums
+#uint16_t
+#NetIpChecksum(uint16_t const ipHeader[], int nWords)
+#{
+#    uint32_t  sum = 0;
+#    /*
+#     * IP headers always contain an even number of bytes.
+#     */
+#    while (nWords-- > 0)
+#    {
+#        sum += *(ipHeader++);
+#    }
+#    /*
+#     * Use carries to compute 1's complement sum.
+#     */
+#    sum = (sum >> 16) + (sum & 0xFFFF);
+#    sum += sum >> 16;
+#    /*
+#     * Return the inverted 16-bit result.
+#     */
+#    return ((unsigned short) ~sum);
+#}   /* NetIpChecksum() */
+checksum(buf: array of byte): int
+{
+	cksum := big 0;
+	for(i := 0; i<(RBUFSIZE-4); i+=4){
+		cksum += big get4(buf,i);
+	}
+	cksum = (cksum >> 32) + (cksum & big 16rFFFFFFFF);
+	cksum += cksum >> 32;
+	return int (~cksum & big 16rFFFFFFFF);
+}
+
 Iobuf.settag(p: self ref Iobuf, tag: int, qpath: big)
 {
-	Tag(tag, qpath).pack(p.iobuf[BUFSIZE:]);
+	# checksum on the tag and qpath too
+	cksum := checksum(p.iobuf);
+	Tag(tag, qpath, cksum).pack(p.iobuf[BUFSIZE:]);
 	p.flags |= Bmod;
 }
 
