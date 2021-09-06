@@ -7,9 +7,9 @@ implement Kfs64;
 
 # Differences from kfs
 #	updating all file offsets, sizes and block numbers to 64 bits
-#	triple, quadruple, quintiple and sextuple-indirect blocks
-#	filename size 102 bytes
-#	using a default bufsize of 512 bytes, small but not too small
+#	triple, quadruple, and quintuple-indirect blocks
+#	filename size 104 bytes
+#	keeping the default bufsize of 1024 bytes
 #	added halt to shutdown using disk/kfscmd
 #	using hwblock to represent the highest touched block number
 #		to avoid reaming all the free space at once
@@ -41,14 +41,15 @@ Kfs64: module
 };
 
 MAXBUFSIZE:	con 16*1024;
+DEFAULTBUFSIZE:	con 1024;
 
 #
 #  fundamental constants
 #
-	# keeps Dentrysize to 250
-NAMELEN:	con 102; # ext2, ext3, ext4, zfs - 255 bytes, kfs - 28, cwfs - 144
+	# keeps Dentrysize to 252
+NAMELEN:	con 104; # ext2, ext3, ext4, zfs - 255 bytes, kfs - 28, cwfs - 144
 NDBLOCK:	con 8;	# number of direct blocks in Dentry
-NIBLOCK:	con 6;	# max depth of indirect blocks in Dentry - sextuple-indirect blocks
+NIBLOCK:	con 5;	# max depth of indirect blocks in Dentry - quintuple-indirect blocks
 MAXFILESIZE:	con big 16r7FFFFFFFFFFFFFFF;	# Plan 9's limit (kfs's size is signed)
 
 SUPERADDR: con big 1;	# block address of Super block
@@ -111,8 +112,7 @@ Dentry: adt
 	mod:	int;	# bits of buf that need updating
 
 	unpack:	fn(a: array of byte): ref Dentry;
-		# TODO slot is obsolete with this design of leaving each block for a Dentry
-		# leave the slot as int as it can be used as an index and it is rare to have 1TB memory
+		# slot is an index to the Dentry in a block
 	get:	fn(p: ref Iobuf, slot: int): ref Dentry; # read Dentry from a slot in the iobuf array
 		# read from device addr into iobuf array
 		# then read Dentry from a slot in that array
@@ -136,13 +136,13 @@ Uname, Uids, Umode, Uqid, Usize, Utime: con 1<<iota;	# Dentry.mod
 
 #
 # disc structure:
-#	Tag:	pad[2] tag[2] path[8] cksum[4]
-Tagsize: con 2+2+8+4;
+#	Tag:	path[8] pad[2] tag[2] cksum[4]
+Tagsize: con 8+2+2+4;
 
 Tag: adt
 {
-	tag:	int;
 	path:	big;
+	tag:	int;
 	cksum:	int;
 
 	unpack:	fn(a: array of byte): Tag;
@@ -339,7 +339,6 @@ Tind3,			# points to Tind2 - double indirect pointer
 Tind4,			# points to Tind3 - triple indirect pointer
 Tind5,			# points to Tind4 - quadruple indirect pointer
 Tind6,			# points to Tind5 - quintuple indirect pointer
-Tind7,			# points to Tind6 - sextuple indirect pointer
 Tfile,			# file contents
 Tfree,			# in free list
 Tbuck,			# cache fs bucket - why?
@@ -376,23 +375,20 @@ MAXTAG: con iota;
 #
 # could be named better but left alone for conformity
 #	BUF = block in these variables
-RBUFSIZE	:= 512;				# block size, real block size
-BUFSIZE		:= 500; # RBUFSIZE-Tagsize; # usable block size
-DIRPERBUF	:= 2;				# number of Dentries per block
-INDPERBUF	:= big 62; # BUFSIZE/8; # number of pointers in a block
+RBUFSIZE	:= DEFAULTBUFSIZE;	# block size, real block size
+BUFSIZE		:= DEFAULTBUFSIZE-Tagsize;	# RBUFSIZE-Tagsize; # usable block size
+DIRPERBUF	:= 4;		# number of Dentries per block
+INDPERBUF	:= big 126; # BUFSIZE/8; # number of pointers in a block
 	# number of blocks representable by a double indirect block of pointers
-INDPERBUF2	:= big 3844; # INDPERBUF*INDPERBUF;
+INDPERBUF2	:= big 15876; # INDPERBUF*INDPERBUF;
 	# number of blocks representable by a triple indirect block of pointers
-INDPERBUF3	:= big 238328; # INDPERBUF*INDPERBUF2;
+INDPERBUF3	:= big 2000376; # INDPERBUF*INDPERBUF2;
 	# number of blocks representable by a quadruple indirect block of pointers
-INDPERBUF4	:= big 14776336; # INDPERBUF*INDPERBUF3;
+INDPERBUF4	:= big 252047376; # INDPERBUF*INDPERBUF3;
 	# number of blocks representable by a quintuple indirect block of pointers
-INDPERBUF5	:= big 916132832; # INDPERBUF*INDPERBUF4;
-	# number of blocks representable by a sextuple indirect block of pointers
-INDPERBUF6	:= big 56800235584; # INDPERBUF*INDPERBUF5;
-	# -4 for the nfree[4] of Fbuf
+INDPERBUF5	:= big 31757969376; # INDPERBUF*INDPERBUF4;
 	# list of free blocks maintained in a Tfree block
-FEPERBUF	:= 57; # (BUFSIZE - Super1size -4)/8;
+FEPERBUF	:= 120; # (BUFSIZE - Super1size -4)/8;
 
 emptyblock: array of byte;
 
@@ -433,7 +429,7 @@ init(nil: ref Draw->Context, args: list of string)
 		error(sys->sprint("can't load %s: %r", Arg->PATH));
 	arg->init(args);
 	arg->setusage("disk/kfs [-r [-b blocksize]] [-cADPRW] [-n name] kfsfile");
-	bufsize := 512;
+	bufsize := DEFAULTBUFSIZE;
 	nocheck := 0;
 	while((o := arg->opt()) != 0)
 		case o {
@@ -469,6 +465,7 @@ init(nil: ref Draw->Context, args: list of string)
 	if(ream){
 		if(bufsize <= 0 || bufsize % 512 || bufsize > MAXBUFSIZE)
 			error(sys->sprint("invalid block size %d", bufsize));
+		RBUFSIZE = bufsize;
 		wrenream(thedevice);
 	}else{
 		if(!wreninit(thedevice))
@@ -485,8 +482,6 @@ init(nil: ref Draw->Context, args: list of string)
 	INDPERBUF4 = INDPERBUF*INDPERBUF3;
 		# number of blocks representable by a quintuple indirect block of pointers
 	INDPERBUF5 = INDPERBUF*INDPERBUF4;
-		# number of blocks representable by a sextuple indirect block of pointers
-	INDPERBUF6 = INDPERBUF*INDPERBUF5;
 		# -4 for the nfree[4] of Fbuf
 		# number of possible free block pointers in super block 
 		# the -4 to store the number of freeblockpointers
@@ -502,8 +497,7 @@ init(nil: ref Draw->Context, args: list of string)
 					DIRPERBUF, INDPERBUF, FEPERBUF);
 		sys->print("INDPERBUF2 %bd	INDPERBUF3 %bd	INDPERBUF4 %bd\n",
 					INDPERBUF2, INDPERBUF3, INDPERBUF4);
-		sys->print("INDPERBUF5 %bd	INDPERBUF6 %bd\n",
-					INDPERBUF5, INDPERBUF6);
+		sys->print("INDPERBUF5 %bd\n", INDPERBUF5);
 	}
 	iobufinit(30);	# initialize buffer pool of 30 buffers in groups of 5
 
@@ -2142,16 +2136,17 @@ put8(a: array of byte, o: int, v: big)
 
 Tag.unpack(a: array of byte): Tag
 {
-	return Tag(get2(a,2), get8(a,4), get4(a,12));
+	return Tag(get8(a,0), get2(a,10), get4(a,12));
 }
 
 Tag.pack(t: self Tag, a: array of byte)
 {
-	put2(a, 0, 0);
-	put2(a, 2, t.tag);
 	if(t.path != QPNONE)
-		put8(a, 4, t.path & ~QPDIR);
+		put8(a, 0, t.path & ~QPDIR);
+	put2(a, 8, 0);
+	put2(a, 10, t.tag);
 	put4(a, 12, t.cksum);
+
 }
 
 Superb.get(dev: ref Device, flags: int): ref Superb
@@ -2210,7 +2205,7 @@ Ofsok: con Ohwblock+8;
 #	Ororaddr: con Ofsok+8;
 #	Olast: con Ororaddr+8;
 #	Onext: con Olast+8;
-Super1size: con Ofsok+4; # 36
+Super1size: con Ofsok+4; # 44
 
 Superb.unpack(a: array of byte): ref Superb
 {
@@ -2280,6 +2275,11 @@ Dentry.getd(file: ref File, mode: int): (ref Dentry, string)
 	return (d, nil);
 }
 
+# for 4 Dentries per block
+# RBUFSIZE - 16 Tagsize = BUFSIZE
+# BUFSIZE / 4 = Dentrysize
+# RBUFSIZE = 1024, BUFSIZE = 1008, Dentry size = 252
+# Dentry size 252 - 148 = NAMELEN 104
 #  this is the disk structure:
 #	u8	name[NAMELEN];
 #	u16	uid;
@@ -2300,7 +2300,7 @@ Dentry.getd(file: ref File, mode: int): (ref Dentry, string)
 #	u64	iblock[NIBLOCK];[8*6]	140
 #	u32	atime;					144
 #	u32	mtime;					148
-#	Dentry size = (512 RBUFSIZE -Tagsize - 148 - 102 NAMELEN)/2= 250
+#	Dentry size = 252
 
 Oname: con 0;
 Ouid: con Oname+NAMELEN;
@@ -2314,7 +2314,7 @@ Odblock: con Osize+8;
 Oiblock: con Odblock+NDBLOCK*8;
 Oatime: con Oiblock+NIBLOCK*8;
 Omtime: con Oatime+4;
-Dentrysize: con Omtime+4; # kept to 250 = BUFSIZE/2 = (RBUFSIZE -Tagsize)/2
+Dentrysize: con Omtime+4; # kept to 252 = BUFSIZE/4 = (RBUFSIZE -Tagsize)/4
 
 Dentry.unpack(a: array of byte): ref Dentry
 {
@@ -2526,23 +2526,6 @@ Dentry.rel2abs(d: self ref Dentry, a: big, tag: int, putb: int): big
 		}
 		if(putb)
 			d.release();
-		addr = indfetch(dev, qpath, addr, a/INDPERBUF4, Tind5, Tind4);
-		addr = indfetch(dev, qpath, addr, a/INDPERBUF3, Tind4, Tind3);
-		addr = indfetch(dev, qpath, addr, a/INDPERBUF2, Tind3, Tind2);
-		addr = indfetch(dev, qpath, addr, a/INDPERBUF, Tind2, Tind1);
-		return indfetch(dev, qpath, addr, a%INDPERBUF, Tind1, tag);
-	}
-	a -= INDPERBUF5;
-	if(a < INDPERBUF6){
-		addr := get8(data, Oiblock+5*8);
-		if(addr == big 0 && tag){
-			addr = balloc(dev, Tind6, qpath);
-			put8(data, Oiblock+5*8, addr);
-			p.flags |= Bmod|Bimm;
-		}
-		if(putb)
-			d.release();
-		addr = indfetch(dev, qpath, addr, a/INDPERBUF5, Tind6, Tind5);
 		addr = indfetch(dev, qpath, addr, a/INDPERBUF4, Tind5, Tind4);
 		addr = indfetch(dev, qpath, addr, a/INDPERBUF3, Tind4, Tind3);
 		addr = indfetch(dev, qpath, addr, a/INDPERBUF2, Tind3, Tind2);
@@ -3017,7 +3000,6 @@ tagname(t: int): string
 	Tind4 => return "Tind4";
 	Tind5 => return "Tind5";
 	Tind6 => return "Tind6";
-	Tind7 => return "Tind7";
 	Tfile => return "Tfile";
 	Tfree => return "Tfree";
 	Tbuck => return "Tbuck";
@@ -3092,7 +3074,7 @@ Iobuf.settag(p: self ref Iobuf, tag: int, qpath: big)
 {
 	# checksum on the tag and qpath too
 	cksum := checksum(p.iobuf);
-	Tag(tag, qpath, cksum).pack(p.iobuf[BUFSIZE:]);
+	Tag(qpath, tag, cksum).pack(p.iobuf[BUFSIZE:]);
 	p.flags |= Bmod;
 }
 
@@ -3123,7 +3105,7 @@ wreninit(dev: ref Device): int
 	if(n < len buf)
 		return 0;
 	badmagic = 0;
-	RBUFSIZE = 512;
+	RBUFSIZE = DEFAULTBUFSIZE;
 	if(string buf[256:256+len wmagic] != wmagic){
 		badmagic = 1;
 		return 0;

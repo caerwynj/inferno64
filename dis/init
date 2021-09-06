@@ -74,7 +74,7 @@ echo $"sysname > '#c'/sysname
 if{~ $"sysname vmx9ferno}{
 
 	# for using the cd
-	9660srv /dev/sdF0/data /n/cd
+	9660srv -9 /dev/sdF0/data /n/cd
 	bind -a /n/cd/dis /dis
 	#bind -a /n/cd/ /
 
