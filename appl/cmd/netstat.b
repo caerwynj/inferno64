@@ -15,15 +15,25 @@ Netstat: module
 
 stderr: ref FD;
 
-init(nil: ref Context, nil: list of string)
+usage()
+{
+	sys->fprint(sys->fildes(2), "Usage: netstat [/net.alt]\n");
+	raise "fail:usage";
+}
+
+init(nil: ref Context, args: list of string)
 {
 	sys = load Sys Sys->PATH;
 
 	stderr = fildes(2);
 
-	nstat("/net/tcp", 1);
-	nstat("/net/udp", 1);
-	nstat("/net/il", 0);
+	net := "/net";
+	args = tl args;
+	if(len args == 1)
+		net = hd args;
+	nstat(net+"/tcp", 1);
+	nstat(net+"/udp", 1);
+	nstat(net+"/il", 0);
 }
 
 nstat(file: string, whine: int)
