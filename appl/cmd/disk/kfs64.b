@@ -3034,6 +3034,13 @@ Iobuf.checktag(p: self ref Iobuf, tag: int, qpath: big): int
 	return 0;
 }
 
+# this checksum use is useless and slows down processing as
+#	the disks do the crc check at the block level anyway.
+#	Leaving it in as I cannot use the cksum[4] bytes for anything
+#	else and they would be wasted for padding.
+#	might as well use those 4 bytes for something, maybe help catch
+#	memory errors?
+#	check the inferno.notes on the relevant discussion about this too.
 # using an array of big instead of int to keep it fast
 #	ignoring the last 4 bytes before tag from the checksum calculation
 # using 1's complement addition from
