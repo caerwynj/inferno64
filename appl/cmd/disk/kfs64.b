@@ -47,7 +47,7 @@ DEFAULTBUFSIZE:	con 1024;
 #  fundamental constants
 #
 	# keeps Dentrysize to 252
-NAMELEN:	con 104; # ext2, ext3, ext4, zfs - 255 bytes, kfs - 28, cwfs - 144
+NAMELEN:	con 112; # ext2, ext3, ext4, zfs - 255 bytes, kfs - 28, cwfs - 144
 NDBLOCK:	con 8;	# number of direct blocks in Dentry
 NIBLOCK:	con 5;	# max depth of indirect blocks in Dentry - quintuple-indirect blocks
 MAXFILESIZE:	con big 16r7FFFFFFFFFFFFFFF;	# Plan 9's limit (kfs's size is signed)
@@ -126,6 +126,8 @@ Dentry: adt
 		# a is the block number of the Direntry being retrieved
 	getblk:	fn(d: self ref Dentry, a: big, tag: int): ref Iobuf;
 	getblk1:	fn(d: self ref Dentry, a: big, tag: int): ref Iobuf;
+		# boffset is offset from the start of a block, so should never be more than the block size
+	putblk:	fn (d: self ref Dentry, a: big, tag: int, boffset: int, b: array of byte): ref Iobuf;
 	rel2abs:	fn(d: self ref Dentry, a: big, tag: int, putb: int): big;
 	trunc:	fn(d: self ref Dentry, uid: int);
 	update:	fn(d: self ref Dentry);
@@ -157,7 +159,11 @@ Superb: adt
 	fsize:	big;	# size in blocks
 	tfree:	big;	# total number of free blocks
 	qidgen:	big;	# generator for unique ids
-	hwblock: big;	# highest touched block number, high water block number
+		# using hwblock to avoid reaming all blocks in the beginning
+		#	or while building the list of free blocks in check()
+		# It is assumed that fsize-hwblock are all free blocks as kfs64 has not
+		#	touched them yet
+	hwblock: big;	# highest touched block number, high-water block number
 
 	fsok:	int;
 
@@ -517,7 +523,8 @@ init(nil: ref Draw->Context, args: list of string)
 	if(!ream && !readonly && !superok(0)){
 		sys->print("kfs needs check\n");
 		if(!nocheck)
-			check(thedevice, Cquiet|Cfree);
+#			check(thedevice, Cquiet|Cfree);
+			check(thedevice, Cfree);
 	}
 
 	(d, e) := Dentry.geta(thedevice, ROOTADDR, 0, QPROOT, Bread);
@@ -1374,13 +1381,17 @@ rcreate(cp: ref Chan, f: ref Tmsg.Create): ref Rmsg
 	if(f.name == "." || f.name == "..")
 		return ferr(f, Edot, file, p);
 
+	# loop through all directory children to check for duplicates
 	addr1 := big 0;	# block with first empty slot, if any
 	slot1 := 0;
 	for(addr := big 0; ; addr++){
 		if((p1 := d.getblk(addr, 0)) == nil){
+			# no more directory children
+			# if an empty slot was found, use it
+			# else create an empty block for the new Dentry
 			if(addr1 != big 0)
 				break;
-			p1 = d.getblk(addr, Tdir);
+			p1 = d.putblk(addr, Tdir, 0, emptyblock);
 		}
 		if(p1 == nil)
 			return ferr(f, Efull, file, p);
@@ -1392,11 +1403,13 @@ rcreate(cp: ref Chan, f: ref Tmsg.Create): ref Rmsg
 			d1 := Dentry.get(p1, slot);
 			if(!(d1.mode & DALLOC)){
 				if(addr1 == big 0){
+					# use the first empty slot for creating
 					addr1 = p1.addr;
 					slot1 = slot; # + addr*DIRPERBUF; # TODO
 				}
 				continue;
 			}
+			# check all 
 			if(f.name == d1.name){
 				p1.put();
 				return ferr(f, Eexist, file, p);
@@ -1708,16 +1721,13 @@ rwrite(cp: ref Chan, f: ref Tmsg.Write): ref Rmsg
 		if(n > count)
 			n = count;
 		qpath := d.qid.path;
-		p1 := d.getblk1(addr, Tfile);
+		p1 := d.putblk(addr, Tfile, o, f.data[nwrite:nwrite+n]);
 		if(p1 == nil)
 			return ferr(f, Efull, file, nil);
 		if(p1.checktag(Tfile, qpath)){
 			p1.put();
 			return ferr(f, Ealloc, file, nil);
 		}
-		p1.iobuf[o:] = f.data[nwrite:nwrite+n];
-		p1.flags |= Bmod;
-		p1.put();
 		count -= n;
 		nwrite += n;
 		offset += big n;
@@ -2279,11 +2289,11 @@ Dentry.getd(file: ref File, mode: int): (ref Dentry, string)
 # RBUFSIZE - 16 Tagsize = BUFSIZE
 # BUFSIZE / 4 = Dentrysize
 # RBUFSIZE = 1024, BUFSIZE = 1008, Dentry size = 252
-# Dentry size 252 - 148 = NAMELEN 104
+# Dentry size 252 - 140 = NAMELEN 112
 #  this is the disk structure:
 #	u8	name[NAMELEN];
 #	u16	uid;
-#	u16	gid;		[2*2]
+#	u16	gid;		[2*2] 4
 #	u16	mode;
 #		#define	DALLOC	0x8000
 #		#define	DDIR	0x4000
@@ -2292,14 +2302,14 @@ Dentry.getd(file: ref File, mode: int): (ref Dentry, string)
 #		#define	DREAD	0x4
 #		#define	DWRITE	0x2
 #		#define	DEXEC	0x1
-#	[u16 muid]		[2*2]
+#	[u16 muid]		[2*2] 8
 #	Qid.path;			[8]	16
 #	Qid.version;		[4]	20
 #	u64	size;			[8]	28
 #	u64	dblock[NDBLOCK];[8*8]	92
-#	u64	iblock[NIBLOCK];[8*6]	140
-#	u32	atime;					144
-#	u32	mtime;					148
+#	u64	iblock[NIBLOCK];[8*5]	132
+#	u32	atime;					136
+#	u32	mtime;					140
 #	Dentry size = 252
 
 Oname: con 0;
@@ -2428,7 +2438,7 @@ Dentry.getblk(d: self ref Dentry, a: big, tag: int): ref Iobuf
 }
 
 #
-# same as Dentry.buf but calls d.release
+# same as Dentry.getblk but calls d.release
 # to reduce interference.
 #
 Dentry.getblk1(d: self ref Dentry, a: big, tag: int): ref Iobuf
@@ -2453,11 +2463,6 @@ Dentry.rel2abs(d: self ref Dentry, a: big, tag: int, putb: int): big
 	dev := p.dev;
 	if(a < big NDBLOCK){
 		addr := get8(data, Odblock+int a*8);
-		if(addr == big 0 && tag){
-			addr = balloc(dev, tag, qpath);
-			put8(data, Odblock+int a*8, addr);
-			p.flags |= Bmod|Bimm;
-		}
 		if(putb)
 			d.release();
 		return addr;
@@ -2465,72 +2470,47 @@ Dentry.rel2abs(d: self ref Dentry, a: big, tag: int, putb: int): big
 	a -= big NDBLOCK;
 	if(a < INDPERBUF){
 		addr := get8(data, Oiblock);
-		if(addr == big 0 && tag){
-			addr = balloc(dev, Tind1, qpath);
-			put8(data, Oiblock, addr);
-			p.flags |= Bmod|Bimm;
-		}
 		if(putb)
 			d.release();
-		return  indfetch(dev, qpath, addr, a, Tind1, tag);
+		return  indfetch(dev, qpath, addr, a, Tind1);
 	}
 	a -= INDPERBUF;
 	if(a < INDPERBUF2){
 		addr := get8(data, Oiblock+1*8);
-		if(addr == big 0 && tag){
-			addr = balloc(dev, Tind2, qpath);
-			put8(data, Oiblock+1*8, addr);
-			p.flags |= Bmod|Bimm;
-		}
 		if(putb)
 			d.release();
-		addr = indfetch(dev, qpath, addr, a/INDPERBUF, Tind2, Tind1);
-		return indfetch(dev, qpath, addr, a%INDPERBUF, Tind1, tag);
+		addr = indfetch(dev, qpath, addr, a/INDPERBUF, Tind2);
+		return indfetch(dev, qpath, addr, a%INDPERBUF, Tind1);
 	}
 	a -= INDPERBUF2;
 	if(a < INDPERBUF3){
 		addr := get8(data, Oiblock+2*8);
-		if(addr == big 0 && tag){
-			addr = balloc(dev, Tind3, qpath);
-			put8(data, Oiblock+2*8, addr);
-			p.flags |= Bmod|Bimm;
-		}
 		if(putb)
 			d.release();
-		addr = indfetch(dev, qpath, addr, a/INDPERBUF2, Tind3, Tind2);
-		addr = indfetch(dev, qpath, addr, a/INDPERBUF, Tind2, Tind1);
-		return indfetch(dev, qpath, addr, a%INDPERBUF, Tind1, tag);
+		addr = indfetch(dev, qpath, addr, a/INDPERBUF2, Tind3);
+		addr = indfetch(dev, qpath, addr, a/INDPERBUF, Tind2);
+		return indfetch(dev, qpath, addr, a%INDPERBUF, Tind1);
 	}
 	a -= INDPERBUF3;
 	if(a < INDPERBUF4){
 		addr := get8(data, Oiblock+3*8);
-		if(addr == big 0 && tag){
-			addr = balloc(dev, Tind4, qpath);
-			put8(data, Oiblock+3*8, addr);
-			p.flags |= Bmod|Bimm;
-		}
 		if(putb)
 			d.release();
-		addr = indfetch(dev, qpath, addr, a/INDPERBUF3, Tind4, Tind3);
-		addr = indfetch(dev, qpath, addr, a/INDPERBUF2, Tind3, Tind2);
-		addr = indfetch(dev, qpath, addr, a/INDPERBUF, Tind2, Tind1);
-		return indfetch(dev, qpath, addr, a%INDPERBUF, Tind1, tag);
+		addr = indfetch(dev, qpath, addr, a/INDPERBUF3, Tind4);
+		addr = indfetch(dev, qpath, addr, a/INDPERBUF2, Tind3);
+		addr = indfetch(dev, qpath, addr, a/INDPERBUF, Tind2);
+		return indfetch(dev, qpath, addr, a%INDPERBUF, Tind1);
 	}
 	a -= INDPERBUF4;
 	if(a < INDPERBUF5){
 		addr := get8(data, Oiblock+4*8);
-		if(addr == big 0 && tag){
-			addr = balloc(dev, Tind5, qpath);
-			put8(data, Oiblock+4*8, addr);
-			p.flags |= Bmod|Bimm;
-		}
 		if(putb)
 			d.release();
-		addr = indfetch(dev, qpath, addr, a/INDPERBUF4, Tind5, Tind4);
-		addr = indfetch(dev, qpath, addr, a/INDPERBUF3, Tind4, Tind3);
-		addr = indfetch(dev, qpath, addr, a/INDPERBUF2, Tind3, Tind2);
-		addr = indfetch(dev, qpath, addr, a/INDPERBUF, Tind2, Tind1);
-		return indfetch(dev, qpath, addr, a%INDPERBUF, Tind1, tag);
+		addr = indfetch(dev, qpath, addr, a/INDPERBUF4, Tind5);
+		addr = indfetch(dev, qpath, addr, a/INDPERBUF3, Tind4);
+		addr = indfetch(dev, qpath, addr, a/INDPERBUF2, Tind3);
+		addr = indfetch(dev, qpath, addr, a/INDPERBUF, Tind2);
+		return indfetch(dev, qpath, addr, a%INDPERBUF, Tind1);
 	}
 	if(putb)
 		d.release();
@@ -2538,33 +2518,134 @@ Dentry.rel2abs(d: self ref Dentry, a: big, tag: int, putb: int): big
 	return big 0;
 }
 
-indfetch(dev: ref Device, path: big, addr: big, a: big, itag: int, tag: int): big
+indfetch(dev: ref Device, path: big, addr: big, a: big, itag: int): big
 {
 	if(addr == big 0)
 		return big 0;
 	bp := Iobuf.get(dev, addr, Bread);
 	if(bp == nil){
-		sys->print("ind fetch bp = nil\n");
+		cprint("ind fetch bp = nil\n");
 		return big 0;
 	}
 	if(bp.checktag(itag, path)){
-		sys->print("ind fetch tag\n");
+		cprint("ind fetch tag\n");
 		bp.put();
 		return big 0;
 	}
 	addr = get8(bp.iobuf, int a*8);
-	if(addr == big 0 && tag){
-		addr = balloc(dev, tag, path);
-		if(addr != big 0){
-			put8(bp.iobuf, int a*8, addr);
-			bp.flags |= Bmod;
-			if(localfs || tag == Tdir)
-				bp.flags |= Bimm;
-			bp.settag(itag, path);
-		}
-	}
-	bp.put();
 	return addr;
+}
+
+#
+# save b to the a'th block of this Dentry at boffset
+# 	boffset is offset from the start of a block, so should never be more than the block size
+#
+Dentry.putblk(d: self ref Dentry, a: big, tag: int, boffset: int, b: array of byte): ref Iobuf
+{
+	if(a < big 0){
+		cprint("Dentry.rel2abs: neg\n");
+		return nil;
+	}
+	p := d.iob;
+	if(p == nil || d.buf == nil)
+		panic("nil iob");
+	data := d.buf;
+	qpath := d.qid.path;
+	dev := p.dev;
+	if(a < big NDBLOCK){
+		p1 := putdata(dev, qpath, d.iob, data[Odblock:], a, tag, boffset, b);
+		d.release();
+		return p1;
+	}
+	a -= big NDBLOCK;
+	if(a < INDPERBUF){
+		p1 := indstore(dev, qpath, d.iob, data[Oiblock:], a, Tind1, tag, boffset, b);
+		d.release();
+		return p1;
+	}
+	a -= INDPERBUF;
+	if(a < INDPERBUF2){
+		p1 := indstore(dev, qpath, d.iob, data[Oiblock+1*8:], a, Tind2, tag, boffset, b);
+		d.release();
+		return p1;
+	}
+	a -= INDPERBUF2;
+	if(a < INDPERBUF3){
+		p1 := indstore(dev, qpath, d.iob, data[Oiblock+2*8:], a, Tind3, tag, boffset, b);
+		d.release();
+		return p1;
+	}
+	a -= INDPERBUF3;
+	if(a < INDPERBUF4){
+		p1 := indstore(dev, qpath, d.iob, data[Oiblock+3*8:], a, Tind4, tag, boffset, b);
+		d.release();
+		return p1;
+	}
+	a -= INDPERBUF4;
+	if(a < INDPERBUF5){
+		p1 := indstore(dev, qpath, d.iob, data[Oiblock+4*8:], a, Tind5, tag, boffset, b);
+		d.release();
+		return p1;
+	}
+	d.release();
+	sys->print("Dentry.buf: trip indirect a %bd tag %d %s\n", a, tag, tagname(tag));
+	return nil;
+}
+
+# finally storing the data
+putdata(dev: ref Device, qpath: big, p: ref Iobuf, buf: array of byte, a: big, tag: int, boffset: int, b: array of byte): ref Iobuf
+{
+		addr := get8(buf, int a* 8);
+		if(addr == big 0 && tag){
+			addr = balloc(dev, tag, qpath);
+			put8(buf, int a* 8, addr);
+			p.flags |= Bmod|Bimm;
+		}
+		p1 := Iobuf.get(thedevice, addr, Bread);
+		p1.iobuf[boffset:] = b;
+		p1.flags |= Bmod;
+		p1.put();
+		return p1;
+}
+
+indoffset(tag: int): big
+{
+	case tag
+	{
+		Tind1 => return INDPERBUF;
+		Tind2 => return INDPERBUF2;
+		Tind3 => return INDPERBUF3;
+		Tind4 => return INDPERBUF4;
+		Tind5 => return INDPERBUF5;
+		* => cprint("unknown tag");
+			return big 0;
+	}
+	return big 0;
+}
+
+# walk the indirect pointer tree to the relevant data block and put data there
+#	if there is no indirect pointer yet to this data block, create one
+indstore(dev: ref Device, qpath: big, p: ref Iobuf, buf: array of byte, a: big, itag: int, tag: int, boffset: int, b: array of byte): ref Iobuf
+{
+	if(a == big 0)
+		return nil;
+	indoff := indoffset(itag);
+	addrloc := int (a/indoff)*8;
+	addr := get8(buf, addrloc);
+	if(addr == big 0 && tag){
+		addr = balloc(dev, itag, qpath);
+		put8(buf, addrloc, addr);
+		p.flags |= Bmod|Bimm;
+	}
+	p1 := Iobuf.get(thedevice, addr, Bread);
+	p2 : ref Iobuf;
+	if(itag == Tind1)
+			p2 = putdata(dev, qpath, p1, p1.iobuf, a%indoff, tag, boffset, b);
+	else
+			p2 = indstore(dev, qpath, p1, p1.iobuf, a%indoff, itag-1, tag, boffset, b);
+	p1.flags |= Bmod;
+	p1.put();
+	return p2;
 }
 
 # allocate a disk block
@@ -3697,11 +3778,18 @@ Check.check(c: self ref Check)
 		cprint(sys->sprint("invalid size in superblock"));
 		return;
 	}
-	c.amap = Map.new(fstart, fsize);
+	hwblock := sb.hwblock;
+	if(hwblock < fstart || hwblock > fsize){
+		cprint(sys->sprint("invalid hwblock in superblock"));
+		return;
+	}
+	c.amap = Map.new(fstart, hwblock);
 
 	nqid := sb.qidgen+big 100;		# not as much of a botch
-	if(nqid > big (1024*1024*8))
+	if(nqid > big (1024*1024*8)){
+		cprint(sys->sprint("nqid > big (1024*1024*8)"));
 		nqid = big (1024*1024*8);
+	}
 	if(nqid < big (64*1024))
 		nqid = big (64*1024);
 	c.qmap = Map.new(big 0, nqid);
@@ -3759,7 +3847,7 @@ Check.check(c: self ref Check)
 		cprint(sys->sprint("%8bd files", c.nfiles));
 		cprint(sys->sprint("%8bd blocks in the file system", fsize-fstart));
 		cprint(sys->sprint("%8bd used blocks", nused));
-		cprint(sys->sprint("%8bd free blocks", sb.tfree));
+		cprint(sys->sprint("%8bd free blocks", sb.tfree+fsize-hwblock));
 	}
 	if(!(c.flags & Cfree)){
 		if(nfree != sb.tfree)
@@ -3767,7 +3855,7 @@ Check.check(c: self ref Check)
 		if(nfdup > big 0)
 			cprint(sys->sprint("%8bd blocks duplicated in the free list", nfdup));
 		if(fsize-fstart-nused-nfree > big 0)
-			cprint(sys->sprint("%8bd missing blocks", fsize-fstart-nused-nfree));
+			cprint(sys->sprint("%8bd missing blocks", hwblock-fstart-nused-nfree));
 	}
 	if(ndup > big 0)
 		cprint(sys->sprint("%8bd address duplications", ndup));
@@ -4108,7 +4196,7 @@ Check.fmark(c: self ref Check,a: big): int
 Check.missing(c: self ref Check, sb: ref Superb)
 {
 	n := 0;
-	for(a:=sb.fsize-sb.fstart-big 1; a>=big 0; a--){
+	for(a:=sb.hwblock-sb.fstart-big 1; a>=big 0; a--){
 		i := a>>3;
 		b := byte (1 << int (a&big 7));
 		if((c.amap.bits[int i] & b) == byte 0){
