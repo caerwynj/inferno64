@@ -457,7 +457,7 @@ readnum(ulong off, char *buf, ulong n, ulong val, int size)
 
 	if(size > 64) size = 64;
 
-	snprint(tmp, sizeof(tmp), "%*.0lud ", size, val);
+	snprint(tmp, sizeof(tmp), "%*.0ld ", size, val);
 	if(off >= size)
 		return 0;
 	if(off+n > size)

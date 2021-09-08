@@ -215,60 +215,60 @@ OP(iexpf)
 }
 OP(indx)
 {
-	ulong i;
+	uintptr i;
 	Array *a;
 
 	a = A(s);
 	i = W(d);
-	DP("indx a %p a->len %lld i %ld\n", a, a->len, i);
+	DP("indx a %p a->len %zd i %zd\n", a, a->len, i);
 	if(a == H || i >= a->len)
 		error(exBounds);
 	W(m) = (WORD)(a->data+i*a->t->size);
 }
 OP(indw)
 {
-	ulong i;
+	uintptr i;
 	Array *a;
 
 	a = A(s);
 	i = W(d);
-	DP("indw a %p a->len %lld i %ld\n", a, a->len, i);
+	DP("indw a %p a->len %zd i %zd\n", a, a->len, i);
 	if(a == H || i >= a->len)
 		error(exBounds);
 	W(m) = (WORD)(a->data+i*sizeof(WORD));
 }
 OP(indf)
 {
-	ulong i;
+	uintptr i;
 	Array *a;
 
 	a = A(s);
 	i = W(d);
-	DP("indf a %p a->len %lld i %ld\n", a, a->len, i);
+	DP("indf a %p a->len %zd i %zd\n", a, a->len, i);
 	if(a == H || i >= a->len)
 		error(exBounds);
 	W(m) = (WORD)(a->data+i*sizeof(REAL));
 }
 OP(indl)
 {
-	ulong i;
+	uintptr i;
 	Array *a;
 
 	a = A(s);
 	i = W(d);
-	DP("indl a %p a->len %lld i %ld\n", a, a->len, i);
+	DP("indl a %p a->len %zd i %zd\n", a, a->len, i);
 	if(a == H || i >= a->len)
 		error(exBounds);
 	W(m) = (WORD)(a->data+i*sizeof(LONG));
 }
 OP(indb)
 {
-	ulong i;
+	uintptr i;
 	Array *a;
 
 	a = A(s);
 	i = W(d);
-	DP("indb a %p a->len %lld i %ld\n", a, a->len, i);
+	DP("indb a %p a->len %zd a->data 0x%p i %zd\n", a, a->len, a->data, i);
 	if(a == H || i >= a->len)
 		error(exBounds);
 	W(m) = (WORD)(a->data+i*sizeof(BYTE));

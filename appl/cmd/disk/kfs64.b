@@ -3581,6 +3581,13 @@ Lock.unlock(l: self ref Lock)
 #
 # kfs check, could be a separate module if that seemed important
 #
+# check() kicks off the fsck() on the root directory
+# fsck() walks through each child file and directory
+#	and marks every block and qid that are being used
+#	in amap and qmap. If the child is a directory, then fsck()
+#	descends into it and fsck()'s each child.
+#	if a bit has already been marked, then we have a duplicate
+#	if a block number is <= fstart and >= fsize, then bad
 
 MAXDEPTH: con 100;
 MAXNAME: con 4000;
@@ -3602,8 +3609,8 @@ Map: adt {
 Check: adt {
 	dev:	ref Device;
 
-	amap:	ref Map;
-	qmap:	ref Map;
+	amap:	ref Map;	# bit map of all blocks
+	qmap:	ref Map;	# bit map of max qid used + 100
 
 	name:	string;
 	nfiles:	big;

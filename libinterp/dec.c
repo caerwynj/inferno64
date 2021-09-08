@@ -4,7 +4,7 @@
 #include "isa.h"
 #include "interp.h"
 
-#define DIND(reg, xxx) (uchar*)((*(ulong*)(R.reg+R.PC->xxx.i.f))+R.PC->xxx.i.s)
+#define DIND(reg, xxx) (uchar*)((*(uintptr*)(R.reg+R.PC->xxx.i.f))+R.PC->xxx.i.s)
 static void
 D00(void)
 {

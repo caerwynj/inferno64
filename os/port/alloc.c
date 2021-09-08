@@ -18,7 +18,7 @@ struct Pool
 	char*	name;
 	int	pnum;
 	uintptr	maxsize;
-	int	quanta;
+	intptr	quanta;
 	int	chunk;
 	uintptr	ressize;
 	uintptr	cursize;
@@ -29,8 +29,8 @@ struct Pool
 	Bhdr*	chain;
 	uintptr	nalloc;
 	uintptr	nfree;
-	int	nbrk;
-	int	lastfree;
+	intptr	nbrk;
+	intptr	lastfree;
 	int	warn;
 	void	(*move)(void*, void*);
 };
@@ -955,7 +955,7 @@ _auditmemloc(char *str, void *v)
 	char *fmsg, *msg;
 	uintptr fsz;
 
-	SET(fsz, fmsg);
+	SET(fsz, fmsg, nb);
 	for (p = &table.pool[0]; p < &table.pool[nelem(table.pool)]; p++) {
 		ilock(&p->l);
 		for (bc = p->chain; bc != nil; bc = bc->clink) {
