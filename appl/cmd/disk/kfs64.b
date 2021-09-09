@@ -505,7 +505,7 @@ init(nil: ref Draw->Context, args: list of string)
 					INDPERBUF2, INDPERBUF3, INDPERBUF4);
 		sys->print("INDPERBUF5 %bd\n", INDPERBUF5);
 	}
-	iobufinit(30);	# initialize buffer pool of 30 buffers in groups of 5
+	iobufinit(500);	# initialize buffer pool of 500 buffers in groups of 5
 
 	if(ream){
 		if(debug)
