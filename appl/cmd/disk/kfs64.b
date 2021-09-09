@@ -138,14 +138,14 @@ Uname, Uids, Umode, Uqid, Usize, Utime: con 1<<iota;	# Dentry.mod
 
 #
 # disc structure:
-#	Tag:	path[8] pad[2] tag[2] cksum[4]
-Tagsize: con 8+2+2+4;
+#	Tag:	unused[4] pad[2] tag[2] path[8]
+#	using unused[4] to align to 64 bits
+Tagsize: con 4+2+2+8;
 
 Tag: adt
 {
-	path:	big;
 	tag:	int;
-	cksum:	int;
+	path:	big;
 
 	unpack:	fn(a: array of byte): Tag;
 	pack:	fn(t: self Tag, a: array of byte);
@@ -1391,7 +1391,7 @@ rcreate(cp: ref Chan, f: ref Tmsg.Create): ref Rmsg
 			# else create an empty block for the new Dentry
 			if(addr1 != big 0)
 				break;
-			p1 = d.putblk(addr, Tdir, 0, emptyblock);
+			p1 = d.putblk(addr, Tdir, 0, emptyblock[0:BUFSIZE]);
 		}
 		if(p1 == nil)
 			return ferr(f, Efull, file, p);
@@ -1399,9 +1399,10 @@ rcreate(cp: ref Chan, f: ref Tmsg.Create): ref Rmsg
 			p1.put();
 			return ferr(f, Ephase, file, p);
 		}
+
 		for(slot := 0; slot < DIRPERBUF; slot++){
 			d1 := Dentry.get(p1, slot);
-			if(!(d1.mode & DALLOC)){
+		if(!(d1.mode & DALLOC)){
 				if(addr1 == big 0){
 					# use the first empty slot for creating
 					addr1 = p1.addr;
@@ -1479,10 +1480,12 @@ rcreate(cp: ref Chan, f: ref Tmsg.Create): ref Rmsg
 		# if nil, out of tlock structures
 	}
 	d1.access(FWRITE, file.uid);
+	d1.size = big 0; # should not be needed as we start off with an emptyblock anyway
 	d1.change(~0);
 	d1.update();
 	qid := mkqid(path, 0, d1.mode);
 	p1.put();
+	d.size += big Dentrysize;
 	d.change(~0);
 	d.access(FWRITE, file.uid);
 	d.update();
@@ -1554,7 +1557,6 @@ Dread:
 			break;
 		if(p1.checktag(Tdir, QPNONE))
 			return ferr(f, Ephase, file, p1);
-
 		for(; slot < DIRPERBUF; slot++){
 			d1 = Dentry.get(p1, slot);
 			if(!(d1.mode & DALLOC))
@@ -1702,8 +1704,6 @@ rwrite(cp: ref Chan, f: ref Tmsg.Write): ref Rmsg
 	if(end > d.size){
 		if(end > MAXFILESIZE)
 			return ferr(f, Etoobig, file, nil);
-		d.size = end;
-		d.change(Usize);
 	}
 	d.update();
 
@@ -1731,12 +1731,19 @@ rwrite(cp: ref Chan, f: ref Tmsg.Write): ref Rmsg
 		count -= n;
 		nwrite += n;
 		offset += big n;
+		if(d.size < offset){
+			d.size = offset;
+			d.change(Usize);
+		}
+		p1.put();
 	}
 	d.put();
 	file.unlock();
 	return ref Rmsg.Write(f.tag, nwrite);
 }
 
+# slots are not given back. They are reused on a create though.
+# Hence, the directory size does not decrease.
 doremove(f: ref File, iscon: int): string
 {
 	if(isro(f.fs) || f.cons == 0 && (writegroup && !ingroup(f.uid, writegroup)))
@@ -2146,17 +2153,14 @@ put8(a: array of byte, o: int, v: big)
 
 Tag.unpack(a: array of byte): Tag
 {
-	return Tag(get8(a,0), get2(a,10), get4(a,12));
+	return Tag(get2(a,6), get8(a,8));
 }
 
 Tag.pack(t: self Tag, a: array of byte)
 {
+	put2(a, 6, t.tag);
 	if(t.path != QPNONE)
-		put8(a, 0, t.path & ~QPDIR);
-	put2(a, 8, 0);
-	put2(a, 10, t.tag);
-	put4(a, 12, t.cksum);
-
+		put8(a, 8, t.path & ~QPDIR);
 }
 
 Superb.get(dev: ref Device, flags: int): ref Superb
@@ -2256,7 +2260,7 @@ Dentry.get(p: ref Iobuf, slot: int): ref Dentry
 	d.buf = buf;
 	return d;
 }
-
+# any Dentry at that addr and slot
 Dentry.geta(fs: ref Device, addr: big, slot: int, qpath: big, mode: int): (ref Dentry, string)
 {
 	p := Iobuf.get(fs, addr, mode);
@@ -2514,7 +2518,7 @@ Dentry.rel2abs(d: self ref Dentry, a: big, tag: int, putb: int): big
 	}
 	if(putb)
 		d.release();
-	sys->print("Dentry.buf: trip indirect a %bd tag %d %s putb %d\n", a, tag, tagname(tag),putb);
+	sys->print("Dentry.rel2abs: trip indirect a %bd tag %d %s putb %d\n", a, tag, tagname(tag),putb);
 	return big 0;
 }
 
@@ -2533,6 +2537,7 @@ indfetch(dev: ref Device, path: big, addr: big, a: big, itag: int): big
 		return big 0;
 	}
 	addr = get8(bp.iobuf, int a*8);
+	bp.put();
 	return addr;
 }
 
@@ -2554,40 +2559,33 @@ Dentry.putblk(d: self ref Dentry, a: big, tag: int, boffset: int, b: array of by
 	dev := p.dev;
 	if(a < big NDBLOCK){
 		p1 := putdata(dev, qpath, d.iob, data[Odblock:], a, tag, boffset, b);
-		d.release();
 		return p1;
 	}
 	a -= big NDBLOCK;
 	if(a < INDPERBUF){
 		p1 := indstore(dev, qpath, d.iob, data[Oiblock:], a, Tind1, tag, boffset, b);
-		d.release();
 		return p1;
 	}
 	a -= INDPERBUF;
 	if(a < INDPERBUF2){
 		p1 := indstore(dev, qpath, d.iob, data[Oiblock+1*8:], a, Tind2, tag, boffset, b);
-		d.release();
 		return p1;
 	}
 	a -= INDPERBUF2;
 	if(a < INDPERBUF3){
 		p1 := indstore(dev, qpath, d.iob, data[Oiblock+2*8:], a, Tind3, tag, boffset, b);
-		d.release();
 		return p1;
 	}
 	a -= INDPERBUF3;
 	if(a < INDPERBUF4){
 		p1 := indstore(dev, qpath, d.iob, data[Oiblock+3*8:], a, Tind4, tag, boffset, b);
-		d.release();
 		return p1;
 	}
 	a -= INDPERBUF4;
 	if(a < INDPERBUF5){
 		p1 := indstore(dev, qpath, d.iob, data[Oiblock+4*8:], a, Tind5, tag, boffset, b);
-		d.release();
 		return p1;
 	}
-	d.release();
 	sys->print("Dentry.buf: trip indirect a %bd tag %d %s\n", a, tag, tagname(tag));
 	return nil;
 }
@@ -2605,7 +2603,7 @@ putdata(dev: ref Device, qpath: big, p: ref Iobuf, buf: array of byte, a: big, t
 		p1.iobuf[boffset:] = b;
 		p1.flags |= Bmod;
 		p1.put();
-		return p1;
+		return Iobuf.get(thedevice, addr, Bread);
 }
 
 indoffset(tag: int): big
@@ -2627,8 +2625,6 @@ indoffset(tag: int): big
 #	if there is no indirect pointer yet to this data block, create one
 indstore(dev: ref Device, qpath: big, p: ref Iobuf, buf: array of byte, a: big, itag: int, tag: int, boffset: int, b: array of byte): ref Iobuf
 {
-	if(a == big 0)
-		return nil;
 	indoff := indoffset(itag);
 	addrloc := int (a/indoff)*8;
 	addr := get8(buf, addrloc);
@@ -2678,7 +2674,8 @@ balloc(dev: ref Device, tag: int, qpath: big): big
 				}
 				sb.hwblock = end;
 				sb.touched();
-				sb.print();
+				if(debug)
+					sb.print();
 				sb.put();
 				return balloc(dev, tag, qpath);
 			}
@@ -2716,6 +2713,7 @@ balloc(dev: ref Device, tag: int, qpath: big): big
 	return a;
 }
 # add a freed block to the list of free blocks
+#	recursively drills through indirect pointer blocks
 bfree(dev: ref Device, addr: big, d: int)
 {
 	if(addr == big 0)
@@ -2789,19 +2787,11 @@ Dentry.trunc(d: self ref Dentry, uid: int)
 {
 	p := d.iob;
 	data := d.buf;
-	bfree(p.dev, get8(data, Oiblock+5*8), 6);
-	put8(data, Oiblock+5*8, big 0);
-	bfree(p.dev, get8(data, Oiblock+4*8), 5);
-	put8(data, Oiblock+4*8, big 0);
-	bfree(p.dev, get8(data, Oiblock+3*8), 4);
-	put8(data, Oiblock+3*8, big 0);
-	bfree(p.dev, get8(data, Oiblock+2*8), 3);
-	put8(data, Oiblock+2*8, big 0);
-	bfree(p.dev, get8(data, Oiblock+1*8), 2);
-	put8(data, Oiblock+1*8, big 0);
-	bfree(p.dev, get8(data, Oiblock), 1);
-	put8(data, Oiblock, big 0);
-	for(i:=NDBLOCK-1; i>=0; i--){
+	for(i:=NIBLOCK-1; i>=0; i--){
+		bfree(p.dev, get8(data, Oiblock+i*8), i+1);
+		put8(data, Odblock+i*8, big 0);
+	}
+	for(i=NDBLOCK-1; i>=0; i--){
 		bfree(p.dev, get8(data, Odblock+i*8), 0);
 		put8(data, Odblock+i*8, big 0);
 	}
@@ -2829,13 +2819,19 @@ Dentry.print(d: self ref Dentry, msg: string)
 		msg, d.name, len d.name, len array of byte d.name, d.uid, d.gid, d.mode, d.qid.path, d.qid.vers, d.size);
 	p := d.iob;
 	if(p != nil && (data := p.iobuf) != nil){
-		sys->print("\tdblock=");
-		for(i := 0; i < NDBLOCK; i++)
-			sys->print(" %bd", get8(data, Odblock+i*8));
-		sys->print("\tiblock=");
-		for(i = 0; i < NIBLOCK; i++)
-			sys->print(" %bd", get8(data, Oiblock+i*8));
-		sys->print("\n");
+		for(slot:=0; slot<BUFSIZE/Dentrysize; slot++){
+			qid := get8(data, slot*Dentrysize+Opath);
+			qid &=  ~QPDIR;
+			if(qid!= big 0 && d.qid.path == qid){
+				sys->print("\tdblock=");
+				for(i := 0; i < NDBLOCK; i++)
+					sys->print(" %bd", get8(data, slot*Dentrysize+Odblock+i*8));
+				sys->print("\tiblock=");
+				for(i = 0; i < NIBLOCK; i++)
+					sys->print(" %bd", get8(data, slot*Dentrysize+Oiblock+i*8));
+				sys->print("\n");
+			}
+		}
 	}
 }
 
@@ -2988,12 +2984,6 @@ Search:
 			p.unlock();
 			return nil;
 		}
-		cksum := checksum(p.iobuf);
-		ocksum := get4(p.iobuf, RBUFSIZE-4);
-		if(cksum != ocksum){
-			eprint(sys->sprint("block %bud: checksum failed cksum 0x%bux ocksum 0x%bux", addr, big cksum, big ocksum));
-			return nil;
-		}
 	}
 	return p;
 }
@@ -3005,8 +2995,6 @@ Iobuf.put(p: self ref Iobuf)
 	if(p.flags & Bimm){
 		if(!(p.flags & Bmod))
 			eprint(sys->sprint("imm and no mod (%bd)", p.addr));
-		cksum := checksum(p.iobuf);
-		put4(p.iobuf, RBUFSIZE-4, cksum);
 		if(!wrenwrite(p.dev.fd, p.addr, p.iobuf))
 			p.flags &= ~(Bmod|Bimm);
 		else
@@ -3115,54 +3103,9 @@ Iobuf.checktag(p: self ref Iobuf, tag: int, qpath: big): int
 	return 0;
 }
 
-# this checksum use is useless and slows down processing as
-#	the disks do the crc check at the block level anyway.
-#	Leaving it in as I cannot use the cksum[4] bytes for anything
-#	else and they would be wasted for padding.
-#	might as well use those 4 bytes for something, maybe help catch
-#	memory errors?
-#	check the inferno.notes on the relevant discussion about this too.
-# using an array of big instead of int to keep it fast
-#	ignoring the last 4 bytes before tag from the checksum calculation
-# using 1's complement addition from
-#	https://barrgroup.com/embedded-systems/how-to/additive-checksums
-#uint16_t
-#NetIpChecksum(uint16_t const ipHeader[], int nWords)
-#{
-#    uint32_t  sum = 0;
-#    /*
-#     * IP headers always contain an even number of bytes.
-#     */
-#    while (nWords-- > 0)
-#    {
-#        sum += *(ipHeader++);
-#    }
-#    /*
-#     * Use carries to compute 1's complement sum.
-#     */
-#    sum = (sum >> 16) + (sum & 0xFFFF);
-#    sum += sum >> 16;
-#    /*
-#     * Return the inverted 16-bit result.
-#     */
-#    return ((unsigned short) ~sum);
-#}   /* NetIpChecksum() */
-checksum(buf: array of byte): int
-{
-	cksum := big 0;
-	for(i := 0; i<(RBUFSIZE-4); i+=4){
-		cksum += big get4(buf,i);
-	}
-	cksum = (cksum >> 32) + (cksum & big 16rFFFFFFFF);
-	cksum += cksum >> 32;
-	return int (~cksum & big 16rFFFFFFFF);
-}
-
 Iobuf.settag(p: self ref Iobuf, tag: int, qpath: big)
 {
-	# checksum on the tag and qpath too
-	cksum := checksum(p.iobuf);
-	Tag(qpath, tag, cksum).pack(p.iobuf[BUFSIZE:]);
+	Tag(tag, qpath).pack(p.iobuf[BUFSIZE:]);
 	p.flags |= Bmod;
 }
 
