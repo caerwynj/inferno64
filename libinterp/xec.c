@@ -221,8 +221,10 @@ OP(indx)
 	a = A(s);
 	i = W(d);
 	DP("indx a %p a->len %zd i %zd\n", a, a->len, i);
-	if(a == H || i >= a->len)
+	if(a == H || i >= a->len){
+	print("indx a %p a->len %zd i %zd\n", a, a->len, i);
 		error(exBounds);
+	}
 	W(m) = (WORD)(a->data+i*a->t->size);
 }
 OP(indw)
@@ -233,8 +235,10 @@ OP(indw)
 	a = A(s);
 	i = W(d);
 	DP("indw a %p a->len %zd i %zd\n", a, a->len, i);
-	if(a == H || i >= a->len)
+	if(a == H || i >= a->len){
+	print("indw a %p a->len %zd i %zd\n", a, a->len, i);
 		error(exBounds);
+	}
 	W(m) = (WORD)(a->data+i*sizeof(WORD));
 }
 OP(indf)
@@ -245,8 +249,10 @@ OP(indf)
 	a = A(s);
 	i = W(d);
 	DP("indf a %p a->len %zd i %zd\n", a, a->len, i);
-	if(a == H || i >= a->len)
+	if(a == H || i >= a->len){
+	print("indf a %p a->len %zd i %zd\n", a, a->len, i);
 		error(exBounds);
+	}
 	W(m) = (WORD)(a->data+i*sizeof(REAL));
 }
 OP(indl)
@@ -257,8 +263,10 @@ OP(indl)
 	a = A(s);
 	i = W(d);
 	DP("indl a %p a->len %zd i %zd\n", a, a->len, i);
-	if(a == H || i >= a->len)
+	if(a == H || i >= a->len){
+	print("indl a %p a->len %zd i %zd\n", a, a->len, i);
 		error(exBounds);
+	}
 	W(m) = (WORD)(a->data+i*sizeof(LONG));
 }
 OP(indb)
@@ -269,8 +277,10 @@ OP(indb)
 	a = A(s);
 	i = W(d);
 	DP("indb a %p a->len %zd a->data 0x%p i %zd\n", a, a->len, a->data, i);
-	if(a == H || i >= a->len)
+	if(a == H || i >= a->len){
+	print("indb a %p a->len %zd a->data 0x%p i %zd\n", a, a->len, a->data, i);
 		error(exBounds);
+	}
 	W(m) = (WORD)(a->data+i*sizeof(BYTE));
 }
 OP(movp)
@@ -858,6 +868,7 @@ OP(lena)
 	l = 0;
 	if(a != H)
 		l = a->len;
+	DP("lena after A(s) l %zd a->len %zd\n", l, a->len);
 	W(d) = l;
 }
 OP(lenl)

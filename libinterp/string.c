@@ -32,8 +32,10 @@ OP(indc)
 	l = ss->len;
 	DP("indc string %s len %d v %zd\n", string2c(ss), l, v);
 	if(l < 0) {
-		if(v >= -l)
+		if(v >= -l){
+	print("indc string %s len %d v %zd\n", string2c(ss), l, v);
 e:			error(exBounds);
+		}
 		l = ss->Srune[v];			
 	}
 	else {
@@ -80,8 +82,10 @@ r:
 			ss->Srune[v] = r;
 		}
 		else {
-			if(v != l)
+			if(v != l){
+				print("insc\n");
 				error(exBounds);
+			}
 			ns = newstring((v + 1 + v/4)*sizeof(Rune));
 			memmove(ns->Srune, ss->Srune, -ss->len*sizeof(Rune));
 			ns->Srune[v] = r;
