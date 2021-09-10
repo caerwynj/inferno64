@@ -14,6 +14,7 @@ implement Kfs64;
 #	using hwblock to represent the highest touched block number
 #		to avoid reaming all the free space at once
 #		only ream some more blocks after hwblock, when we need space
+#	allow wstat on directories
 
 include "sys.m";
 	sys: Sys;
@@ -1955,10 +1956,11 @@ rwstat(cp: ref Chan, f: ref Tmsg.Wstat): ref Rmsg
 		mode := DMDIR;
 	else
 		mode = 0;
-	if((dir.mode^mode) & DMDIR){
-		d.put();
-		return ferr(f, Enotd, file, p1);
-	}
+# allow wstat on directories. Why not?
+#	if((dir.mode^mode) & DMDIR){
+#		d.put();
+#		return ferr(f, Enotd, file, p1);
+#	}
 
 	if(dir.mtime == ~0)
 		dir.mtime = d.mtime;
