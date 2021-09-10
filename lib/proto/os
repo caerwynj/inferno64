@@ -1,6 +1,5 @@
 Inferno
 	386
-		ipc	664
 		bin
 		include
 			*

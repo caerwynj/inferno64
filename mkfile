@@ -243,8 +243,11 @@ cd:V:	/tmp/9ferno.386.iso.gz
 	mv $target.$pid.pc.iso $target
 	}
 
-# TODO
-#	correct/fix the warnings due to the proto files
+# 9boot iso.c is not able to read /Inferno/amd64/ipc64 but works fine with ipc64
+# 9boot iso.c needs /cfg/plan9.ini. Inferno's location for all configuration is /lib/
+#		but iso.c is not able to read the /lib/ directory
+# Hence, putting the kernels in the root directory of iso and plan9.ini in /cfg/
+# TODO correct/fix the warnings due to the proto files
 %.pc.iso:D:	install kernelinstall
 	@{rfork n
 	mk binds
@@ -255,42 +258,54 @@ cd:V:	/tmp/9ferno.386.iso.gz
 		#echo 'bootfile='^`{echo $kernel | sed 's!^/n/src9!!'}
 		echo 'bootfile=ipc64'
 	} > /env/plan9.ini
-	aux/stub /n/src9/cfg/plan9.ini
 	bind /env/plan9.ini /n/src9/cfg/plan9.ini
-	aux/stub /n/src9/ipc64
-	bind $kernel /n/src9/ipc64
 	cat /n/src9/cfg/plan9.ini
-	disk/mk9660 -c9j -B 386/9bootiso -E 386/efiboot.fat \
-		-p <{echo ipc64; cat /n/src9/lib/proto/^(9boot inferno os src utils)} \
+	disk/mk9660 -c9j -B Inferno/386/9bootiso -E Inferno/386/efiboot.fat \
+		-p <{echo ipc64; echo 9pc64; \
+				cat /n/src9/lib/proto/^(9boot inferno os src utils);} \
 		-s /n/src9 -v 'Inferno 9 Front ('^$objtype^')' $target
-	if(test -r /n/src9/386/9boothyb){
+	if(test -r /n/src9/Inferno/386/9boothyb){
 		dd -if /dev/zero -bs 2048 -count 1024 >> $target
 		disk/partfs -m /n/partfs $target
 		disk=/n/partfs/sdXX
-		disk/mbr -m /n/src9/386/mbr $disk/data
+		disk/mbr -m /n/src9/Inferno/386/mbr $disk/data
 		@{echo a p1 '$-1' '$'
 			echo t p1 ESP
 			echo A p1
 			echo w
 			echo q} | disk/fdisk -b $disk/data
-		disk/format -b /n/src9/386/pbs -xd -t hard $disk/esp
+		disk/format -b /n/src9/Inferno/386/pbs -xd -t hard $disk/esp
 		s = esp.$pid
 		dossrv -f $disk/esp $s
 		mount -c /srv/$s /n/esp
-		cp /n/src9/386/9boothyb /n/esp/9bootfat
+		cp /n/src9/Inferno/386/9boothyb /n/esp/9bootfat
 		mkdir /n/esp/efi
 		mkdir /n/esp/efi/boot
-		cp /n/src9/386/boot*.efi /n/esp/efi/boot
+		cp /n/src9/Inferno/386/boot*.efi /n/esp/efi/boot
 		unmount /n/esp
 		rm -f /srv/$s
 	}}
 
+# backup kernel 9pc64 when building on 9front
+# stub directories needed by proto files
 binds:V:
 	bind $root /n/src9
-	bind -a $root/Inferno /n/src9
 	aux/stub -d /n/src9/cfg
-	aux/stub /n/src9/amd64/9pc64
-	bind /root/amd64/9pc64 /n/src9/amd64/9pc64
+	aux/stub /n/src9/cfg/plan9.ini
+	aux/stub /n/src9/ipc64
+	bind $kernel /n/src9/ipc64
+	aux/stub /n/src9/9pc64
+	aux/stub /n/src9/9front/amd64/9pc64
+	test -f /root/amd64/9pc64 && { \
+		bind /root/amd64/9pc64 /n/src9/9front/amd64/9pc64
+		bind /root/amd64/9pc64 /n/src9/9pc64
+	} || {
+		bind /dev/null /n/src9/9front/amd64/9pc64
+		bind /dev/null /n/src9/9pc64
+	}
+	for(b in chan dev env net net.alt nvfs prof prog sys wrap){
+		aux/stub -d /n/src9/^$b
+	}
 	# ns
 
 # obsolete rules to be deleted

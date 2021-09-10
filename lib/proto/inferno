@@ -971,6 +971,7 @@ appl
 		deflate.b
 		devpointer.b
 		dhcpclient.b
+		dhcpserver.b
 		dial.b
 		dialog.b
 		dict.b
@@ -1580,6 +1581,7 @@ dis
 		deflate.dis
 		devpointer.dis
 		dhcpclient.dis
+		dhcpserver.dis
 		dial.dis
 		dialog.dis
 		dict.dis
@@ -2209,7 +2211,8 @@ module
 	dbm.m
 	debug.m
 	devpointer.m
-	dhcp.m
+	dhcpclient.m
+	dhcpserver.m
 	dial.m
 	dialog.m
 	dict.m
