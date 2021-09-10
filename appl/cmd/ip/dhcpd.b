@@ -157,7 +157,7 @@ init(nil: ref Draw->Context, args: list of string)
 		say("local ip address is "+siaddr.text());
 	}
 
-	addr := net+"udp!*!bootp";
+	addr := net+"/udp!*!bootp";
 	(ok, c) := sys->announce(addr);
 	if(ok < 0)
 		fail(sprint("announce %s: %r", addr));
