@@ -183,7 +183,7 @@ start(void *sp)
 	close(&ex);
 #endif
 
-	if(isowalk(f = &ex, drive, "/cfg/plan9.ini")){
+	if(isowalk(f = &ex, drive, "plan9.ini")){
 		print("no config\n");
 		f = 0;
 	}

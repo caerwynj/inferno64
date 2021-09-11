@@ -220,7 +220,7 @@ Found:
 	close = isoclose;
 
 	if(fp != nil)
-		*fp = isoopen("/cfg/plan9.ini");
+		*fp = isoopen("plan9.ini");
 
 	return 0;
 }

@@ -1,6 +1,4 @@
 # copied from 9front /sys/lib/sysconfig/proto/9bootproto
-# cannot have /plan9.ini or /lib/plan9.ini as 9bootiso cannot find it
-#	leaving it as /cfg/plan9.ini for the cd and hybrid booting to work
 uid=sys
 gid=sys
 Inferno
@@ -14,5 +12,3 @@ Inferno
 		bootx64.efi	664
 		mbr		664
 		pbs		664
-cfg	d775
-	plan9.ini	664

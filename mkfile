@@ -244,9 +244,8 @@ cd:V:	/tmp/9ferno.386.iso.gz
 	}
 
 # 9boot iso.c is not able to read /Inferno/amd64/ipc64 but works fine with ipc64
-# 9boot iso.c needs /cfg/plan9.ini. Inferno's location for all configuration is /lib/
-#		but iso.c is not able to read the /lib/ directory
-# Hence, putting the kernels in the root directory of iso and plan9.ini in /cfg/
+#	it needs the filenames to be lower cased
+#	Hence, putting the kernels and plan9.ini in / as we do with fat partitions
 # TODO correct/fix the warnings due to the proto files
 %.pc.iso:D:	install kernelinstall
 	@{rfork n
@@ -258,8 +257,8 @@ cd:V:	/tmp/9ferno.386.iso.gz
 		#echo 'bootfile='^`{echo $kernel | sed 's!^/n/src9!!'}
 		echo 'bootfile=ipc64'
 	} > /env/plan9.ini
-	bind /env/plan9.ini /n/src9/cfg/plan9.ini
-	cat /n/src9/cfg/plan9.ini
+	bind /env/plan9.ini /n/src9/plan9.ini
+	cat /n/src9/plan9.ini
 	disk/mk9660 -c9j -B Inferno/386/9bootiso -E Inferno/386/efiboot.fat \
 		-p <{echo ipc64; echo 9pc64; \
 				cat /n/src9/lib/proto/^(9boot inferno os src utils);} \
@@ -290,8 +289,7 @@ cd:V:	/tmp/9ferno.386.iso.gz
 # stub directories needed by proto files
 binds:V:
 	bind $root /n/src9
-	aux/stub -d /n/src9/cfg
-	aux/stub /n/src9/cfg/plan9.ini
+	aux/stub /n/src9/plan9.ini
 	aux/stub /n/src9/ipc64
 	bind $kernel /n/src9/ipc64
 	aux/stub /n/src9/9pc64
