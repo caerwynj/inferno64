@@ -541,7 +541,9 @@ appl
 		ip
 			bootpd.b
 			dhcp.b
+			dhcpd.b
 			mkfile
+			netaddr.b
 			nppp
 				mkfile
 				modem.b
@@ -753,6 +755,7 @@ appl
 		touch.b
 		touchcal.b
 		tr.b
+		trampoline.b
 		trfs.b
 		tsort.b
 		unicode.b
@@ -1825,6 +1828,7 @@ dis
 	touch.dis
 	touchcal.dis
 	tr.dis
+	trampoline.dis
 	trfs.dis
 	tsort.dis
 	unicode.dis

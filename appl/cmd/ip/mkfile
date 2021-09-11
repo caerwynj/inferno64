@@ -8,6 +8,7 @@ TARG=\
 	bootpd.dis\
 	dhcp.dis\
 	dhcpd.dis\
+	netaddr.dis\
 	ping.dis\
 	rip.dis\
 	tftpd.dis\
