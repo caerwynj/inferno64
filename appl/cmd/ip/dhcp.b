@@ -135,7 +135,7 @@ leasemon(configs: chan of (ref Bootconf, string), pcfg: int)
 
 printcfg(cfg: ref Bootconf)
 {
-	sys->print("ip=%s ipmask=%s ipgw=%s iplease=%d\n", cfg.ip, cfg.ipmask, cfg.ipgw, cfg.lease);
+	sys->print("ip=%s ipmask=%s ipgw=%s iplease=%d sys=%s\n", cfg.ip, cfg.ipmask, cfg.ipgw, cfg.lease, cfg.sys);
 }
 
 finddev(ifcdir: string): string
