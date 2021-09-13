@@ -406,9 +406,11 @@ static Dirtab consdir[]=
 {
 	".",	{Qdir, 0, QTDIR},	0,		DMDIR|0555,
 	"cons",		{Qcons},	0,		0660,
+	"consctl",	{Qconsctl},	0,		0220,
 	"sysctl",	{Qsysctl},	0,		0644,
 	"drivers",	{Qdrivers},	0,		0444,
 	"hostowner",	{Qhostowner},	0,	0644,
+	"jit",		{Qjit},	0,	0666,
 	"keyboard",	{Qkeyboard},	0,		0666,
 	"klog",		{Qklog},	0,		0444,
 	"kprint",		{Qkprint},	0,		0444,
@@ -421,7 +423,6 @@ static Dirtab consdir[]=
 	"sysname",	{Qsysname},	0,		0664,
 	"time",		{Qtime},	0,		0664,
 	"user",		{Quser},	0,	0644,
-	"jit",		{Qjit},	0,	0666,
 };
 
 ulong	boottime;		/* seconds since epoch at boot */
@@ -554,12 +555,29 @@ consstat(Chan *c, uchar *dp, s32 n)
 	return devstat(c, dp, n, consdir, nelem(consdir), devgen);
 }
 
+static void
+flushkbdline(Queue *q)
+{
+	if(kbd.x){
+		qwrite(q, kbd.line, kbd.x);
+		kbd.x = 0;
+	}
+}
+
 static Chan*
 consopen(Chan *c, u32 omode)
 {
 	c->aux = nil;
 	c = devopen(c, omode, consdir, nelem(consdir), devgen);
 	switch((u64)c->qid.path){
+	case Qconsctl:
+		if(!iseve())
+			error(Eperm);
+		qlock(&kbd);
+		kbd.ctl++;
+		qunlock(&kbd);
+		break;
+
 	case Qkprint:
 		if(tas(&kprintinuse) != 0){
 			c->flag &= ~COPEN;
@@ -584,6 +602,14 @@ static void
 consclose(Chan *c)
 {
 	switch((u64)c->qid.path){
+	case Qconsctl:
+		/* last close of control file turns off raw */
+		qlock(&kbd);
+		if(--kbd.ctl == 0)
+			kbd.raw = 0;
+		qunlock(&kbd);
+		break;
+
 	/* close of kprint allows other opens */
 	case Qkprint:
 		if(c->flag & COPEN){
@@ -773,7 +799,27 @@ conswrite(Chan *c, void *va, s32 n, s64 offset)
 		break;
 
 	case Qconsctl:
-		error(Egreg);
+		if(n >= sizeof(buf))
+			n = sizeof(buf)-1;
+		strncpy(buf, a, n);
+		buf[n] = 0;
+		for(a = buf; a;){
+			if(strncmp(a, "rawon", 5) == 0){
+				qlock(&kbd);
+				flushkbdline(kbdq);
+				kbd.raw = 1;
+				qunlock(&kbd);
+			} else if(strncmp(a, "rawoff", 6) == 0){
+				qlock(&kbd);
+				kbd.raw = 0;
+				kbd.x = 0;
+				qunlock(&kbd);
+			}
+			if(a = strchr(a, ' '))
+				a++;
+		}
+		break;
+
 	
 	case Qtime:
 		if(n >= sizeof(buf))
@@ -1096,7 +1142,7 @@ kbdcr2nl(Queue *q, int ch)
 void
 kbdprocesschar(int ch)
 {
-	int s, c, i;
+	int c, i;
 	static int esc1, esc2;
 	static int alt, caps, ctl, num, shift;
 	static int collecting, nk;
@@ -1120,7 +1166,7 @@ kbdprocesschar(int ch)
 	if(c > sizeof kbtab){
 		c |= keyup;
 		if(c != 0xFF)	/* these come fairly often: CAPSLOCK U Y */
-			print("unknown key %ux\n", c);
+			print("kbdprocess: unknown key 0x%ux\n", c);
 		return;
 	}
 
