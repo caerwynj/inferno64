@@ -1,0 +1,21 @@
+#!/dis/sh.dis -n
+# shell script to cause emu to run on the host as a server (daemon mode)
+# man emuinit talks about emu -d /dis/lib/svc.dis to do this
+#	but, I could not find svc.dis in the source
+#	and this is an attempt to replicate it without using limbo
+# emu /lib/sh/daemon
+
+load std
+
+# the following scripts seem more robust than this
+# run /lib/sh/srv
+
+svc/net
+svc/auth
+
+# until I sort out the authentication
+#	but this is killing /mnt/keys, so do not start it here
+# styxlisten -A 'tcp!*!17001' export /
+
+ls -l /mnt/keys
+sh -l # for a shell prompt
