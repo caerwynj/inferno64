@@ -90,6 +90,9 @@ struct XBFstate
 	BFstate	state;
 };
 
+/* for debugging */
+void printauthinfo(char *msg, Keyring_Authinfo *ai);
+
 /* convert a Big to base64 ascii */
 int
 bigtobase64(mpint* b, char *buf, int len)
@@ -1000,6 +1003,15 @@ Keyring_sign(void *fp)
 	release();
 	c->signa = (*sa->vec->sign)(b, sk->key);
 	acquire();
+
+	/* verification is failing on the client, hence check before sending */
+	/* verify */
+	release();
+	n = (*sa->vec->verify)(b, c->signa, (*sa->vec->sk2pk)(sk->key));
+	/* print("(*sa->vec->verify)(b, c->signa, pk->key) n %d sa->vec->name %s\n", n,sa->vec->name); */
+	acquire();
+	/* verification is failing on the client, hence check before sending */
+
 	mpfree(b);
 }
 
@@ -1045,8 +1057,10 @@ verify(PK *pk, Certificate *c, char *a, int len)
 
 	sa = checkSigAlg(c->x.sa);
 	pksa = checkSigAlg(pk->x.sa);
-	if(sa->vec != pksa->vec)
+	if(sa->vec != pksa->vec){
+		print("sa->vec != pksa->vec return 0\n");
 		return 0;
+	}
 
 	/* add signer name and expiration time to hash */
 	buf = malloc(Maxbuf);
@@ -1073,8 +1087,10 @@ verify(PK *pk, Certificate *c, char *a, int len)
 
 	/* turn message into a big integer */
 	b = betomp(digest, n, nil);
-	if(b == nil)
+	if(b == nil){
+		print("b == nil return 0\n");
 		return 0;
+	}
 	/* verify */
 	release();
 	n = (*sa->vec->verify)(b, c->signa, pk->key);
@@ -1942,6 +1958,7 @@ Keyring_writeauthinfo(void *fp)
 	 *  file2chan.
 	 */
 	release();
+	/* printauthinfo("Keyring_writeauthinfo", f->info); */
 	fd = kopen(string2c(f->filename), OTRUNC|OWRITE);
 	if(fd < 0)
 		fd = kcreate(string2c(f->filename), OWRITE, 0600);
@@ -1984,6 +2001,72 @@ out:
 		kclose(fd);
 		acquire();
 	}
+}
+
+void
+printauthinfo(char *msg, Keyring_Authinfo *ai)
+{
+	SigAlg *sa;
+	char alphabuf[MaxBigBytes] = "\0", pbuf[MaxBigBytes] = "\0",
+		signabuf[Maxbuf] = "\0", pkbuf[Maxbuf] = "\0",
+		spkbuf[Maxbuf] = "\0", skbuf[Maxbuf] = "\0",
+		balphabuf[MaxBigBytes] = "\0", bpbuf[MaxBigBytes] = "\0";
+	mpint *p, *alpha;
+
+
+	alpha = checkIPint(ai->alpha);
+	p = checkIPint(ai->p);
+	ipinttostr(ai->alpha, 64, alphabuf, MaxBigBytes);
+	bigtobase64(alpha, balphabuf, Maxbuf);
+	ipinttostr(ai->p, 64, pbuf, MaxBigBytes);
+	bigtobase64(p, bpbuf, Maxbuf);
+	sa = checkSigAlg(ai->cert->sa);
+	(*sa->vec->sig2str)(((Certificate*)ai->cert)->signa, signabuf, Maxbuf);
+	sa = checkSigAlg(ai->mypk->sa);
+	(*sa->vec->pk2str)(((PK*)ai->mypk)->key, pkbuf, Maxbuf);
+	sa = checkSigAlg(ai->spk->sa);
+	(*sa->vec->pk2str)(((PK*)ai->spk)->key, spkbuf, Maxbuf);
+	sa = checkSigAlg(ai->mysk->sa);
+	(*sa->vec->pk2str)(((PK*)ai->mysk)->key, skbuf, Maxbuf);
+	print("%s Authinfo\n"
+		"	spk signers public key\n"
+		"		owner %s Signature Algorithm %s\n"
+		"		key %s\n",
+		msg,
+		string2c(ai->spk->owner),
+		string2c(ai->spk->sa->name),
+		spkbuf);
+	print("	cert certificate\n"
+		"		Signature Algorithm %s\n"
+		"		hash ha %s\n"
+		"		signer %s\n"
+		"		expiry date exp 0x%zx\n"
+		"		signature signa %s\n",
+		string2c(ai->cert->sa->name),
+		string2c(ai->cert->ha),
+		string2c(ai->cert->signer),
+		ai->cert->exp,
+		signabuf);
+	print("	sk my secret key\n"
+		"		owner %s Signature Algorithm %s\n"
+		"		key %s\n",
+		string2c(ai->mysk->owner),
+		string2c(ai->mysk->sa->name),
+		skbuf);
+	print("	pk my public key\n"
+		"		owner %s Signature Algorithm %s\n"
+		"		key %s\n",
+		string2c(ai->mypk->owner),
+		string2c(ai->mypk->sa->name),
+		pkbuf);
+	print("	alpha %s\n"
+		"		big %s\n",
+		alphabuf,
+		balphabuf);
+	print("	p %s\n"
+		"		big %s\n",
+		pbuf,
+		bpbuf);
 }
 
 void
@@ -2076,6 +2159,7 @@ out:
 	free(buf);
 	if(fd >= 0){
 		release();
+		/* printauthinfo("Keyring_readauthinfo", ai); */
 		kclose(fd);
 		acquire();
 		kwerrstr("%q: %s", string2c(f->filename), MSG);

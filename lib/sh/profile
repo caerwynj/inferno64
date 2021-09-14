@@ -9,11 +9,6 @@ cd $home
 # build the user's namespace in $home/
 and {ftest -e namespace}	{nsbuild}
 
-# Networking
-ndb/dns -r
-ndb/cs
-# bind -a '#scs' /net
-
 if{~ $#emuhost 0 && ~ $#emuwdir 0}{
 	# running native
 
@@ -24,7 +19,6 @@ if{~ $#emuhost 0 && ~ $#emuwdir 0}{
 
 	# dis/init has set this up already for native booting
 	mount {mntgen} /n
-	mount {mntgen} /mnt
 }
 
 # Run the user's profile

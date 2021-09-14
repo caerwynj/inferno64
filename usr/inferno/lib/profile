@@ -3,24 +3,3 @@
 echo starting /usr/inferno/lib/profile
 
 cp /locale/US_Arizona /locale/timezone
-
-if{~ $"sysname vmx9ferno}{
-	# serve the cd
-	styxlisten -A -v tcp!192.168.88.118!17001 export /n/cd/
-	# serve the root - TODO use svc/styx(8) instead of this
-	styxlisten -A -v tcp!192.168.88.118!17002 export /
-}
-
-if{~ $"sysname 9ferno}{
-
-	# serve the root - TODO use svc/styx(8) instead of this
-	styxlisten -A -v tcp!192.168.88.113!17001 export /
-
-	bind -a '#I1' /net.alt
-	bind -a '#l1' /net.alt
-	<>/net.alt/ipifc/clone {
-		x=`{read}
-		and {echo bind ether /net.alt/ether1 > /net.alt/ipifc/^$x^/ctl} {
-			ip/dhcp -h $"sysname^'.1' -p /net.alt/ipifc/$x}
-	}
-}

@@ -178,6 +178,12 @@ IPint_iptostr(void *fp)
 	retstr(buf, f->ret);
 }
 
+void
+ipinttostr(void *ip, int base, char *buf, int buflen)
+{
+	mptoa(MP(ip), base, buf, buflen);
+}
+
 static IPints_IPint*
 strtoipint(String *s, int base)
 {

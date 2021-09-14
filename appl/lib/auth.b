@@ -85,7 +85,8 @@ client(alg: string, ai: ref Keyring->Authinfo, fd: ref Sys->FD): (ref Sys->FD, s
 
 	# mutual authentication
 	(id_or_err, secret) := kr->auth(fd, ai, 0);
-	if(secret == nil)
+	if(secret == nil){
+sys->print("client secret == nil\n");
 		return (nil, id_or_err);
 
 	# send algorithm

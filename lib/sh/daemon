@@ -10,12 +10,13 @@ load std
 # the following scripts seem more robust than this
 # run /lib/sh/srv
 
-svc/net
-svc/auth
+/dis/svc/net
+/dis/svc/auth
 
 # until I sort out the authentication
 #	but this is killing /mnt/keys, so do not start it here
 # styxlisten -A 'tcp!*!17001' export /
 
 ls -l /mnt/keys
+netstat
 sh -l # for a shell prompt

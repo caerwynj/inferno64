@@ -161,7 +161,7 @@ init(nil: ref Draw->Context, args: list of string)
 		dbdir = keydb+"/"+id;
 		fd := sys->create(dbdir, Sys->OREAD, Sys->DMDIR|8r700);
 		if(fd == nil){
-			sys->fprint(stderr, "%s: can't create account %s: %r\n", argv0, id);
+			sys->fprint(stderr, "%s: can't create account %s: %r creating %s\n", argv0, id, dbdir);
 			raise "fail:create user";
 		}
 	}
