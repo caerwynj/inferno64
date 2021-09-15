@@ -146,8 +146,8 @@ main(void)
 	doc("confinit");
 	confinit();
 	xinit();
-	i8253init();
-	/* TODO 9front if(i8237alloc != nil)
+	/* TODO 9front does this for dma
+	if(i8237alloc != nil)
 		i8237alloc(); */
 	doc("pcicfginit");
 	pcicfginit();

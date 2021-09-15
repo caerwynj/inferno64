@@ -44,6 +44,7 @@ ip
 #	il
 
 lib
+	aml
 	fis
 	interp
 	keyring
@@ -72,12 +73,13 @@ link
 	ethervirtio	pci
 
 misc
-	archgeneric
-#	archacpi	mp apic ec hpet
+	pci		pcipc
+	archgeneric	devkbd i8259 i8253
+	archacpi	mp apic squidboy ec hpet
 	archmp		mp apic squidboy
-#	mtrr
+	mtrr
+
 	bios32
-	pcipc
 	cga
 	uarti8250
 

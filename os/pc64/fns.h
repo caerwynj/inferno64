@@ -130,7 +130,7 @@ int	(*pcicfgrw8)(int, int, int, int);
 int	(*pcicfgrw16)(int, int, int, int);
 int	(*pcicfgrw32)(int, int, int, int);
 int	pciscan(int bno, Pcidev **list, Pcidev *parent);
-u32	pcibarsize(Pcidev*, int);
+s32	pcibarsize(Pcidev*, int);
 int	pcicfgr8(Pcidev*, int);
 int	pcicfgr16(Pcidev*, int);
 int	pcicfgr32(Pcidev*, int);

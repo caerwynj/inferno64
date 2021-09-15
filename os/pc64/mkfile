@@ -27,13 +27,10 @@ OBJ=\
 	fpu.$O\
 	portclock.$O\
 	tod.$O\
-	i8253.$O\
-	i8259.$O\
 	main.$O\
 	memmap.$O\
 	memory.$O\
 	mmu.$O\
-	mtrr.$O\
 	trap.$O\
 	bootargs.$O\
 	$CONF.root.$O\

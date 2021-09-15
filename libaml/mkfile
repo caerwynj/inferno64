@@ -1,0 +1,13 @@
+<../mkconfig
+
+LIB=libaml.a
+OFILES=\
+	aml.$O\
+	amlmapio.$O\
+	amlunmapio.$O\
+	amlalloc.$O\
+	amldelay.$O\
+
+HFILES=$ROOT/include/aml.h
+
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE

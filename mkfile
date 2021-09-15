@@ -260,7 +260,7 @@ cd:V:	/tmp/9ferno.386.iso.gz
 	bind /env/plan9.ini /n/src9/plan9.ini
 	cat /n/src9/plan9.ini
 	disk/mk9660 -c9j -B Inferno/386/9bootiso -E Inferno/386/efiboot.fat \
-		-p <{echo ipc64; echo 9pc64; \
+		-p <{echo ipc64; echo 9pc64; echo plan9.ini; \
 				cat /n/src9/lib/proto/^(9boot inferno os src utils);} \
 		-s /n/src9 -v 'Inferno 9 Front ('^$objtype^')' $target
 	if(test -r /n/src9/Inferno/386/9boothyb){

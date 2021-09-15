@@ -240,7 +240,7 @@ extern void pcibussize(Pcidev *root, uvlong *msize, ulong *iosize);
 extern Pcidev* pcimatch(Pcidev* prev, int vid, int did);
 extern Pcidev* pcimatchtbdf(int tbdf);
 
-extern u32 pcibarsize(Pcidev *, int rno);
+extern s32 pcibarsize(Pcidev *, int rno);
 extern void pcisetbar(Pcidev *, int, uvlong);
 
 extern uchar pciipin(Pcidev *pci, uchar pin);
@@ -254,6 +254,7 @@ extern void pciclrmwi(Pcidev* p);
 
 extern int pcicap(Pcidev *p, int cap);
 extern int pcihtcap(Pcidev *p, int cap);
+extern int pcienumcaps(Pcidev *p, int (*fmatch)(Pcidev*, int, int, int), int arg);
 
 extern int pcimsienable(Pcidev *p, uvlong addr, ulong data);
 extern int pcimsidisable(Pcidev *p);
