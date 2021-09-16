@@ -234,7 +234,7 @@ memmapadd(uintptr addr, uintptr size, u32 type)
 	unlock(&mapalloc);
 }
 
-uintptr
+intptr
 memmapalloc(uintptr addr, uintptr size, uintptr align, u32 type)
 {
 	Mapent *i, *e;

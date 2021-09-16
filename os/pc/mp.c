@@ -197,6 +197,8 @@ mpinit(void)
 	}
 	else
 		ncpu = MAXMACH;
+	if(sizeof(apbootstrap) > 4*KiB)
+		print("mpinit: sizeof(apbootstrap) 0x%x > 4*KiB -- fix it\n", sizeof(apbootstrap));
 	memmove((void*)APBOOTSTRAP, apbootstrap, sizeof(apbootstrap));
 	for(i=0; i<nelem(mpapic); i++){
 		if((apic = mpapic[i]) == nil)

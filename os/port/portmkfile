@@ -146,4 +146,10 @@ $CONF.$O:	$CONF.root.h
 $CONF.root.s $CONF.root.h: $CONF ../init/$INIT.dis ../port/mkroot $ROOTFILES
 	$SHELLNAME ../port/mkroot $CONF
 
+%.i:D:	%.out
+	{echo 'uchar '^$stem^'[]={'
+	 xd -1x <$stem.out |
+		sed -e 's/^[0-9a-f]+ //' -e 's/ ([0-9a-f][0-9a-f])/0x\1,/g'
+	 echo '};'} > $target
+
 %.$O:	$ROOT/Inferno/$OBJTYPE/include/u.h ../port/lib.h mem.h dat.h fns.h io.h ../port/error.h ../port/portdat.h ../port/portfns.h

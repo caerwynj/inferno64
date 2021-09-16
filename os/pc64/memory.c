@@ -30,13 +30,14 @@ enum {
 
 u64	MemMin;		/* set by l.s */
 
-/* TODO just use xspanalloc. I do not know what the memmapalloc() does. It does not seem to work anyway. inferno pc does not use it either? can refactor all this code.
- */
 void*
 rampage(void)
 {
-	uintptr pa;
+	intptr pa;
 
+	/* no need to add page tables with pmap() here as
+	 * mmuinit() has done it for us
+	 */
 	if(conf.mem[0].npage != 0)
 		return xspanalloc(BY2PG, BY2PG, 0);
 
@@ -48,16 +49,20 @@ rampage(void)
 	pa = memmapalloc(-1, BY2PG, BY2PG, MemRAM);
 	if(pa == -1)
 		panic("rampage: out of memory\n");
-	DP("rampage returned 0x%p\n", pa);
+	DP("rampage returned 0x%p\n", (void*)pa);
+	DP("rampage pmap base 0x%p size %zd 0x%zx\n",
+		(void*)pa, BY2PG+BY2PG, BY2PG+BY2PG);
+	pmap(pa, PTEGLOBAL|PTEWRITE|PTEVALID, BY2PG+BY2PG);
 	return (void*)pa;
 }
 
+/* maps page tables for the kernel to run */
 static void
 mapkzero(uintptr base, uintptr len, int type)
 {
-	uintptr flags, n;
+	uintptr flags;
 
-	DP("mapkzero base 0x%p len %llud 0x%llux type 0x%x\n",
+	print("mapkzero base 0x%p len %llud 0x%llux type 0x%x\n",
 		base, len, len, type);
 	if(base < MemMin && base+len > MemMin){
 		mapkzero(base, MemMin-base, type);
@@ -65,16 +70,25 @@ mapkzero(uintptr base, uintptr len, int type)
 		base = MemMin;
 	}
 
+	/* arbitrarily limiting the page table size while the
+	 * kernel is still booting
+	 */
+	if(base > 1*GiB && type == MemRAM)
+		return;
+	if(base >= MemMin && len > 1*GiB && type == MemRAM){
+		len=2*MemMin;
+	}
 	switch(type){
 	default:
 		return;
 	case MemRAM:
-		if(base < MemMin)
-			return;
 		flags = PTEGLOBAL|PTEWRITE|PTEVALID;
 		break;
 	case MemUMB:
 		flags = PTEGLOBAL|PTEWRITE|PTEUNCACHED|PTEVALID;
+		break;
+	case MemACPI:
+		flags = PTEGLOBAL|PTEVALID;
 		break;
 	}
 	pmap(base, flags, len);
@@ -157,6 +171,22 @@ lowraminit(void)
 
 	/* Reserve BIOS tables */
 	memmapadd(pa, 1*KB, MemReserved);
+
+	/* Allocate memory to be used for reboot code */
+	len=4*KiB /* sizeof(rebootcode) */;
+	memmapadd(PADDR(PGROUND((uintptr)REBOOTADDR)), len, MemRAM);
+	if(memmapalloc(PADDR(PGROUND((uintptr)REBOOTADDR)), len, BY2PG, MemRAM) == -1){
+		print("lowraminit: could not memmapalloc REBOOTADDR 0x%p len 0x%zd\n",
+			PADDR(PGROUND((uintptr)REBOOTADDR)), len);
+	}
+
+	/* Allocate memory to be used for ap bootstrap code */
+	len=4*KiB /*sizeof(apbootstrap)*/;
+	memmapadd(PADDR(PGROUND((uintptr)APBOOTSTRAP)), len, MemRAM);
+	if(memmapalloc(PADDR(PGROUND((uintptr)APBOOTSTRAP)), len, BY2PG, MemRAM) == -1){
+		print("lowraminit: could not memmapalloc APBOOTSTRAP 0x%p len 0x%zd\n",
+			PADDR(PGROUND((uintptr)APBOOTSTRAP)), len);
+	}
 
 	/* Reserve EBDA */
 	if((pa = ebdaseg()) != 0)
@@ -433,6 +463,28 @@ e820scan(void)
 	/* RAM needs to be writeback */
 	mtrrexclude(MemRAM, "wb");
 
+	/* do not bother allocating page tables for UPA.
+	 * UPA users call vmap() to do that.
+	 */
+print("e820scan building page tables for the kernel to work\n");
+	for(base = memmapnext(-1, MemRAM); base != -1; base = memmapnext(base, MemRAM)){
+		size = memmapsize(base, BY2PG) & ~(BY2PG-1);
+		if(size != 0)
+				mapkzero(PGROUND(base), size, MemRAM);
+	}
+print("e820scan building page tables after RAM\n");
+	for(base = memmapnext(-1, MemUMB); base != -1; base = memmapnext(base, MemUMB)){
+		size = memmapsize(base, BY2PG) & ~(BY2PG-1);
+		if(size != 0)
+			mapkzero(PGROUND(base), size, MemUMB);
+	}
+print("e820scan building page tables after UMB\n");
+	for(base = memmapnext(-1, MemACPI); base != -1; base = memmapnext(base, MemACPI)){
+		size = memmapsize(base, BY2PG) & ~(BY2PG-1);
+		if(size != 0)
+			mapkzero(PGROUND(base), size, MemACPI);
+	}
+print("e820scan building page tables after ACPI\n");
 	return 0;
 }
 
@@ -593,27 +645,23 @@ showpagetables(uintptr *pml4)
 void
 meminit0(void)
 {
-	uintptr prevbase = 0, base, size = 0;
-
 	print("Memory Configuration\n"
-		"\tMemMin 0x%llux end 0x%p KZERO 0x%x KDZERO 0x%x\n"
-		"\tKTZERO 0x%x etext 0x%p\n\tCPU0END 0x%llux\n"
-		"\tPADDR(PGROUND((uintptr)end)) 0x%zux\n"
-		"\tMemMin-PADDR(PGROUND((uintptr)end)) 0x%zux\n",
+		"\tMemMin 0x%llux end 0x%p KZERO 0x%p KDZERO 0x%p\n"
+		"\tKTZERO 0x%p etext 0x%p\n\tCPU0END 0x%p\n"
+		"\tPADDR(PGROUND((uintptr)end)) 0x%p\n"
+		"\tMemMin-PADDR(PGROUND((uintptr)end)) 0x%p\n",
 		MemMin, end, KZERO, KDZERO, KTZERO, etext, (uintptr)CPU0END,
 		PADDR(PGROUND((uintptr)end)), MemMin-PADDR(PGROUND((uintptr)end)));
 	/*
 	 * Add the already mapped memory after the kernel.
+	 * Memory below MemMin is reserved for the kernel.
+	 * From KDZERO to MemMin is the kernel's RAM.
+	 * Also, set the kernel text pages read only
 	 */
 	if(MemMin < PADDR(PGROUND((uintptr)end)))
 		panic("kernel too big");
-	memmapadd(PADDR(PGROUND((uintptr)end)), MemMin-PADDR(PGROUND((uintptr)end)), MemRAM);
-
-	/*
-	 * Memory below MemMin is reserved for the kernel.
-	 * Also, set the kernel text pages read only
-	 */
-	memreserve(PADDR(KDZERO), PADDR(PGROUND((uintptr)MemMin))-PADDR(KDZERO));
+	memmapadd(PADDR(KDZERO), PADDR(PGROUND((uintptr)MemMin))-PADDR(KDZERO), MemRAM);
+	memmapalloc(PADDR(KDZERO), PADDR(PGROUND((uintptr)MemMin))-PADDR(KDZERO), BY2PG, MemRAM);
 	kernelro();
 
 	/*
@@ -645,6 +693,9 @@ meminit0(void)
 	 */
 	mtrrexclude(MemUMB, "uc");
 	mtrrexclude(MemUPA, "uc");
+
+	/* Reserve RAM below MemMin to avoid being trashed */
+	memreserve(KZERO, MemMin);
 }
 
 /*

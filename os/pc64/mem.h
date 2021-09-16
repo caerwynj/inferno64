@@ -43,25 +43,32 @@
 /*
  *  Address spaces. Kernel, sorted by address.
  */
-#define KZERO		(0)			/* with identity mapping, KZERO = 0 */
+#define KZERO		(0ull)			/* with identity mapping, KZERO = 0 */
 /* Leave the 1st MiB to the BIOS (0 to 1MiB-1)
  * From the first MiB to KTZERO is used by the global data tables
  * acid expects plan9 userspace program text at 2MiB. So, having KTZERO at 2MiB
  * 1MiB for l.s data structures  (1 to 2MiB-1)
+ * check the e820 memory map to see the available memory
  */
-#define KDZERO		(0x100000)
-#define KTZERO		(0x200000)
+#define KDZERO		(0x100000ull)
+#define KTZERO		(0x200000ull)
 #define VMAPSIZE  (512ull*GiB)
 
 /*
  * Fundamental addresses
  */
 #define	CONFADDR	(0x1200ull)		/* info passed from boot loader */
-#define	REBOOTADDR	(0x11000ull)	/* reboot code - physical address */
-#define	APBOOTSTRAP	(KDZERO+ 0x7000ull)	/* AP bootstrap code */
+	/* Both these should be below 1MiB as they are addressed from real
+	 * mode which can address only upto 1MiB.
+	 * check the e820 memory map to figure out the availble memory below
+	 * 1MiB
+	 * The intel manual mentions a 4KiB (0x1000) page for ap bootstrap code
+	 */
+#define	REBOOTADDR	(0x4000ull)	/* reboot code - physical address */
+#define	APBOOTSTRAP	(0x5000ull)	/* Application Processor (AP) bootstrap code */
 #define	IDTADDR		(KDZERO+0x10000ull)	/* idt */
 #define GDTADDR		(KDZERO+0x11000ull)	/* gdt */
-#define	CPU0MACH	(KDZERO+0x12000ull)	/* Mach for bootstrap processor */
+#define	CPU0MACH	(KDZERO+0x12000ull)	/* Mach for bootstrap processor (BSP) */
 #define CPU0END		(KDZERO+0x22000ull)	/* CPU0MACH + (MACHSIZE = 64 KiB = 0x10 000) */
 										/* MACHSIZE includes stack size */
 #define CPU0SP		(KDZERO+0x22000ull)

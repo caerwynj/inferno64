@@ -12,9 +12,9 @@ INSTALLDIR=$ROOT/Inferno/$OBJTYPE/	#path of directory where kernel is installed
 #INSTALLDIR=/$OBJTYPE
 
 # must match mem.h
+REBOOTADDR=0x4000
+APBOOTSTRAP=0x5000
 KTZERO=0x200000
-APBOOTSTRAP=0x107000
-REBOOTADDR=0x11000
 
 #end configurable parameters
 
@@ -84,7 +84,7 @@ REPCC=`{../port/mkfilelist ../pc}
 clock.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
 devether.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
 fault386.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
-main.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
+main.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h rebootcode.i
 trap.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
 
 devether.$O $ETHERS:	etherif.h ../port/netif.h
@@ -99,6 +99,16 @@ $SDEV:				../port/sd.h
 sdiahci.$O:			ahci.h
 
 ether8169.$O:			../port/ethermii.h
+
+$O.rebootcode:		rebootcode.$O
+	$LD -l -R1 -s -o $target -T$REBOOTADDR $prereq
+rebootcode.out:		$O.rebootcode
+	dd -if $prereq(1) -of $target -bs 1 -iseek 40
+
+$O.apbootstrap:		apbootstrap.$O
+	$LD -l -R1 -s -o $target -T$APBOOTSTRAP $prereq
+apbootstrap.out:	$O.apbootstrap
+	dd -if $prereq(1) -of $target -bs 1 -iseek 40
 
 # to be moved to port/interp 
 bench.h:D: ../../module/bench.m

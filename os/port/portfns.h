@@ -160,7 +160,7 @@ void		memmapdump(void);
 uintptr		memmapnext(uintptr, u32);
 uintptr		memmapsize(uintptr, uintptr);
 void		memmapadd(uintptr, uintptr, u32);
-uintptr		memmapalloc(uintptr, uintptr, uintptr, u32);
+intptr		memmapalloc(uintptr, uintptr, uintptr, u32);
 void		memmapfree(uintptr, uintptr, u32);
 int			memusehigh(void);
 void		microdelay(int);

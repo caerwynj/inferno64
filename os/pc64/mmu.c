@@ -136,28 +136,27 @@ mmuinit(void)
 
 	/* pre allocate pages */
 	Confmem *cm;
-	ulong np, nt;
 
-	np = 0;
 	for(i=0; i<nelem(conf.mem); i++){
 		cm = &conf.mem[i];
 		if(cm->npage == 0)
 			continue;
 		DP("i %d base 0x%p npage 0x%d\n", i, cm->base, cm->npage);
 		pmap(cm->base, PTEGLOBAL|PTEWRITE|PTENOEXEC|PTEVALID, cm->npage*BY2PG);
-
 	}
 }
 
 int
 mmukmapsync(uintptr va)
 {
+USED(va);
 return 0;
 }
 
 uintptr
 mmukmap(uintptr pa, uintptr va, int size)
 {
+USED(pa, va, size);
 return 0;
 }
 
@@ -172,7 +171,7 @@ return 0;
  * < cinap_lenrek> vmap() and kmap() are all built ontop of it
  */
 void*
-vmap(uintptr pa, int size)
+vmap(uintptr pa, s32 size)
 {
         int o;
 
@@ -187,13 +186,14 @@ vmap(uintptr pa, int size)
         o = pa & (BY2PG-1);
         pa -= o;
         size += o;
-        pmap(pa, PTEUNCACHED|PTEWRITE|PTENOEXEC|PTEVALID, size);
+        pmap(pa, PTEGLOBAL|PTEUNCACHED|PTEWRITE|PTENOEXEC|PTEVALID, size);
         return (void*)(pa+o);
 }
 
 void
-vunmap(void *va, int size)
+vunmap(void *va, s32 size)
 {
+USED(va, size);
 /* nothing to do */
 }
 
@@ -207,7 +207,6 @@ static uintptr*
 mmucreate(uintptr *table, uintptr pa, int level, int index)
 {
 	uintptr *page, flags;
-	MMU *p;
 	
 	DP("mmucreate table 0x%p pa 0x%p level %d index %d\n",
 		table, pa, level, index);
@@ -224,12 +223,12 @@ mmucreate(uintptr *table, uintptr pa, int level, int index)
 uintptr*
 mmuwalk(uintptr* table, uintptr pa, int level, int create)
 {
-	uintptr pte, flags;
+	uintptr pte /*, flags*/;
 	int i, x;
 
 	DP("mmuwalk table 0x%p pa 0x%p level %d create %d\n",
 		table, pa, level, create);
-	flags = PTEWRITE | PTEVALID;
+	/* flags = PTEWRITE | PTEVALID; */
 	x = PTLX(pa, 3);
 	DP("\tpml4 index %d\n", x);
 	for(i = 2; i >= level; i--){
@@ -290,7 +289,7 @@ pmap(uintptr pa, u64 flags, s64 size)
 		/* reducing complexity, use 4096 byte pages all through */
 		l = 0;
 		z = PGLSZ(0);
-		pte = mmuwalk((uintptr*)PML4ADDR, pa, l, 1);
+		pte = mmuwalk(m->pml4, pa, l, 1);
 		if(pte == nil){
 			panic("pmap: pa=%#p size=%lld", pa, size);
 		}
@@ -304,7 +303,7 @@ pmap(uintptr pa, u64 flags, s64 size)
 }
 
 void
-punmap(uintptr pa, vlong size)
+punmap(uintptr pa, uvlong size)
 {
 	uintptr *pte;
 	int l;

@@ -477,6 +477,10 @@ cpuidprint(void)
 	print("cpu%d: %dMHz %s %s (AX %8.8uX CX %8.8uX DX %8.8uX)\n",
 		m->machno, m->cpumhz, m->cpuidid, m->cpuidtype,
 		m->cpuidax, m->cpuidcx, m->cpuiddx);
+	print("	family %d model %d stepping %d tsc %d\n"
+		"	pge %d watchpoint %d\n",
+		m->cpuidfamily, m->cpuidmodel, m->cpuidstepping, m->havetsc,
+		m->havepge, m->havewatchpt8);
 }
 
 /*

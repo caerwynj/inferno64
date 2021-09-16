@@ -35,7 +35,7 @@ mpstartap(Apic* apic)
 	uintptr *apbootp, *pml4, *pdp0;
 	Segdesc *gdt;
 	Mach *mach;
-	uchar *p;
+	uchar *p, *q;
 	int i;
 
 	/*
@@ -62,15 +62,14 @@ mpstartap(Apic* apic)
 	MACHP(mach->machno) = mach;
 
 	/*
-	 * map KZERO (note that we share the KZERO (and VMAP)
+	 * map KZERO (note that we share the KZERO
 	 * PDP between processors.
 	 */
 	pml4[PTLX(KZERO, 3)] = MACHP(0)->pml4[PTLX(KZERO, 3)];
-	/* TODO pml4[PTLX(VMAP, 3)] = MACHP(0)->pml4[PTLX(VMAP, 3)]; */
 
 	/* double map */
 	pml4[0] = PADDR(pdp0) | PTEWRITE|PTEVALID;
-	/* TODO Why do I need this? Why not use the same page tables for all the processors? pdp0[0] = *mmuwalk(KZERO, 2, 0); */
+	pdp0[0] = *mmuwalk(pml4, KZERO, 2, 0);
 
 	/*
 	 * Tell the AP where its kernel vector and pdb are.

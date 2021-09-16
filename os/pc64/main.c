@@ -5,6 +5,7 @@
 #include	"fns.h"
 #include	"io.h"
 #include	"ureg.h"
+#include	"rebootcode.i"
 
 #define X86STEPPING(x)	((x) & 0x0F)
 #define X86MODEL(x)	(((x)>>4) & 0x0F)
@@ -142,6 +143,7 @@ main(void)
 	doc("arch->clockinit");
 	if(arch->clockinit)
 		arch->clockinit();
+	doc("meminit");
 	meminit();			/* builds the conf.mem entries */
 	doc("confinit");
 	confinit();
@@ -151,12 +153,14 @@ main(void)
 		i8237alloc(); */
 	doc("pcicfginit");
 	pcicfginit();
+	doc("bootscreeninit");
 	bootscreeninit();	/* vga maps pages for the frame buffer TODO bug causes an i8042 system reset in poolsizeinit() */
 	trapinit();
 	printinit();
 	cpuidprint();
+	doc("mmuinit");
 	mmuinit();		/* builds the page tables, lgdt, lidt */
-	print("after mmuinit\n");
+	print("poolsizeinit\n");
 	poolsizeinit();
 	memmapdump();
 	eve = strdup("inferno");

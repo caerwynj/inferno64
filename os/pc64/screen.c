@@ -601,7 +601,7 @@ vgalinearaddr0(VGAscr *scr, uvlong paddr, int size, int allocupa)
 		nsize = 64*MB;
 	print("vgalinearaddr0 paddr 0x%p size 0x%x %d pmap npaddr 0x%p nsize 0x%x %d\n",
 		paddr, size, size, npaddr, nsize, nsize);
-	pmap(npaddr, PTEGLOBAL|PTEUNCACHED|PTEWRITE|PTENOEXEC|PTEVALID, nsize);
+	vmap(npaddr, nsize);
 	scr->vaddr = (void*)npaddr;
 
 	if(allocupa){
