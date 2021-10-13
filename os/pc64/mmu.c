@@ -281,7 +281,7 @@ pmap(uintptr pa, u64 flags, s64 size)
 
 	if(size <= 0)
 		panic("pmap: pa=%#zux size=%lld", pa, size);
-	print("pmap pa 0x%zux-0x%zux flags 0x%llux size %llud 0x%llux\n",
+	DP("pmap pa 0x%zux-0x%zux flags 0x%llux size %llud 0x%llux\n",
 		pa, (uintptr)pa+size, flags, size, size);
 	pa = PPN(pa);
 	DP("\tpa 0x%zux\n", pa);

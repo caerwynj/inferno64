@@ -63,7 +63,7 @@ mapkzero(uintptr base, uintptr len, int type)
 {
 	uintptr flags;
 
-	print("mapkzero base 0x%p len %llud 0x%llux type 0x%x\n",
+	DP("mapkzero base 0x%p len %llud 0x%llux type 0x%x\n",
 		base, len, len, type);
 	if(base < MemMin && base+len > MemMin){
 		mapkzero(base, MemMin-base, type);
@@ -467,25 +467,25 @@ e820scan(void)
 	/* do not bother allocating page tables for UPA.
 	 * UPA users call vmap() to do that.
 	 */
-print("e820scan building page tables for the kernel to work\n");
+	DP("e820scan building page tables for the kernel to work\n");
 	for(base = memmapnext(-1, MemRAM); base != -1; base = memmapnext(base, MemRAM)){
 		size = memmapsize(base, BY2PG) & ~(BY2PG-1);
 		if(size != 0)
 				mapkzero(PGROUND(base), size, MemRAM);
 	}
-print("e820scan building page tables after RAM\n");
+	DP("e820scan building page tables after RAM\n");
 	for(base = memmapnext(-1, MemUMB); base != -1; base = memmapnext(base, MemUMB)){
 		size = memmapsize(base, BY2PG) & ~(BY2PG-1);
 		if(size != 0)
 			mapkzero(PGROUND(base), size, MemUMB);
 	}
-print("e820scan building page tables after UMB\n");
+	DP("e820scan building page tables after UMB\n");
 	for(base = memmapnext(-1, MemACPI); base != -1; base = memmapnext(base, MemACPI)){
 		size = memmapsize(base, BY2PG) & ~(BY2PG-1);
 		if(size != 0)
 			mapkzero(PGROUND(base), size, MemACPI);
 	}
-print("e820scan building page tables after ACPI\n");
+	DP("e820scan building page tables after ACPI\n");
 	return 0;
 }
 
@@ -738,11 +738,11 @@ meminit(void)
 			mapkzero(PGROUND(base), size, MemUMB);
 	}
 
-	memmapdump();
+	/* memmapdump(); */
 	cm = &conf.mem[0];
 	for(base = memmapnext(-1, MemRAM); base != -1; base = memmapnext(base, MemRAM)){
 		size = memmapsize(base, BY2PG) & ~(BY2PG-1);
-		print("memmapnext() base 0x%zx size 0x%zux %zud\n", base, size, size);
+		DP("memmapnext() base 0x%zx size 0x%zux %zud\n", base, size, size);
 		if(size == 0)
 			continue;
 		if(cm >= &conf.mem[nelem(conf.mem)]){
@@ -755,23 +755,24 @@ meminit(void)
 			continue;
 		}
 		base = memmapalloc(base, size, BY2PG, MemRAM);
-		print("memmapalloc() base 0x%zx\n", base);
+		DP("memmapalloc() base 0x%zx\n", base);
 		if(base == -1){
 			print("base == -1\n");
 			continue;
 		}
 		cm->base = base;
 		cm->npage = size/BY2PG;
-		print("	cm->base 0x%zx cm->npage 0x%zux %zud\n", cm->base, cm->npage, cm->npage);
+		DP("	cm->base 0x%zx cm->npage 0x%zux %zud\n", cm->base, cm->npage, cm->npage);
 		cm++;
 	}
 	print("meminit: conf.mem entries\n");
 	for(i = 0; i < nelem(conf.mem); i++)
-		print("%d base 0x%zx 0x%zp npage 0x%zx %zd\n",
-			i, conf.mem[i].base, conf.mem[i].base,
-			conf.mem[i].npage, conf.mem[i].npage);	
+		if(conf.mem[i].base != 0)
+			print("%d base 0x%zx 0x%zp npage 0x%zx %zd\n",
+				i, conf.mem[i].base, conf.mem[i].base,
+				conf.mem[i].npage, conf.mem[i].npage);
 
-	memmapdump();
+	/* memmapdump(); */
 	// showpagetables((uintptr*)PML4ADDR);
 	//showpagetables((uintptr*)PML4ADDR);
 }

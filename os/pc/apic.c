@@ -7,6 +7,8 @@
 
 #include "mp.h"
 
+#define DP if(1){}else print
+
 enum {					/* Local APIC registers */
 	LapicID		= 0x0020,	/* ID */
 	LapicVER	= 0x0030,	/* Version */
@@ -202,7 +204,7 @@ lapiconline(void)
 	lapicw(LapicTDCR, lapictdxtab[a->tdx]);
 
 	lapicw(LapicTPR, 0);
-	showlapicregisters();
+	/* showlapicregisters(); */
 }
 
 /*
@@ -253,7 +255,7 @@ Retry:
 	splx(s);
 
 	v = (v+500000LL)/1000000LL;
-	print("cpu%d: lapic clock at %lludMHz\n", m->machno, v);
+	DP("cpu%d: lapic clock at %lludMHz\n", m->machno, v);
 }
 
 void
@@ -274,7 +276,7 @@ lapicinit(Apic* apic)
 		dfr = 0xffffffff;
 	ldr = 0x00000000;
 
-print("lapicinit LapicID ID 0x%lux apic->machno 0x%d\n", lapicr(LapicID), apic->machno);
+	DP("lapicinit LapicID ID 0x%lux apic->machno 0x%d\n", lapicr(LapicID), apic->machno);
 	lapicw(LapicDFR, dfr);
 	lapicw(LapicLDR, ldr);
 	lapicw(LapicTPR, 0xff);
@@ -305,7 +307,7 @@ print("lapicinit LapicID ID 0x%lux apic->machno 0x%d\n", lapicr(LapicID), apic->
 	lapiceoi(0);
 
 	lvt = (lapicr(LapicVER)>>16) & 0xFF;
-print("lapicinit LapicVER Version 0x%lux\n", lvt);
+	DP("lapicinit LapicVER Version 0x%lux\n", lvt);
 	if(lvt >= 4)
 		lapicw(LapicPCINT, ApicIMASK);
 	lapicw(LapicERROR, VectorPIC+IrqERROR);
@@ -336,28 +338,29 @@ lapicstartap(Apic* apic, int v)
 	int i;
 	ulong crhi;
 
-	showlapicregisters();
-print("lapicstartap v 0x%x\n", v);
+	/* showlapicregisters(); */
 	/* make apic's processor do a warm reset */
 	crhi = apic->apicno<<24;
 	lapicw(LapicICRHI, crhi);
 	lapicw(LapicICRLO, LapicFIELD|ApicLEVEL|LapicASSERT|ApicINIT);
-print("lapicstartap LapicFIELD|ApicLEVEL|LapicASSERT|ApicINIT 0x%ux\n", LapicFIELD|ApicLEVEL|LapicASSERT|ApicINIT);
+	DP("lapicstartap LapicFIELD|ApicLEVEL|LapicASSERT|ApicINIT 0x%ux\n",
+		LapicFIELD|ApicLEVEL|LapicASSERT|ApicINIT);
 	microdelay(200);
 	lapicw(LapicICRLO, LapicFIELD|ApicLEVEL|LapicDEASSERT|ApicINIT);
 	delay(10);
 
-print("lapicstartap LapicID ID 0x%lux apic->machno 0x%d\n", lapicr(LapicID), apic->machno);
+	DP("lapicstartap LapicID ID 0x%lux apic->machno 0x%d\n", lapicr(LapicID), apic->machno);
 	/* assumes apic is not an 82489dx */
 	for(i = 0; i < 2; i++){
 		lapicw(LapicICRHI, crhi);
 		/* make apic's processor start at v in real mode */
 		lapicw(LapicICRLO, LapicFIELD|ApicEDGE|ApicSTARTUP|(v/BY2PG));
-print("lapicstartap LapicFIELD|ApicEDGE|ApicSTARTUP|(v/BY2PG) 0x%zux\n", LapicFIELD|ApicEDGE|ApicSTARTUP|(v/BY2PG));
+		DP("lapicstartap LapicFIELD|ApicEDGE|ApicSTARTUP|(v/BY2PG) 0x%zux\n",
+			LapicFIELD|ApicEDGE|ApicSTARTUP|(v/BY2PG));
 		microdelay(200);
 	}
-print("lapicstartap apic->machno %d after the for loop\n", apic->machno);
-	showlapicregisters();
+	DP("lapicstartap apic->machno %d after the for loop\n", apic->machno);
+	/* showlapicregisters(); */
 }
 
 void
@@ -454,7 +457,7 @@ ioapicinit(Apic* apic, int apicno)
 	 * Make sure interrupts are all masked off for now.
 	 */
 	iowin = apic->addr+(0x10/sizeof(ulong));
-print("ioapicinit apic->addr 0x%p iowin 0x%p\n", apic->addr, iowin);
+	DP("ioapicinit apic->addr 0x%p iowin 0x%p\n", apic->addr, iowin);
 	lock(apic);
 	*apic->addr = IoapicVER;
 	apic->mre = (*iowin>>16) & 0xFF;
@@ -463,7 +466,7 @@ print("ioapicinit apic->addr 0x%p iowin 0x%p\n", apic->addr, iowin);
 	*iowin = apicno<<24;
 	unlock(apic);
 
-print("ioapicinit *iowin 0x%ux\n", *iowin);
+	DP("ioapicinit *iowin 0x%ux\n", *iowin);
 	hi = 0;
 	lo = ApicIMASK;
 	for(v = 0; v <= apic->mre; v++)

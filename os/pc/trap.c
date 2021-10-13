@@ -341,10 +341,10 @@ trap(Ureg* ureg)
 				mach = MACHP(i);
 				if(m->machno == mach->machno)
 					continue;
-				print(" cpu%d: last %d",
-					mach->machno, mach->lastintr);
+				/* print(" cpu%d: last %d",
+					mach->machno, mach->lastintr) */;
 			}
-			print("\n");
+			/* print("\n"); */
 		}
 		m->spuriousintr++;
 		return;

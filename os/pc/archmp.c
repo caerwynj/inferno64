@@ -389,9 +389,7 @@ identify(void)
 	_MP_ *_mp_;
 	ulong pa, len;
 
-print("archmp.c: identify\n");
 	if((cp = getconf("*nomp")) != nil && strcmp(cp, "0") != 0){
-print("archmp.c: identify *nomp != nil\n");
 		return 1;
 	}
 
@@ -403,11 +401,9 @@ print("archmp.c: identify *nomp != nil\n");
 	 * To do: check extended table checksum.
 	 */
 	if((_mp_ = sigsearch("_MP_", _MP_sz)) == nil || _mp_->physaddr == 0){
-print("archmp.c: identify sigsearch _MP_ not found\n");
 		return 1;
 	}
 
-print("archmp sigsearch found _mp_ 0x%p\n", _mp_);
 	len = PCMPsz;
 	pa = _mp_->physaddr;
 	if(pa + len-1 < pa)
@@ -434,7 +430,6 @@ Bad:
 	if(checksum(pcmp, len) != 0)
 		goto Bad;
 
-print("archmp identify after checksum\n");
 	if(m->havetsc && getconf("*notsc") == nil)
 		archmp.fastclock = tscticks;
 

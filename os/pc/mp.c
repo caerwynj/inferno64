@@ -10,6 +10,7 @@
 #include "mp.h"
 #include "apbootstrap.i"
 
+#define DP if(1){}else print
 extern void i8259init(void);
 
 /* filled in by pcmpinit or acpiinit */
@@ -165,16 +166,12 @@ mpinit(void)
 	Apic *apic;
 	char *cp;
 
-print("mpinit\n");
-	showglobalconfig();
+	/* showglobalconfig(); */
 	i8259init();
-print("mpinit i8259init\n");
 	syncclock();
-print("mpinit after syncclock getconf(*apicdebug) %s\n", getconf("*apicdebug"));
+	DP("mpinit after syncclock getconf(*apicdebug) %s\n", getconf("*apicdebug"));
 
-/* system trap handlers work here, interrupt vectors are working? */
-
-	if(getconf("*apicdebug") || 1){
+	if(getconf("*apicdebug")){
 		Bus *b;
 		Aintr *ai;
 		PCMPintr *pi;
@@ -197,7 +194,6 @@ print("mpinit after syncclock getconf(*apicdebug) %s\n", getconf("*apicdebug"));
 			}
 		}
 	}
-print("mpinit after apicdebug\n");
 
 	apic = nil;
 	for(i=0; i<=MaxAPICNO; i++){
@@ -216,8 +212,7 @@ print("mpinit after apicdebug\n");
 	apic->online = 1;
 
 	lapicinit(apic);
-print("mpinit after lapicinit\n");
-lapicerror(nil,nil);
+	/* lapicerror(nil,nil); */
 
 	/*
 	 * These interrupts are local to the processor
@@ -228,8 +223,7 @@ lapicerror(nil,nil);
 	intrenable(IrqERROR, lapicerror, 0, BUSUNKNOWN, "lapicerror");
 	intrenable(IrqSPURIOUS, lapicspurious, 0, BUSUNKNOWN, "lapicspurious");
 	lapiconline();
-print("mpinit after lapiconline\n");
-lapicerror(nil,nil);
+	/* lapicerror(nil,nil); */
 
 	/*
 	 * Initialise the application processors.
@@ -246,10 +240,12 @@ lapicerror(nil,nil);
 	if(sizeof(apbootstrap) > 4*KiB)
 		print("mpinit: sizeof(apbootstrap) 0x%x > 4*KiB -- fix it\n", sizeof(apbootstrap));
 	memmove((void*)APBOOTSTRAP, apbootstrap, sizeof(apbootstrap));
-for(i=0;i<sizeof(apbootstrap);i++){
-	print(" %x", *((uchar*)APBOOTSTRAP+i));
-}
-print("\n");
+	/*
+	for(i=0;i<sizeof(apbootstrap);i++){
+		DP(" %x", *((uchar*)APBOOTSTRAP+i));
+	}
+	DP("\n");
+	*/
 	for(i=0; i<nelem(mpapic); i++){
 		if((apic = mpapic[i]) == nil)
 			continue;
@@ -263,7 +259,6 @@ print("\n");
 			ncpu--;
 		}
 	}
-print("mpinit after mpstartap\n");
 
 	/*
 	 *  we don't really know the number of processors till

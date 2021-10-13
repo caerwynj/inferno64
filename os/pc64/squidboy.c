@@ -8,12 +8,13 @@
 
 #include "mp.h"
 
+#define DP	if(1){}else print
+
 extern void _stts(void);
 
 static void
 squidboy(Apic* apic)
 {
-print("starting squidboy\n");
 	machinit();
 	mmuinit();
 	cpuidentify();
@@ -36,10 +37,10 @@ mpstartap(Apic* apic)
 	uintptr *apbootp, *pml4/*, *pdp0*/;
 	Segdesc *gdt;
 	Mach *mach;
-	uchar *p, *q;
+	uchar *p /*, *q */;
 	int i;
 
-print("mpstartap apic->machno %d: \n", apic->machno);
+	DP("mpstartap apic->machno %d: \n", apic->machno);
 	/*
 	 * Initialise the AP page-tables and Mach structure.
 	 * Xspanalloc will panic if an allocation can't be made.
@@ -69,8 +70,9 @@ print("mpstartap apic->machno %d: \n", apic->machno);
 	 */
 	for(i=0; i<BY2PG/8; i+=8){
 		pml4[i] = MACHP(0)->pml4[i];
-if(pml4[i] != 0)
-print("mpstartap i %d pml4[i] 0x%p MACHP(0)->pml4[i] 0x%p\n", i, pml4[i], MACHP(0)->pml4[i]);
+		if(pml4[i] != 0)
+			DP("mpstartap i %d pml4[i] 0x%p MACHP(0)->pml4[i] 0x%p\n",
+				i, pml4[i], MACHP(0)->pml4[i]);
 	}
 
 	/*
@@ -83,10 +85,12 @@ print("mpstartap i %d pml4[i] 0x%p MACHP(0)->pml4[i] 0x%p\n", i, pml4[i], MACHP(
 	apbootp[2] = (uintptr)apic;
 	apbootp[3] = (uintptr)mach;
 	apbootp[4] |= (uintptr)m->havenx<<11;	/* EFER */
-for(i=0;i<80;i++){
-	print(" %x", *((uchar*)APBOOTSTRAP+i));
-}
-print("\n");
+	/*
+	for(i=0;i<80;i++){
+		print(" %x", *((uchar*)APBOOTSTRAP+i));
+	}
+	print("\n");
+	*/
 
 	/*
 	 * Universal Startup Algorithm.
@@ -100,12 +104,14 @@ print("\n");
 		print("mp: bad APBOOTSTRAP i 0x%ux\n", i);
 	*p++ = i;
 	*p = i>>8;
+	/*
 	print("p 0x%p PADDR(APBOOTSTRAP) 0x%p (PADDR(APBOOTSTRAP) & ~0xFFFF)/16 0x%p\n",
 			p, PADDR(APBOOTSTRAP), (PADDR(APBOOTSTRAP) & ~0xFFFF)/16);
 	for(q = (uchar*)KADDR(0x467); q<=p; q++){
 		print("	q 0x%p *q 0x%x",q, *q);
 	}
 	print("\n");
+	*/
 	coherence();
 
 	nvramwrite(0x0F, 0x0A);	/* shutdown code: warm reset upon init ipi */
@@ -114,11 +120,9 @@ print("\n");
 		if(arch->fastclock == tscticks)
 			cycles(&m->tscticks);	/* for ap's syncclock(); */
 		if(apic->online){
-print("online\n");
 			break;
 		}
 		delay(1);
 	}
-print("nvramwrite(0x0F, 000)\n");
 	nvramwrite(0x0F, 0x00);
 }
