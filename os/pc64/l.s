@@ -115,6 +115,17 @@ TEXT _gdtptr64v<>(SB), 1, $-4
 #define PDO(v)		((PTLX((v), 1))<<3)
 #define PTO(v)		((PTLX((v), 0))<<3)
 
+/* code for debugging
+	writes a single A at the left top of the screen
+_idle1:
+MOVL $0xB8000, AX
+MOVB $0x41, BX
+MOVB BX, (AX)
+MOVL $0xB8001, AX
+MOVB $15, BX
+MOVB BX, (AX)
+	JMP _idle1
+*/
 TEXT _warp64<>(SB), 1, $-4
 
 	/* clear global data tables - IDT, GDT, Page tables, Mach */
@@ -549,6 +560,11 @@ TEXT islo(SB), 1, $-4
 	PUSHFQ
 	POPQ	AX
 	ANDQ	$0x200, AX			/* 0x200 - Interrupt Flag */
+	RET
+
+TEXT rflags(SB), 1, $-4
+	PUSHFQ
+	POPQ	AX
 	RET
 
 /*

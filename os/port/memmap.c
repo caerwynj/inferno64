@@ -181,7 +181,7 @@ memmapdump(void)
 	print("----------------------\n");
 }
 
-uvlong
+uintptr
 memmapnext(uintptr addr, u32 type)
 {
 	Mapent *i, *e;
@@ -200,7 +200,7 @@ memmapnext(uintptr addr, u32 type)
 	return -1;
 }
 
-uvlong
+uintptr
 memmapsize(uintptr addr, uintptr align)
 {
 	Mapent *i;

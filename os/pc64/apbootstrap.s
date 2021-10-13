@@ -130,6 +130,27 @@ TEXT _ap64(SB), 1, $-4
 	PUSHQ	AX				/* clear flags */
 	POPFQ
 
+/*_idle1:
+MOVL $0xB8000, AX
+MOVB $0x41, BX
+MOVB BX, (AX)
+MOVL $0xB8001, AX
+MOVB $15, BX
+MOVB BX, (AX)
+MOVL $0xB8002, AX
+MOVB $0x41, BX
+MOVB BX, (AX)
+MOVL $0xB8003, AX
+MOVB $15, BX
+MOVB BX, (AX)
+MOVL $0xB8004, AX
+MOVB $0x41, BX
+MOVB BX, (AX)
+MOVL $0xB8005, AX
+MOVB $15, BX
+MOVB BX, (AX)
+	JMP _idle1*/
+
 	MOVQ	_apvector(SB), AX
 	MOVQ	_apapic(SB), RARG
 	PUSHQ	RARG

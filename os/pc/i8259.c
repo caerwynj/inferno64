@@ -29,6 +29,9 @@ static Lock i8259lock;
 static int i8259mask = 0xFFFF;		/* disabled interrupts */
 int i8259elcr;				/* mask of level-triggered interrupts */
 
+void	i8259on(void);
+void	i8259off(void);
+
 void
 i8259init(void)
 {
@@ -128,41 +131,10 @@ i8259isr(int vno)
 }
 
 int
-i8259enable(Vctl* v)
+i8259enable(Vctl*)
 {
-	int irq, irqbit;
-
-	/*
-	 * Given an IRQ, enable the corresponding interrupt in the i8259
-	 * and return the vector to be used. The i8259 is set to use a fixed
-	 * range of vectors starting at VectorPIC.
-	 */
-	irq = v->irq;
-	if(irq < 0 || irq > MaxIrqPIC){
-		print("i8259enable: irq %d out of range\n", irq);
-		return -1;
-	}
-	irqbit = 1<<irq;
-
-	ilock(&i8259lock);
-	if(!(i8259mask & irqbit) && !(i8259elcr & irqbit)){
-		print("i8259enable: irq %d shared but not level\n", irq);
-		iunlock(&i8259lock);
-		return -1;
-	}
-	i8259mask &= ~irqbit;
-	if(irq < 8)
-		outb(Int0aux, i8259mask & 0xFF);
-	else
-		outb(Int1aux, (i8259mask>>8) & 0xFF);
-
-	if(i8259elcr & irqbit)
-		v->eoi = i8259isr;
-	else
-		v->isr = i8259isr;
-	iunlock(&i8259lock);
-
-	return VectorPIC+irq;
+	i8259on();
+	return 1; /* TODO fix this */
 }
 
 int
@@ -172,29 +144,9 @@ i8259vecno(int irq)
 }
 
 int
-i8259disable(int irq)
+i8259disable(int)
 {
-	int irqbit;
-
-	/*
-	 * Given an IRQ, disable the corresponding interrupt
-	 * in the 8259.
-	 */
-	if(irq < 0 || irq > MaxIrqPIC){
-		print("i8259disable: irq %d out of range\n", irq);
-		return -1;
-	}
-	irqbit = 1<<irq;
-
-	ilock(&i8259lock);
-	if(!(i8259mask & irqbit)){
-		i8259mask |= irqbit;
-		if(irq < 8)
-			outb(Int0aux, i8259mask & 0xFF);
-		else
-			outb(Int1aux, (i8259mask>>8) & 0xFF);
-	}
-	iunlock(&i8259lock);
+	i8259off();
 	return 0;
 }
 

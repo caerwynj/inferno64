@@ -112,6 +112,7 @@ maptable(uvlong pa)
 	Tbl *t;
 	int i;
 
+print("maptable pa 0x%p\n", pa);
 	if(-pa < 8)
 		return;
 
@@ -131,9 +132,11 @@ maptable(uvlong pa)
 	if(l < Tblsz
 	|| l >= 0x10000000
 	|| -pa < l){
+print("mptable vunmap t 0x%p\n", t);
 		vunmap(t, 8);
 		return;
 	}
+print("mptable memreserve pa 0x%p l 0x%d\n", pa, l);
 	memreserve(pa, l);
 	vunmap(t, 8);
 	if((t = vmap(pa, l)) == nil)
@@ -144,19 +147,25 @@ maptable(uvlong pa)
 	}
 	tblmap[ntblmap++] = t;
 
+print("mptable ntblmap 0x%d\n", ntblmap);
 	p = (uchar*)t;
 	e = p + l;
 	if(memcmp("RSDT", t->sig, 4) == 0){
+print("mptable RSDT\n");
 		for(p = t->data; p+3 < e; p += 4)
 			maptable(get32(p));
+print("mptable exiting RSDT\n");
 		return;
 	}
 	if(memcmp("XSDT", t->sig, 4) == 0){
+print("mptable XSDT\n");
 		for(p = t->data; p+7 < e; p += 8)
 			maptable(get64(p));
+print("mptable exiting XSDT\n");
 		return;
 	}
 	if(memcmp("FACP", t->sig, 4) == 0){
+print("mptable FACP\n");
 		if(l < 44)
 			return;
 		maptable(get32(p + 40));
@@ -574,21 +583,24 @@ static void
 acpiinit(void)
 {
 	Tbl *t;
-	Apic *a;
+	Apic *a, *apic;
 	void *va;
 	uchar *s, *p, *e;
 	ulong lapicbase;
 	int machno, i, c;
 
+print("acpiinit: before amlinit\n");
 	amlinit();
 
 	/* load DSDT */
+print("acpiinit: load DSDT\n");
 	if((t = findtable("DSDT")) != nil){
 		amlintmask = (~0ULL) >> (t->rev <= 1)*32;
 		amlload(t->data, tbldlen(t));
 	}
 
 	/* load SSDT, there can be multiple tables */
+print("acpiinit: load SSDT\n");
 	for(i=0; i<ntblmap; i++){
 		t = tblmap[i];
 		if(memcmp(t->sig, "SSDT", 4) == 0)
@@ -596,20 +608,28 @@ acpiinit(void)
 	}
 
 	/* set APIC mode */
+print("acpiinit: set APIC mode\n");
 	amleval(amlwalk(amlroot, "_PIC"), "i", 1, nil);
 
 	t = findtable("APIC");
 	if(t == nil)
 		panic("acpiinit: no MADT (APIC) table");
+print("acpiinit: found APIC\n");
 
 	s = t->data;
 	e = s + tbldlen(t);
 	lapicbase = get32(s); s += 8;
+print("acpiinit: lapicbase 0x%lux\n", lapicbase);
 	va = vmap(lapicbase, 1024);
 	print("LAPIC: %.8lux %#p\n", lapicbase, va);
 	if(va == nil)
 		panic("acpiinit: cannot map lapic %.8lux", lapicbase);
 
+	print("t->data:");
+	for(p = s; p < e; p ++){
+		print(" %x", *p);
+	}
+	print("\n");
 	machno = 0;
 	for(p = s; p < e; p += c){
 		c = p[1];
@@ -617,6 +637,7 @@ acpiinit(void)
 			break;
 		switch(*p){
 		case 0x00:	/* Processor Local APIC */
+print("acpiinit Processor Local APIC p[3] %d MaxAPICNO %d\n", p[3], MaxAPICNO);
 			if(p[3] > MaxAPICNO)
 				break;
 			if((a = xalloc(sizeof(Apic))) == nil)
@@ -631,6 +652,7 @@ acpiinit(void)
 
 			/* skip disabled processors */
 			if((a->flags & PcmpEN) == 0 || mpapic[a->apicno] != nil){
+print("acpiinit disabled processor a->flags & PcmpEN 0x%x mpapic[a->apicno] 0x%p\n", a->flags & PcmpEN, mpapic[a->apicno]);
 				xfree(a);
 				break;
 			}
@@ -644,8 +666,11 @@ acpiinit(void)
 				a->flags |= PcmpBP;
 
 			mpapic[a->apicno] = a;
+				print("acpinit LAPIC%d: pa=%lux va=%#p flags=%x\n",
+					a->apicno, a->paddr, a->addr, a->flags);
 			break;
 		case 0x01:	/* I/O APIC */
+print("acpiinit Processor I/O APIC p[2] %d MaxAPICNO %d\n", p[2], MaxAPICNO);
 			if(p[2] > MaxAPICNO)
 				break;
 			if((a = xalloc(sizeof(Apic))) == nil)
@@ -658,11 +683,21 @@ acpiinit(void)
 			a->gsibase = get32(p+8);
 			a->flags = PcmpEN;
 			mpioapic[a->apicno] = a;
+print("acpiinit ioapicinit\n");
 			ioapicinit(a, a->apicno);
 			break;
 		}
 	}
 
+print("after initialization\n");
+		for(i=0; i<=MaxAPICNO; i++){
+			if(apic = mpapic[i])
+				print("LAPIC%d: pa=%lux va=%#p flags=%x\n",
+					i, apic->paddr, apic->addr, apic->flags);
+			if(apic = mpioapic[i])
+				print("IOAPIC%d: pa=%lux va=%#p flags=%x gsibase=%d mre=%d\n",
+					i, apic->paddr, apic->addr, apic->flags, apic->gsibase, apic->mre);
+		}
 	/*
 	 * need 2nd pass as vbox puts interrupt overrides
 	 * *before* the ioapic entries (!)
@@ -689,22 +724,27 @@ acpiinit(void)
 		}
 	}
 
+print("acpiinit: embedded controller\n");
 	/* find embedded controller */
 	amlenum(amlroot, "_HID", enumec, nil);
 
 	/* look for PCI interrupt mappings */
+print("acpiinit: interrupt mappings\n");
 	amlenum(amlroot, "_PRT", enumprt, nil);
 
 	/* add identity mapped legacy isa interrupts */
+print("acpiinit: legacy isa interrupts\n");
 	for(i=0; i<16; i++)
 		addirq(i, BusISA, 0, i, 0);
 
+print("acpiinit: free aml\n");
 	/* free the AML interpreter */
 	amlexit();
 
 	/*
 	 * Ininitalize local APIC and start application processors.
 	 */
+print("acpiinit: calling mpinit\n");
 	mpinit();
 }
 
@@ -802,15 +842,24 @@ identify(void)
 	}
 	if(rsd == nil)
 		return 1;
-	if(checksum(rsd, 20) && checksum(rsd, 36))
+	if(checksum(rsd, 20) && checksum(rsd, 36)){
+print("checksum(rsd, 20) && checksum(rsd, 36) unmatched\n");
 		return 1;
+	}
+print("archacpi identify: maptables()\n");
 	maptables();
+print("archacpi identify: after maptables()\n");
 	addarchfile("acpitbls", 0444, readtbls, nil);
 	addarchfile("acpimem", 0600, readmem, writemem);
-	if(v == 0 || findtable("APIC") == nil)
+print("archacpi identify: findtable APIC()\n");
+	if(v == 0 || findtable("APIC") == nil){
+print("v == 0 || findtable(APIC) == nil\n");
 		return 1;
-	if((cp = getconf("*nomp")) != nil && strcmp(cp, "0") != 0)
+	}
+	if((cp = getconf("*nomp")) != nil && strcmp(cp, "0") != 0){
+print("(cp = getconf(*nomp)) != nil && strcmp(cp, 0) != 0\n");
 		return 1;
+	}
 	if(getconf("*nohpet") == nil
 	&& (t = findtable("HPET")) != nil
 	&& ((uchar*)t)[40] == 0
@@ -818,8 +867,10 @@ identify(void)
 		archacpi.clockinit = hpetinit;
 		archacpi.fastclock = hpetread;
 	}
+print("archacpi identify: after hpet\n");
 	if(m->havetsc && getconf("*notsc") == nil)
 		archacpi.fastclock = tscticks;
+print("archacpi identify: after notsc\n");
 
 	return 0;
 }

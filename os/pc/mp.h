@@ -12,6 +12,8 @@ typedef struct {			/* floating pointer */
 	uchar	reserved[3];
 } _MP_;
 
+#define _MP_sz			(4+4+1+1+1+1+1+3)
+
 typedef struct {			/* configuration table header */
 	uchar	signature[4];		/* "PCMP" */
 	ushort	length;			/* total table length */
@@ -27,6 +29,8 @@ typedef struct {			/* configuration table header */
 	uchar	reserved;
 } PCMP;
 
+#define PCMPsz			(4+2+1+1+20+4+2+2+4+2+1+1)
+
 typedef struct {			/* processor table entry */
 	uchar	type;			/* entry type (0) */
 	uchar	apicno;			/* local APIC id */
@@ -37,11 +41,15 @@ typedef struct {			/* processor table entry */
 	uchar	reserved[8];
 } PCMPprocessor;
 
+#define PCMPprocessorsz		(1+1+1+1+4+4+8)
+
 typedef struct {			/* bus table entry */
 	uchar	type;			/* entry type (1) */
 	uchar	busno;			/* bus id */
 	char	string[6];		/* bus type string */
 } PCMPbus;
+
+#define PCMPbussz		(1+1+6)
 
 typedef struct {			/* I/O APIC table entry */
 	uchar	type;			/* entry type (2) */
@@ -50,6 +58,8 @@ typedef struct {			/* I/O APIC table entry */
 	uchar	flags;			/* I/O APIC flags */
 	ulong	addr;			/* I/O APIC address */
 } PCMPioapic;
+
+#define PCMPioapicsz		(1+1+1+1+4)
 
 typedef struct {			/* interrupt table entry */
 	uchar	type;			/* entry type ([34]) */
@@ -61,6 +71,8 @@ typedef struct {			/* interrupt table entry */
 	uchar	intin;			/* destination APIC [L]INTIN# */
 } PCMPintr;
 
+#define PCMPintrsz		(1+1+2+1+1+1+1)
+
 typedef struct {			/* system address space mapping entry */
 	uchar	type;			/* entry type (128) */
 	uchar	length;			/* of this entry (20) */
@@ -69,6 +81,8 @@ typedef struct {			/* system address space mapping entry */
 	ulong	addrbase[2];
 	ulong	addrlength[2];
 } PCMPsasm;
+
+#define PCMPsasmsz		(1+1+1+1+8+8)
 
 typedef struct {			/* bus hierarchy descriptor entry */
 	uchar	type;			/* entry type (129) */
@@ -79,6 +93,8 @@ typedef struct {			/* bus hierarchy descriptor entry */
 	uchar	reserved[3];
 } PCMPhierarchy;
 
+#define PCMPhirarchysz		(1+1+1+1+1+3)
+
 typedef struct {			/* compatibility bus address space modifier entry */
 	uchar	type;			/* entry type (130) */
 	uchar	length;			/* of this entry (8) */
@@ -86,6 +102,8 @@ typedef struct {			/* compatibility bus address space modifier entry */
 	uchar	modifier;		/* address modifier */
 	ulong	range;			/* predefined range list */
 } PCMPcbasm;
+
+#define PCMPcbasmsz		(1+1+1+1+4)
 
 enum {					/* table entry types */
 	PcmpPROCESSOR	= 0x00,		/* one entry per processor */
@@ -150,6 +168,7 @@ typedef struct Bus {
 typedef struct Aintr {
 	PCMPintr* intr;
 	Apic*	apic;
+	Bus*	bus;
 	Aintr*	next;
 };
 
@@ -157,17 +176,21 @@ typedef struct Apic {
 	int	type;
 	int	apicno;
 	ulong*	addr;			/* register base address */
+	ulong	paddr;
 	int	flags;			/* PcmpBP|PcmpEN */
 
 	Lock;				/* I/O APIC: register access */
 	int	mre;			/* I/O APIC: maximum redirection entry */
+	int	gsibase;		/* I/O APIC: global system interrupt base (acpi) */
 
 	int	lintr[2];		/* Local APIC */
 	int	machno;
+
+	int	online;
 } Apic;
 
 enum {
-	MaxAPICNO	= 31,
+	MaxAPICNO	= 254,		/* 255 is physical broadcast */
 };
 
 enum {					/* I/O APIC registers */
@@ -206,20 +229,34 @@ enum {
 	ApicIMASK	= 0x00010000,	/* [16] Interrupt Mask */
 };
 
+extern void ioapicinit(Apic*, int);
 extern void ioapicrdtr(Apic*, int, int*, int*);
 extern void ioapicrdtw(Apic*, int, int, int);
-extern void ioapicinit(Apic*, int);
-extern void lapiconline(void);
-extern void lapicinit(Apic*);
-extern void lapicstartap(Apic*, int);
-extern void lapicerror(Ureg*, void*);
-extern void lapicspurious(Ureg*, void*);
-extern int lapicisr(int);
+
+extern void lapicclock(Ureg*, void*);
 extern int lapiceoi(int);
-extern void lapicicrw(int, int);
+extern void lapicerror(Ureg*, void*);
+extern void lapicicrw(ulong, ulong);
+extern void lapicinit(Apic*);
+extern int lapicintroff(int);
+extern int lapicintron(Vctl*);
+extern int lapicisr(int);
+extern void lapicnmidisable(void);
+extern void lapicnmienable(void);
+extern void lapiconline(void);
+extern void lapicspurious(Ureg*, void*);
+extern void lapicstartap(Apic*, int);
+extern void lapictimerset(uvlong);
 
+extern int mpintrinit(Bus*, PCMPintr*, int, int);
 extern void mpinit(void);
+extern int mpintrassign(Vctl*);
 extern void mpshutdown(void);
-extern int mpintrenable(Vctl*);
+extern void mpstartap(Apic*);
 
-extern _MP_ *_mp_;
+extern Bus* mpbus;
+extern Bus* mpbuslast;
+extern int mpisabus;
+extern int mpeisabus;
+extern Apic *mpioapic[];
+extern Apic *mpapic[];

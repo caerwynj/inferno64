@@ -856,10 +856,13 @@ archinit(void)
 
 	arch = knownarch[0];
 	for(p = knownarch; *p != nil; p++){
+print("archinit checking %s .. ", (*p)->id);
 		if((*p)->ident != nil && (*p)->ident() == 0){
+print(" identified\n");
 			arch = *p;
 			break;
 		}
+print(" not identified\n");
 	}
 	if(arch != knownarch[0]){
 		if(arch->id == nil)
@@ -873,7 +876,7 @@ archinit(void)
 		if(arch->clockinit == nil)
 			arch->clockinit = knownarch[0]->clockinit;
 	}
-
+print("archinit id %s\n", arch->id);
 	/*
 	 *  Decide whether to use copy-on-reference (386 and mp).
 	 *  We get another chance to set it in mpinit() for a

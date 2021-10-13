@@ -175,6 +175,7 @@ void*	rampage(void);
 s32	rdmsr(s32, s64*);
 ulong rdtsc32(void);
 void	rdrandbuf(void*, u32);
+u64		rflags(void);
 void*	rsdsearch(void);
 void	screeninit(void);
 int	screenprint(char*, ...);			/* debugging */

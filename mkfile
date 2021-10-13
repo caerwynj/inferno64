@@ -251,11 +251,14 @@ cd:V:	/tmp/9ferno.386.iso.gz
 	@{rfork n
 	mk binds
 	{	echo 'console=0 b115200'
-		#echo '*dumpmp=1'
-		echo '*nomp=1'
+		echo '*dumpmp=1'
+		echo '*apicdebug=1'
+		#echo '*nomp=1'
 		grep -v '^bootfile=' /n/src9/os/pc/plan9.ini
 		#echo 'bootfile='^`{echo $kernel | sed 's!^/n/src9!!'}
+		#echo 'bootfile=9pc64'
 		echo 'bootfile=ipc64'
+		echo wait
 	} > /env/plan9.ini
 	bind /env/plan9.ini /n/src9/plan9.ini
 	cat /n/src9/plan9.ini

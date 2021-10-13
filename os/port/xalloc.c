@@ -36,7 +36,7 @@ struct Xalloc
 {
 	Lock;
 	Hole	hole[Nhole];
-	Hole*	flist;
+	Hole*	flist;	/* front of list */
 	Hole*	table;
 };
 
@@ -237,7 +237,7 @@ xsummary(void)
 
 	print("%lld holes free\n", i);
 	i = 0;
-	for(h = xlists.table; h; h = h->link) {
+	for(h = xlists.table; h; h = h->link){
 		print("%.8zux %.8zux %zud\n", h->addr, h->top, h->size);
 		i += h->size;
 	}

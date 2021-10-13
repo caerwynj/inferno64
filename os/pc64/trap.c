@@ -365,9 +365,9 @@ trap(Ureg* ureg)
 		/* clear the interrupt */
 		i8259isr(vno);
 			
-		if(0)print("cpu%d: spurious interrupt %d, last %d",
+		if(1)print("cpu%d: spurious interrupt %d, last %d",
 			m->machno, vno, m->lastintr);
-		if(0)if(conf.nmach > 1){
+		if(1)if(conf.nmach > 1){
 			for(i = 0; i < MAXMACH; i++){
 				if(active.machs[i] == 0)
 					continue;

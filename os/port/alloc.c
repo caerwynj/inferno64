@@ -444,7 +444,7 @@ poolrealloc(Pool *p, void *v, uintptr size)
 	void *nv;
 	intptr osize;
 
-	//if(size >= 1024*1024*1024)	/* for sanity and to avoid overflow */
+	// if(size >= 1024*1024*1024)	/* for sanity and to avoid overflow */
 	//	return nil;
 	if(size == 0){
 		poolfree(p, v);
@@ -907,10 +907,13 @@ poolsize(Pool *p, uintptr max, int contig)
 		p->ressize = max-RESERVED;
 	if (contig && max > 0) {
 		p->chunk = max-1024;
+		print("poolsize: poolalloc() contig chunk 0x%zx %zd\n", p->chunk, p->chunk);
 		x = poolalloc(p, p->chunk);
 		if(x == nil)
 			panic("poolsize: don't have %d bytes\n", p->chunk);
+		print("poolsize: before poolfree()\n");
 		poolfree(p, x);
+		print("poolsize: after poolfree()\n");
 		p->hw = 0;
 	}
 }

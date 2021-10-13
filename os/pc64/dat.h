@@ -110,7 +110,7 @@ struct PFPU
 struct Confmem
 {
 	uintptr	base;
-	u32	npage;
+	uintptr	npage;
 };
 
 struct Conf
@@ -119,11 +119,11 @@ struct Conf
 	u32	nproc;		/* processes */
 	u32	monitor;	/* has monitor? */
 	Confmem mem[16];	/* physical memory */
-	u32	npage;		/* total physical pages of memory */
-	u32	nswap;		/* number of swap pages */
+	uintptr	npage;		/* total physical pages of memory */
+	uintptr	nswap;		/* number of swap pages */
 	u32	copymode;	/* 0 is copy on write, 1 is copy on reference */
-	u32	ialloc;		/* max interrupt time allocation in bytes */
-	u32	pipeqsize;	/* size in bytes of pipe queues */
+	uintptr	ialloc;		/* max interrupt time allocation in bytes */
+	uintptr	pipeqsize;	/* size in bytes of pipe queues */
 	u32	nuart;		/* number of uart devices */
 };
 

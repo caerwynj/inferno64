@@ -141,7 +141,7 @@ mmuinit(void)
 		cm = &conf.mem[i];
 		if(cm->npage == 0)
 			continue;
-		DP("i %d base 0x%p npage 0x%d\n", i, cm->base, cm->npage);
+		DP("i %d base 0x%zx npage 0x%zx %zd\n", i, cm->base, cm->npage, cm->npage);
 		pmap(cm->base, PTEGLOBAL|PTEWRITE|PTENOEXEC|PTEVALID, cm->npage*BY2PG);
 	}
 }
@@ -280,11 +280,11 @@ pmap(uintptr pa, u64 flags, s64 size)
 	s32 z, l;
 
 	if(size <= 0)
-		panic("pmap: pa=%#p size=%lld", pa, size);
-	DP("pmap pa 0x%p-0x%zux flags 0x%llux size %llud 0x%llux\n",
+		panic("pmap: pa=%#zux size=%lld", pa, size);
+	print("pmap pa 0x%zux-0x%zux flags 0x%llux size %llud 0x%llux\n",
 		pa, (uintptr)pa+size, flags, size, size);
 	pa = PPN(pa);
-	DP("\tpa 0x%p\n", pa);
+	DP("\tpa 0x%zux\n", pa);
 	while(size > 0){
 		/* reducing complexity, use 4096 byte pages all through */
 		l = 0;

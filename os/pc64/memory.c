@@ -37,6 +37,7 @@ rampage(void)
 
 	/* no need to add page tables with pmap() here as
 	 * mmuinit() has done it for us
+	 * use xspanalloc() if xlists are built
 	 */
 	if(conf.mem[0].npage != 0)
 		return xspanalloc(BY2PG, BY2PG, 0);
@@ -728,6 +729,7 @@ meminit(void)
 {
 	uintptr base, size;
 	Confmem *cm;
+	int i;
 
 	umbexclude();
 	for(base = memmapnext(-1, MemUMB); base != -1; base = memmapnext(base, MemUMB)){
@@ -736,26 +738,38 @@ meminit(void)
 			mapkzero(PGROUND(base), size, MemUMB);
 	}
 
+	memmapdump();
 	cm = &conf.mem[0];
 	for(base = memmapnext(-1, MemRAM); base != -1; base = memmapnext(base, MemRAM)){
 		size = memmapsize(base, BY2PG) & ~(BY2PG-1);
+		print("memmapnext() base 0x%zx size 0x%zux %zud\n", base, size, size);
 		if(size == 0)
 			continue;
 		if(cm >= &conf.mem[nelem(conf.mem)]){
-			print("meminit: out of entries, loosing: %#p (%llud)\n", base, (uvlong)size);
+			print("meminit: out of entries, loosing: 0x%#p (%zud)\n", (void *)base, size);
 			continue;
 		}
 		if(base < MemMin){
-			print("meminit: ignoring RAM below MemMin base 0x%p size 0x%zd\n", base, size);
+			print("meminit: ignoring RAM below MemMin 0x%p base 0x%p size 0x%zd\n",
+				MemMin, (void *)base, size);
 			continue;
 		}
-		cm->base = memmapalloc(base, size, BY2PG, MemRAM);
-		if(cm->base == -1)
+		base = memmapalloc(base, size, BY2PG, MemRAM);
+		print("memmapalloc() base 0x%zx\n", base);
+		if(base == -1){
+			print("base == -1\n");
 			continue;
-		base = cm->base;
+		}
+		cm->base = base;
 		cm->npage = size/BY2PG;
+		print("	cm->base 0x%zx cm->npage 0x%zux %zud\n", cm->base, cm->npage, cm->npage);
 		cm++;
 	}
+	print("meminit: conf.mem entries\n");
+	for(i = 0; i < nelem(conf.mem); i++)
+		print("%d base 0x%zx 0x%zp npage 0x%zx %zd\n",
+			i, conf.mem[i].base, conf.mem[i].base,
+			conf.mem[i].npage, conf.mem[i].npage);	
 
 	memmapdump();
 	// showpagetables((uintptr*)PML4ADDR);

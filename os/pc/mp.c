@@ -123,6 +123,41 @@ syncclock(void)
 	}
 }
 
+static void
+showglobalconfig(void)
+{
+	u64 flags;
+	u32 iopl;
+	uintptr apic_base;
+
+	print("APIC global configuration\n");
+	flags = rflags();
+	print("	RFLAGS: 0x%zux, ", flags);
+	if(flags & 0x200)
+		print("maskable interrupts enabled, ");
+	else
+		print("maskable interrupts disabled, ");
+	iopl = flags & (0x11 << 12);
+	print("iopl 0x%x", iopl);
+	print("\n");
+
+	rdmsr(0x1B, (s64*)&apic_base);
+	print("	APIC_BASE: 0x%zux, ", apic_base);
+	if(apic_base & 0x100)
+		print("BSP, ");
+	else
+		print("not BSP, ");
+	if(apic_base & 0x400)
+		print("enable x2APIC mode, ");
+	else
+		print("disable x2APIC mode, ");
+	if(apic_base & 0x800)
+		print("APIC global enable");
+	else
+		print("APIC global disable");
+	print("\n");
+}
+
 void
 mpinit(void)
 {
@@ -130,10 +165,16 @@ mpinit(void)
 	Apic *apic;
 	char *cp;
 
+print("mpinit\n");
+	showglobalconfig();
 	i8259init();
+print("mpinit i8259init\n");
 	syncclock();
+print("mpinit after syncclock getconf(*apicdebug) %s\n", getconf("*apicdebug"));
 
-	if(getconf("*apicdebug")){
+/* system trap handlers work here, interrupt vectors are working? */
+
+	if(getconf("*apicdebug") || 1){
 		Bus *b;
 		Aintr *ai;
 		PCMPintr *pi;
@@ -156,6 +197,7 @@ mpinit(void)
 			}
 		}
 	}
+print("mpinit after apicdebug\n");
 
 	apic = nil;
 	for(i=0; i<=MaxAPICNO; i++){
@@ -174,6 +216,8 @@ mpinit(void)
 	apic->online = 1;
 
 	lapicinit(apic);
+print("mpinit after lapicinit\n");
+lapicerror(nil,nil);
 
 	/*
 	 * These interrupts are local to the processor
@@ -184,6 +228,8 @@ mpinit(void)
 	intrenable(IrqERROR, lapicerror, 0, BUSUNKNOWN, "lapicerror");
 	intrenable(IrqSPURIOUS, lapicspurious, 0, BUSUNKNOWN, "lapicspurious");
 	lapiconline();
+print("mpinit after lapiconline\n");
+lapicerror(nil,nil);
 
 	/*
 	 * Initialise the application processors.
@@ -200,6 +246,10 @@ mpinit(void)
 	if(sizeof(apbootstrap) > 4*KiB)
 		print("mpinit: sizeof(apbootstrap) 0x%x > 4*KiB -- fix it\n", sizeof(apbootstrap));
 	memmove((void*)APBOOTSTRAP, apbootstrap, sizeof(apbootstrap));
+for(i=0;i<sizeof(apbootstrap);i++){
+	print(" %x", *((uchar*)APBOOTSTRAP+i));
+}
+print("\n");
 	for(i=0; i<nelem(mpapic); i++){
 		if((apic = mpapic[i]) == nil)
 			continue;
@@ -213,6 +263,7 @@ mpinit(void)
 			ncpu--;
 		}
 	}
+print("mpinit after mpstartap\n");
 
 	/*
 	 *  we don't really know the number of processors till

@@ -25,6 +25,9 @@ static  uchar *sp;	/* stack pointer for /boot */
 
 char bootdisk[KNAMELEN];
 
+/* until I sort out the mp initialization issue */
+extern void startaps(void);
+
 static void
 doc(char *m)
 {
@@ -147,6 +150,7 @@ main(void)
 	meminit();			/* builds the conf.mem entries */
 	doc("confinit");
 	confinit();
+	doc("xinit");
 	xinit();
 	/* TODO 9front does this for dma
 	if(i8237alloc != nil)
@@ -160,10 +164,13 @@ main(void)
 	cpuidprint();
 	doc("mmuinit");
 	mmuinit();		/* builds the page tables, lgdt, lidt */
-	print("poolsizeinit\n");
+	memmapdump();
+	doc("poolsizeinit");
 	poolsizeinit();
 	memmapdump();
+	doc("eve inferno");
 	eve = strdup("inferno");
+	doc("arch->intrinit");
 	if(arch->intrinit){	/* launches other processors on an mp */
 		doc("intrinit");
 		arch->intrinit();
@@ -320,20 +327,20 @@ confinit(void)
 		pcnt = 70;
 	conf.ialloc = (((conf.npage*(100-pcnt))/100)/2)*BY2PG;
 	conf.nproc = 100 + ((conf.npage*BY2PG)/MiB)*5;
-	print("conf.npage %d conf.ialloc %ud conf.nproc %d\n",
+	print("conf.npage %zd conf.ialloc %zud conf.nproc %d\n",
 			conf.npage, conf.ialloc, conf.nproc);
+	USED(maxmem);
 }
 
 void
 poolsizeinit(void)
 {
-	u64 nb;
-
-	nb = conf.npage*BY2PG;
-	print("poolsizeinit nb 0x%zx conf.npage %d\n", nb, conf.npage);
-	poolsize(mainmem, (nb*main_pool_pcnt)/100, 0);
-	poolsize(heapmem, (nb*heap_pool_pcnt)/100, 0);
-	poolsize(imagmem, (nb*image_pool_pcnt)/100, 1);
+	print("poolsizeinit conf.npage %zd\n", conf.npage);
+	poolsize(mainmem, ((conf.npage*main_pool_pcnt)/100)*BY2PG, 0);
+	poolsize(heapmem, ((conf.npage*heap_pool_pcnt)/100)*BY2PG, 0);
+	/* TODO causes a double fault now. needs to be fixed
+	poolsize(imagmem, ((conf.npage*image_pool_pcnt)/100)*BY2PG, 1); */
+	print("after poolsizeinit\n");
 }
 
 /*
