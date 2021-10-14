@@ -379,7 +379,6 @@ kbdreset(void)
 	static char initfailed[] = "i8042: kbd init failed\n";
 	int c, try;
 
-	print("kbdreset\n");
 	kbd.q = qopen(1024, Qcoalesce, 0, 0);
 	if(kbd.q == nil)
 		panic("kbdreset");

@@ -95,8 +95,6 @@ accountant(void)
 {
 	Prog *p;
 
-	print("accountant isched 0x%p isched.runhd 0x%p\n",
-		isched, isched.runhd);
 	p = isched.runhd;
 	if(p != nil)
 		p->ticks++;
@@ -296,14 +294,14 @@ tellsomeone(Prog *p, char *buf)
 	DP("tellsomeone after waserror() pid %d buf %s\n", p->pid, buf);
 	o = p->osenv;
 	if(o->childq != nil){
-		qproduce(o->childq, buf, strlen(buf));
+		ret = qproduce(o->childq, buf, strlen(buf));
 		if(ret != strlen(buf))
-			print("tellsomeone qproduce on childq sent %d bytes out of %d\n", ret, strlen(buf));
+			print("tellsomeone qproduce on childq sent %d bytes out of %ld\n", ret, strlen(buf));
 	}
 	if(o->waitq != nil){
 		ret = qproduce(o->waitq, buf, strlen(buf));
 		if(ret != strlen(buf))
-			print("tellsomeone qproduce on waitq sent %d bytes out of %d\n", ret, strlen(buf));
+			print("tellsomeone qproduce on waitq sent %d bytes out of %ld\n", ret, strlen(buf));
 	}
 	poperror();
 }
@@ -1104,9 +1102,6 @@ vmachine(void*)
 				delrunq(up->prog);
 			} else
 				print("up->iprog not nil (%lux)\n", up->iprog);
-		/*} else {
-			print("completed running the program - TODO\n");
-			for(;;){}*/
 		}
 	}
 }
@@ -1126,7 +1121,7 @@ disinit(void *a)
 
 	fmtinstall('D', Dconv);
 
-	// TODO addclock0link(accountant, MS2HZ);
+	addclock0link(accountant, MS2HZ);
 
 	// TODO obsolete? cpuidentify calls fpuinit() fpinit();
 	// TODO obsolete? fpsave(&up->env->fpu);

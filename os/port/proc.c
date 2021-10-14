@@ -94,7 +94,7 @@ sched(void)
 		splhi();
 		procsave(up);
 		if(setlabel(&up->sched)) {
-			/*procrestore(up);*/
+			/* procrestore(up); */
 			spllo();
 			return;
 		}
