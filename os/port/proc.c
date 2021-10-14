@@ -505,27 +505,34 @@ proctab(int i)
 }
 
 void
+dumpaproc(Proc *p)
+{
+	char *s;
+	char tmp[14];
+
+	s = p->psstate;
+	if(s == nil)
+		s = "kproc";
+	if(p->state == Wakeme)
+		snprint(tmp, sizeof(tmp), " /%.8lux", p->r);
+	else
+		*tmp = '\0';
+	print("%p:%3ud:%14s pc %.8zux %s/%s qpc %.8zux pri %d%s\n",
+		p, p->pid, p->text, p->pc, s, statename[p->state], p->qpc, p->pri, tmp);
+}
+
+void
 procdump(void)
 {
 	int i;
-	char *s;
 	Proc *p;
-	char tmp[14];
 
 	for(i=0; i<conf.nproc; i++) {
 		p = &procalloc.arena[i];
 		if(p->state == Dead)
 			continue;
 
-		s = p->psstate;
-		if(s == nil)
-			s = "kproc";
-		if(p->state == Wakeme)
-			snprint(tmp, sizeof(tmp), " /%.8lux", p->r);
-		else
-			*tmp = '\0';
-		print("%p:%3ud:%14s pc %.8zux %s/%s qpc %.8zux pri %d%s\n",
-			p, p->pid, p->text, p->pc, s, statename[p->state], p->qpc, p->pri, tmp);
+		dumpaproc(p);
 	}
 }
 

@@ -515,8 +515,14 @@ struct Proc
 	s32		nerrlab;
 	Label		errlab[NERR];
 	char	genbuf[128];	/* buffer used e.g. for last name element from namec */
+
+	Lock	*lockwait;
+	Lock	*lastlock;	/* debugging */
+	Lock	*lastilock;	/* debugging */
+
 	Mach*		mp;		/* machine this process last ran on */
 	Mach*		wired;
+	int	nlocks;		/* number of locks held by proc */
 	u32		movetime;	/* next time process should switch processors */
 	u32		delaysched;
 	s32			preempted;	/* process yielding in interrupt */
