@@ -131,23 +131,9 @@ i8259isr(int vno)
 }
 
 int
-i8259enable(Vctl*)
-{
-	i8259on();
-	return 1; /* TODO fix this */
-}
-
-int
 i8259vecno(int irq)
 {
 	return VectorPIC+irq;
-}
-
-int
-i8259disable(int)
-{
-	i8259off();
-	return 0;
 }
 
 static int

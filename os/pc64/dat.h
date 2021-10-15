@@ -259,10 +259,10 @@ struct PCArch
 	void	(*intrinit)(void);
 	s32	(*intrassign)(Vctl*);
 	s32	(*intrirqno)(s32, s32);
-	s32	(*intrspurious)(s32);
-	s32	(*intrenable)(Vctl*);
 	s32	(*intrvecno)(s32);
-	s32	(*intrdisable)(s32);
+	s32	(*intrspurious)(s32);
+	void	(*introff)(void);
+	void	(*intron)(void);
 
 	void	(*clockinit)(void);
 	void	(*clockenable)(void);

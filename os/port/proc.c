@@ -164,7 +164,30 @@ preemption(int tick)
 	}
 	return 0;
 }
-		
+
+/* this is from 9front, above is inferno's */
+/*
+ *  here at the end of non-clock interrupts to see if we should preempt the
+ *  current process.  Returns 1 if preempted, 0 otherwise.
+ */
+int
+preempted(void)
+{
+	if(up != nil && up->state == Running)
+	if(up->preempted == 0)
+	if(anyhigher())
+	if(anyready()){ /* TODO replaced the below 2 lines with this line. Have to test */
+	/* if(!active.exiting){
+		m->readied = nil; */	/* avoid cooperative scheduling */
+		up->preempted = 1;
+		sched();
+		splhi();
+		up->preempted = 0;
+		return 1;
+	}
+	return 0;
+}
+
 Proc*
 runproc(void)
 {

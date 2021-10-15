@@ -7,6 +7,11 @@
 #include	"ureg.h"
 #include	"../port/error.h"
 
+Vctl *vctl[256];	/* defined in pc/irq.c */
+
+extern int irqhandled(Ureg*, int);
+extern void irqinit(void);
+
 int (*breakhandler)(Ureg *ur, Proc*);
 
 static void debugbpt(Ureg*, void*);
@@ -14,182 +19,6 @@ static void faultamd64(Ureg*, void*);
 static void doublefault(Ureg*, void*);
 static void unexpected(Ureg*, void*);
 static void _dumpstack(Ureg*);
-
-static Lock vctllock;
-static Vctl *vctl[256];
-
-enum
-{
-	Ntimevec = 20		/* number of time buckets for each intr */
-};
-ulong intrtimes[256][Ntimevec];
-
-void
-intrenable(int irq, void (*f)(Ureg*, void*), void* a, int tbdf, char *name)
-{
-	int vno;
-	Vctl *v;
-
-	if(f == nil){
-		print("intrenable: nil handler for %d, tbdf 0x%uX for %s\n",
-			irq, tbdf, name);
-		return;
-	}
-
-	v = xalloc(sizeof(Vctl));
-	v->isintr = 1;
-	v->irq = irq;
-	v->tbdf = tbdf;
-	v->f = f;
-	v->a = a;
-	strncpy(v->name, name, KNAMELEN-1);
-	v->name[KNAMELEN-1] = 0;
-
-	ilock(&vctllock);
-	vno = arch->intrenable(v);
-	if(vno == -1){
-		iunlock(&vctllock);
-		print("intrenable: couldn't enable irq %d, tbdf 0x%uX for %s\n",
-			irq, tbdf, v->name);
-		xfree(v);
-		return;
-	}
-	if(vctl[vno]){
-		if(vctl[vno]->isr != v->isr || vctl[vno]->eoi != v->eoi)
-			panic("intrenable: handler: %s %s %luX %luX %luX %luX\n",
-				vctl[vno]->name, v->name,
-				vctl[vno]->isr, v->isr, vctl[vno]->eoi, v->eoi);
-		v->next = vctl[vno];
-	}
-	vctl[vno] = v;
-	iunlock(&vctllock);
-}
-
-int
-intrdisable(int irq, void (*f)(Ureg *, void *), void *a, int tbdf, char *name)
-{
-	Vctl **pv, *v;
-	int vno;
-
-	/*
-	 * For now, none of this will work with the APIC code,
-	 * there is no mapping between irq and vector as the IRQ
-	 * is pretty meaningless.
-	 */
-	if(arch->intrvecno == nil)
-		return -1;
-	vno = arch->intrvecno(irq);
-	ilock(&vctllock);
-	pv = &vctl[vno];
-	while (*pv && 
-		  ((*pv)->irq != irq || (*pv)->tbdf != tbdf || (*pv)->f != f || (*pv)->a != a ||
-		   strcmp((*pv)->name, name)))
-		pv = &((*pv)->next);
-	assert(*pv);
-
-	v = *pv;
-	*pv = (*pv)->next;	/* Link out the entry */
-	
-	if(vctl[vno] == nil && arch->intrdisable != nil)
-		arch->intrdisable(irq);
-	iunlock(&vctllock);
-	xfree(v);
-	return 0;
-}
-
-static s32
-irqallocread(Chan*, void *vbuf, s32 n, s64 offset)
-{
-	char *buf, *p, str[2*(11+1)+KNAMELEN+1+1];
-	int m, vno;
-	long oldn;
-	Vctl *v;
-
-	if(n < 0 || offset < 0)
-		error(Ebadarg);
-
-	oldn = n;
-	buf = vbuf;
-	for(vno=0; vno<nelem(vctl); vno++){
-		for(v=vctl[vno]; v; v=v->next){
-			m = snprint(str, sizeof str, "%11d %11d %.*s\n", vno, v->irq, KNAMELEN, v->name);
-			if(m <= offset)	/* if do not want this, skip entry */
-				offset -= m;
-			else{
-				/* skip offset bytes */
-				m -= offset;
-				p = str+offset;
-				offset = 0;
-
-				/* write at most max(n,m) bytes */
-				if(m > n)
-					m = n;
-				memmove(buf, p, m);
-				n -= m;
-				buf += m;
-
-				if(n == 0)
-					return oldn;
-			}	
-		}
-	}
-	return oldn - n;
-}
-
-void
-trapenable(int vno, void (*f)(Ureg*, void*), void* a, char *name)
-{
-	Vctl *v;
-
-	if(f == nil)
-		panic("trapenable: nil handler for %d, for %s\n",
-			vno, name);
-	if(vno < 0 || vno >= VectorPIC)
-		panic("trapenable: vno %d out of range\n", vno);
-	if((v = xalloc(sizeof(Vctl))) == nil){
-		panic("trapenable: out of memory");
-	}
-	v->tbdf = BUSUNKNOWN;
-	v->f = f;
-	v->a = a;
-	v->irq = -1;
-	v->cpu = -1;
-	strncpy(v->name, name, KNAMELEN);
-	v->name[KNAMELEN-1] = 0;
-
-	lock(&vctllock);
-	if(vctl[vno])
-		v->next = vctl[vno]->next;
-	vctl[vno] = v;
-	unlock(&vctllock);
-}
-
-static void
-nmihandler(Ureg *ureg, void*)
-{
-	iprint("cpu%d: nmi PC %#p, status %ux\n",
-		m->machno, ureg->pc, inb(0x61));
-	while(m->machno != 0)
-		;
-}
-
-static void
-nmienable(void)
-{
-	int x;
-
-	trapenable(VectorNMI, nmihandler, nil, "nmi");
-
-	/*
-	 * Hack: should be locked with NVRAM access.
-	 */
-	outb(0x70, 0x80);		/* NMI latch clear */
-	outb(0x70, 0);
-
-	x = inb(0x61) & 0x07;		/* Enable NMI */
-	outb(0x61, 0x08|x);
-	outb(0x61, x);
-}
 
 void
 trapinit0(void)
@@ -235,19 +64,19 @@ trapinit0(void)
 void
 trapinit(void)
 {
+	irqinit();
+
+	nmienable();
+
 	/*
 	 * Special traps.
 	 * Syscall() is called directly without going through trap().
 	 */
+	/* 9front specific trapenable(VectorDE, debugexc, 0, "debugexc"); */
 	trapenable(VectorBPT, debugbpt, 0, "debugpt");
 	trapenable(VectorPF, faultamd64, 0, "faultamd64");
 	trapenable(Vector2F, doublefault, 0, "doublefault");
 	trapenable(Vector15, unexpected, 0, "unexpected");
-
-	nmienable();
-
-	/* 9front calls this irqinit() */
-	addarchfile("irqalloc", 0444, irqallocread, nil);
 }
 
 static char* excname[32] = {

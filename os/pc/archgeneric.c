@@ -11,8 +11,8 @@ extern int i8259assign(Vctl*);
 extern int i8259irqno(int, int);
 extern void i8259init(void);
 extern int i8259isr(int);
-extern int i8259enable(Vctl*);
-extern int i8259disable(int);
+extern void i8259on(void);
+extern void i8259off(void);
 extern int i8259vecno(int);
 
 void
@@ -85,8 +85,8 @@ PCArch archgeneric = {
 .intrirqno=	i8259irqno,
 .intrvecno=	i8259vecno,
 .intrspurious=	i8259isr,
-.intrenable=	i8259enable,
-.intrdisable=	i8259disable,
+.intron=	i8259on,
+.introff=	i8259off,
 
 .clockinit=	i8253init,
 .clockenable=	i8253enable,

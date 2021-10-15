@@ -500,18 +500,16 @@ lapicclock(Ureg *u, void*)
 	timerintr(u, 0);
 }
 
-int
-lapicintron(Vctl*)
+void
+lapicintron(void)
 {
 	lapicw(LapicTPR, 0);
-	return 0;
 }
 
-int
-lapicintroff(int)
+void
+lapicintroff(void)
 {
 	lapicw(LapicTPR, 0xFF);
-	return 0;
 }
 
 void

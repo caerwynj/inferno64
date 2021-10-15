@@ -196,6 +196,7 @@ Block*		packblock(Block*);
 Block*		padblock(Block*, int);
 void		panic(char*, ...);
 Cmdbuf*		parsecmd(char*, int);
+ulong		perfticks(void);
 void		pexit(char*, int);
 void		pgrpcpy(Pgrp*, Pgrp*);
 #define		poperror()		up->nerrlab--
@@ -203,6 +204,7 @@ int		poolread(char*, int, u64);
 void		poolsize(Pool *, u64, int);
 int		postnote(Proc *, int, char *, int);
 int		pprint(char*, ...);
+int		preempted(void);
 int		preemption(int);
 void		printinit(void);
 void		procctl(Proc*);

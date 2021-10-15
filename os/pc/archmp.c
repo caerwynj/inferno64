@@ -376,8 +376,8 @@ PCArch archmp = {
 .intrinit=	pcmpinit,
 .intrassign=	mpintrassign,
 .intrirqno=	i8259irqno,
-.intrenable=	lapicintron,
-.intrdisable=	lapicintroff,
+.intron=	lapicintron,
+.introff=	lapicintroff,
 .fastclock=	i8253read,
 .timerset=	lapictimerset,
 };

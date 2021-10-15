@@ -657,7 +657,7 @@ mpshutdown(void)
 	 */
 	if(m->machno != 0){
 		splhi();
-		arch->intrdisable(0);
+		arch->introff();
 		for(;;) idle();
 	}
 	delay(1000);
