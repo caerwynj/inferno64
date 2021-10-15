@@ -229,7 +229,7 @@ i8042intr(Ureg*, void*)
 
 	b = c & 0xff;
 	qproduce(kbd.q, &b, 1);
-	/* print("i8042intr b %d %c 0x%x\n", b, b, b); */
+	/* iprint("i8042intr b %d %c 0x%x\n", b, b, b); */
 	kbdprocesschar(b); /* hack until kbdfs is built */
 }
 

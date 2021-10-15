@@ -9,7 +9,8 @@
 #include	"../port/error.h"
 
 static Lock vctllock;
-static Vctl *vclock, *vctl[256];
+static Vctl *vclock;
+extern Vctl *vctl[256];
 
 enum
 {
