@@ -91,16 +91,16 @@ ptedebug(uintptr pa, char *desc)
 	pdpe = mmuwalk((uintptr*)PML4ADDR, pa, 2, 0);
 	pde = mmuwalk((uintptr*)PML4ADDR, pa, 1, 0);
 	if((intptr)pde > 0){
-		snprint(pdestr, 64, "at 0x%p i %zd",
-				pde, ((intptr)pde-(intptr)PD0ADDR)/sizeof(intptr));
+		snprint(pdestr, 64, "at 0x%p i %zd has 0x%p",
+				pde, ((intptr)pde-(intptr)PD0ADDR)/sizeof(intptr), *pde);
 	}
 	print("\tpage of address 0x%zux (%s) with pml4 at 0x%p\n"
-			"\t\tpml4 entry at 0x%p i %zd\n"
-			"\t\tpdp entry at 0x%p i %zd\n"
+			"\t\tpml4 entry at 0x%p i %zd has 0x%p\n"
+			"\t\tpdp entry at 0x%p i %zd has 0x%p\n"
 			"\t\tpd entry %s\n",
 			pa, desc, m->pml4,
-			pml4e, (pml4e-m->pml4)/sizeof(intptr),
-			pdpe, ((intptr)pdpe-(intptr)PDPADDR)/sizeof(intptr),
+			pml4e, (pml4e-m->pml4)/sizeof(intptr), *pml4e,
+			pdpe, ((intptr)pdpe-(intptr)PDPADDR)/sizeof(intptr), *pdpe,
 			pdestr);
 }
 
@@ -119,6 +119,11 @@ showconfig(void)
 	print("Some page table entries\n");
 	ptedebug(1*MiB,"1 MiB");
 	ptedebug(2*MiB,"2 MiB");
+	ptedebug(400*MiB,"400 MiB");
+	ptedebug(466*MiB,"466 MiB");
+	ptedebug(468*MiB,"468 MiB");
+	ptedebug(470*MiB,"470 MiB");
+	ptedebug(512*MiB,"512 MiB");
 	ptedebug(1*GiB,"1 GiB");
 	ptedebug(4ull*GiB,"4 GiB");
 }
