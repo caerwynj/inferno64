@@ -57,43 +57,51 @@
 /*
  * Fundamental addresses
  */
+	/* free conventional memory starts from 0x500 as per the
+	 * 	BIOS memory map
+	 * But, using 0x1200ull to be in sync with 9front source built 9boot*
+	 * 	executables
+	 */
 #define	CONFADDR	(0x1200ull)		/* info passed from boot loader */
 	/* Both these should be below 1MiB as they are addressed from real
 	 * mode which can address only upto 1MiB.
 	 * check the e820 memory map to figure out the availble memory below
 	 * 1MiB
 	 * The intel manual mentions a 4KiB (0x1000) page for ap bootstrap code
+	 * sync these values in os/pc64/mkfile too
 	 */
-#define	REBOOTADDR	(0x4000ull)	/* reboot code - physical address */
-#define	APBOOTSTRAP	(0x5000ull)	/* Application Processor (AP) bootstrap code */
-#define	IDTADDR		(KDZERO+0x10000ull)	/* idt */
-#define GDTADDR		(KDZERO+0x11000ull)	/* gdt */
-#define	CPU0MACH	(KDZERO+0x12000ull)	/* Mach for bootstrap processor (BSP) */
-#define CPU0END		(KDZERO+0x22000ull)	/* CPU0MACH + (MACHSIZE = 64 KiB = 0x10 000) */
+#define	REBOOTADDR	(0x2000ull)	/* reboot code - physical address */
+#define	APBOOTSTRAP	(0x3000ull)	/* Application Processor (AP) bootstrap code */
+
+#define	IDTADDR		(KDZERO+0x0ull)	/* idt */
+#define GDTADDR		(KDZERO+0x1000ull)	/* gdt */
+#define	CPU0MACH	(KDZERO+0x2000ull)	/* Mach for bootstrap processor (BSP) */
+#define CPU0END		(KDZERO+0x12000ull)	/* CPU0MACH + (MACHSIZE = 64 KiB = 0x10 000) */
 										/* MACHSIZE includes stack size */
-#define CPU0SP		(KDZERO+0x22000ull)
+#define CPU0SP		(KDZERO+0x12000ull)
 /* 1 PD table has 512 entries
  * each entry maps to a 2MB page
  * 512 entries maps 1GiB and occupies 512*8 = 4096 bytes
  */
-#define PML4ADDR	(KDZERO+0x23000ull)
-#define PDPADDR		(KDZERO+0x24000ull)
-#define PD0ADDR		(KDZERO+0x25000ull)	/* KZERO=0 .. 1GiB */
-#define PT0ADDR		(KDZERO+0x26000ull)	/* KZERO=0 .. 2MiB */
-#define PT1ADDR		(KDZERO+0x27000ull)	/* 2MiB .. 4MiB */
-#define PT2ADDR		(KDZERO+0x28000ull)	/* 4MiB .. 6MiB */
-#define PT3ADDR		(KDZERO+0x29000ull)	/* 6MiB .. 8MiB */
+#define PML4ADDR	(KDZERO+0x13000ull)
+#define PDPADDR		(KDZERO+0x14000ull)	/* KZERO=0 .. 512GiB */
+#define PD0ADDR		(KDZERO+0x15000ull)	/* KZERO=0 .. 1GiB */
+#define PT0ADDR		(KDZERO+0x16000ull)	/* KZERO=0 .. 2MiB */
+#define PT1ADDR		(KDZERO+0x17000ull)	/* 2MiB .. 4MiB */
+#define PT2ADDR		(KDZERO+0x18000ull)	/* 4MiB .. 6MiB */
+#define PT3ADDR		(KDZERO+0x19000ull)	/* 6MiB .. 8MiB */
 						/* fill with page tables until KTZERO */
 
 /*
  * Where configuration info is left for us by 9boot.
  * (e.g. why parse the .ini file twice?).
- * There are 24064 bytes available at CONFADDR.
+ * Free memory until REBOOTADDR
  */
 #define BOOTLINE	((char*)CONFADDR)
 #define BOOTLINELEN	64
 #define BOOTARGS	((char*)(CONFADDR+BOOTLINELEN))
-#define BOOTARGSLEN	(0x6000-0x200-BOOTLINELEN)
+	/* 9front uses -0x200 to end on a page boundary */
+#define BOOTARGSLEN	(4096-0x200-BOOTLINELEN)
 
 /*
  *  known x86 segments (in GDT) and their selectors

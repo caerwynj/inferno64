@@ -159,19 +159,15 @@ lowraminit(void)
 	uintptr base, pa, len;
 	uchar *p;
 
-	/*
-	 * Discover the memory bank information for conventional memory
-	 * (i.e. less than 640KB). The base is the first location after the
-	 * bootstrap processor MMU information and the limit is obtained from
-	 * the BIOS data area.
+	/* Reserve
+	 *	0x000 - 0x3FF Real mode IVT
+	 *	0x400 - 0x4FF BIOS data area (BDA)
+	 *	0x1200 - 0x2000 BOOTARGS
 	 */
-	base = PADDR(CPU0END);
-	pa = convmemsize();
-	if(base < pa)
-		memmapadd(base, pa-base, MemRAM);
-
-	/* Reserve BIOS tables */
-	memmapadd(pa, 1*KB, MemReserved);
+	memmapadd(0, 2*4*KiB, MemRAM);
+	if(memmapalloc(0, 2*4*KiB, BY2PG, MemRAM) == -1){
+		print("lowraminit: could not memmapalloc BDA\n");
+	}
 
 	/* Allocate memory to be used for reboot code */
 	len=4*KiB /* sizeof(rebootcode) */;
@@ -188,6 +184,20 @@ lowraminit(void)
 		print("lowraminit: could not memmapalloc APBOOTSTRAP 0x%p len 0x%zd\n",
 			PADDR(PGROUND((uintptr)APBOOTSTRAP)), len);
 	}
+
+	/*
+	 * Discover the memory bank information for conventional memory
+	 * (i.e. less than 640KB). The base is the first location after the
+	 * bootstrap processor MMU information and the limit is obtained from
+	 * the BIOS data area.
+	 */
+	base = PADDR(CPU0END);
+	pa = convmemsize();
+	if(base < pa)
+		memmapadd(base, pa-base, MemRAM);
+
+	/* Reserve BIOS tables */
+	memmapadd(pa, 1*KB, MemReserved);
 
 	/* Reserve EBDA */
 	if((pa = ebdaseg()) != 0)

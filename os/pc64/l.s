@@ -135,6 +135,9 @@ TEXT _warp64<>(SB), 1, $-4
 	CLD
 	REP;	STOSL
 
+	/*
+	 * map from KZERO = 0 to KTZERO using 4096 pages
+	 */
 	MOVL	$PML4ADDR, SI
 	MOVL	SI, AX				/* PML4 */
 	MOVL	AX, DX
@@ -146,7 +149,18 @@ TEXT _warp64<>(SB), 1, $-4
 	MOVL	DX, (AX)			/* PDPE for KZERO = 0 */
 
 	/*
-	 * map from KZERO = 0 to KTZERO using 4096 pages
+	 * fill from PT0ADDR to KTZERO with page tables
+	 *	KTZERO 2MiB - PT0ADDR 0x116000 = 0xea000 = 958 464 bytes
+	 *	available memory 0xea000 / PTSZ 0x1000 = 0xea = 234 page tables
+	 *	Hence, 234 entries in the PD table
+	 *	CX = 234 for this loop
+	 * 	If CX > 512, then we need more PD tables.
+	 *	At the lowest level of granularity, each page table maps 2MiB
+	 *		With 234 PDE's, we are building page tables for
+	 *		234 * 2MiB = 468MiB of memory
+	 *	This amount of memory should get us through booting until
+	 *		meminit() maps the rest of the memory using the
+	 *		e820 memory map.
 	 */
 	ADDL	$PTSZ, AX			/* PD0 at PML4 + 2*PTSZ */
 	ADDL	$PTSZ, DX			/* PT0 at PML4 + 3*PTSZ */
@@ -161,6 +175,10 @@ pdeloop:
 
 	MOVL	$(PT0ADDR), AX
 	MOVL	$(PTEWRITE|PTEVALID), DX
+	/* each PTE uses 8 bytes => (>>3).
+	 * As many PTE's as possible until KTZERO.
+	 * With each PTE mapping 1 page (0x1000 = 4096 bytes).
+	 */
 	MOVL	$((KTZERO-PT0ADDR)>>3), CX
 pteloop:
 	MOVL	DX, (AX)			/* PTE from 0 */

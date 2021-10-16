@@ -12,8 +12,8 @@ INSTALLDIR=$ROOT/Inferno/$OBJTYPE/	#path of directory where kernel is installed
 #INSTALLDIR=/$OBJTYPE
 
 # must match mem.h
-REBOOTADDR=0x4000
-APBOOTSTRAP=0x5000
+REBOOTADDR=0x2000
+APBOOTSTRAP=0x3000
 KTZERO=0x200000
 
 #end configurable parameters
