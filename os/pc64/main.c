@@ -289,7 +289,7 @@ userinit(void)
 	o = p->env;
 
 	o->fgrp = newfgrp(nil);
-
+	o->egrp = newegrp();
 	o->pgrp = newpgrp();
 	kstrdup(&o->user, eve);
 

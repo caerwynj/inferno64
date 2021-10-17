@@ -318,20 +318,25 @@ egrpcpy(Egrp *to, Egrp *from)
 	qunlock(from);
 }
 
+/*
+ *  to let the kernel set environment variables
+ *	TODO 9ferno shows both #ec and #e variables for ls '#e' and ls '#ec'
+ */
 void
-ksetenv(char *var, char *val, int)
+ksetenv(char *ename, char *eval, int conf)
 {
 	Chan *c;
 	char buf[2*KNAMELEN];
 
-	snprint(buf, sizeof(buf), "#e/%s", var);
-	if(waserror())
+	snprint(buf, sizeof(buf), "#e%s/%s", conf?"c":"", ename);
+	if(waserror()){
 		return;
-	c = namec(buf, Acreate, OWRITE, 0600);
+	}
+	c = namec(buf, Acreate, OWRITE, 0666);
 	poperror();
 	if(!waserror()){
 		if(!waserror()){
-			devtab[c->type]->write(c, val, strlen(val), 0);
+			devtab[c->type]->write(c, eval, strlen(eval), 0);
 			poperror();
 		}
 		poperror();
