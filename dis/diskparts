@@ -1,0 +1,50 @@
+#!/dis/sh
+load std
+
+disks=$*
+
+# note that really big disks (e.g., aoe devices) may have no mbr
+# partition table because the mbr partition table can't cope with large
+# block numbers, so we may have to examine the data file with prep if
+# there's no plan9 file.  beware that `disk/prep -p data' on a disk with
+# no plan 9 partition table will delete all extant partitions.
+fn setup {
+	disk=$1
+	if {ftest -f $disk^/data && ftest -f $disk^/ctl} {
+		{ @{disk/fdisk -p $disk^/data} |
+			grep -v '^delpart ' >$disk^/ctl } >[2]/dev/null
+	}
+
+	if {ftest -f $disk^/plan9} {
+		parts=($disk^/plan9*)
+	}{ parts=($disk^/data) }
+
+	for part in $parts {
+		if{ftest -f $part} {
+			{ disk/prep -p $part |
+				grep -v '^delpart ' >$disk^/ctl } >[2]/dev/null
+		}
+	}
+}
+
+if{~ $#disks 0}{
+	# set up any disk partitions
+	or { ftest -e /dev/sdctl } { bind -b '#S' /dev }
+	for disk in /dev/sd* { setup $disk }
+	sysname=`{cat /dev/sysname}
+
+	# set up any fs(3) partitions
+	if {! ftest -e /dev/fs/ctl && ftest -e '#k/fs'} {
+		bind -b '#k' /dev
+	}
+
+	# is this needed?
+	#if {~ $#sysname 1 && ! ~ $sysname '' &&
+	#  test -r /cfg/$sysname/fsconfig && test -w /dev/fs/ctl}{
+	#	awk '{print $0; fflush}' /cfg/$sysname/fsconfig >/dev/fs/ctl
+	#}
+} {
+	for disk in $disks {
+		setup $disk
+	}
+}
