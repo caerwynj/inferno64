@@ -268,8 +268,8 @@ init0(void)
 
 	if(!waserror()){
 		ksetenv("cputype", "am64", 0);
-		snprint(buf, sizeof(buf), "amd64 %s", conffile);
-		ksetenv("terminal", buf, 0);
+		//snprint(buf, sizeof(buf), "amd64 %s", conffile);
+		//ksetenv("terminal", buf, 0);
 		setconfenv();
 		poperror();
 	}

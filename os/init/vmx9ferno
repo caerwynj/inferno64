@@ -1,0 +1,30 @@
+#!/bin/sh
+
+load std
+# machine specific initialization
+#	special networking setup, disk setup
+#	avoids putting machine specific stuff in devroot
+
+echo binding /net/ether0
+<>/net/ipifc/clone {
+	x=`{read}
+	echo bind ether /net/ether0 > /net/ipifc/^$x^/ctl
+}
+
+# Networking
+ndb/dns -r
+ndb/cs
+#bind -a '#scs' /net
+
+# refresh disk contents from the master
+and {ndb/csquery tcp!master!styx}{ftest -d /n/rootdisk/dis}{
+	mount -A tcp!master!styx /n/master
+	#disk/mkfs -v -s /n/master/ -d /n/rootdisk/ <{ cat /n/master/lib/proto/^(9boot inferno os src utils) }
+
+	## sync the boot executables
+	#dossrv -f /dev/sdG0/9fat -m /n/9fat
+	#cp /n/9fat/ipc64 /n/9fat/ipc64.0
+	#cp /n/master/Inferno/amd64/ipc64 /n/9fat/ipc64
+	#cp /n/master/Inferno/386/9bootfat /n/9fat/9bootfat
+}
+

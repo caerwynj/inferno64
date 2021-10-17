@@ -73,14 +73,14 @@ init(nil: ref Draw->Context, nil: list of string)
 				sys->fprint(stderr, "dis/init status: %s\nStarting fallback shell\n", e);
 				# fallback console
 				sh1 := load Sh "/dis/sh.dis";
-				sys->print("sh -x -n\n");
-				sh1->init(nil, "sh" :: "-x" :: "-n" :: nil);
+				sys->print("sh -x\n");
+				sh1->init(nil, "sh" :: "-x" :: nil);
 		}
 	}{
 		# fallback console
 		sh1 := load Sh "/dis/sh.dis";
-		sys->print("sh -x -n\n");
-		sh1->init(nil, "sh" :: "-x" :: "-n" :: nil);
+		sys->print("sh -x\n");
+		sh1->init(nil, "sh" :: "-x" :: nil);
 	}
 }
 

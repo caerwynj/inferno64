@@ -1,5 +1,7 @@
+#!/dis/sh
+
 # boot initialization
-#	configure devices
+#	configure boot devices
 #	setup /
 # sh -n /dis/init
 
@@ -11,110 +13,178 @@ load std
 mount {mntgen} /n
 mount {mntgen} /mnt
 
-#fn showlocaldev {
-#	echo $1'	' $2
-#	if(~ $#bootargs 0){
-#		if(! ~ $#cdboot 0){
-#			if(~ $2 9660)
-#				bootargs=local!$1
-#		}
-#		if not {
-#			if(! ~ $2 '' dos)
-#				bootargs=local!$1
-#		}
-#	}
-#}
-#
-#fn showlocaldevs{
-#	for(d in /dev/sd*) if(test -r $d/ctl){
-#		q=`{sed 's,(inquiry|geometry),\
-#\1,g' $d/ctl | grep inquiry}
-#		echo $d':' $q(2-)
-#		for(i in `{ls -p $d}){
-#			p=$d/$i
-#			switch($i){
-#			case ctl raw log led
-#				;
-#			case plan9 nvram swap
-#				echo $p
-#			case *
-#				showlocaldev $p `{fstype $p}
-#			}
-#		}
-#	}
-#	for(d in /shr/sd*) if(test -d $d) {
-#		echo $d':'
-#		for(p in $d/*.^(iso paq)) if(test -f $p){
-#			t=`{fstype $p}
-#			~ $#t 0 || showlocaldev $p $t
-#		}
-#	}
-#}
-#
-#showlocaldevs
+# checked these to get this working
+#	/n/m/home/j/local/plan9/plan9front/sys/src/9/boot/bootrc
+#	/n/m/home/j/local/plan9/plan9front/sys/src/9/boot/cpurc
+#	/n/m/home/j/local/plan9/plan9front/rc/bin/diskparts
+#  parse the bootargs and try to find and start that device
+#		this is what 9front does and it is wise to stick with it
+#		and, after booting the specified device, use /os/init/$sysname
+#			for machine specific booting
 
-mac=`{cat /net/ether0/addr}
-if{~ $"mac deadbeefcafe}{
-	sysname=vmx9ferno
-}{~ $"mac 6805ca1bae72}{
-	sysname=9ferno
-}{
-	sysname=9ferno1
+# read the ether0 from plan9.ini TODO
+#	bind it
+# read bootargs (plan9.ini)
+#	could be tcp, tls or local disk
+#	if local, use the specified disk
+#	if tcp, TODO
+# get the sysname
+#	figure out the sysname from /lib/ndb/local
+# 		ndb/query ether 50e549e5f938 sys
+#	sys= in plan9.ini
+#	run /os/init/$sysname, if it exists
+#
+#	for options to disk/kfs:
+#	bootargs=local!any other disk/kfs args /dev/sdG0/fs
+
+#TODO
+#	use nvram to connect to the authentication server
+#	bother with older kfs?
+#	usb disks at /shr/sd*
+#	tls, il bootargs
+#	if set, use ether0= of plan9.ini
+
+## reparse variables
+#for(i in `{ls -Qp /env}){
+#	switch($i){
+#	case '*'* 'fn#'* e820 apm0 apid ifs path pid prompt status ?
+#		# ignore these
+#	case *
+#		$i=`{echo $$i}
+#	}
+#}
+
+fn showlocaldev {
+	(diskpart fstype)=$*
+	echo $diskpart'	' $fstype
+	#if{~ $#bootargs 0 && ~ $fstype fs 9660 dos} {
+	#	bootargs=local!$diskpart
+	#}
 }
 
-echo $"sysname > '#c'/sysname
+fn showlocaldevs{
+	for d in /dev/sd* {
+		if {ftest -r $d/ctl}{
+			(a q)=`{grep inquiry $d/ctl}
+			echo $d':' $q
+			for i in `{ls -p $d} {
+				p=$d/$i
+				if{~ $"i ctl raw log led}{
+					;
+				} {~ $"i plan9 nvram swap}{
+					echo $p
+				} {~ $"i 9fat}{
+					showlocaldev $p dos
+				} {~ $"i 9660}{
+					showlocaldev $p 9660
+				} {~ $"i fs}{
+					showlocaldev $p kfs64
+				} {~ $cdboot 1 && ~ $"i data}{
+					showlocaldev $p 9660
+				} {
+					echo $p: unrecognized filesystem
+				}
+			}
+		}
+	}
+	#for d in /shr/sd* {
+	#	if(test -d $d) {
+	#		echo $d':'
+	#		for(p in $d/*.^(iso paq)) if(test -f $p){
+	#			t=`{fstype $p}
+	#			~ $#t 0 || showlocaldev $p $t
+	#		}
+	#	}
+	#}
+}
 
+fn mountlocal{
+	device=$*
+	if{ ~ $device ''}{
+		echo local method needs an argument: device
+	} {
+		part=`{basename $device}
+		if{~ $part 9660}{
+			9660srv -9 $device /n/cd
+			bind /n/cd/dis /dis
+			bind -a /n/cd/ /
+		}{~ $cdboot 1 && ~ $part data}{
+			9660srv -9 $device /n/cd
+			bind /n/cd/dis /dis
+			bind -a /n/cd/ /
+		}{~ $part dos 9fat}{
+			dossrv -f $device
+			bind /n/dos/dis /dis
+			bind -a /n/dos/ /
+		}{~ $part fs}{
+			mount -c {disk/kfs64 $device} /n/rootdisk
+			bind /n/rootdisk/dis /dis
+			bind -c -a /n/rootdisk/ /
+		}{
+			echo unrecognized partition of $device: $part
+		}
+	}
+}
+
+fn confignet {
+	# the correct /net/ether0 can be set in plan9.ini
+	echo binding /net/ether0
 	<>/net/ipifc/clone {
 		x=`{read}
 		echo bind ether /net/ether0 > /net/ipifc/^$x^/ctl
-		ip/dhcp -dp -h $sysname /net/ipifc/$x
+	}
+}
+
+fn mountnet {
+	ip/dhcp -p /net/ipifc/$x
+	for tuple in `{cat /net/ndb}{
+		(name value)=${split '=' $tuple}
+		if{~ $name sys}{
+			echo -n $value > /dev/sysname
+			sys=$value
+			sysname=$value
+		}{~ $name ip}{
+			ip=$value
+		}
+	}
+	echo $sysname
+	cat /dev/sysname
+	cat /net/ndb
+	cat /dev/sysname
+
+	mount -A -c $"bootargs /n/remote
+	bind /n/remote/dis /dis
+	bind -c -a /n/remote/ /
+}
+
+sysname=$sys
+#showlocaldevs
+echo $bootargs
+and {ftest -e '#e/bootargs'} {
+	(connectmethod localdevice) = ${split ! $bootargs}
+
+	# if local, start disks
+	# if tcp, bind ether0 as ipifc and get on with it
+
+	if { ~ $"connectmethod local }{
+		sh /dis/diskparts
+		mountlocal $localdevice
+		if {~ $"sysname ''}{
+			sysname=`{ndb/query ether `{cat '#l0/ether0/addr'} sys}
+		}
+	} { ~ $"connectmethod tcp }{
+		confignet
+		mountnet
+	} {
+		echo unsupported connect method: $connectmethod
 	}
 
-#ns
-if{~ $"sysname vmx9ferno}{
-
-	# for using the cd
-	9660srv -9 /dev/sdF0/data /n/cd
-	bind -a /n/cd/dis /dis
-	#bind -a /n/cd/ /
-
-	disk/fdisk -p /dev/sdG0/data >/dev/sdG0/ctl
-	disk/prep -p /dev/sdG0/plan9 > /dev/sdG0/ctl
-
-	### for formatting the disk
-	###	bind -a '#S' /dev	# simple.b does this
-	##disk/mbr -m mbr /dev/sdG0/data
-	##disk/fdisk -baw /dev/sdG0/data
-	##disk/prep -bw -a^(9fat fs) /dev/sdG0/plan9
-	##disk/format -b pbs -d -r 2 /dev/sdG0/9fat 9bootfat /n/cd/cfg/plan9.ini
-	#
-	## for installing to a formatted disk
-	#mount -c { disk/kfs -r -n root /dev/sdG0/fs } /n/rootdisk # ream
-	#disk/kfscmd -n root sync
-	#disk/mkfs -v -r -s /n/cd/ -d /n/rootdisk/ <{ echo + }
-	#disk/kfscmd -n root sync
-
-	## starting inferno already installed to a disk
-	mount -c { disk/kfs -n rootdisk /dev/sdG0/fs } /n/rootdisk
-	#disk/kfscmd -n rootdisk sync
-	#bind -b /n/rootdisk/dis /dis
-	bind -a -c /n/rootdisk/ /
-
-	# refresh the disk contents from the cd
-	#disk/mkfs -v -s /n/cd/ -d /n/rootdisk/ <{ echo + } &
-
-}{~ $"sysname 9ferno}{
-
-	# mount the vmx cd
-	mount -A tcp!192.168.88.118!17001 /n/cd
-	bind -b /n/cd/dis /dis
-	bind -a /n/cd /
-
-	disk/fdisk -p /dev/sdE0/data >/dev/sdE0/ctl
-	disk/prep -p /dev/sdE0/plan9 > /dev/sdE0/ctl
-
+	and {! ~ $"sysname ''} {
+			ftest -x /os/init/$sysname }{
+			@ /os/init/$sysname
+		}
 }
 
 # if I add /lib/sh/profile to devroot,
 #	all the above binds can be moved to $home/namespace
-sh -x -l -n # to run the /lib/sh/profile
+sh -l -i #-l # to run the /lib/sh/profile

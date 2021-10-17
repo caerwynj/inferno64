@@ -1,6 +1,7 @@
 <../../mkconfig
 
 OBJ=\
+	disinit.dis\
 	wminit.dis\
 
 all:V:	$OBJ

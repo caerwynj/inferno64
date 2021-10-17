@@ -1455,8 +1455,8 @@ appl
 		wm.b
 		wmdeb.m
 		wmplay.b
-chan
-dev
+#chan
+#dev
 dis
 	9660srv.dis
 	9export.dis
@@ -1984,7 +1984,7 @@ doc
 	sh.pdf
 	styx.ms
 	styx.pdf
-env
+#env
 fonts
 	LICENCE
 	big5
@@ -2355,25 +2355,25 @@ module
 	x509.m
 	xml.m
 	xpointers.m
-n
-	cd
-	client
-		chan
-		dev
-	disk
-	dist
-	dump
-	ftp
-	kfs
-	local
-	rdbg
-	registry
-	remote
-net
-net.alt
-nvfs
-prof
-prog
+#n
+#	cd
+#	client
+#		chan
+#		dev
+#	disk
+#	dist
+#	dump
+#	ftp
+#	kfs
+#	local
+#	rdbg
+#	registry
+#	remote
+#net
+#net.alt
+#nvfs
+#prof
+#prog
 services
 	httpd
 		httpd.rewrite
@@ -2405,7 +2405,7 @@ sys
 #		+
 #	tvlist
 #		+
-tmp
+#tmp
 usr
 	inferno
 		charon

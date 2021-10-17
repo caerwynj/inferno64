@@ -967,8 +967,6 @@ os
 		NOTICE
 		ahci.h
 		apbootstrap.s
-		apic.c
-		archmp.c
 		audio.h
 		dat.h
 		errstr.h

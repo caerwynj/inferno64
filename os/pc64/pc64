@@ -167,7 +167,6 @@ root
 	/dis
 	/env	/
 	/fd	/
-	/lib	/
 	/n	/
 	/net	/
 	/net.alt	/
@@ -182,10 +181,14 @@ root
 	/dis/init
 	/dis/shutdown
 # basic commands
+	/dis/basename.dis
 	/dis/bind.dis
 	/dis/cat.dis
 	/dis/cd.dis
+	/dis/diskparts
 	/dis/echo.dis
+	/dis/ftest.dis
+	/dis/grep.dis
 	/dis/ls.dis
 	/dis/mntgen.dis
 	/dis/mount.dis
@@ -210,38 +213,40 @@ root
 	/dis/ip/ping.dis
 	/dis/auth/factotum.dis
 # libraries for the above commands
-	/dis/lib/arg.dis
-	/dis/lib/daytime.dis
-	/dis/lib/string.dis
-	/dis/lib/styx.dis
-	/dis/disk/pedit.dis
 	/dis/disk/calc.tab.dis
+	/dis/disk/pedit.dis
+	/dis/lib/arg.dis
+	/dis/lib/auth.dis
 	/dis/lib/bufio.dis
-	/dis/lib/disks.dis
+	/dis/lib/daytime.dis
 	/dis/lib/dhcpclient.dis
 	/dis/lib/dial.dis
-	/dis/lib/ip.dis
-	/dis/lib/random.dis
-	/dis/lib/rand.dis
-	/dis/lib/timers.dis
-	/dis/lib/readdir.dis
-	/dis/lib/nametree.dis
-	/dis/lib/styxservers.dis
-	/dis/lib/auth.dis
-	/dis/lib/ssl.dis
+	/dis/lib/disks.dis
+	/dis/lib/env.dis
 	/dis/lib/factotum.dis
+	/dis/lib/filepat.dis
+	/dis/lib/ip.dis
+	/dis/lib/names.dis
+	/dis/lib/nametree.dis
+	/dis/lib/rand.dis
+	/dis/lib/random.dis
+	/dis/lib/readdir.dis
+	/dis/lib/regex.dis
+	/dis/lib/ssl.dis
+	/dis/lib/string.dis
+	/dis/lib/styx.dis
 	/dis/lib/styxconv/new2old.dis
 	/dis/lib/styxconv/ostyx.dis
 	/dis/lib/styxpersist.dis
-	/dis/lib/env.dis
-	/dis/lib/filepat.dis
+	/dis/lib/styxservers.dis
+	/dis/lib/timers.dis
 	/dis/lib/workdir.dis
 # would need these to authenticate with the root server
 #	/keydb  /
 #	/keydb/mutual   /usr/inferno/keyring/mutual
 #	/keydb/spree /usr/inferno/keyring/spree
 # for factotum
-	/mnt
+#	/mnt
 
 # obsolete?
 #bootdir

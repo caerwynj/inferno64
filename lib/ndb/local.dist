@@ -18,3 +18,5 @@ infernosite=
 	GAMES=your_games_server
 	registry=your_registry_server
 	gridsched=your_inferno_grid_scheduler
+
+sys=vmx9ferno ether=deadbeefcafe
