@@ -11,7 +11,6 @@ bind -c '#e' /env
 load std
 
 mount {mntgen} /n
-mount {mntgen} /mnt
 
 # checked these to get this working
 #	/n/m/home/j/local/plan9/plan9front/sys/src/9/boot/bootrc
@@ -22,19 +21,28 @@ mount {mntgen} /mnt
 #		and, after booting the specified device, use /os/init/$sysname
 #			for machine specific booting
 
-# read the ether0 from plan9.ini TODO
-#	bind it
 # read bootargs (plan9.ini)
-#	could be tcp, tls or local disk
+#	could be tcp or local disk
 #	if local, use the specified disk
-#	if tcp, TODO
-# get the sysname
-#	figure out the sysname from /lib/ndb/local
-# 		ndb/query ether 50e549e5f938 sys
+#	if tcp,
+#		tcp!dhcp
+#			dhcp server provides fs=
+#			if not, get fs= from plan9.ini
+#			use tcp!$fs!styx as root
+#		tcp!add address mask gateway
+#			get fs= from plan9.ini
+#			use tcp!$fs!styx as root
+# getting the sysname
 #	sys= in plan9.ini
-#	run /os/init/$sysname, if it exists
+#	for tcp!dhcp
+#		get the sys= from dhcp
+#	for local disk and tcp!address mask gateway
+#		figure out the sysname from /lib/ndb/local
+# 			ndb/query ether 50e549e5f938 sys
 #
-#	for options to disk/kfs:
+# run /os/init/$sysname, if it exists
+#
+# for options to disk/kfs:
 #	bootargs=local!any other disk/kfs args /dev/sdG0/fs
 
 #TODO
@@ -126,16 +134,20 @@ fn mountlocal{
 	}
 }
 
-fn confignet {
-	# the correct /net/ether0 can be set in plan9.ini
-	echo binding /net/ether0
+fn bindether0 {
 	<>/net/ipifc/clone {
 		x=`{read}
 		echo bind ether /net/ether0 > /net/ipifc/^$x^/ctl
 	}
 }
 
-fn mountnet {
+fn usedhcp {
+	# the correct /net/ether0 can be set in plan9.ini
+	echo binding /net/ether0
+	<>/net/ipifc/clone {
+		x=`{read}
+		echo bind ether /net/ether0 > /net/ipifc/^$x^/ctl
+	}
 	ip/dhcp -p /net/ipifc/$x
 	for tuple in `{cat /net/ndb}{
 		(name value)=${split '=' $tuple}
@@ -145,16 +157,22 @@ fn mountnet {
 			sysname=$value
 		}{~ $name ip}{
 			ip=$value
+		}{~ $name fs}{
+			fs=$value
 		}
 	}
 	echo $sysname
 	cat /dev/sysname
 	cat /net/ndb
 	cat /dev/sysname
+}
 
-	mount -A -c $"bootargs /n/remote
-	bind /n/remote/dis /dis
-	bind -c -a /n/remote/ /
+fn mountfs {
+	if{! ~ $"fs ''}{
+		mount -v -c tcp!$"fs!6666 /n/remote
+		bind /n/remote/dis /dis
+		bind -c -a /n/remote/ /
+	}
 }
 
 sysname=$sys
@@ -169,19 +187,30 @@ and {ftest -e '#e/bootargs'} {
 	if { ~ $"connectmethod local }{
 		sh /dis/diskparts
 		mountlocal $localdevice
-		if {~ $"sysname ''}{
-			sysname=`{ndb/query ether `{cat '#l0/ether0/addr'} sys}
+	} {~ $"connectmethod tcp}{
+		if{~ $"localdevice dhcp}{
+			usedhcp
+			mountfs
+		}{
+			echo binding /net/ether0
+			<>/net/ipifc/clone {
+				x=`{read}
+				echo bind ether /net/ether0 > /net/ipifc/^$x^/ctl
+				echo $localdevice > /net/ipifc/^$x^/ctl
+			}
+			mountfs
 		}
-	} { ~ $"connectmethod tcp }{
-		confignet
-		mountnet
 	} {
 		echo unsupported connect method: $connectmethod
 	}
 
+	if {~ $"sysname ''}{
+		sysname=`{ndb/query ether `{cat '#l0/ether0/addr'} sys}
+	}
+
 	and {! ~ $"sysname ''} {
-			ftest -x /os/init/$sysname }{
-			@ /os/init/$sysname
+			ftest -f /os/init/$sysname }{
+			@{sh /os/init/$sysname}
 		}
 }
 

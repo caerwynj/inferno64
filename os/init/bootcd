@@ -1,0 +1,20 @@
+#!/bin/sh
+
+load std
+# machine specific initialization
+#	called by /dis/init when sysname=bootcd
+#	special networking setup, disk setup
+#	avoids putting machine specific stuff in devroot
+
+<>/net/ipifc/clone {
+	x=`{read}
+	echo bind ether /net/ether0 > /net/ipifc/^$x^/ctl
+}
+ip/dhcp -p /net/ipifc/$x
+
+# Networking
+ndb/dns -r
+ndb/cs
+#bind -a '#scs' /net
+
+

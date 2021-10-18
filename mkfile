@@ -255,6 +255,7 @@ cd:V:	/tmp/9ferno.386.iso.gz
 		#echo '*apicdebug=1'
 		#echo '*nomp=1'
 		echo 'cdboot=1'
+		echo 'sys=bootcd'
 		grep -v '^bootfile=' /n/src9/os/pc/plan9.ini
 		#echo 'bootfile='^`{echo $kernel | sed 's!^/n/src9!!'}
 		#echo 'bootfile=9pc64'

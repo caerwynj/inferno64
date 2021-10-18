@@ -705,6 +705,7 @@ os
 		shell.b
 		srvinit.b
 		wminit.b
+		bootcd 755
 	ip
 		*
 	ipaq1110

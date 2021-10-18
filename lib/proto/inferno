@@ -1549,6 +1549,7 @@ dis
 	install
 		+
 	iostats.dis
+	init
 	ip
 		+
 	itest.dis
