@@ -2029,6 +2029,9 @@ lib
 	emptydirs
 	games
 		+
+	init
+		bootcd 755
+		vmx9ferno 755
 	keyboard
 	legal
 		*

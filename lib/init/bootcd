@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/dis/sh
 
 load std
 # machine specific initialization

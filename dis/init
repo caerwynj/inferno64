@@ -40,7 +40,7 @@ mount {mntgen} /n
 #		figure out the sysname from /lib/ndb/local
 # 			ndb/query ether 50e549e5f938 sys
 #
-# run /os/init/$sysname, if it exists
+# run /lib/init/$sysname, if it exists
 #
 # for options to disk/kfs:
 #	bootargs=local!any other disk/kfs args /dev/sdG0/fs
@@ -209,8 +209,8 @@ and {ftest -e '#e/bootargs'} {
 	}
 
 	and {! ~ $"sysname ''} {
-			ftest -f /os/init/$sysname }{
-			@{sh /os/init/$sysname}
+			ftest -f /lib/init/$sysname }{
+			/lib/init/$sysname
 		}
 }
 
