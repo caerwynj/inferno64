@@ -505,6 +505,8 @@ struct Proc
 	u32		alarm;		/* Time of call */
 	s32		pri;		/* scheduler priority */
 	u32		twhen;
+
+	Timer;			/* For tsleep and real-time */
 	Rendez*		trend;
 	Proc*		tlink;
 	s32		(*tfn)(void*);
