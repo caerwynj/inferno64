@@ -1,4 +1,5 @@
 TEXT memmove(SB), $0
+TEXT	memcpy(SB), $0
 	MOVQ	RARG, DI
 	MOVQ	DI, AX			/* return value */
 	MOVQ	p2+8(FP), SI
