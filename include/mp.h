@@ -1,11 +1,13 @@
-#pragma	src	"/usr/inferno/src/libmp"
+#pragma	src	"/libmp"
+#pragma	lib	"libmp.a"
 
 #define _MPINT 1
 
-/* the code assumes mpdigit to be at least an int */
-/* mpdigit must be an atomic type.  mpdigit is defined */
-/* in the architecture specific u.h */
-
+/*
+ * the code assumes mpdigit to be at least an int
+ * mpdigit must be an atomic type.  mpdigit is defined
+ * in the architecture specific u.h
+ */
 typedef struct mpint mpint;
 
 struct mpint
@@ -19,7 +21,11 @@ struct mpint
 
 enum
 {
-	MPstatic=	0x01,
+	MPstatic=	0x01,	/* static constant */
+	MPnorm=		0x02,	/* normalization status */
+	MPtimesafe=	0x04,	/* request time invariant computation */
+	MPfield=	0x08,	/* this mpint is a field modulus */
+
 	Dbytes=		sizeof(mpdigit),	/* bytes per digit */
 	Dbits=		Dbytes*8		/* bits per digit */
 };
@@ -29,12 +35,14 @@ void	mpsetminbits(int n);	/* newly created mpint's get at least n bits */
 mpint*	mpnew(int n);		/* create a new mpint with at least n bits */
 void	mpfree(mpint *b);
 void	mpbits(mpint *b, int n);	/* ensure that b has at least n bits */
-void	mpnorm(mpint *b);		/* dump leading zeros */
+mpint*	mpnorm(mpint *b);		/* dump leading zeros */
 mpint*	mpcopy(mpint *b);
 void	mpassign(mpint *old, mpint *new);
 
 /* random bits */
 mpint*	mprand(int bits, void (*gen)(uchar*, int), mpint *b);
+/* return uniform random [0..n-1] */
+mpint*	mpnrand(mpint *n, void (*gen)(uchar*, int), mpint *b);
 
 /* conversion */
 mpint*	strtomp(char*, char**, int, mpint*);	/* ascii */
@@ -42,8 +50,10 @@ int	mpfmt(Fmt*);
 char*	mptoa(mpint*, int, char*, int);
 mpint*	letomp(uchar*, uint, mpint*);	/* byte array, little-endian */
 int	mptole(mpint*, uchar*, uint, uchar**);
-mpint*	betomp(uchar*, uint, mpint*);	/* byte array, little-endian */
+void	mptolel(mpint *b, uchar *p, int n);
+mpint*	betomp(uchar*, uint, mpint*);	/* byte array, big-endian */
 int	mptobe(mpint*, uchar*, uint, uchar**);
+void	mptober(mpint *b, uchar *p, int n);
 uint	mptoui(mpint*);			/* unsigned int */
 mpint*	uitomp(uint, mpint*);
 int	mptoi(mpint*);			/* int */
@@ -52,6 +62,8 @@ uvlong	mptouv(mpint*);			/* unsigned vlong */
 mpint*	uvtomp(uvlong, mpint*);
 vlong	mptov(mpint*);			/* vlong */
 mpint*	vtomp(vlong, mpint*);
+double	mptod(mpint*);			/* double */
+mpint*	dtomp(double, mpint*);
 
 /* divide 2 digits by one */
 void	mpdigdiv(mpdigit *dividend, mpdigit divisor, mpdigit *quotient);
@@ -66,11 +78,32 @@ void	mpmul(mpint *b1, mpint *b2, mpint *prod);	/* prod = b1*b2 */
 void	mpexp(mpint *b, mpint *e, mpint *m, mpint *res);	/* res = b**e mod m */
 void	mpmod(mpint *b, mpint *m, mpint *remainder);	/* remainder = b mod m */
 
+/* logical operations */
+void	mpand(mpint *b1, mpint *b2, mpint *res);
+void	mpbic(mpint *b1, mpint *b2, mpint *res);
+void	mpor(mpint *b1, mpint *b2, mpint *res);
+void	mpnot(mpint *b, mpint *res);
+void	mpxor(mpint *b1, mpint *b2, mpint *res);
+void	mptrunc(mpint *b, int n, mpint *res);
+void	mpxtend(mpint *b, int n, mpint *res);
+void	mpasr(mpint *b, int shift, mpint *res);
+
+/* modular arithmetic, time invariant when 0≤b1≤m-1 and 0≤b2≤m-1 */
+void	mpmodadd(mpint *b1, mpint *b2, mpint *m, mpint *sum);	/* sum = b1+b2 % m */
+void	mpmodsub(mpint *b1, mpint *b2, mpint *m, mpint *diff);	/* diff = b1-b2 % m */
+void	mpmodmul(mpint *b1, mpint *b2, mpint *m, mpint *prod);	/* prod = b1*b2 % m */
+
 /* quotient = dividend/divisor, remainder = dividend % divisor */
 void	mpdiv(mpint *dividend, mpint *divisor,  mpint *quotient, mpint *remainder);
 
 /* return neg, 0, pos as b1-b2 is neg, 0, pos */
 int	mpcmp(mpint *b1, mpint *b2);
+
+/* res = s != 0 ? b1 : b2 */
+void	mpsel(int s, mpint *b1, mpint *b2, mpint *res);
+
+/* return n! */
+mpint*	mpfactorial(ulong n);
 
 /* extended gcd return d, x, and y, s.t. d = gcd(a,b) and ax+by = d */
 void	mpextendedgcd(mpint *a, mpint *b, mpint *d, mpint *x, mpint *y);
@@ -101,12 +134,14 @@ void	mpvecdigmuladd(mpdigit *b, int n, mpdigit m, mpdigit *p);
 /* prereq: p has room for n+1 digits */
 int	mpvecdigmulsub(mpdigit *b, int n, mpdigit m, mpdigit *p);
 
-/* p[0:alen*blen-1] = a[0:alen-1] * b[0:blen-1] */
+/* p[0:alen+blen-1] = a[0:alen-1] * b[0:blen-1] */
 /* prereq: alen >= blen, p has room for m*n digits */
 void	mpvecmul(mpdigit *a, int alen, mpdigit *b, int blen, mpdigit *p);
+void	mpvectsmul(mpdigit *a, int alen, mpdigit *b, int blen, mpdigit *p);
 
 /* sign of a - b or zero if the same */
 int	mpveccmp(mpdigit *a, int alen, mpdigit *b, int blen);
+int	mpvectscmp(mpdigit *a, int alen, mpdigit *b, int blen);
 
 /* divide the 2 digit dividend by the one digit divisor and stick in quotient */
 /* we assume that the result is one digit - overflow is all 1's */
@@ -122,6 +157,8 @@ typedef struct CRTpre	CRTpre;		/* precomputed values for converting */
 					/*  twixt residues and mpint */
 typedef struct CRTres	CRTres;		/* residue form of an mpint */
 
+#pragma incomplete CRTpre
+
 struct CRTres
 {
 	int	n;		/* number of residues */
@@ -134,6 +171,18 @@ void	crtout(CRTpre*, CRTres*, mpint*);	/* convert residues to mpint */
 void	crtprefree(CRTpre*);
 void	crtresfree(CRTres*);
 
+/* fast field arithmetic */
+typedef struct Mfield	Mfield;
+
+struct Mfield
+{
+	mpint;
+	int	(*reduce)(Mfield*, mpint*, mpint*);
+};
+
+mpint *mpfield(mpint*);
+
+Mfield *gmfield(mpint*);
+Mfield *cnfield(mpint*);
 
 #pragma	varargck	type	"B"	mpint*
-#pragma varargck	type	"U" mpint*

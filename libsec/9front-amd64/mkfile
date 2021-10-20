@@ -4,8 +4,11 @@ OBJTYPE=$objtype
 
 LIB=libsec.a
 FILES=\
-	md5block\
-	sha1block\
+        chachablock\
+        md5block\
+        sha1block\
+        aesni\
+
 
 HFILES=$ROOT/include/libsec.h
 

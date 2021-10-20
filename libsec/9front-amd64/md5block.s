@@ -103,7 +103,7 @@
 #define	LEN	8
 #define	STATE	16
 
-TEXT	_md5block+0(SB),$0
+TEXT	_md5block+0(SB), $0
 
 	MOVQ	RARG,R8
 	MOVLQZX len+LEN(FP),BX
@@ -206,7 +206,7 @@ mainloop:
 	ADDL CX,8(DI)
 	ADDL DX,12(DI)
 
-	CMPL BP,R8
+	CMPQ BP,R8
 	JCS mainloop
 
 	RET

@@ -91,17 +91,17 @@ static MD4Table tab[] =
 	{ 15,	S34},	
 };
 
-static void encode(uchar*, u32*, u32);
-static void decode(u32*, uchar*, u32);
+static void encode(uchar*, u32int*, u32);
+static void decode(u32int*, uchar*, u32);
 
 static void
 md4block(uchar *p, u32 len, MD4state *s)
 {
 	int i;
-	u32 a, b, c, d, tmp;
+	u32int a, b, c, d, tmp;
 	MD4Table *t;
 	uchar *end;
-	u32 x[16];
+	u32int x[16];
 
 	for(end = p+len; p < end; p += 64){
 		a = s->state[0];
@@ -147,7 +147,7 @@ md4block(uchar *p, u32 len, MD4state *s)
 MD4state*
 md4(uchar *p, u32 len, uchar *digest, MD4state *s)
 {
-	u32 x[16];
+	u32int x[16];
 	uchar buf[128];
 	int i;
 	uchar *e;
@@ -238,13 +238,13 @@ md4(uchar *p, u32 len, uchar *digest, MD4state *s)
 }
 
 /*
- *	encodes input (u32) into output (uchar). Assumes len is
+ *	encodes input (u32int) into output (uchar). Assumes len is
  *	a multiple of 4.
  */
 static void
-encode(uchar *output, u32 *input, u32 len)
+encode(uchar *output, u32int *input, u32 len)
 {
-	u32 x;
+	u32int x;
 	uchar *e;
 
 	for(e = output + len; output < e;) {
@@ -257,11 +257,11 @@ encode(uchar *output, u32 *input, u32 len)
 }
 
 /*
- *	decodes input (uchar) into output (u32). Assumes len is
+ *	decodes input (uchar) into output (u32int). Assumes len is
  *	a multiple of 4.
  */
 static void
-decode(u32 *output, uchar *input, u32 len)
+decode(u32int *output, uchar *input, u32 len)
 {
 	uchar *e;
 

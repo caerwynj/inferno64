@@ -1,5 +1,4 @@
 #include "os.h"
-#include <mp.h>
 #include <libsec.h>
 
 // Blowfish block cipher.  See:
@@ -7,17 +6,48 @@
 // 	Fast Software Encryption
 // 	Cambridge Security Workshop, Cambridge, England (1993)
 
-static u32 sbox[1024];
-static u32 pbox[BFrounds+2];
+static u32int sbox[1024];
+static u32int pbox[BFrounds+2];
 
-static void bfencrypt(u32 *, BFstate *);
-static void bfdecrypt(u32 *, BFstate *);
+static void bfencrypt(u32int *, BFstate *);
+static void bfdecrypt(u32int *, BFstate *);
+
+/*
+ * Endianess agnostic functions to convert a 
+ * block (8-byte buffer) to a u32int array and 
+ * viceversa.
+ */
+
+static void
+buf2ints(uchar *p, u32int *b)
+{
+	b[0] =  p[0]<<24 | p[1]<<16  | p[2]<<8 | p[3];
+	b[1] =  p[4]<<24 | p[5]<<16  | p[6]<<8 | p[7];
+}
+
+static void
+ints2buf(u32int *b, uchar *p)
+{
+	u32int u;
+
+	u = b[0];
+	p[0] = u>>24;
+	p[1] = u>>16;
+	p[2] = u>>8;
+	p[3] = u;
+
+	u = b[1];
+	p[4] = u>>24;
+	p[5] = u>>16;
+	p[6] = u>>8;
+	p[7] = u;
+}
 
 void
 setupBFstate(BFstate *s, uchar key[], int keybytes, uchar *ivec)
 {
 	int i, j;
-	u32 n, buf[2];
+	u32int n, buf[2];
 
 	memset(s, 0, sizeof(*s));
 	memset(buf, 0, sizeof buf);
@@ -31,7 +61,7 @@ setupBFstate(BFstate *s, uchar key[], int keybytes, uchar *ivec)
 		memmove(s->ivec, ivec, sizeof(s->ivec));
 	else
 		memset(s->ivec, 0, sizeof(s->ivec));
-		
+
 	memmove(s->pbox, pbox, sizeof(pbox));
 	memmove(s->sbox, sbox, sizeof(sbox));
 
@@ -76,17 +106,13 @@ void
 bfCBCencrypt(uchar *buf, int n, BFstate *s)
 {
 	int i;
-	uchar *p;
-	u32 bo[2], bi[2], b;
+	u32int bo[2], bi[2];
 
 	assert((n & 7) == 0);
 
-	bo[0] =  s->ivec[0] | ((u32) s->ivec[1]<<8) | ((u32)s->ivec[2]<<16) | ((u32)s->ivec[3]<<24);
-	bo[1] =  s->ivec[4] | ((u32) s->ivec[5]<<8) | ((u32)s->ivec[6]<<16) | ((u32)s->ivec[7]<<24);
-
+	buf2ints(s->ivec, bo);
 	for(i=0; i < n; i += 8, buf += 8) {
-		bi[0] =  buf[0] | ((u32) buf[1]<<8) | ((u32)buf[2]<<16) | ((u32)buf[3]<<24);
-		bi[1] =  buf[4] | ((u32) buf[5]<<8) | ((u32)buf[6]<<16) | ((u32)buf[7]<<24);
+		buf2ints(buf, bi);
 
 		bi[0] ^= bo[0];
 		bi[1] ^= bo[1];
@@ -96,36 +122,9 @@ bfCBCencrypt(uchar *buf, int n, BFstate *s)
 		bo[0] = bi[0];
 		bo[1] = bi[1];
 
-		p = buf;
-		b = bo[0];
-		*p++ = b;
-		b >>= 8;
-		*p++ = b;
-		b >>= 8;
-		*p++ = b;
-		b >>= 8;
-		*p++ = b;
-
-		b = bo[1];
-		*p++ = b;
-		b >>= 8;
-		*p++ = b;
-		b >>= 8;
-		*p++ = b;
-		b >>= 8;
-		*p = b;
+		ints2buf(bi, buf);
 	}
-
-	s->ivec[7] = bo[1] >> 24;
-	s->ivec[6] = bo[1] >> 16;
-	s->ivec[5] = bo[1] >> 8;
-	s->ivec[4] = bo[1];
-
-	s->ivec[3] = bo[0] >> 24;
-	s->ivec[2] = bo[0] >> 16;
-	s->ivec[1] = bo[0] >> 8;
-	s->ivec[0] = bo[0];
-
+	ints2buf(bo, s->ivec);
 	return;
 }
 
@@ -133,17 +132,13 @@ void
 bfCBCdecrypt(uchar *buf, int n, BFstate *s)
 {
 	int i;
-	uchar *p;
-	u32 b, bo[2], bi[2], xr[2];
+	u32int  bo[2], bi[2], xr[2];
 
 	assert((n & 7) == 0);
 
-	bo[0] =  s->ivec[0] | ((u32) s->ivec[1]<<8) | ((u32)s->ivec[2]<<16) | ((u32)s->ivec[3]<<24);
-	bo[1] =  s->ivec[4] | ((u32) s->ivec[5]<<8) | ((u32)s->ivec[6]<<16) | ((u32)s->ivec[7]<<24);
-
+	buf2ints(s->ivec, bo);
 	for(i=0; i < n; i += 8, buf += 8) {
-		bi[0] =  buf[0] | ((u32) buf[1]<<8) | ((u32)buf[2]<<16) | ((u32)buf[3]<<24);
-		bi[1] =  buf[4] | ((u32) buf[5]<<8) | ((u32)buf[6]<<16) | ((u32)buf[7]<<24);
+		buf2ints(buf, bi);
 
 		xr[0] = bi[0];
 		xr[1] = bi[1];
@@ -153,39 +148,12 @@ bfCBCdecrypt(uchar *buf, int n, BFstate *s)
 		bo[0] ^= bi[0];
 		bo[1] ^= bi[1];
 
-		p = buf;
-		b = bo[0];
-		*p++ = b;
-		b >>= 8;
-		*p++ = b;
-		b >>= 8;
-		*p++ = b;
-		b >>= 8;
-		*p++ = b;
-
-		b = bo[1];
-		*p++ = b;
-		b >>= 8;
-		*p++ = b;
-		b >>= 8;
-		*p++ = b;
-		b >>= 8;
-		*p = b;
+		ints2buf(bo, buf);
 
 		bo[0] = xr[0];
 		bo[1] = xr[1];
 	}
-
-	s->ivec[7] = bo[1] >> 24;
-	s->ivec[6] = bo[1] >> 16;
-	s->ivec[5] = bo[1] >> 8;
-	s->ivec[4] = bo[1];
-
-	s->ivec[3] = bo[0] >> 24;
-	s->ivec[2] = bo[0] >> 16;
-	s->ivec[1] = bo[0] >> 8;
-	s->ivec[0] = bo[0];
-
+	ints2buf(bo, s->ivec);
 	return;
 }
 
@@ -193,23 +161,12 @@ void
 bfECBencrypt(uchar *buf, int n, BFstate *s)
 {
 	int i;
-	u32 b[2];
+	u32int b[2];
 
 	for(i=0; i < n; i += 8, buf += 8) {
-		b[0] =  buf[0] | ((u32) buf[1]<<8) | ((u32)buf[2]<<16) | ((u32)buf[3]<<24);
-		b[1] =  buf[4] | ((u32) buf[5]<<8) | ((u32)buf[6]<<16) | ((u32)buf[7]<<24);
-
+		buf2ints(buf, b);
 		bfencrypt(b, s);
-
-		buf[7] = b[1] >> 24;
-		buf[6] = b[1] >> 16;
-		buf[5] = b[1] >> 8;
-		buf[4] = b[1];
-
-		buf[3] = b[0] >> 24;
-		buf[2] = b[0] >> 16;
-		buf[1] = b[0] >> 8;
-		buf[0] = b[0];
+		ints2buf(b, buf);
 	}
 
 	return;
@@ -219,34 +176,23 @@ void
 bfECBdecrypt(uchar *buf, int n, BFstate *s)
 {
 	int i;
-	u32 b[2];
+	u32int b[2];
 
 	for(i=0; i < n; i += 8, buf += 8) {
-		b[0] =  buf[0] | ((u32) buf[1]<<8) | ((u32)buf[2]<<16) | ((u32)buf[3]<<24);
-		b[1] =  buf[4] | ((u32) buf[5]<<8) | ((u32)buf[6]<<16) | ((u32)buf[7]<<24);
-
+		buf2ints(buf, b);
 		bfdecrypt(b, s);
-
-		buf[7] = b[1] >> 24;
-		buf[6] = b[1] >> 16;
-		buf[5] = b[1] >> 8;
-		buf[4] = b[1];
-
-		buf[3] = b[0] >> 24;
-		buf[2] = b[0] >> 16;
-		buf[1] = b[0] >> 8;
-		buf[0] = b[0];
+		ints2buf(b, buf);
 	}
 
 	return;		
 }
 
 static void
-bfencrypt(u32 *b, BFstate *s)
+bfencrypt(u32int *b, BFstate *s)
 {
 	int i;
-	u32 l, r;
-	u32 *pb, *sb;
+	u32int l, r;
+	u32int *pb, *sb;
 
 	l = b[0];
 	r = b[1];
@@ -276,11 +222,11 @@ bfencrypt(u32 *b, BFstate *s)
 }
 
 static void
-bfdecrypt(u32 *b, BFstate *s)
+bfdecrypt(u32int *b, BFstate *s)
 {
 	int i;
-	u32 l, r;
-	u32 *pb, *sb;
+	u32int l, r;
+	u32int *pb, *sb;
 
 	l = b[0];
 	r = b[1];
@@ -309,7 +255,7 @@ bfdecrypt(u32 *b, BFstate *s)
 	return;
 }
 
-static u32 pbox[BFrounds+2] = {
+static u32int pbox[BFrounds+2] = {
 	0x243f6a88, 0x85a308d3, 0x13198a2e, 0x03707344, 
 	0xa4093822, 0x299f31d0, 0x082efa98, 0xec4e6c89, 
 	0x452821e6, 0x38d01377, 0xbe5466cf, 0x34e90c6c, 
@@ -317,7 +263,7 @@ static u32 pbox[BFrounds+2] = {
 	0x9216d5d9, 0x8979fb1b
 };
 
-static u32 sbox[1024] = {
+static u32int sbox[1024] = {
 	0xd1310ba6L, 0x98dfb5acL, 0x2ffd72dbL, 0xd01adfb7L, 
 	0xb8e1afedL, 0x6a267e96L, 0xba7c9045L, 0xf12c7f99L, 
 	0x24a19947L, 0xb3916cf7L, 0x0801f2e2L, 0x858efc16L, 
@@ -575,5 +521,4 @@ static u32 sbox[1024] = {
 	0x90d4f869L, 0xa65cdea0L, 0x3f09252dL, 0xc208e69fL, 
 	0xb74e6132L, 0xce77e25bL, 0x578fdfe3L, 0x3ac372e6L, 
 };
-
 

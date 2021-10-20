@@ -6,14 +6,13 @@
 void
 main(void)
 {
-	RSApriv *rsa;
-	Biobuf b;
-	char *p;
 	int n;
-	mpint *clr, *enc, *clr2;
-	uchar buf[4096];
-	uchar *e;
 	vlong start;
+	char *p;
+	uchar buf[4096];
+	Biobuf b;
+	RSApriv *rsa;
+	mpint *clr, *enc, *clr2;
 
 	fmtinstall('B', mpfmt);
 

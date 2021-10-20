@@ -1,5 +1,3 @@
-	TEXT	_sha1block+0(SB),$384
-
 /* x = (wp[off-f] ^ wp[off-8] ^ wp[off-14] ^ wp[off-16]) <<< 1;
  * wp[off] = x;
  * x += A <<< 5;
@@ -84,7 +82,7 @@
  * ulong a = eax, b = ebx, c = ecx, d = edx, e = esi
  * ulong tmp = edi
  */
-#define Rpdata	R8
+#define	Rpdata	R8
 #define WARRAY	(-8-(80*4))
 #define TMP1	(-16-(80*4))
 #define TMP2	(-24-(80*4))
@@ -93,6 +91,8 @@
 #define W60	(-48-(80*4))
 #define W80	(-56-(80*4))
 #define EDATA	(-64-(80*4))
+
+TEXT	_sha1block+0(SB),$384
 
 	MOVQ RARG, Rpdata
 	MOVLQZX len+LEN(FP),BX

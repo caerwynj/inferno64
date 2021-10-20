@@ -1,6 +1,6 @@
 #include "os.h"
 
-u32 smallprimes[1000] = {
+ulong smallprimes[1000] = {
 	2,
 	3,
 	5,

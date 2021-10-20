@@ -78,10 +78,10 @@ eg_sk2str(void *veg, char *buf, int len)
 	ep = buf + len - 1;
 	cp = buf;
 
-	cp += snprint(cp, ep - cp, "%U\n", eg->pub.p);
-	cp += snprint(cp, ep - cp, "%U\n", eg->pub.alpha);
-	cp += snprint(cp, ep - cp, "%U\n", eg->pub.key);
-	cp += snprint(cp, ep - cp, "%U\n", eg->secret);
+	cp += snprint(cp, ep - cp, "%B\n", eg->pub.p);
+	cp += snprint(cp, ep - cp, "%B\n", eg->pub.alpha);
+	cp += snprint(cp, ep - cp, "%B\n", eg->pub.key);
+	cp += snprint(cp, ep - cp, "%B\n", eg->secret);
 	*cp = 0;
 
 	return cp - buf;
@@ -97,9 +97,9 @@ eg_pk2str(void *veg, char *buf, int len)
 	ep = buf + len - 1;
 	cp = buf;
 
-	cp += snprint(cp, ep - cp, "%U\n", eg->p);
-	cp += snprint(cp, ep - cp, "%U\n", eg->alpha);
-	cp += snprint(cp, ep - cp, "%U\n", eg->key);
+	cp += snprint(cp, ep - cp, "%B\n", eg->p);
+	cp += snprint(cp, ep - cp, "%B\n", eg->alpha);
+	cp += snprint(cp, ep - cp, "%B\n", eg->key);
 	*cp = 0;
 
 	return cp - buf;
@@ -115,8 +115,8 @@ eg_sig2str(void *veg, char *buf, int len)
 	ep = buf + len - 1;
 	cp = buf;
 
-	cp += snprint(cp, ep - cp, "%U\n", eg->r);
-	cp += snprint(cp, ep - cp, "%U\n", eg->s);
+	cp += snprint(cp, ep - cp, "%B\n", eg->r);
+	cp += snprint(cp, ep - cp, "%B\n", eg->s);
 	*cp = 0;
 
 	return cp - buf;
