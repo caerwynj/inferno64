@@ -1,7 +1,7 @@
 #include "os.h"
 #include <libsec.h>
 
-extern	u32	getpid(void);
+extern	s32	getpid(void);
 
 static void
 init(Chachastate *cs)

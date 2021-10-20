@@ -251,7 +251,7 @@ Crypt_sha224(void *fp)
 	*f->ret = H;
 	destroy(r);
 
-	*f->ret = crypt_digest_x(f->buf, f->n, f->digest, SHA224dlen, f->state, sha224);
+	*f->ret = crypt_digest_x(f->buf, f->n, f->digest, SHA2_224dlen, f->state, sha2_224);
 }
 
 void
@@ -265,7 +265,7 @@ Crypt_sha256(void *fp)
 	*f->ret = H;
 	destroy(r);
 
-	*f->ret = crypt_digest_x(f->buf, f->n, f->digest, SHA256dlen, f->state, sha256);
+	*f->ret = crypt_digest_x(f->buf, f->n, f->digest, SHA2_256dlen, f->state, sha2_256);
 }
 
 void
@@ -279,7 +279,7 @@ Crypt_sha384(void *fp)
 	*f->ret = H;
 	destroy(r);
 
-	*f->ret = crypt_digest_x(f->buf, f->n, f->digest, SHA384dlen, f->state, sha384);
+	*f->ret = crypt_digest_x(f->buf, f->n, f->digest, SHA2_384dlen, f->state, sha2_384);
 }
 
 void
@@ -293,7 +293,7 @@ Crypt_sha512(void *fp)
 	*f->ret = H;
 	destroy(r);
 
-	*f->ret = crypt_digest_x(f->buf, f->n, f->digest, SHA512dlen, f->state, sha512);
+	*f->ret = crypt_digest_x(f->buf, f->n, f->digest, SHA2_512dlen, f->state, sha2_512);
 }
 
 void

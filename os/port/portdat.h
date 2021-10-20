@@ -494,7 +494,7 @@ struct Proc
 	s32		swipend;	/* software interrupt pending for Prog */
 	Lock		sysio;		/* note handler lock */
 	char*		psstate;	/* What /proc/#/status reports */
-	u32		pid;
+	s32		pid;
 	s32		procctl;	/* Control for /proc debugging */
 	uintptr		pc;		/* DEBUG only */
 	Lock	rlock;	/* sync between sleep/swiproc for r */

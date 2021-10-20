@@ -46,16 +46,12 @@ void	aesOFBencrypt(uchar *p, int len, AESstate *s);
 void	aes_xts_encrypt(AESstate *tweak, AESstate *ecb, uvlong sectorNumber, uchar *input, uchar *output, u32 len);
 void	aes_xts_decrypt(AESstate *tweak, AESstate *ecb, uvlong sectorNumber, uchar *input, uchar *output, u32 len);
 
-#ifdef H
-#undef H;
-#endif
-
 typedef struct AESGCMstate AESGCMstate;
 struct AESGCMstate
 {
 	AESstate;
 
-	u32	H[4];
+	u32	varH[4];	/* renamed H to varH to avoid collision with the H macro used by inferno */
 	u32	M[16][256][4];
 };
 

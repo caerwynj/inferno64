@@ -60,7 +60,7 @@ ghash1(AESGCMstate *s, u32 X[4], u32 Y[4])
 
 	X[0] ^= Y[0], X[1] ^= Y[1], X[2] ^= Y[2], X[3] ^= Y[3];
 	if(0){
-		gfmul(X, s->H, Y);
+		gfmul(X, s->varH, Y);
 		return;
 	}
 
@@ -152,9 +152,9 @@ setupAESGCMstate(AESGCMstate *s, uchar *key, int keylen, uchar *iv, int ivlen)
 
 	memset(s->ivec, 0, AESbsize);
 	aes_encrypt(s->ekey, s->rounds, s->ivec, s->ivec);
-	load128(s->ivec, s->H);
+	load128(s->ivec, s->varH);
 	memset(s->ivec, 0, AESbsize);
-	prepareM(s->H, s->M);
+	prepareM(s->varH, s->M);
 
 	if(iv != nil && ivlen > 0)
 		aesgcm_setiv(s, iv, ivlen);

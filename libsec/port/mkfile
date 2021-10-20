@@ -2,6 +2,8 @@
 
 LIB=libsec.a
 
+# TODO get rid of the idea.c usage
+#	It is used by devssl
 CFILES = des.c desmodes.c desECB.c desCBC.c des3ECB.c des3CBC.c\
         aes.c aesni.c aesCBC.c aesCFB.c aesOFB.c aes_gcm.c \
         blowfish.c \
@@ -35,6 +37,7 @@ CFILES = des.c desmodes.c desECB.c desCBC.c des3ECB.c des3CBC.c\
         secp256r1.c\
         secp384r1.c\
         secp256k1.c\
+	idea.c\
 
 
 ALLOFILES=${CFILES:%.c=%.$O}
