@@ -827,3 +827,9 @@ rptproc(char *s, int t, void *o, int (*active)(void*), int (*ck)(void*, int), vo
 	kproc(s, rproc, r, KPDUP);
 	return r;
 }
+
+u32
+getpid(void)
+{
+	return up->pid;
+}

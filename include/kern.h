@@ -578,8 +578,8 @@ extern	long	write9p(int, void*, long);
 extern	int	wstat(char*, char*);
 extern	ulong	rendezvous(ulong, ulong);
 
-extern	intptr	getpid(void);
-extern	intptr	getppid(void);
+extern	u32	getpid(void);
+extern	u32	getppid(void);
 extern	void	rerrstr(char*, uint);
 extern	char*	sysname(void);
 extern	void	werrstr(char*, ...);
