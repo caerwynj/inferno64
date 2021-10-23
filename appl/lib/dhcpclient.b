@@ -584,6 +584,8 @@ reacquire(srv: ref DhcpIO, req: ref Dhcp, initopt: list of (int, array of byte),
 {
 	# INIT-REBOOT: know an address; try requesting it (once)
 	# TO DO: could use Inform when our address is static but we need a few service parameters
+	if(debug)
+		sys->print("reacquire\n");
 	req.ciaddr = ip->v4noaddr;
 	rep := request(srv, ++xidgen, req, (Oipaddr, addr.v4()) :: initopt);
 	if(rep != nil && rep.dhcpop == Ack && addr.eq(rep.yiaddr)){
@@ -600,6 +602,8 @@ reacquire(srv: ref DhcpIO, req: ref Dhcp, initopt: list of (int, array of byte),
 askround(srv: ref DhcpIO, req: ref Dhcp, initopt: list of (int, array of byte)): ref Dhcp
 {
 	# INIT
+	if(debug)
+		sys->print("askround\n");
 	req.ciaddr = ip->v4noaddr;
 	req.udphdr[Udpraddr:] = (ip->v4bcast).v6();
 	for(retries := 0; retries < 5; retries++){
@@ -929,7 +933,7 @@ dumpdhcp(m: ref Dhcp, dir: string)
 	sys->print("%s %s/%ud: ", dir, IPaddr.newv6(m.udphdr[Udpraddr:]).text(), get2(m.udphdr, Udprport));
 	if(m.dhcpop != NotDHCP)
 		s = " "+opname(m.dhcpop);
-	sys->print("op %d%s htype %d hops %d xid %ud\n", m.op, s, m.htype, m.hops, m.xid);
+	sys->print("op %d%s htype %d hops %d xid %ux\n", m.op, s, m.htype, m.hops, m.xid);
 	sys->print("\tsecs %d flags 0x%.4ux\n", m.secs, m.flags);
 	sys->print("\tciaddr %s\n", m.ciaddr.text());
 	sys->print("\tyiaddr %s\n", m.yiaddr.text());
