@@ -13,10 +13,11 @@ cinit(void)
 {
 }
 
-void
+int
 copen(Chan *c)
 {
 	c->flag &= ~CCACHE;
+	return 0;
 }
 
 int
@@ -47,3 +48,14 @@ cupdate(Chan *c, uchar *buf,  int n, vlong off)
 	USED(off);
 }
 
+void
+ctrunc(Chan *c)
+{
+	USED(c);
+}
+
+void
+cclunk(Chan *c)
+{
+	USED(c);
+}

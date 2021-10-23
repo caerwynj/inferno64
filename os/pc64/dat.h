@@ -188,7 +188,9 @@ struct Mach
 
 	u64	ticks;		/* of the clock since boot time */
 	Proc*	proc;		/* current process on this processor */
-	Label	sched;		/* scheduler wakeup */
+
+	PMach;
+
 	Lock	alarmlock;	/* access to alarm list */
 	void*	alarm;		/* alarms bound to this clock */
 	u32	inclockintr;

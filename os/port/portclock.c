@@ -17,7 +17,7 @@ static Timers timers[MAXMACH];
 ulong intrcount[MAXMACH];
 ulong fcallcount[MAXMACH];
 
-static uvlong
+static vlong
 tadd(Timers *tt, Timer *nt)
 {
 	Timer *t, **last;
@@ -29,11 +29,9 @@ tadd(Timers *tt, Timer *nt)
 		panic("timer");
 		break;
 	case Trelative:
-		assert(nt->tns > 0);
+		if(nt->tns <= 0)
+			nt->tns = 1;
 		nt->twhen = fastticks(nil) + ns2fastticks(nt->tns);
-		break;
-	case Tabsolute:
-		nt->twhen = tod2fastticks(nt->tns);
 		break;
 	case Tperiodic:
 		assert(nt->tns >= 100000);	/* At least 100 µs period */
@@ -94,15 +92,6 @@ timeradd(Timer *nt)
 	Timers *tt;
 	vlong when;
 
-	if (nt->tmode == Tabsolute){
-		when = todget(nil);
-		if (nt->tns <= when){
-	//		if (nt->tns + MS2NS(10) <= when)	/* small deviations will happen */
-	//			print("timeradd (%lld %lld) %lld too early 0x%lux\n",
-	//				when, nt->tns, when - nt->tns, getcallerpc(&nt));
-			nt->tns = when;
-		}
-	}
 	/* Must lock Timer struct before Timers struct */
 	ilock(nt);
 	if(tt = nt->tt){
@@ -123,8 +112,12 @@ timeradd(Timer *nt)
 void
 timerdel(Timer *dt)
 {
+	Mach *mp;
 	Timers *tt;
 	uvlong when;
+
+	/* avoid Tperiodic getting re-added */
+	dt->tmode = Trelative;
 
 	ilock(dt);
 	if(tt = dt->tt){
@@ -134,7 +127,16 @@ timerdel(Timer *dt)
 			timerset(tt->head->twhen);
 		iunlock(tt);
 	}
+	if((mp = dt->tactive) == nil || mp->machno == m->machno){
+		iunlock(dt);
+		return;
+	}
 	iunlock(dt);
+
+	/* rare, but tf can still be active on another cpu */
+	while(dt->tactive == mp && dt->tt == nil)
+		if(up->nlocks == 0 && islo())
+			sched();
 }
 
 void
@@ -144,6 +146,7 @@ hzclock(Ureg *ur)
 	if(m->proc)
 		m->proc->pc = ur->pc;
 
+	/* accounttime(); */
 	kmapinval();
 
 	if(kproftick != nil)
@@ -157,7 +160,8 @@ hzclock(Ureg *ur)
 		exit(0);
 	}
 
-	checkalarms();
+	if(m->machno == 0)
+		checkalarms();
 
 	if(up && up->state == Running){
 		if(anyready()){
@@ -168,13 +172,12 @@ hzclock(Ureg *ur)
 }
 
 void
-timerintr(Ureg *u, uvlong)
+timerintr(Ureg *u, Tval)
 {
 	Timer *t;
 	Timers *tt;
 	uvlong when, now;
 	int callhzclock;
-	static int sofar;
 
 	intrcount[m->machno]++;
 	callhzclock = 0;
@@ -199,12 +202,14 @@ timerintr(Ureg *u, uvlong)
 		tt->head = t->tnext;
 		assert(t->tt == tt);
 		t->tt = nil;
+		t->tactive = MACHP(m->machno);
 		fcallcount[m->machno]++;
 		iunlock(tt);
 		if(t->tf)
 			(*t->tf)(u, t);
 		else
 			callhzclock++;
+		t->tactive = nil;
 		ilock(tt);
 		if(t->tmode == Tperiodic)
 			tadd(tt, t);
@@ -217,8 +222,13 @@ timersinit(void)
 {
 	Timer *t;
 
+	/*
+	 * T->tf == nil means the HZ clock for this processor.
+	 */
 	todinit();
 	t = malloc(sizeof(*t));
+	if(t == nil)
+		panic("timersinit: no memory for Timer");
 	t->tmode = Tperiodic;
 	t->tt = nil;
 	t->tns = 1000000000/HZ;
@@ -234,6 +244,8 @@ addclock0link(void (*f)(void), int ms)
 
 	/* Synchronize to hztimer if ms is 0 */
 	nt = malloc(sizeof(Timer));
+	if(nt == nil)
+		panic("addclock0link: no memory for Timer");
 	if(ms == 0)
 		ms = 1000/HZ;
 	nt->tns = (vlong)ms*1000000LL;

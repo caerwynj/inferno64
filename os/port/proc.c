@@ -7,29 +7,33 @@
 #include	<interp.h>
 
 Ref	pidalloc;
+int	schedgain = 30;	/* units in seconds */
+int	nrdy;
 
-typedef struct Schedq Schedq;
+ulong	delayedscheds;	/* statistics */
+ulong	skipscheds;
+ulong	preempts;
 
-struct
+/* bitmap of priorities of procs ready to run. When any process is
+ * queued, the bit corresponding to that priority gets set.
+ * when there are no more processes to run at a priority, then the
+ * corresponding bit gets cleared.
+ */
+static u32	occupied;
+
+static struct Procalloc
 {
 	Lock;
 	Proc*	arena;
 	Proc*	free;
 } procalloc;
 
-struct Schedq
-{
-	Lock;
-	Proc*	head;
-	Proc*	tail;
-};
-
 /* multiple run queues by priority, different from Brian's book
- * Per Brian's book, it is the struct Procs == struct Scheq.
+ * Per Brian's book, it is the struct Procs == struct Schedq.
  * Now, inferno maintains multiple Schedq based on priority.
  */
 static Schedq	runq[Nrq];
-static ulong	occupied;
+static ulong	runvec;
 int	nrdy;
 
 char *statename[] =
@@ -40,12 +44,27 @@ char *statename[] =
 	"Scheding",
 	"Running",
 	"Queueing",
+	"QueueingR",
+	"QueueingW",
 	"Wakeme",
 	"Broken",
 	"Stopped",
 	"Rendez",
+	"Waitrelease",
 };
 
+/*
+ * The kernel scheduler state is in m->sched. It is set to the address
+ * of schedinit().
+ * When sched() is switching processes, it transfers control to the kernel
+ * scheduler by using the m->sched label. The kernel scheduler then updates
+ * the running process's state and picks the next process to run.
+ * By using m->sched, we are creating a loop from sched() to schedinit()
+ * after every process switch.
+ *
+ * inferno does not change the process priorities. So, ignoring updatecpu().
+ * process priorities are set with setpri()
+ */
 /*
  * Always splhi()'ed.
  */
@@ -53,7 +72,7 @@ void
 schedinit(void)		/* never returns */
 {
 	setlabel(&m->sched);
-	if(up) {
+	if(up != nil) {
 /*
 		if((e = up->edf) && (e->flags & Admitted))
 			edfrecord(up);
@@ -61,6 +80,10 @@ schedinit(void)		/* never returns */
 		m->proc = nil;
 		switch(up->state) {
 		case Running:
+			/*
+			 * process state from Runnning -> Ready
+			 * gets put to the back of the run queue
+			 */
 			ready(up);
 			break;
 		case Moribund:
@@ -72,46 +95,124 @@ schedinit(void)		/* never returns */
 				up->edf = nil;
 			}
 */
-			/*
-			 * Holding locks from pexit:
-			 * 	procalloc
-			 */
+
+			lock(&procalloc);
+			up->mach = nil;
 			up->qnext = procalloc.free;
 			procalloc.free = up;
+			/* proc is free now, make sure unlock() wont touch it */
+			up = procalloc.Lock.p = nil;
 			unlock(&procalloc);
-			break;
+
+			sched();
 		}
+		coherence();
+		/* flag to indicate that the process has saved itself
+		 * for the next run
+		 */
 		up->mach = nil;
 		up = nil;
 	}
 	sched();
 }
 
+static void
+procswitch(void)
+{
+	uvlong t;
+
+	/* statistics */
+	m->cs++;
+
+	cycles(&t);
+	up->pcycles += t;
+
+	procsave(up);
+
+	if(!setlabel(&up->sched))
+		gotolabel(&m->sched);
+
+	/* process wakes up here next time */
+	procrestore(up);
+
+	cycles(&t);
+	up->pcycles -= t;
+}
+
+/*
+ *  If changing this routine, look also at sleep().  It
+ *  contains a copy of the guts of sched().
+ */
 void
 sched(void)
 {
-	if(up) {
-		splhi();
-		procsave(up);
-		if(setlabel(&up->sched)) {
-			/* procrestore(up); */
-			spllo();
+	Proc *p;
+
+	if(m->ilockdepth)
+		panic("cpu%d: ilockdepth %d, last lock %#p at %#p, sched called from %#p",
+			m->machno,
+			m->ilockdepth,
+			up != nil ? up->lastilock: nil,
+			(up != nil && up->lastilock != nil) ? up->lastilock->pc: 0,
+			getcallerpc(&p+2));
+	if(up != nil) {
+		/*
+		 * Delay the sched until the process gives up the locks
+		 * it is holding.  This avoids dumb lock loops.
+		 * Don't delay if the process is Moribund.
+		 * It called sched to die.
+		 * But do sched eventually.  This avoids a missing unlock
+		 * from hanging the entire kernel. 
+		 * But don't reschedule procs holding palloc or procalloc.
+		 * Those are far too important to be holding while asleep.
+		 *
+		 * This test is not exact.  There can still be a few instructions
+		 * in the middle of taslock when a process holds a lock
+		 * but Lock.p has not yet been initialized.
+		 */
+		if(up->nlocks)
+		if(up->state != Moribund)
+		if(up->delaysched < 20
+/*		|| palloc.Lock.p == up
+		|| fscache.Lock.p == up
+*/
+		|| procalloc.Lock.p == up){
+			up->delaysched++;
+ 			delayedscheds++;
 			return;
 		}
-		gotolabel(&m->sched);
+		up->delaysched = 0;
+		splhi();
+		procswitch();
+		spllo();
+		return;
 	}
-	up = runproc();
+	/* if up == nil, it is the scheduler process after the
+	 * previous process state has been saved
+	 */
+	p = runproc();
+	up = p;
 	up->state = Running;
-	up->mach = MACHP(m->machno);	/* m might be a fixed address; use MACHP */
+	up->mach = MACHP(m->machno);
 	m->proc = up;
 	gotolabel(&up->sched);
 }
 
+/*
+ * ready(p) is simpler as we do not change process priorities
+ * puts the current process at the end of the run queue
+ * p->state = Running -> Ready
+ */
 void
 ready(Proc *p)
 {
 	int s;
 	Schedq *rq;
+
+	if(p->state == Ready){
+		print("double ready %s %zud pc %p\n", p->text, p->pid, getcallerpc(&p));
+		return;
+	}
 
 	s = splhi();
 /*
@@ -121,8 +222,12 @@ ready(Proc *p)
 	}
 */
 
-	/* adding to the end of the queue of procs ready to run */
-	rq = &runq[p->pri];
+/* 9front does this. Not sure what it does yet
+	if(up != p && (p->wired == nil || p->wired == MACHP(m->machno)))
+		m->readied = p;	*//* group scheduling */
+
+	/* add to the end of the run queue */
+	rq = &runq[p->priority];
 	lock(runq);
 	p->rnext = 0;
 	if(rq->tail)
@@ -130,9 +235,9 @@ ready(Proc *p)
 	else
 		rq->head = p;
 	rq->tail = p;
-
+	rq->n++;
 	nrdy++;
-	occupied |= 1<<p->pri;
+	occupied |= 1<<p->priority;
 	p->state = Ready;
 	unlock(runq);
 	splx(s);
@@ -142,43 +247,31 @@ int
 anyready(void)
 {
 	/* same priority only */
-	return occupied & (1<<up->pri);
+	return occupied & (1<<up->priority);
 }
 
+/*
+ * the higher the priority, the lower the number
+ * unlike 9front
+ */
 int
 anyhigher(void)
 {
-	return occupied & ((1<<up->pri)-1);
+	return occupied & ((1<<up->priority)-1);
 }
 
-int
-preemption(int tick)
-{
-	if(up != nil && up->state == Running && !up->preempted &&
-	   (anyhigher() || tick && anyready())){
-		up->preempted = 1;
-		sched();
-		splhi();
-		up->preempted = 0;
-		return 1;
-	}
-	return 0;
-}
-
-/* this is from 9front, above is inferno's */
 /*
  *  here at the end of non-clock interrupts to see if we should preempt the
  *  current process.  Returns 1 if preempted, 0 otherwise.
+ *  similar to 9front's preempted()
  */
 int
-preempted(void)
+preemption(int tick)
 {
-	if(up != nil && up->state == Running)
-	if(up->preempted == 0)
-	if(anyhigher())
-	if(anyready()){ /* TODO replaced the below 2 lines with this line. Have to test */
-	/* if(!active.exiting){
-		m->readied = nil; */	/* avoid cooperative scheduling */
+	if(up != nil && up->state == Running &&
+		up->preempted == 0 &&
+		active.exiting == 0 &&
+		(anyhigher() || tick && anyready())){
 		up->preempted = 1;
 		sched();
 		splhi();
@@ -191,45 +284,90 @@ preempted(void)
 Proc*
 runproc(void)
 {
-	Proc *p, *l;
 	Schedq *rq, *erq;
+	Proc *p, *tp, *last;
+	u64 start, now;
+	int i;
+/*	void (*pt)(Proc*, int, vlong); */
+
+	start = perfticks();
+	preempts++;
 
 	erq = runq + Nrq - 1;
 loop:
+	/*
+	 *  find a process that last ran on this processor (affinity),
+	 *  or one that can be moved to this processor.
+	 */
+	spllo();
+	for(i = 0;; i++){
+		/*
+		 * find the highest priority target process that this
+		 * processor can run given affinity constraints.
+		 * when i == 0, thats where we pick the associated procs
+		 * after this, we take anyone even from other cores
+		 */
+		for(rq = runq; rq <= erq; rq++){
+			for(tp = rq->head; tp != nil; tp = tp->rnext){
+				if(tp->mp == nil || tp->mp == MACHP(m->machno)
+				|| (tp->wired == nil && i > 0))
+					goto found;
+			}
+		}
+
+		/* waste time or halt the CPU */
+		idlehands();
+
+		/* remember how much time we're here */
+		now = perfticks();
+		m->perf.inidle += now-start;
+		start = now;
+	}
+
+found:
 	/* print("runproc\n");
 	procdump(); */
 	splhi();
-	for(rq = runq; rq->head == 0; rq++)
-		if(rq >= erq) {
-			idlehands();
-			spllo();
-			goto loop;
-		}
-
+	/*
+	 * try to remove the process from a scheduling queue
+	 * similar to 9front's dequeueproc()
+	 */
 	if(!canlock(runq))
 		goto loop;
-	/* choose first one we last ran on this processor at this level or hasn't moved recently */
-	l = nil;
-	for(p = rq->head; p != nil; p = p->rnext)
-		if(p->mp == nil || p->mp == MACHP(m->machno) || p->movetime < MACHP(0)->ticks)
+
+	/*
+	 *  the queue may have changed before we locked runq,
+	 *  refind the target process.
+	 */
+	last = nil;
+	for(p = rq->head; p != nil; p = p->rnext){
+		if(p == tp)
 			break;
-	if(p == nil)
-		p = rq->head;
-	/* p->mach==0 only when process state is saved */
-	if(p == 0 || p->mach) {
+		last = p;
+	}
+
+	/*
+	 *  p->mach==0 only when process state is saved
+	 */
+	if(p == nil || p->mach != nil){
 		unlock(runq);
 		goto loop;
 	}
+	/* if p is the last in the run queue
+	 * update run queue tail to point to the last */
 	if(p->rnext == nil)
-		rq->tail = l;
-	if(l)
-		l->rnext = p->rnext;
+		rq->tail = last;
+	/* remove p from the linked list */
+	if(last != nil)
+		last->rnext = p->rnext;
 	else
 		rq->head = p->rnext;
+	/* no other procs in the run queue */
 	if(rq->head == nil){
 		rq->tail = nil;
-		occupied &= ~(1<<p->pri);
+		occupied &= ~(1<<p->priority);
 	}
+	rq->n--;
 	nrdy--;
 	if(p->dbgstop){
 		p->state = Stopped;
@@ -237,55 +375,59 @@ loop:
 		goto loop;
 	}
 	if(p->state != Ready)
-		print("runproc %s %ud %s\n", p->text, p->pid, statename[p->state]);
+		print("runproc %s %zud %s\n", p->text, p->pid, statename[p->state]);
 	unlock(runq);
+
 	p->state = Scheding;
-	if(p->mp != MACHP(m->machno))
-		p->movetime = MACHP(0)->ticks + HZ/10;
 	p->mp = MACHP(m->machno);
 
-/*
-	if(edflock(p)){
-		edfrun(p, rq == &runq[PriEdf]);	// start deadline timer and do admin
+/*	if(edflock(p)){
+		edfrun(p, rq == &runq[PriEdf]);	*//* start deadline timer and do admin *//*
 		edfunlock();
 	}
+	pt = proctrace;
+	if(pt != nil)
+		pt(p, SRun, 0);
 */
 	return p;
 }
 
 int
-setpri(int pri)
+setpri(int priority)
 {
 	int p;
 
 	/* called by up so not on run queue */
-	p = up->pri;
-	up->pri = pri;
+	p = up->priority;
+	up->priority = priority;
 	if(up->state == Running && anyhigher())
 		sched();
 	return p;
 }
 
+/*
+ * TODO
+ *	add p->wired and procwired()
+ *  pid reuse
+ */
 Proc*
 newproc(void)
 {
 	Proc *p;
 
 	lock(&procalloc);
-	for(;;) {
-		if(p = procalloc.free)
-			break;
-
+	p = procalloc.free;
+	if(p == nil || (p->kstack == nil && (p->kstack = malloc(KSTACK)) == nil)){
 		unlock(&procalloc);
-		resrcwait("no procs");
-		lock(&procalloc);
+		return nil;
 	}
 	procalloc.free = p->qnext;
+	p->qnext = nil;
 	unlock(&procalloc);
 
 	p->type = Unknown;
 	p->state = Scheding;
-	p->pri = PriNormal;
+	p->priority = PriNormal;
 	p->psstate = "New";
 	p->mach = 0;
 	p->qnext = 0;
@@ -294,7 +436,6 @@ newproc(void)
 	p->killed = 0;
 	p->swipend = 0;
 	p->mp = 0;
-	p->movetime = 0;
 	p->delaysched = 0;
 	p->edf = nil;
 	memset(&p->defenv, 0, sizeof(p->defenv));
@@ -321,8 +462,13 @@ procinit(void)
 	int i;
 
 	print("procinit conf.nproc %d\n", conf.nproc);
-	procalloc.free = xalloc(conf.nproc*sizeof(Proc));
-	procalloc.arena = procalloc.free;
+	p = xalloc(conf.nproc*sizeof(Proc));
+	if(p == nil){
+		xsummary();
+		panic("cannot allocate %zud procs (%zudMB)", conf.nproc, conf.nproc*sizeof(Proc)/(1024*1024));
+	}
+	procalloc.arena = p;
+	procalloc.free = p;
 
 	p = procalloc.free;
 	for(i=0; i<conf.nproc-1; i++,p++)
@@ -332,6 +478,16 @@ procinit(void)
 	/* debugkey('p', "processes", procdump, 0); */
 }
 
+/*
+ *  sleep if a condition is not true.  Another process will
+ *  awaken us after it sets the condition.  When we awaken
+ *  the condition may no longer be true.
+ *
+ *  we lock both the process and the rendezvous to keep r->p
+ *  and p->r synchronized.
+ * TODO
+ *  9front checks up->notepending instead of up->swipend
+ */
 void
 sleep(Rendez *r, int (*f)(void*), void *arg)
 {
@@ -345,120 +501,140 @@ sleep(Rendez *r, int (*f)(void*), void *arg)
 	 */
 	s = splhi();
 
-	lock(&up->rlock);
+	if(up->nlocks)
+		print("process %zud sleeps with %d locks held, last lock %#p locked at pc %#p, sleep called from %#p\n",
+			up->pid, up->nlocks, up->lastlock, up->lastlock->pc, getcallerpc(&r));
 	lock(r);
+	lock(&up->rlock);
+	if(r->p != nil){
+		print("double sleep called from %#p, %zud %zud\n", getcallerpc(&r), r->p->pid, up->pid);
+		dumpstack();
+		panic("sleep");
+	}
+
+	/*
+	 *  Wakeup only knows there may be something to do by testing
+	 *  r->p in order to get something to lock on.
+	 *  Flush that information out to memory in case the sleep is
+	 *  committed.
+	 */
+	r->p = up;
 
 	/*
 	 * if killed or condition happened, never mind
 	 */
 	if(up->killed || f(arg)){
+		r->p = nil;
+		unlock(&up->rlock);
 		unlock(r);
 	}else{
-
 		/*
 		 * now we are committed to
 		 * change state and call scheduler
 		 */
-		if(r->p != nil) {
-			print("double sleep pc=0x%zux %ud %ud r=0x%lux\n", getcallerpc(&r), r->p->pid, up->pid, r);
-			dumpstack();
-			panic("sleep");
-		}
+/*		pt = proctrace;
+		if(pt != nil)
+			pt(up, SSleep, 0); */
 		up->state = Wakeme;
-		r->p = up;
-		unlock(r);
-		up->swipend = 0;
 		up->r = r;	/* for swiproc */
 		unlock(&up->rlock);
-
-		sched();
-		splhi();	/* sched does spllo */
-
-		lock(&up->rlock);
-		up->r = nil;
+		unlock(r);
+		up->swipend = 0;
+		unlock(&up->rlock);
+		procswitch();
 	}
 
 	if(up->killed || up->swipend) {
 		up->killed = 0;
 		up->swipend = 0;
-		unlock(&up->rlock);
 		splx(s);
 		error(Eintr);
 	}
-	unlock(&up->rlock);
 	splx(s);
 }
 
-int
+static int
 tfn(void *arg)
 {
-	return MACHP(0)->ticks >= up->twhen || (*up->tfn)(arg);
+	return up->trend == nil || up->tfn(arg);
 }
 
 void
-tsleep(Rendez *r, int (*fn)(void*), void *arg, int ms)
+twakeup(Ureg*, Timer *t)
 {
-	ulong when;
-	Proc *f, **l;
+	Proc *p;
+	Rendez *trend;
 
-	if(up == nil)
-		panic("tsleep() not in process (0x%zux)", getcallerpc(&r));
+	p = t->ta;
+	trend = p->trend;
+	if(trend != nil){
+		p->trend = nil;
+		wakeup(trend);
+	}
+}
 
-	when = MS2TK(ms)+MACHP(0)->ticks;
-	lock(&talarm);
-	/* take out of list if checkalarm didn't */
-	if(up->trend) {
-		l = &talarm.list;
-		for(f = *l; f; f = f->tlink) {
-			if(f == up) {
-				*l = up->tlink;
-				break;
-			}
-			l = &f->tlink;
-		}
+void
+tsleep(Rendez *r, int (*fn)(void*), void *arg, s32 ms)
+{
+	if(up->tt != nil){
+		print("%s %lud: tsleep timer active: mode %d, tf %#p, pc %#p\n",
+			up->text, up->pid, up->tmode, up->tf, getcallerpc(&r));
+		timerdel(up);
 	}
-	/* insert in increasing time order */
-	l = &talarm.list;
-	for(f = *l; f; f = f->tlink) {
-		if(f->twhen >= when)
-			break;
-		l = &f->tlink;
-	}
+	up->tns = MS2NS(ms);
+	up->tf = twakeup;
+	up->tmode = Trelative;
+	up->ta = up;
 	up->trend = r;
-	up->twhen = when;
 	up->tfn = fn;
-	up->tlink = *l;
-	*l = up;
-	unlock(&talarm);
+	timeradd(up);
 
 	if(waserror()){
-		up->twhen = 0;
+		up->trend = nil;
+		timerdel(up);
 		nexterror();
 	}
 	sleep(r, tfn, arg);
-	up->twhen = 0;
+	up->trend = nil;
+	timerdel(up);
 	poperror();
 }
 
-int
+/*
+ *  Expects that only one process can call wakeup for any given Rendez.
+ *  We hold both locks to ensure that r->p and p->r remain consistent.
+ *  Richard Miller has a better solution that doesn't require both to
+ *  be held simultaneously, but I'm a paranoid - presotto.
+ */
+Proc*
 wakeup(Rendez *r)
 {
 	Proc *p;
 	int s;
 
 	s = splhi();
+
 	lock(r);
 	p = r->p;
-	if(p){
-		r->p = nil;
-		if(p->state != Wakeme)
+
+	if(p != nil){
+		lock(&p->rlock);
+		if(p->state != Wakeme || p->r != r){
+			iprint("%p %p %d\n", p->r, r, p->state);
 			panic("wakeup: state");
+		}
+		r->p = nil;
+		p->r = nil;
 		ready(p);
+		unlock(&p->rlock);
 	}
 	unlock(r);
+
 	splx(s);
-	return p != nil;
+
+	return p;
 }
+
 
 void
 swiproc(Proc *p, int interp)
@@ -510,9 +686,6 @@ pexit(char*, int)
 		closesigs(o->sigs);
 	}
 
-	/* Sched must not loop for this lock */
-	lock(&procalloc);
-
 /*
 	edfstop(up);
 */
@@ -540,8 +713,8 @@ dumpaproc(Proc *p)
 		snprint(tmp, sizeof(tmp), " /%.8lux", p->r);
 	else
 		*tmp = '\0';
-	print("%p:%3ud:%14s pc %.8zux %s/%s qpc %.8zux pri %d%s\n",
-		p, p->pid, p->text, p->pc, s, statename[p->state], p->qpc, p->pri, tmp);
+	print("%p:%3ud:%14s pc %.8zux %s/%s qpc %.8zux priority %d%s\n",
+		p, p->pid, p->text, p->pc, s, statename[p->state], p->qpc, p->priority, tmp);
 }
 
 void
@@ -567,7 +740,10 @@ kproc(char *name, void (*func)(void *), void *arg, int flags)
 	Fgrp *fg;
 	Egrp *eg;
 
-	p = newproc();
+	while((p = newproc()) == nil){
+/* TODO		freebroken(); */
+		resrcwait("no procs for kproc");
+	}
 	p->psstate = 0;
 	p->kp = 1;
 
@@ -744,6 +920,9 @@ setid(char *name, int owner)
 		kstrdup(&up->env->user, name);
 }
 
+/* TODO no idea what this rptproc() does
+ * something to do with repeat of tk actions
+ */
 void
 rptwakeup(void *o, void *ar)
 {

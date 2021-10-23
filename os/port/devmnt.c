@@ -73,6 +73,8 @@ void	mountrpc(Mnt*, Mntrpc*);
 int	rpcattn(void*);
 Chan*	mntchan(void);
 
+#define cachedchan(c) (((c)->flag & CCACHE) != 0 && (c)->mcp != nil)
+
 char	Esbadstat[] = "invalid directory entry received from server";
 char Enoversion[] = "version not established for mount channel";
 
@@ -95,7 +97,7 @@ mntreset(void)
 /*
  * Version is not multiplexed: message sent only once per connection.
  */
-long
+int
 mntversion(Chan *c, char *version, int msize, int returnlen)
 {
 	Fcall f;
@@ -719,7 +721,7 @@ mntrdwr(int type, Chan *c, void *buf, s32 n, s64 off)
 			nr = nreq;
 
 		if(type == Tread)
-			r->b = bl2mem((uchar*)uba, r->b, nr);
+			nr = readblist(r->b, (uchar*)uba, nr, 0);
 		else if(cache)
 			cwrite(c, (uchar*)uba, nr, off);
 

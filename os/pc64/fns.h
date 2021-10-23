@@ -162,6 +162,7 @@ void	(*_pcmspecialclose)(int);
 void	pcmunmap(int, PCMmap*);
 void	pmap(uintptr, u64, s64);
 void	poolsizeinit(void);
+void	procrestore(Proc*);
 void	procsave(Proc*);
 void	procsetup(Proc*);
 void	punmap(uintptr, uvlong);

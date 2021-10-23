@@ -28,6 +28,7 @@ typedef struct Osenv	Osenv;
 typedef struct Perf	Perf;
 typedef struct Pgrp	Pgrp;
 typedef struct Proc	Proc;
+typedef struct PMach	PMach;
 typedef struct QLock	QLock;
 typedef struct Queue	Queue;
 typedef struct Ref	Ref;
@@ -35,6 +36,7 @@ typedef struct Rendez	Rendez;
 typedef struct Rept	Rept;
 typedef struct Rootdata	Rootdata;
 typedef struct RWlock	RWlock;
+typedef struct Schedq	Schedq;
 typedef struct Signerkey Signerkey;
 typedef struct Skeyset	Skeyset;
 typedef struct Talarm	Talarm;
@@ -425,14 +427,16 @@ enum {
 struct Timer
 {
 	/* Public interface */
-	s32	tmode;		/* See above */
-	s64	tns;		/* meaning defined by mode */
+	int	tmode;		/* See above */
+	vlong	tns;		/* meaning defined by mode */
 	void	(*tf)(Ureg*, Timer*);
 	void	*ta;
 	/* Internal */
 	Lock;
+	Mach	*tactive;	/* The cpu that tf is active on */
 	Timers	*tt;		/* Timers queue this timer runs on */
-	s64	twhen;		/* ns represented in fastticks */
+	Tval	tticks;		/* tns converted to ticks */
+	Tval	twhen;		/* ns represented in fastticks */
 	Timer	*tnext;
 };
 
@@ -476,6 +480,14 @@ enum
 	Nrq
 };
 
+struct Schedq
+{
+	Lock;
+	Proc*	head;
+	Proc*	tail;
+	int	n;
+};
+
 struct Proc
 {
 	Label		sched;		/* known to l.s */
@@ -502,8 +514,9 @@ struct Proc
 	Rendez		sleep;		/* place for syssleep/debug */
 	s32		killed;		/* by swiproc */
 	s32		kp;		/* true if a kernel process */
+	Proc	*palarm;	/* Next alarm time */
 	u32		alarm;		/* Time of call */
-	s32		pri;		/* scheduler priority */
+	s32		priority;		/* scheduler priority */
 	u32		twhen;
 
 	Timer;			/* For tsleep and real-time */
@@ -525,13 +538,23 @@ struct Proc
 	Mach*		mp;		/* machine this process last ran on */
 	Mach*		wired;
 	int	nlocks;		/* number of locks held by proc */
-	u32		movetime;	/* next time process should switch processors */
+	/* obsoleted u32		movetime; */	/* next time process should switch processors */
 	u32		delaysched;
 	s32			preempted;	/* process yielding in interrupt */
 	uintptr		qpc;		/* last call that blocked in qlock */
 	void*		dbgreg;		/* User registers for devproc */
  	s32		dbgstop;		/* don't run this kproc */
 	Edf*	edf;	/* if non-null, real-time proc, edf contains scheduling params */
+
+	/*
+	 * pcycles: cycles spent in this process (updated on procswitch)
+	 * when this is the current proc and we're in the kernel
+	 * (procrestores outnumber procsaves by one)
+	 * the number of cycles spent in the proc is pcycles + cycles()
+	 * when this is not the current process or we're in user mode
+	 * (procrestores and procsaves balance), it is pcycles.
+	 */
+	s64	pcycles;
 
 	PMMU;				/* TODO obsolete? machine specific mmu state */
 };
@@ -761,6 +784,30 @@ struct Watchpt
 		WATCHEX = 4,
 	} type;
 	uintptr addr, len;
+};
+
+struct PMach
+{
+	Proc*	readied;		/* for runproc */ /* unused in inferno */
+	Label	sched;			/* scheduler wakeup */
+	ulong	ticks;			/* of the clock since boot time */
+	ulong	schedticks;		/* next forced context switch */
+
+	int	pfault;
+	int	cs;
+	int	syscall;
+	int	load;
+	int	intr;
+	int	ilockdepth;
+
+	int	flushmmu;		/* make current proc flush it's mmu state */
+
+	int	tlbfault;
+	int	tlbpurge;
+
+	Perf	perf;			/* performance counters */
+
+	uvlong	cyclefreq;		/* Frequency of user readable cycle counter */
 };
 
 /* queue state bits,  Qmsg, Qcoalesce, and Qkick can be set in qopen */

@@ -50,14 +50,53 @@ devdir(Chan *c, Qid qid, char *n, vlong length, char *user, long perm, Dir *db)
 }
 
 /*
+ * (here, Devgen is the prototype; devgen is the function in dev.c.)
+ * 
+ * a Devgen is expected to return the directory entry for ".."
+ * if you pass it s==DEVDOTDOT (-1).  otherwise...
+ * 
+ * there are two contradictory rules.
+ * 
+ * (i) if c is a directory, a Devgen is expected to list its children
+ * as you iterate s.
+ * 
+ * (ii) whether or not c is a directory, a Devgen is expected to list
+ * its siblings as you iterate s.
+ * 
+ * devgen always returns the list of children in the root
+ * directory.  thus it follows (i) when c is the root and (ii) otherwise.
+ * many other Devgens follow (i) when c is a directory and (ii) otherwise.
+ * 
+ * devwalk assumes (i).  it knows that devgen breaks (i)
+ * for children that are themselves directories, and explicitly catches them.
+ * 
+ * devstat assumes (ii).  if the Devgen in question follows (i)
+ * for this particular c, devstat will not find the necessary info.
+ * with our particular Devgen functions, this happens only for
+ * directories, so devstat makes something up, assuming
+ * c->name, c->qid, eve, DMDIR|0555.
+ * 
+ * devdirread assumes (i).  the callers have to make sure
+ * that the Devgen satisfies (i) for the chan being read.
+ */
+/*
  * the zeroth element of the table MUST be the directory itself for ..
 */
 int
-devgen(Chan *c, char*, Dirtab *tab, int ntab, int i, Dir *dp)
+devgen(Chan *c, char *name, Dirtab *tab, int ntab, int i, Dir *dp)
 {
 	if(tab == 0)
 		return -1;
-	if(i != DEVDOTDOT){
+	if(i == DEVDOTDOT){
+		/* nothing */
+	}else if(name){
+		for(i=1; i<ntab; i++)
+			if(strcmp(tab[i].name, name) == 0)
+				break;
+		if(i==ntab)
+			return -1;
+		tab += i;
+	}else{
 		/* skip over the first element, that for . itself */
 		i++;
 		if(i >= ntab)
@@ -164,7 +203,11 @@ devwalk(Chan *c, Chan *nc, char **name, int nname, Dirtab *tab, int ntab, Devgen
 			continue;
 		}
 		if(strcmp(n, "..") == 0){
-			(*gen)(nc, nil, tab, ntab, DEVDOTDOT, &dir);
+			if((*gen)(nc, nil, tab, ntab, DEVDOTDOT, &dir) != 1){
+				print("devgen walk .. in dev%s %llux broken\n",
+					devtab[nc->type]->name, nc->qid.path);
+				error("broken devgen");
+			}
 			nc->qid = dir.qid;
 			goto Accept;
 		}

@@ -285,7 +285,10 @@ userinit(void)
 	Proc *p;
 	Osenv *o;
 
-	p = newproc();
+	while((p = newproc()) == nil){
+/* TODO		freebroken(); */
+		resrcwait("no procs for userinit");
+	}
 	o = p->env;
 
 	o->fgrp = newfgrp(nil);
@@ -374,7 +377,22 @@ procsave(Proc *p)
 	 * You might think it would be a win not to do this in that case,
 	 * especially on VMware, but it turns out not to matter.
 	 */
+	/* TODO obsolete with linear memory? */
 	mmuflushtlb();
+}
+void
+procrestore(Proc *p)
+{
+	if(p->dr[7] != 0){
+		m->dr7 = p->dr[7];
+		putdr(p->dr);
+	}
+	
+/*	if(p->vmx != nil)
+		vmxprocrestore(p);
+*/
+
+	fpuprocrestore(p);
 }
 
 void
