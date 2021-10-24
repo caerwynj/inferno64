@@ -95,7 +95,6 @@ schedinit(void)		/* never returns */
 				up->edf = nil;
 			}
 */
-
 			lock(&procalloc);
 			up->mach = nil;
 			up->qnext = procalloc.free;
@@ -148,7 +147,7 @@ sched(void)
 {
 	Proc *p;
 
-	if(m->ilockdepth)
+	if(m->ilockdepth != 0)
 		panic("cpu%d: ilockdepth %d, last lock %#p at %#p, sched called from %#p",
 			m->machno,
 			m->ilockdepth,
@@ -188,7 +187,8 @@ sched(void)
 		return;
 	}
 	/* if up == nil, it is the scheduler process after the
-	 * previous process state has been saved
+	 * previous process state has been saved and also the
+	 * first time entering schedinit()
 	 */
 	p = runproc();
 	up = p;
@@ -325,8 +325,9 @@ loop:
 	}
 
 found:
-	/* print("runproc\n");
-	procdump(); */
+/*	print("runproc\n");
+	procdump();
+*/
 	splhi();
 	/*
 	 * try to remove the process from a scheduling queue
@@ -407,7 +408,7 @@ setpri(int priority)
 
 /*
  * TODO
- *	add p->wired and procwired()
+ *	add procwired() to set p->wired
  *  pid reuse
  */
 Proc*
@@ -425,25 +426,31 @@ newproc(void)
 	p->qnext = nil;
 	unlock(&procalloc);
 
+	p->psstate = "New";
+	p->fpstate = FPinit;
+	p->procctl = 0;
+	p->dbgreg = nil;
+	p->nerrlab = 0;
 	p->type = Unknown;
 	p->state = Scheding;
 	p->priority = PriNormal;
-	p->psstate = "New";
 	p->mach = 0;
 	p->qnext = 0;
-	p->fpstate = FPinit;
 	p->kp = 0;
 	p->killed = 0;
 	p->swipend = 0;
-	p->mp = 0;
+	p->nlocks = 0;
 	p->delaysched = 0;
-	p->edf = nil;
 	memset(&p->defenv, 0, sizeof(p->defenv));
 	p->env = &p->defenv;
-	p->dbgreg = 0;
 	kstrdup(&p->env->user, "*nouser");
 	p->env->errstr = p->env->errbuf0;
 	p->env->syserrstr = p->env->errbuf1;
+
+	/* sched params */
+	p->mp = 0;
+	p->wired = 0;
+	p->edf = nil;
 
 	p->pid = incref(&pidalloc);
 	if(p->pid == 0)
@@ -502,8 +509,11 @@ sleep(Rendez *r, int (*f)(void*), void *arg)
 	s = splhi();
 
 	if(up->nlocks)
-		print("process %zud sleeps with %d locks held, last lock %#p locked at pc %#p, sleep called from %#p\n",
-			up->pid, up->nlocks, up->lastlock, up->lastlock->pc, getcallerpc(&r));
+		print("process %zd name %s sleeps with %d locks held,"
+				" last lock %#p locked at pc %#p, sleep called from %#p\n",
+			up->pid, up->text, up->nlocks,
+			up->lastlock, up->lastlock->pc, getcallerpc(&r));
+
 	lock(r);
 	lock(&up->rlock);
 	if(r->p != nil){
@@ -539,8 +549,6 @@ sleep(Rendez *r, int (*f)(void*), void *arg)
 		up->r = r;	/* for swiproc */
 		unlock(&up->rlock);
 		unlock(r);
-		up->swipend = 0;
-		unlock(&up->rlock);
 		procswitch();
 	}
 
@@ -714,7 +722,8 @@ dumpaproc(Proc *p)
 	else
 		*tmp = '\0';
 	print("%p:%3ud:%14s pc %.8zux %s/%s qpc %.8zux priority %d%s\n",
-		p, p->pid, p->text, p->pc, s, statename[p->state], p->qpc, p->priority, tmp);
+		p, p->pid, p->text, p->pc, s, statename[p->state], p->qpc,
+		p->priority, tmp);
 }
 
 void
