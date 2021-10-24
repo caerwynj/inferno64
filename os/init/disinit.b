@@ -65,9 +65,9 @@ init(nil: ref Draw->Context, nil: list of string)
 	sh := load Sh "/dis/sh.dis";
 	(s, nil) := sys->stat("/dis/init");
 	if(s == 0){
-		sys->print("spawn sh -x -n /dis/init\n");
+		sys->print("spawn sh /dis/init\n");
 		{
-			sh->init(nil, "sh" :: "-x" :: "-n" :: "/dis/init" :: nil);
+			sh->init(nil, "sh" :: "/dis/init" :: nil);
 		} exception e {
 			"*" =>
 				sys->fprint(stderr, "dis/init status: %s\nStarting fallback shell\n", e);

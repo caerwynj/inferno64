@@ -1,10 +1,8 @@
 #!/dis/sh
 
 load std
-# machine specific initialization
-#	called by /dis/init when sysname=bootcd
-#	special networking setup, disk setup
-#	avoids putting machine specific stuff in devroot
+# this is the most generic boot script when booting from the cd
+#	sets up the network with dhcp and is done
 
 <>/net/ipifc/clone {
 	x=`{read}

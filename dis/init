@@ -148,7 +148,7 @@ fn usedhcp {
 		x=`{read}
 		echo bind ether /net/ether0 > /net/ipifc/^$x^/ctl
 	}
-	ip/dhcp -p /net/ipifc/$x
+	ip/dhcp -d -p /net/ipifc/$x
 	for tuple in `{cat /net/ndb}{
 		(name value)=${split '=' $tuple}
 		if{~ $name sys}{
@@ -167,9 +167,24 @@ fn usedhcp {
 	cat /dev/sysname
 }
 
+# 9front uses the $bootargs to gather
+#	the ether device to bind
+#	the ether device ip address
+#	fs address
+#	port
+# 9ferno takes the following shortcuts, for now
+#	hardcoded the ether device to be /net/ether0
+#	use $bootargs for the ethernet ip address, mask and gateway
+#	use $fs for the fs address
+#	use $noauth to avoid authentication
+#	hardcoded the ports
 fn mountfs {
 	if{! ~ $"fs ''}{
-		mount -v -c tcp!$"fs!6666 /n/remote
+		if{~ $"noauth 1}{
+			mount -A -v -c tcp!$"fs!17001 /n/remote
+		}{
+			mount -v -c tcp!$"fs!6666 /n/remote
+		}
 		bind /n/remote/dis /dis
 		bind -c -a /n/remote/ /
 	}
@@ -192,6 +207,7 @@ and {ftest -e '#e/bootargs'} {
 			usedhcp
 			mountfs
 		}{
+			# check the notes above for details
 			echo binding /net/ether0
 			<>/net/ipifc/clone {
 				x=`{read}
@@ -208,6 +224,10 @@ and {ftest -e '#e/bootargs'} {
 		sysname=`{ndb/query ether `{cat '#l0/ether0/addr'} sys}
 	}
 
+	# for machine specific initialization
+	#	use /lib/init/$sysname
+	#	special networking setup, disk setup
+	#	avoids putting machine specific stuff in devroot
 	and {! ~ $"sysname ''} {
 			ftest -f /lib/init/$sysname }{
 			/lib/init/$sysname

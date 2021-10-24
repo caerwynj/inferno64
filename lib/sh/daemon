@@ -15,7 +15,7 @@ load std
 
 # until I sort out the authentication
 #	but this is killing /mnt/keys, so do not start it here
-# styxlisten -A 'tcp!*!17001' export /
+styxlisten -A 'tcp!*!17001' export /
 
 ls -l /mnt/keys
 netstat
