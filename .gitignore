@@ -356,4 +356,5 @@ os/init/*.dis
 os/init/*.sbl
 os/pc64/pc64.root.s
 
-
+os/pc64/6.*
+os/pc64/*.i
