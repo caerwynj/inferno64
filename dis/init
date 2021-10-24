@@ -148,7 +148,7 @@ fn usedhcp {
 		x=`{read}
 		echo bind ether /net/ether0 > /net/ipifc/^$x^/ctl
 	}
-	ip/dhcp -d -p /net/ipifc/$x
+	ip/dhcp -p /net/ipifc/$x
 	for tuple in `{cat /net/ndb}{
 		(name value)=${split '=' $tuple}
 		if{~ $name sys}{
@@ -162,9 +162,9 @@ fn usedhcp {
 		}
 	}
 	echo $sysname
-	cat /dev/sysname
+	#cat /dev/sysname
 	cat /net/ndb
-	cat /dev/sysname
+	#cat /dev/sysname
 }
 
 # 9front uses the $bootargs to gather

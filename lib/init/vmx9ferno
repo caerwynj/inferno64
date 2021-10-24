@@ -28,4 +28,3 @@ and {ndb/csquery tcp!master!styx}{ftest -d /n/rootdisk/dis}{
 	cp /n/master/Inferno/amd64/ipc64 /n/9fat/ipc64
 	cp /n/master/Inferno/386/9bootfat /n/9fat/9bootfat
 }
-

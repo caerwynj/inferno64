@@ -17,7 +17,7 @@ fn setup {
 
 	if {ftest -f $disk^/plan9} {
 		parts=($disk^/plan9*)
-	}{ parts=($disk^/data) }
+	}
 
 	for part in $parts {
 		if{ftest -f $part} {
@@ -31,7 +31,6 @@ if{~ $#disks 0}{
 	# set up any disk partitions
 	or { ftest -e /dev/sdctl } { bind -b '#S' /dev }
 	for disk in /dev/sd* { setup $disk }
-	sysname=`{cat /dev/sysname}
 
 	# set up any fs(3) partitions
 	if {! ftest -e /dev/fs/ctl && ftest -e '#k/fs'} {
