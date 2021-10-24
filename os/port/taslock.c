@@ -63,8 +63,11 @@ lock(Lock *l)
 	if(up)
 		up->nlocks++;	/* prevent being scheded */
 	if(tas(&l->key) == 0){ /* got the lock on the 1st attempt, done */
-		if(up)
-			up->lastlock = l;
+		if(up){
+				up->lastlock = l;
+				l->priority = up->priority;
+				up->priority = PriLock;
+			}
 		l->pc = pc;
 		l->p = up;
 		l->m = MACHP(m->machno);
@@ -205,20 +208,22 @@ unlock(Lock *l)
 	}
 #endif
 	if(l->key == 0)
-		print("unlock(%#p): not locked: pc %#p\n",
-			l, getcallerpc(&l));
+		print("unlock(%#p): not locked: pc %#p up->pid %d up->text %s\n",
+			l, getcallerpc(&l), up->pid, up->text);
 	if(l->isilock)
-		print("unlock(%#p) of ilock: pc %#p, held by %#p\n",
-			l, getcallerpc(&l), l->pc);
+		print("unlock(%#p) of ilock: pc %#p, held by %#p up->pid %d up->text %s\n",
+			l, getcallerpc(&l), l->pc, up->pid, up->text);
 	if(l->p != up){
-		print("unlock(%#p): up changed: pc %#p, acquired at pc %#p, lock p %#p, unlock up %#p\n",
-			l, getcallerpc(&l), l->pc, l->p, up);
+		print("unlock(%#p): up changed: pc %#p, acquired at pc %#p,"
+				" lock p %#p, unlock up %#p up->pid %d up->text %s up->mach->machno %d\n",
+			l, getcallerpc(&l), l->pc, l->p, up, up->pid, up->text, up->mach->machno);
 		dumpaproc(l->p);
 		dumpaproc(up);
 	}
 	pri = l->priority;
-	l->m = l->p = nil;
 	l->pc = 0;
+	l->p = nil;
+	l->m = nil;
 	coherence();
 	l->key = 0;
 
@@ -261,8 +266,10 @@ iunlock(Lock *l)
 		print("iunlock(%#p) while lo: pc %#p, held by %#p\n", l, getcallerpc(&l), l->pc);
 
 	sr = l->sr;
-	l->m = l->p = nil;
-	l->sr = l->pc = 0;
+	l->sr = 0;
+	l->pc = 0;
+	l->p = nil;
+	l->m = nil;
 	coherence();
 	l->key = 0;
 	m->ilockdepth--;

@@ -210,7 +210,7 @@ ready(Proc *p)
 	Schedq *rq;
 
 	if(p->state == Ready){
-		print("double ready %s %zud pc %p\n", p->text, p->pid, getcallerpc(&p));
+		print("double ready %s %ud pc %p\n", p->text, p->pid, getcallerpc(&p));
 		return;
 	}
 
@@ -222,7 +222,7 @@ ready(Proc *p)
 	}
 */
 
-/* 9front does this. Not sure what it does yet
+	/* 9front does this. Not sure what it does yet
 	if(up != p && (p->wired == nil || p->wired == MACHP(m->machno)))
 		m->readied = p;	*//* group scheduling */
 
@@ -376,7 +376,7 @@ found:
 		goto loop;
 	}
 	if(p->state != Ready)
-		print("runproc %s %zud %s\n", p->text, p->pid, statename[p->state]);
+		print("runproc %s %ud %s\n", p->text, p->pid, statename[p->state]);
 	unlock(runq);
 
 	p->state = Scheding;
@@ -472,7 +472,7 @@ procinit(void)
 	p = xalloc(conf.nproc*sizeof(Proc));
 	if(p == nil){
 		xsummary();
-		panic("cannot allocate %zud procs (%zudMB)", conf.nproc, conf.nproc*sizeof(Proc)/(1024*1024));
+		panic("cannot allocate %ud procs (%udMB)", conf.nproc, conf.nproc*sizeof(Proc)/(1024*1024));
 	}
 	procalloc.arena = p;
 	procalloc.free = p;
@@ -509,7 +509,7 @@ sleep(Rendez *r, int (*f)(void*), void *arg)
 	s = splhi();
 
 	if(up->nlocks)
-		print("process %zd name %s sleeps with %d locks held,"
+		print("process %d name %s sleeps with %d locks held,"
 				" last lock %#p locked at pc %#p, sleep called from %#p\n",
 			up->pid, up->text, up->nlocks,
 			up->lastlock, up->lastlock->pc, getcallerpc(&r));
@@ -517,7 +517,7 @@ sleep(Rendez *r, int (*f)(void*), void *arg)
 	lock(r);
 	lock(&up->rlock);
 	if(r->p != nil){
-		print("double sleep called from %#p, %zud %zud\n", getcallerpc(&r), r->p->pid, up->pid);
+		print("double sleep called from %#p, %ud %ud\n", getcallerpc(&r), r->p->pid, up->pid);
 		dumpstack();
 		panic("sleep");
 	}
@@ -585,7 +585,7 @@ void
 tsleep(Rendez *r, int (*fn)(void*), void *arg, s32 ms)
 {
 	if(up->tt != nil){
-		print("%s %lud: tsleep timer active: mode %d, tf %#p, pc %#p\n",
+		print("%s %ud: tsleep timer active: mode %d, tf %#p, pc %#p\n",
 			up->text, up->pid, up->tmode, up->tf, getcallerpc(&r));
 		timerdel(up);
 	}

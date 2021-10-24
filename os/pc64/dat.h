@@ -34,9 +34,9 @@ typedef struct Vctl	Vctl;
 struct Lock
 {
 	u32	key;
-	u32	sr;
-	uintptr	pc;
-	u32	pri;
+	u32	sr;	/* value returned by splhi() */
+	uintptr	pc;	/* lock() caller */
+	u32	priority;
 	void *p;	/* Proc */
 	Mach *m;
 	u16 isilock;

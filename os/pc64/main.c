@@ -233,6 +233,7 @@ machinit(void)
 	m->pml4 = pml4;
 	m->gdt = gdt;
 	m->perf.period = 1;
+	m->ilockdepth = 0;
 
 	/*
 	 * For polled uart output at boot, need
@@ -302,7 +303,7 @@ userinit(void)
 	 * Kernel Stack
 	 *
 	 * N.B. make sure there's
-	 *	4 bytes for gotolabel's return PC
+	 *	8 bytes for gotolabel's return PC
 	 */
 	p->sched.pc = (uintptr)init0;
 	p->sched.sp = (uintptr)p->kstack+KSTACK-sizeof(uintptr);

@@ -4,38 +4,103 @@
 #include	"dat.h"
 #include	"fns.h"
 
-Talarm	talarm;
+static Alarms	alarms;
+static Rendez	alarmr;
+
+void
+alarmkproc(void*)
+{
+	Proc *rp;
+	ulong now, when;
+
+	while(waserror())
+		;
+
+	for(;;){
+		now = MACHP(0)->ticks;
+		qlock(&alarms);
+		for(rp = alarms.head; rp != nil; rp = rp->palarm){
+			if((when = rp->alarm) == 0)
+				continue;
+			if((long)(now - when) < 0)
+				break;
+/* TODO		if(!canqlock(&rp->debug))
+				break;
+			if(rp->alarm != 0){
+				postnote(rp, 0, "alarm", NUser);
+				rp->alarm = 0;
+			}
+			qunlock(&rp->debug);
+*/
+		}
+		alarms.head = rp;
+		qunlock(&alarms);
+
+		sleep(&alarmr, return0, 0);
+	}
+}
 
 /*
- *  called every clock tick
+ *  called every clock tick on cpu0
  */
 void
 checkalarms(void)
 {
 	Proc *p;
-	ulong now;
+	u64 now, when;
 
-	now = MACHP(0)->ticks;
-
-	if(talarm.list == 0 || canlock(&talarm) == 0)
-		return;
-
-	for(;;) {
-		p = talarm.list;
-		if(p == 0)
-			break;
-
-		if(p->twhen == 0) {
-			talarm.list = p->tlink;
-			p->trend = 0;
-			continue;
-		}
-		if(now < p->twhen)
-			break;
-		wakeup(p->trend);
-		talarm.list = p->tlink;
-		p->trend = 0;
+	p = alarms.head;
+	if(p != nil){
+		now = MACHP(0)->ticks;
+		when = p->alarm;
+		if(when == 0 || (s64)(now - when) >= 0)
+			wakeup(&alarmr);
 	}
+}
 
-	unlock(&talarm);
+ulong
+procalarm(ulong time)
+{
+	Proc **l, *f;
+	u64 when, old;
+
+	when = MACHP(0)->ticks;
+	old = up->alarm;
+	if(old) {
+		old -= when;
+		if((long)old > 0)
+			old = tk2ms(old);
+		else
+			old = 0;
+	}
+	if(time == 0) {
+		up->alarm = 0;
+		return old;
+	}
+	when += (u64)ms2tk(time);
+	if(when == 0)
+		when = 1;
+
+	qlock(&alarms);
+	l = &alarms.head;
+	for(f = *l; f; f = f->palarm) {
+		if(up == f){
+			*l = f->palarm;
+			break;
+		}
+		l = &f->palarm;
+	}
+	l = &alarms.head;
+	for(f = *l; f; f = f->palarm) {
+		time = f->alarm;
+		if(time != 0 && (long)(time - when) >= 0)
+			break;
+		l = &f->palarm;
+	}
+	up->palarm = f;
+	*l = up;
+	up->alarm = when;
+	qunlock(&alarms);
+
+	return old;
 }
