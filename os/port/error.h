@@ -29,6 +29,7 @@ extern char Enolisten[];	/* not announced */
 extern char Ehungup[];		/* i/o on hungup channel */
 extern char Ebadctl[];		/* bad process or channel control request */
 extern char Enodev[];		/* no free devices */
+extern char Eprocdied[];	/* process exited */
 extern char Enoenv[];		/* no free environment resources */
 extern char Ethread[];		/* thread exited */
 extern char Estopped[];		/* thread must be stopped */
@@ -54,6 +55,7 @@ extern char Eshort[];		/* i/o count too small */
 extern char Enobitstore[];	/* out of screen memory */
 extern char Egreg[];		/* jim'll fix it */
 extern char Ebadspec[];		/* bad attach specifier */
+extern char Enoreg[];		/* process has no saved registers */
 extern char Enoattach[];	/* mount/attach disallowed */
 extern char Eshortstat[];	/* stat buffer too small */
 extern char Ebadstat[];		/* malformed stat buffer */

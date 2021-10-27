@@ -14,5 +14,3 @@ ip/dhcp -p /net/ipifc/$x
 ndb/dns -r
 ndb/cs
 #bind -a '#scs' /net
-
-

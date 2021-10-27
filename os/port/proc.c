@@ -6,13 +6,14 @@
 #include	"../port/error.h"
 #include	<interp.h>
 
-Ref	pidalloc;
+/* Ref	pidalloc; */
 int	schedgain = 30;	/* units in seconds */
 int	nrdy;
 
 ulong	delayedscheds;	/* statistics */
 ulong	skipscheds;
 ulong	preempts;
+s32	prevpid;
 
 /* bitmap of priorities of procs ready to run. When any process is
  * queued, the bit corresponding to that priority gets set.
@@ -33,7 +34,6 @@ static struct Procalloc
  * Now, inferno maintains multiple Schedq based on priority.
  */
 static Schedq	runq[Nrq];
-static ulong	runvec;
 int	nrdy;
 
 char *statename[] =
@@ -52,6 +52,9 @@ char *statename[] =
 	"Rendez",
 	"Waitrelease",
 };
+
+static void pidinit(void);
+static void pidfree(Proc*);
 
 /*
  * The kernel scheduler state is in m->sched. It is set to the address
@@ -390,6 +393,16 @@ found:
 	if(pt != nil)
 		pt(p, SRun, 0);
 */
+/*	if(p->pid != prevpid){
+		prevpid = p->pid;
+		if(p->type == Interp && p->iprog != nil){
+			print(" %d:%s,%d ",
+				p->pid, p->text, ((Prog*)p->iprog)->pid);
+		}else
+			print(" %d:%s", p->pid, p->text);
+	}else
+		print(".");
+*/
 	return p;
 }
 
@@ -407,9 +420,8 @@ setpri(int priority)
 }
 
 /*
- * TODO
- *	add procwired() to set p->wired
- *  pid reuse
+ * not using memset 0 on the Proc structure
+ * to avoid leaking KSTACK
  */
 Proc*
 newproc(void)
@@ -451,10 +463,13 @@ newproc(void)
 	p->mp = 0;
 	p->wired = 0;
 	p->edf = nil;
+	p->noteid = 0;
+	p->trace = 0;
 
-	p->pid = incref(&pidalloc);
+	/* replaced with pidalloc() in kproc */
+/*	p->pid = incref(&pidalloc);
 	if(p->pid == 0)
-		panic("pidalloc");
+		panic("pidalloc"); */
 	if(p->kstack == 0)
 		p->kstack = smalloc(KSTACK);
 	addprog(p);
@@ -482,6 +497,7 @@ procinit(void)
 		p->qnext = p+1;
 	p->qnext = 0;
 
+	pidinit();
 	/* debugkey('p', "processes", procdump, 0); */
 }
 
@@ -643,7 +659,10 @@ wakeup(Rendez *r)
 	return p;
 }
 
-
+/* TODO replace with postnote()
+ * man 9 tsleep of inferno
+ * man 9 postnote of 9front
+ */
 void
 swiproc(Proc *p, int interp)
 {
@@ -697,11 +716,15 @@ pexit(char*, int)
 /*
 	edfstop(up);
 */
+	qlock(&up->debug);
+	pidfree(up);
+	qunlock(&up->debug);
 	up->state = Moribund;
 	sched();
 	panic("pexit");
 }
 
+/* 9front uses a macro for this. why? */
 Proc*
 proctab(int i)
 {
@@ -753,6 +776,8 @@ kproc(char *name, void (*func)(void *), void *arg, int flags)
 /* TODO		freebroken(); */
 		resrcwait("no procs for kproc");
 	}
+
+	qlock(&p->debug);
 	p->psstate = 0;
 	p->kp = 1;
 
@@ -778,9 +803,23 @@ kproc(char *name, void (*func)(void *), void *arg, int flags)
 		p->env->egrp = eg;
 	}
 
+/*	p->nnote = 0;
+	p->notify = nil;
+	p->notified = 0;
+	p->notepending = 0;*/
+
+	p->procmode = 0640;
+	p->privatemem = 1;
+	p->noswap = 1;
+	p->hang = 0;
+	p->kp = 1;
 	kprocchild(p, func, arg);
 
 	strcpy(p->text, name);
+
+	pidalloc(p);
+
+	qunlock(&p->debug);
 
 	ready(p);
 }
@@ -1020,4 +1059,208 @@ s32
 getpid(void)
 {
 	return up->pid;
+}
+
+/*
+ *  A Pid structure is a reference counted hashtable entry
+ *  with "pid" being the key and "procindex" being the value.
+ *  A entry is allocated atomically by changing the key from
+ *  negative or zero to the positive process id number.
+ *  Pid's outlive ther Proc's as long as other processes hold
+ *  a reference to them such as noteid or parentpid.
+ *  This prevents pid reuse when the pid generator wraps.
+ */
+typedef struct Pid Pid;
+struct Pid
+{
+	Ref;
+	long	pid;
+	int	procindex;
+};
+
+enum {
+	PIDMASK = 0x7FFFFFFF,
+	PIDSHIFT = 4,	/* log2 bucket size of the hash table */
+};
+
+static Pid *pidhashtab;
+static ulong pidhashmask;
+
+static void
+pidinit(void)
+{
+	/*
+	 * allocate 3 times conf.nproc Pid structures for the hash table
+	 * and round up to a power of two as each process can reference
+	 * up to 3 unique Pid structures:
+	 *	- pid
+	 *	- noteid
+	 *	- parentpid
+	 */
+	pidhashmask = 1<<PIDSHIFT;
+	while(pidhashmask < conf.nproc*3)
+		pidhashmask <<= 1;
+
+	pidhashtab = xalloc(pidhashmask * sizeof(pidhashtab[0]));
+	if(pidhashtab == nil){
+		xsummary();
+		panic("cannot allocate pid hashtable of size %lud", pidhashmask);
+	}
+
+	/* make it a mask */
+	pidhashmask--;
+}
+
+static Pid*
+pidlookup(long pid)
+{
+	Pid *i, *e;
+	long o;
+
+	i = &pidhashtab[(pid<<PIDSHIFT) & pidhashmask];
+	for(e = &i[1<<PIDSHIFT]; i < e; i++){
+		o = i->pid;
+		if(o == pid)
+			return i;
+		if(o == 0)
+			break;
+	}
+	return nil;
+}
+
+/*
+ *  increment the reference count of a pid (pid>0)
+ *  or allocate a new one (pid<=0)
+ */
+static Pid*
+pidadd(long pid)
+{
+	Pid *i, *e;
+	long o;
+
+	if(pid > 0){
+		i = pidlookup(pid);
+		if(i != nil)
+			incref(i);
+		return i;
+	}
+Again:
+	do {
+		static Ref gen;
+		pid = incref(&gen) & PIDMASK;
+	} while(pid == 0 || pidlookup(pid) != nil);
+
+	i = &pidhashtab[(pid<<PIDSHIFT) & pidhashmask];
+	for(e = &i[1<<PIDSHIFT]; i < e; i++){
+		while((o = i->pid) <= 0){
+			if(cmpswap((s32*)&i->pid, o, pid)){
+				incref(i);
+				return i;
+			}
+		}
+	}
+	/* bucket full, try a different pid */
+	goto Again;
+}
+
+/*
+ *  decrement reference count of a pid and free it
+ *  when no references are remaining
+ */
+static void
+piddel(Pid *i)
+{
+	if(decref(i))
+		return;
+	i->pid = -1;	/* freed */
+}
+
+int
+procindex(ulong pid)
+{
+	Pid *i;
+
+	i = pidlookup(pid);
+	if(i != nil){
+		int x = i->procindex;
+		if(proctab(x)->pid == pid)
+			return x;
+	}
+	return -1;
+}
+
+ulong
+setnoteid(Proc *p, ulong noteid)
+{
+	Pid *i, *o;
+
+	/*
+	 * avoid allocating a new pid when we are the only
+	 * user of the noteid
+	 */
+	o = pidlookup(p->noteid);
+	if(noteid == 0 && o->ref == 1)
+		return o->pid;
+
+	i = pidadd(noteid);
+	if(i == nil)
+		error(Ebadarg);
+	piddel(o);
+	return p->noteid = i->pid;
+}
+
+/*
+static ulong
+setparentpid(Proc *p, Proc *pp)
+{
+	Pid *i;
+
+	i = pidadd(pp->pid);
+	return p->parentpid = i->pid;
+} */
+
+/*
+ *  allocate pid, noteid and parentpid to a process
+ */
+ulong
+pidalloc(Proc *p)
+{
+	Pid *i;
+
+	/* skip for the boot process */
+/*	if(up != nil)
+		setparentpid(p, up);*/
+	i = pidadd(0);
+	i->procindex = (int)(p - procalloc.arena);
+
+	if(p->noteid == 0){
+		incref(i);
+		p->noteid = i->pid;
+	} else
+		pidadd(p->noteid);
+
+	return p->pid = i->pid;
+}
+
+/*
+ *  release pid, noteid and parentpid from a process
+ */
+static void
+pidfree(Proc *p)
+{
+	Pid *i;
+
+	i = pidlookup(p->pid);
+	piddel(i);
+
+	if(p->noteid != p->pid)
+		i = pidlookup(p->noteid);
+	piddel(i);
+
+/*	if(p->parentpid != 0)
+		piddel(pidlookup(p->parentpid));
+
+	p->pid = p->noteid = p->parentpid = 0;
+*/
+	p->pid = p->noteid = 0;
 }

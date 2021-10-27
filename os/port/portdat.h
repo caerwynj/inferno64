@@ -503,7 +503,7 @@ struct Proc
 	void*		iprog;
 	Osenv*		env;
 	Osenv		defenv;
-	s32		swipend;	/* software interrupt pending for Prog */
+	s32		swipend;	/* software interrupt pending for Prog TODO replace with notepending? */
 	Lock		sysio;		/* note handler lock */
 	char*		psstate;	/* What /proc/#/status reports */
 	s32		pid;
@@ -557,6 +557,16 @@ struct Proc
 	s64	pcycles;
 
 	PMMU;				/* TODO obsolete? machine specific mmu state */
+
+	/* TODO 9front fields that need to incorporated into 9ferno */
+	/* TODO replace swiproc() with postnote() */
+	u32	noteid;		/* Equivalent of note group */
+	QLock	debug;		/* to access debugging elements of User */
+	int	trace;		/* process being traced? */
+	ulong	procmode;	/* proc device default file mode */
+	int	privatemem;	/* proc does not let anyone read mem */
+	int	noswap;		/* process is not swappable */
+	int	hang;		/* hang at next exec for debug */
 };
 
 enum

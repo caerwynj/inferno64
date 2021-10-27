@@ -6,6 +6,7 @@ dev
 	env
 	mnt
 	pipe
+#	proc
 	prog
 	rtc
 	srv

@@ -299,6 +299,8 @@ userinit(void)
 
 	strcpy(p->text, "interp");
 
+	pidalloc(p);
+
 	/*
 	 * Kernel Stack
 	 *
@@ -336,6 +338,8 @@ confinit(void)
 		pcnt = 70;
 	conf.ialloc = (((conf.npage*(100-pcnt))/100)/2)*BY2PG;
 	conf.nproc = 100 + ((conf.npage*BY2PG)/MiB)*5;
+	if(conf.nproc > 2000)
+		conf.nproc = 2000;
 	print("conf.npage %zd conf.ialloc %zud conf.nproc %d\n",
 			conf.npage, conf.ialloc, conf.nproc);
 	USED(maxmem);

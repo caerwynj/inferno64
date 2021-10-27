@@ -9,7 +9,6 @@
 bind -c '#e' /env
 
 load std
-
 mount {mntgen} /n
 
 # checked these to get this working
@@ -229,9 +228,9 @@ and {ftest -e '#e/bootargs'} {
 	#	special networking setup, disk setup
 	#	avoids putting machine specific stuff in devroot
 	and {! ~ $"sysname ''} {
-			ftest -f /lib/init/$sysname }{
-			/lib/init/$sysname
-		}
+		ftest -f /lib/init/$sysname }{
+		sh /lib/init/$sysname
+	}
 }
 
 # if I add /lib/sh/profile to devroot,

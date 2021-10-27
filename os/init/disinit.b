@@ -50,6 +50,7 @@ init(nil: ref Draw->Context, nil: list of string)
 	sys->bind("#S", "/dev", sys->MAFTER);	# Disks
 #	sys->bind("#T","/dev",sys->MAFTER);		# Touchscreen
 #	sys->bind("#W","/dev",sys->MAFTER);		# Flash
+#	sys->bind("#o", "/proc", sys->MREPL);	# proc device
 
 	# set clock
 	#	does not handle bootp provided time source
