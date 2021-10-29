@@ -125,6 +125,9 @@ MOVL $0xB8001, AX
 MOVB $15, BX
 MOVB BX, (AX)
 	JMP _idle1
+
+	to dumpstack
+JMP dumpstack(SB)
 */
 TEXT _warp64<>(SB), 1, $-4
 
@@ -595,7 +598,7 @@ TEXT _tas(SB), 1, $-4
 	RET
 
 TEXT cmpswap486(SB), 1, $-4
-TEXT cas(SB), 1, $-4
+/* TEXT cas(SB), 1, $-4 *//* ff uses this name */
 	MOVL	exp+8(FP), AX
 	MOVL	new+16(FP), BX
 	LOCK; CMPXCHGL BX, (RARG)

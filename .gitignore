@@ -358,3 +358,5 @@ os/pc64/pc64.root.s
 
 os/pc64/6.*
 os/pc64/*.i
+os/pc64/primitives.s
+os/pc64/words.s

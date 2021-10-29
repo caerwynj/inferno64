@@ -24,6 +24,7 @@ KTZERO=0x200000
 
 OBJ=\
 	l.$O\
+	ff.$O\
 	fpu.$O\
 	portclock.$O\
 	tod.$O\
@@ -88,6 +89,14 @@ devether.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
 fault386.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
 main.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h rebootcode.i
 trap.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
+
+ff.$O:	primitives.s words.s
+primitives.s:	primitives.awk primitives-nasm.s
+	cat primitives-nasm.s | ./primitives.awk > primitives.s
+words.s:	words.awk words-nasm.s
+	cat words-nasm.s | ./words.awk > words.s
+
+CLEANEXTRA=words.s primitives.s
 
 devether.$O $ETHERS:	etherif.h ../port/netif.h
 $IP devip.$O:		../ip/ip.h

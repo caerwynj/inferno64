@@ -79,17 +79,19 @@
 #define CPU0END		(KDZERO+0x12000ull)	/* CPU0MACH + (MACHSIZE = 64 KiB = 0x10 000) */
 										/* MACHSIZE includes stack size */
 #define CPU0SP		(KDZERO+0x12000ull)
+#define FFSTART		(KDZERO+0x12000ull) /* FF stacks, system variables, tib, word buffer */
+#define FFEND		(KDZERO+0x15000ull) /* 3 pages */
 /* 1 PD table has 512 entries
  * each entry maps to a 2MB page
  * 512 entries maps 1GiB and occupies 512*8 = 4096 bytes
  */
-#define PML4ADDR	(KDZERO+0x13000ull)
-#define PDPADDR		(KDZERO+0x14000ull)	/* KZERO=0 .. 512GiB */
-#define PD0ADDR		(KDZERO+0x15000ull)	/* KZERO=0 .. 1GiB */
-#define PT0ADDR		(KDZERO+0x16000ull)	/* KZERO=0 .. 2MiB */
-#define PT1ADDR		(KDZERO+0x17000ull)	/* 2MiB .. 4MiB */
-#define PT2ADDR		(KDZERO+0x18000ull)	/* 4MiB .. 6MiB */
-#define PT3ADDR		(KDZERO+0x19000ull)	/* 6MiB .. 8MiB */
+#define PML4ADDR	(KDZERO+0x15000ull)
+#define PDPADDR		(KDZERO+0x16000ull)	/* KZERO=0 .. 512GiB */
+#define PD0ADDR		(KDZERO+0x17000ull)	/* KZERO=0 .. 1GiB */
+#define PT0ADDR		(KDZERO+0x18000ull)	/* KZERO=0 .. 2MiB */
+#define PT1ADDR		(KDZERO+0x19000ull)	/* 2MiB .. 4MiB */
+#define PT2ADDR		(KDZERO+0x1a000ull)	/* 4MiB .. 6MiB */
+#define PT3ADDR		(KDZERO+0x1b000ull)	/* 6MiB .. 8MiB */
 						/* fill with page tables until KTZERO */
 
 /*

@@ -34,7 +34,7 @@ y.tab.h y.tab.c:	$YFILES
 	$YACC $YFLAGS $prereq
 
 clean-std:V:
-	rm -f *.[$OS] [$OS].out
+	rm -f *.[$OS] [$OS].out $CLEANEXTRA
 
 nuke-std:V:	clean-std
 	rm -f y.tab.? y.output y.error

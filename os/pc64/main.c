@@ -25,6 +25,7 @@ static  uchar *sp;	/* stack pointer for /boot */
 
 char bootdisk[KNAMELEN];
 
+extern void ffmain(void);	/* forth interpreter */
 /* until I sort out the mp initialization issue */
 extern void startaps(void);
 
@@ -113,9 +114,11 @@ showconfig(void)
 		"\tcpu0mach 0x%p cpu0sp 0x%p cpu0gdt 0x%p\n"
 		"\tcpu0pml4 0x%p cpu0pdp 0x%p  cpu0pd 0x%p\n"
 		"\tcpu0end 0x%p\n",
+		"\tetext 0x%p edata 0x%p end 0x%p\n",
 		(void*)KDZERO, CONFADDR,APBOOTSTRAP,
 		IDTADDR, CPU0MACH, CPU0SP, GDTADDR,
-		PML4ADDR, PDPADDR, PD0ADDR, CPU0END);
+		PML4ADDR, PDPADDR, PD0ADDR, CPU0END,
+		etext, edata, end);
 	print("Some page table entries\n");
 	ptedebug(1*MiB,"1 MiB");
 	ptedebug(2*MiB,"2 MiB");
@@ -144,6 +147,7 @@ main(void)
 	screeninit();
 	print("\nInferno release built at %lud\n", kerndate);
 	showconfig();
+ffmain();
 	cpuidentify();
 	meminit0();			/* builds the memmap */
 	doc("archinit");
