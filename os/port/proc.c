@@ -396,8 +396,8 @@ found:
 /*	if(p->pid != prevpid){
 		prevpid = p->pid;
 		if(p->type == Interp && p->iprog != nil){
-			print(" %d:%s,%d ",
-				p->pid, p->text, ((Prog*)p->iprog)->pid);
+			print(" %d:%s,%d %s ",
+				p->pid, p->text, ((Prog*)p->iprog)->pid, ((Prog*)p->iprog)->R.M->m->path);
 		}else
 			print(" %d:%s", p->pid, p->text);
 	}else

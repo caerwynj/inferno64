@@ -1,19 +1,26 @@
 #include "mem.h"
 
 /*
+
+The bigger goal is to replace the dis vm with ff
+ff outputs to screen now.
+But, the input needs to be fixed.
+make this into a devff like device that reads commands and outputs the result.
+
  ff kernel, amd64 9front variant
 
  Register usage:
 
  TOS: AX top of stack register
  SP:  SP parameter stack pointer, grows towards lower memory (downwards)
- RP:  BP return stack pointer, grows towards higher memory (upwards)
+ RP:  BP (= RARG) return stack pointer, grows towards higher memory (upwards)
  AP:  SI address pointer
  W:   DI work register (holds CFA)
  	BX, CX, DX, R8-R15 temporary registers
 
-Memory map:
+plan9 assembler puts the first argument in BP (RARG), return value in AX.
 
+Memory map:
 Return stack 4096 bytes at FFSTART
 	|
 	|
@@ -43,6 +50,103 @@ SSTACK_END = FFEND
  */
 #include "primitives.s"
 
+/*
+plan9 assembler puts the first argument in BP (RARG), return value in AX.
+	For calling a C function with a parameter:
+		Store AX somewhere
+		POPQ AX
+		PUSHA
+		Store ff's SP
+		Restore C's SP
+		POPA	-- this should not be needed as C is caller save
+		MOVQ from somewhere to BP
+		-- call the c function
+	For calling a C function without a parameter:
+		PUSHA
+		Store ff's SP
+		Restore C's SP
+		POPA	-- this should not be needed as C is caller save
+		-- call the c function
+	For coming back from a C function: -- ignoring the return value
+		PUSHA	-- this should not be needed as C is caller save
+		Store C's SP
+		Restore ff's SP
+		POPA
+	ignoring the EFLAGS register, for now
+	not bothering with maintaining the values of the temporary registers
+*/
+#define PUSHALL \
+	PUSHQ	R13; \
+	PUSHQ	R12; \
+	PUSHQ	R11; \
+	PUSHQ	R10; \
+	PUSHQ	R9; \
+	PUSHQ	R8; \
+	PUSHQ	BP; \
+	PUSHQ	DI; \
+	PUSHQ	SI; \
+	PUSHQ	DX; \
+	PUSHQ	CX; \
+	PUSHQ	BX; \
+	PUSHQ	AX;
+#define POPALL \
+	POPQ	AX; \
+	POPQ	BX; \
+	POPQ	CX; \
+	POPQ	DX; \
+	POPQ	SI; \
+	POPQ	DI; \
+	POPQ	BP; \
+	POPQ	R8; \
+	POPQ	R9; \
+	POPQ	R10; \
+	POPQ	R11; \
+	POPQ	R12; \
+	POPQ	R13;
+#define PUSHREGS \
+	PUSHQ	BP; \
+	PUSHQ	DI; \
+	PUSHQ	SI; \
+	PUSHQ	AX;
+#define POPREGS \
+	POPQ	AX; \
+	POPQ	SI; \
+	POPQ	DI; \
+	POPQ	BP; \
+
+#define FF_TO_C_0 \
+	PUSHREGS; \
+	MOVQ SP, ffsp<>(SB); \
+	MOVQ csp<>(SB), SP; \
+	POPREGS;
+
+#define FF_TO_C_1 \
+	MOVQ AX, BX; \
+	POPQ AX; /* drop AX from the parameter stack */ \
+	FF_TO_C_0 \
+	MOVQ BX, BP; /* 1st argument in BP == RARG */
+
+/* ( 1st_parameter 2nd_parameter -- ) */
+#define FF_TO_C_2 /* for calling a c function with 2 parameters */ \
+	MOVQ AX, CX; \
+	POPQ AX; \
+	FF_TO_C_1 \
+	MOVQ CX, 8(SP) \
+
+/* ( 1st_parameter 2nd_parameter 3rd_parameter -- ) */
+#define FF_TO_C_3 /* for calling a c function with 3 parameters */ \
+	MOVQ AX, DX; \
+	POPQ AX; \
+	FF_TO_C_2 \
+	MOVQ DX, 16(SP) \
+
+/* no arguments when calling ff from C, for now */
+#define C_TO_FF \
+	PUSHREGS; \
+	MOVQ SP, csp<>(SB); \
+	MOVQ ffsp<>(SB), SP; \
+	POPREGS;
+
 TEXT	ffmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
 	/* The last dictionary entry address is stored in dtop.
 	 * The location of dtop is stored in the variable dp.
@@ -50,8 +154,13 @@ TEXT	ffmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
 	 * (link + name(1+2) + code field address = 24 bytes) of the dp
 	 * dictionary entry.
 	 */
-	MOVQ $mventry_dp+24(SB), BX	/* BX = dp parameter field address, which has the dtop address */
-	MOVQ (BX), BX	/* BX = *BX = dtop address */
+	PUSHREGS
+	MOVQ SP, csp<>(SB); /* store C stack pointer */
+	MOVQ $FFEND, SP	/* setting up stack */
+	/*
+	 * dtop address is stored in the parameter field address(24-32 bytes) of mventry_dp
+	 */
+	MOVQ mventry_dp+24(SB), BX	/* now, BX = dtop address */
 	MOVQ (BX), AX	/* AX = *BX = $LAST = boot word address (defined last, stored at dtop) */
 				/* if 6a allows multiple symbols per address, then 
 					the above 3 instructions would have been
@@ -69,7 +178,6 @@ TEXT	ffmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
 					 * skipping over docol as we do not need to save the SI
 					 * could have done LEAQ 24(AX), SI
 					 */
-	MOVQ $FFEND, SP	/* setting up stack, argc + argv */
 
 /* lodsl could make this simpler. But, this is more comprehensible
 	why not JMP* (DI)?
@@ -79,6 +187,12 @@ TEXT	ffmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
 		MOVQ (DI), BX; \
 		JMP* BX;
 
+	NEXT
+
+TEXT	ffprint(SB), 1, $-4
+	FF_TO_C_2
+	CALL screenput(SB)
+	C_TO_FF
 	NEXT
 
 TEXT	reset(SB), 1, $-4
@@ -93,6 +207,11 @@ TEXT	colon(SB), 1, $-4
 	MOVQ SI,(BP)
 	ADDQ $8, BP
 	LEAQ 8(DI), SI
+	NEXT
+
+TEXT	exitcolon(SB), 1, $-4
+	SUBQ $8, BP
+	MOVQ (BP), SI
 	NEXT
 
 TEXT	dodoes(SB), 1, $-4	/* ( -- a ) */
@@ -124,7 +243,6 @@ TEXT	fetch(SB), 1, $-4	/* ( a -- n) */
 	MOVQ (AX), AX
 	NEXT
 
-/* shouldn't it be (a n -- )? */
 TEXT	store(SB), 1, $-4	/* ( n a -- ) */
 	POPQ (AX)
 	POPQ AX
@@ -345,11 +463,6 @@ TEXT	sliteral(SB), 1, $-4	/* ( -- a n ) */
 	ADDQ $7, SI
 	ANDQ $~7, SI
 	NEXT
-
-TEXT	exitcolon(SB), 1, $-4
-	SUBQ $8, BP
-	MOVQ (BP), SI
-	NEXT  
 
 /* puts the top 2 entries of the data stack in the return stack */
 TEXT	doinit(SB), 1, $-4	/* ( hi lo -- ) */
@@ -613,5 +726,8 @@ DATA	htop(SB)/8, $0
 GLOBL	htop(SB), $8
 DATA	heapend(SB)/8, $0
 GLOBL	heapend(SB), $8
+
+GLOBL	ffsp<>(SB), $8
+GLOBL	csp<>(SB), $8
 
 	END

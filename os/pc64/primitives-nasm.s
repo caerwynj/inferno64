@@ -63,3 +63,4 @@ dict:
   MVENTRY "_end", textend, ffend, 4
   MENTRY "cas", cas, 3
   MENTRY "(deferred)", deferred, 10
+  MENTRY "ffprint", ffprint, 7

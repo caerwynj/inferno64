@@ -26,6 +26,9 @@ static  uchar *sp;	/* stack pointer for /boot */
 char bootdisk[KNAMELEN];
 
 extern void ffmain(void);	/* forth interpreter */
+extern intptr mventry_dp;
+extern intptr mc_dp;
+extern intptr dtop;
 /* until I sort out the mp initialization issue */
 extern void startaps(void);
 
@@ -82,6 +85,31 @@ writemsg(char *msg, int msglen)
 	nchars += msglen;
 }
 
+/* used by ff */
+void
+show_ff_return_stack(void)
+{
+	intptr* i;
+
+	for(i = (intptr*)0x112000; i<(intptr*)0x112020; i++){
+		print("0x%p: 0x%zx\n", i, *i);
+	}
+}
+
+void
+screenput(char *msg, int msglen)
+{
+	show_ff_return_stack();
+	print("msg %c, msglen %d\n", *msg, msglen);
+	if(screenputs != nil)
+		screenputs(msg, 1);
+	else
+		writemsg(msg, msglen);
+	print("\nscreenput exiting\n");
+	show_ff_return_stack();
+	print("\n");
+}
+
 void
 ptedebug(uintptr pa, char *desc)
 {
@@ -113,7 +141,7 @@ showconfig(void)
 		"\tkdzero 0x%p confaddr 0x%p apbootstrap 0x%p idtaddr 0x%p\n"
 		"\tcpu0mach 0x%p cpu0sp 0x%p cpu0gdt 0x%p\n"
 		"\tcpu0pml4 0x%p cpu0pdp 0x%p  cpu0pd 0x%p\n"
-		"\tcpu0end 0x%p\n",
+		"\tcpu0end 0x%p\n"
 		"\tetext 0x%p edata 0x%p end 0x%p\n",
 		(void*)KDZERO, CONFADDR,APBOOTSTRAP,
 		IDTADDR, CPU0MACH, CPU0SP, GDTADDR,
@@ -252,7 +280,7 @@ void
 init0(void)
 {
 	Osenv *o;
-	char buf[2*KNAMELEN];
+	/*char buf[2*KNAMELEN];*/
 
 	up->nerrlab = 0;
 

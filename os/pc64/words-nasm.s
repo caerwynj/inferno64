@@ -264,6 +264,7 @@ L52:
  VENTRY `stdin`, v_stdin, 5
  VENTRY `stdout`, v_stdout, 6
  VENTRY `eof`, v_eof, 3
+
  CENTRY `key`, c_key, 3
  dd v_iobuf		; variable iobuf
  dd m_literal
@@ -285,23 +286,20 @@ L78:
  dd m_cfetch
 L79:
  dd m_exitcolon
- CENTRY `emit`, c_emit, 4	; ( character -- ) TODO correct the below stack notations
- dd v_iobuf			; variable iobuf
+
+ CENTRY `emit`, c_emit, 4	; ( character -- )
+ dd v_iobuf			; variable iobuf address
  dd m_cstore		; variable iobuf has character
- dd v_iobuf			; variable iobuf
+ dd v_iobuf			; variable iobuf address
  dd m_literal
- dd 1			; ( iobuf 1 -- )
- dd v_stdout			; variable stdout
- dd m_fetch		; ( iobuf 1 1 -- )
- dd m_fswrite		; ( -- ) writes out the character
- dd m_drop		; the return value of fswrite
+ dd 1				; ( iobuf 1 -- )
+ dd m_ffprint		; calls c screenput()
  dd m_exitcolon
+
  CENTRY `type`, c_type, 4	; ( addr n -- ) 
- dd v_stdout			; variable stdout, normally 1
- dd m_fetch		; ( addr n 1 -- )
- dd m_fswrite
- dd m_drop
+ dd m_ffprint
  dd m_exitcolon
+
  CENTRY `cr`, c_cr, 2
  dd m_literal
  dd 10			; ascii value of carriage return
@@ -909,6 +907,7 @@ L146:
  dd m_rpop
  dd c_parse
  dd m_exitcolon
+
  CENTRY `accept`, c_accept, 6	; ( a n -- ) TODO correct below stack notations
  dd m_xswap	; ( n a -- )
  dd m_dup	; ( n a a -- )
@@ -949,6 +948,7 @@ L149:		; n == 0 ( -- ) (R a a -- )
  dd m_rpop	; ( a a -- )
  dd m_minus	; ( 0 -- )
  dd m_exitcolon
+
  CENTRY `query`, c_query, 5
  dd v_eof	; variable eof
  dd c_off	; off sets variable eof = 0
@@ -974,6 +974,7 @@ L152:
  dd c_off
 L153:
  dd m_exitcolon
+
  CENTRY `refill`, c_refill, 6
  dd v_blk
  dd m_fetch
@@ -1699,6 +1700,7 @@ L246:
  dd c_cr
  dd c_abort
  dd m_exitcolon
+
  CENTRY `quit`, c_quit, 4 ; TODO correct below stack notations
  dd m_reset ; initialize return stack
  dd m_clear	; SP = sstack_end, initialize data stack
@@ -1720,6 +1722,7 @@ L254:
  dd m_jump
  dd L253
  dd m_exitcolon
+
  CENTRY `(abort)`, c_parenabort, 7 ; TODO correct below stack notations
  dd v_state	; ( v_state -- )
  dd c_off		; off sets variable state = 0
@@ -1736,6 +1739,7 @@ L254:
  dd m_store	; variable stdout = 1
  dd c_quit	; quit resets return stack and data stack
  dd m_exitcolon
+
  CENTRY `oldboot`, c_oldboot, 7 ; TODO correct below stack notations
  dd m_reset
  dd m_clear	; SP = sstack_end
