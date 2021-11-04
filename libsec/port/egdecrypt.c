@@ -1,6 +1,6 @@
 #include "os.h"
-#include <mp.h>
-#include <libsec.h>
+#include "../include/mp.h"
+#include "libsec.h"
 
 mpint*
 egdecrypt(EGpriv *priv, mpint *in, mpint *out)

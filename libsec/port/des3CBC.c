@@ -1,5 +1,5 @@
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 // Because of the way that non multiple of 8
 // buffers are handled, the decryptor must

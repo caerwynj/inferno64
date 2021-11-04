@@ -1,5 +1,5 @@
 #include "os.h"
-#include <mp.h>
+#include "../include/mp.h"
 #include "dat.h"
 
 static mpdigit _mptwodata[1] = { 2 };

@@ -1,6 +1,6 @@
 #include "os.h"
 #include <bio.h>
-#include <libsec.h>
+#include "libsec.h"
 
 enum{ ThumbTab = 1<<10 };
 

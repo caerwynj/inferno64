@@ -8,7 +8,7 @@ and including the changes to block number and nonce defined in RFC7539
 */
 
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 /* from chachablock.$O */
 extern void _chachablock(u32int x[16], int rounds);

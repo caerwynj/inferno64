@@ -1,5 +1,5 @@
 #include "os.h"
-#include <mp.h>
+#include "../include/mp.h"
 #include "dat.h"
 
 // division ala knuth, seminumerical algorithms, pp 237-238

@@ -1,5 +1,5 @@
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 #define Maxrand	((1UL<<31)-1)
 

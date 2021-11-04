@@ -1,5 +1,5 @@
 #include "os.h"
-#include <mp.h>
+#include "../include/mp.h"
 void jacobian_new(mpint *x, mpint *y, mpint *z, mpint *X, mpint *Y, mpint *Z){
 	mpassign(x, X);
 	mpassign(y, Y);

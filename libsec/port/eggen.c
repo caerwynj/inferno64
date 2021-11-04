@@ -1,6 +1,6 @@
 #include "os.h"
-#include <mp.h>
-#include <libsec.h>
+#include "../include/mp.h"
+#include "libsec.h"
 
 EGpriv*
 eggen(int nlen, int rounds)

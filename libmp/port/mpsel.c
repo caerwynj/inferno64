@@ -1,5 +1,5 @@
 #include "os.h"
-#include <mp.h>
+#include "../include/mp.h"
 #include "dat.h"
 
 // res = s != 0 ? b1 : b2

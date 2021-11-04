@@ -754,6 +754,7 @@ struct Uart
 };
 
 extern	Uart*	consuart;
+extern	int	rdbstarted;
 
 enum
 {

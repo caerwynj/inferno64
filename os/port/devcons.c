@@ -11,6 +11,7 @@
 
 extern int cflag;
 extern int keepbroken;
+extern int rdbstarted;
 
 void	(*serwrite)(char *, int);
 
@@ -167,7 +168,10 @@ putstrn0(char *str, int n, int usewrite)
 		screenputs(str, n);
 	}
 
+	if(rdbstarted == 1)
+		return;
 	if(serialoq == nil){
+		uartputs("putstrn0 ", 9);
 		uartputs(str, n);
 		return;
 	}

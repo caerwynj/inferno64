@@ -1,6 +1,6 @@
 #include "os.h"
-#include <mp.h>
-#include <libsec.h>
+#include "../include/mp.h"
+#include "libsec.h"
 
 // find a prime p of length n and a generator alpha of Z^*_p
 // Alg 4.86 Menezes et al () Handbook, p.164

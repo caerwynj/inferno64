@@ -6,13 +6,11 @@
 #include "io.h"
 #include "ureg.h"
 
-/*
- * alternative debug protocol for plan 9's rdbfs(4) for plan 9's own acid
- */
-#define DBG	if(0)scrprint
+int rdbstarted;
+
+#define DBG	if(1)scrprint
 #pragma varargck argpos scrprint 1
 static Ureg ureg;
-extern Queue *klogq;
 
 static void
 scrprint(char *fmt, ...)

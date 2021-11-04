@@ -1,6 +1,6 @@
 #include "os.h"
-#include <mp.h>
-#include <libsec.h>
+#include "../include/mp.h"
+#include "libsec.h"
 
 uchar key[] = "Jefe";
 uchar data[] = "what do ya want for nothing?";

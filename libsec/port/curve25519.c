@@ -46,7 +46,7 @@
  * from the sample implementation.
  */
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 typedef vlong felem;
 

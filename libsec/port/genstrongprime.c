@@ -1,6 +1,6 @@
 #include "os.h"
-#include <mp.h>
-#include <libsec.h>
+#include "../include/mp.h"
+#include "libsec.h"
 
 // Gordon's algorithm for generating a strong prime
 //	Menezes et al () Handbook, p.150

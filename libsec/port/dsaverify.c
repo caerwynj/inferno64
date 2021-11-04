@@ -1,6 +1,6 @@
 #include "os.h"
-#include <mp.h>
-#include <libsec.h>
+#include "../include/mp.h"
+#include "libsec.h"
 
 int
 dsaverify(DSApub *pub, DSAsig *sig, mpint *m)

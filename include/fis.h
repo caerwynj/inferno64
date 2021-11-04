@@ -1,5 +1,5 @@
 #pragma	lib	"libfis.a"
-#pragma	src	"/usr/inferno/libfis"
+#pragma	src	"/libfis"
 
 /* ata errors */
 enum {

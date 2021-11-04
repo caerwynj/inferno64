@@ -1,5 +1,5 @@
 #include "os.h"
-#include <mp.h>
+#include "../include/mp.h"
 void secp384r1(mpint *p, mpint *a, mpint *b, mpint *x, mpint *y, mpint *n, mpint *h){
 	strtomp("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF", nil, 16, p);
 	uitomp(3UL, a);

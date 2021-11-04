@@ -2,9 +2,8 @@
  * sata fises and sas frames
  * copyright © 2009-2010 erik quanstrom
  */
-#include <u.h>
-#include <libc.h>
-#include <fis.h>
+#include "lib9.h"
+#include "fis.h"
 
 static char *flagname[9] = {
 	"lba",

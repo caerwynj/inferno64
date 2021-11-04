@@ -1,5 +1,5 @@
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 static void
 load128(uchar b[16], u32 W[4])

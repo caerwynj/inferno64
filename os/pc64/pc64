@@ -6,7 +6,7 @@ dev
 	env
 	mnt
 	pipe
-#	proc
+	proc
 	prog
 	rtc
 	srv
@@ -147,6 +147,7 @@ port
 	exportfs
 	inferno
 	iomap
+	irq
 	latin1
 	nocache
 	nodynld
@@ -157,6 +158,7 @@ port
 	qio
 	qlock
 	random
+	rdb
 	swcursor
 	sysfile
 	taslock

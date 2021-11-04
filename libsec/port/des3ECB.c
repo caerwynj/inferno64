@@ -1,5 +1,5 @@
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 // I wasn't sure what to do when the buffer was not
 // a multiple of 8.  I did what lacy's cryptolib did

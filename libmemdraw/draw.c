@@ -1640,7 +1640,7 @@ static void
 writebyte(Param *p, uchar *w, Buffer src)
 {
 	Memimage *img;
-	int i, isalpha, isgrey, nb, delta, dx, adelta;
+	int i, isalph, isgrey, nb, delta, dx, adelta;
 	uchar ff, *red, *grn, *blu, *grey, *alpha;
 	u32 u, mask;
 
@@ -1657,11 +1657,11 @@ writebyte(Param *p, uchar *w, Buffer src)
 	nb = img->depth/8;
 	mask = (nb==4) ? 0 : ~((1<<img->depth)-1);
 
-	isalpha = img->flags&Falpha;
+	isalph = img->flags&Falpha;
 	isgrey = img->flags&Fgrey;
 	adelta = src.delta;
 
-	if(isalpha && (alpha == nil || alpha == &ones)){
+	if(isalph && (alpha == nil || alpha == &ones)){
 		ff = 0xFF;
 		alpha = &ff;
 		adelta = 0;
@@ -1686,7 +1686,7 @@ DBG print("|grey %.8ux...", u);
 DBG print("|rgb %.8ux...", u);
 		}
 
-		if(isalpha){
+		if(isalph){
 			u |= ((*alpha >> (8-img->nbits[CAlpha])) & img->mask[CAlpha]) << img->shift[CAlpha];
 			alpha += adelta;
 DBG print("|alpha %.8ux...", u);

@@ -1,10 +1,10 @@
 #include "lib9.h"
 #include "kernel.h"
-#include <isa.h>
+#include "isa.h"
 #include "interp.h"
 #include "runt.h"
-#include <mp.h>
-#include <libsec.h>
+#include "../include/mp.h"
+#include "libsec.h"
 #include "pool.h"
 #include "ipint.h"
 #include "raise.h"

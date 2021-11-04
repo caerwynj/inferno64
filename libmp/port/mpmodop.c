@@ -1,5 +1,5 @@
 #include "os.h"
-#include <mp.h>
+#include "../include/mp.h"
 
 /* operands need to have m->top+1 digits of space and satisfy 0 ≤ a ≤ m-1 */
 static mpint*

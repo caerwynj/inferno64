@@ -1,5 +1,5 @@
 #include "os.h"
-#include <mp.h>
+#include "../include/mp.h"
 #include <libsec.h>
 
 // chinese remainder theorem

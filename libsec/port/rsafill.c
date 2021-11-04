@@ -1,6 +1,6 @@
 #include "os.h"
-#include <mp.h>
-#include <libsec.h>
+#include "../include/mp.h"
+#include "libsec.h"
 
 RSApriv*
 rsafill(mpint *n, mpint *e, mpint *d, mpint *p, mpint *q)

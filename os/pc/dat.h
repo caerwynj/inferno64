@@ -1,6 +1,10 @@
+typedef struct BIOS32si	BIOS32si;
+typedef struct BIOS32ci	BIOS32ci;
 typedef struct Conf	Conf;
-typedef struct FPU	FPU;
-typedef struct FPenv	FPenv;
+typedef union FPsave	FPsave;
+typedef struct FPx87state FPx87state;
+typedef struct FPssestate FPssestate;
+typedef struct PFPU	PFPU;
 typedef ulong Instr;
 typedef struct ISAConf	ISAConf;
 typedef struct Label	Label;
@@ -15,19 +19,27 @@ typedef struct PCMslot	PCMslot;
 typedef struct Page	Page;
 typedef struct PMMU	PMMU;
 typedef struct Segdesc	Segdesc;
+typedef struct Tss	Tss;
+typedef s64		Tval;
 typedef struct Ureg	Ureg;
 typedef struct Vctl	Vctl;
 
+#pragma incomplete BIOS32si
+#pragma incomplete Pcidev
 #pragma incomplete Ureg
 #pragma incomplete Vctl
 
 
 struct Lock
 {
-	ulong	key;
-	ulong	sr;
-	ulong	pc;
-	ulong	pri;
+	u32	key;
+	u32	sr;	/* value returned by splhi() */
+	uintptr	pc;	/* lock() caller */
+	u32	priority;
+	void *p;	/* Proc */
+	Mach *m;
+	u16 isilock;
+	u32 lockcycles;
 };
 
 struct Label
@@ -36,20 +48,7 @@ struct Label
 	ulong	pc;
 };
 
-/*
- * FPenv.status
- */
-enum
-{
-	FPINIT,
-	FPACTIVE,
-	FPINACTIVE,
-};
-
-/*
- * This structure must agree with FPsave and FPrestore asm routines
- */
-struct FPenv
+struct	FPx87state		/* x87 fp state */
 {
 	ushort	control;
 	ushort	r1;
@@ -59,19 +58,50 @@ struct FPenv
 	ushort	r3;
 	ulong	pc;
 	ushort	selector;
-	ushort	r4;
+	ushort	opcode;
 	ulong	operand;
 	ushort	oselector;
-	ushort	r5;
+	ushort	r4;
+	uchar	regs[80];	/* floating point registers */
 };
 
-/*
- * This structure must agree with fpsave and fprestore asm routines
- */
-struct	FPU
+struct	FPssestate		/* SSE fp state */
 {
-	FPenv	env;
-	uchar	regs[80];	/* floating point registers */
+	ushort	fcw;		/* control */
+	ushort	fsw;		/* status */
+	ushort	ftw;		/* tag */
+	ushort	fop;		/* opcode */
+	ulong	fpuip;		/* pc */
+	ushort	cs;		/* pc segment */
+	ushort	rsrvd1;		/* reserved */
+	ulong	fpudp;		/* data pointer */
+	ushort	ds;		/* data pointer segment */
+	ushort	rsrvd2;
+	ulong	mxcsr;		/* MXCSR register state */
+	ulong	mxcsr_mask;	/* MXCSR mask register */
+	uchar	xregs[480];	/* extended registers */
+};
+
+union FPsave {
+	FPx87state;
+	FPssestate;
+};
+
+struct PFPU
+{
+	int	fpstate;
+	FPsave	*fpsave;
+};
+
+enum
+{
+	/* this is a state */
+	FPinit=		0,
+	FPactive=	1,
+	FPinactive=	2,
+
+	/* the following is a bit that can be or'd into the state */
+	FPillegal=	0x100,
 };
 
 struct Conf
@@ -90,9 +120,37 @@ struct Conf
 	int	nuart;		/* number of uart devices */
 };
 
+struct Segdesc
+{
+	ulong	d0;
+	ulong	d1;
+};
+
+/*
+ *  MMU stuff in proc
+ */
+#define NCOLOR 1
+#define	NPROCSEG	3	/* number of per process descriptors */
+struct PMMU
+{
+	Page*	mmupdb;			/* page directory base */
+	Page*	mmufree;		/* unused page table pages */
+	Page*	mmuused;		/* used page table pages */
+	Page*	kmaptable;		/* page table used by kmap */
+	uint	lastkmap;		/* last entry used by kmap */
+	int	nkmap;			/* number of current kmaps */
+
+	Segdesc	gdt[NPROCSEG];	/* per process descriptors */
+	Segdesc	*ldt;	/* local descriptor table */
+	int	nldt;	/* number of ldt descriptors allocated */
+	
+	u32int	dr[8];			/* debug registers */
+	void	*vmx;
+};
+
 #include "../port/portdat.h"
 
-typedef struct {
+typedef struct Tss {
 	ulong	link;			/* link (old TSS selector) */
 	ulong	esp0;			/* privilege level 0 stack pointer */
 	ulong	ss0;			/* privilege level 0 stack selector */
@@ -119,12 +177,6 @@ typedef struct {
 	ulong	gs;
 	ulong	ldt;			/* selector for task's LDT */
 	ulong	iomap;			/* I/O map base address + T-bit */
-} Tss;
-
-struct Segdesc
-{
-	ulong	d0;
-	ulong	d1;
 };
 
 struct Mach
@@ -190,19 +242,23 @@ struct
 struct PCArch
 {
 	char*	id;
-	int	(*ident)(void);		/* this should be in the model */
+	s32	(*ident)(void);		/* this should be in the model */
 	void	(*reset)(void);		/* this should be in the model */
-	int	(*serialpower)(int);	/* 1 == on, 0 == off */
-	int	(*modempower)(int);	/* 1 == on, 0 == off */
+	s32	(*serialpower)(s32);	/* 1 == on, 0 == off */
+	s32	(*modempower)(s32);	/* 1 == on, 0 == off */
 
 	void	(*intrinit)(void);
-	int	(*intrenable)(Vctl*);
-	int	(*intrvecno)(int);
-	int	(*intrdisable)(int);
+	s32	(*intrassign)(Vctl*);
+	s32	(*intrirqno)(s32, s32);
+	s32	(*intrvecno)(s32);
+	s32	(*intrspurious)(s32);
+	void	(*introff)(void);
+	void	(*intron)(void);
 
+	void	(*clockinit)(void);
 	void	(*clockenable)(void);
-	uvlong	(*fastclock)(uvlong*);
-	void	(*timerset)(uvlong);
+	u64	(*fastclock)(u64*);
+	void	(*timerset)(u64);
 };
 
 /*
@@ -256,3 +312,12 @@ struct DevConf
 	int	nports;			/* Number of ports */
 	Devport	*ports;			/* The ports themselves */
 };
+
+typedef struct BIOS32ci {		/* BIOS32 Calling Interface */
+	u32	eax;
+	u32	ebx;
+	u32	ecx;
+	u32	edx;
+	u32	esi;
+	u32	edi;
+} BIOS32ci;

@@ -1,5 +1,5 @@
 #include "os.h"
-#include <mp.h>
+#include "../include/mp.h"
 #include "dat.h"
 
 #define LO(x) ((x) & ((1<<(Dbits/2))-1))

@@ -1,5 +1,5 @@
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 extern	s32	getpid(void);
 
@@ -31,7 +31,7 @@ fill(Chachastate *cs, uchar *p, int n)
 	memset(&c, 0, sizeof(c));
 }
 
-void
+/*void
 genrandom(uchar *p, int n)
 {
 	static QLock lk;
@@ -40,7 +40,7 @@ genrandom(uchar *p, int n)
 	qlock(&lk);
 	if(cs.rounds == 0)
 		init(&cs);
-	cs.input[4] ^= getpid();	/* fork protection */
+	cs.input[4] ^= getpid();	*//* fork protection *//*
 	fill(&cs, p, n);
 	qunlock(&lk);
-}
+}*/

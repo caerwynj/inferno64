@@ -3,7 +3,7 @@
  */
 #include <u.h>
 #include <libc.h>
-#include <libsec.h>
+#include "libsec.h"
 
 static void encode32(uchar*, u32int*, u32);
 static DigestState* sha2_64(uchar *, u32, uchar *, SHA2_256state *, int);

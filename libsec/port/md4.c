@@ -1,5 +1,5 @@
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 /*
  *  This MD4 is implemented from the description in Stinson's Cryptography,

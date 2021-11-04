@@ -1,6 +1,6 @@
 #include "os.h"
-#include <mp.h>
-#include <libsec.h>
+#include "../include/mp.h"
+#include "libsec.h"
 
 // decrypt rsa using garner's algorithm for the chinese remainder theorem
 //	seminumerical algorithms, knuth, pp 253-254

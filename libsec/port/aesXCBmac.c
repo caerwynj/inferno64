@@ -1,5 +1,5 @@
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 /*
  * AES-XCBC-MAC-96 message authentication, per rfc3566.

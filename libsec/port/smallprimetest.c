@@ -1,6 +1,6 @@
 #include "os.h"
-#include <mp.h>
-#include <libsec.h>
+#include "../include/mp.h"
+#include "libsec.h"
 
 static ulong smallprimes[] = {
 	2,	3,	5,	7,	11,	13,	17,	19,	23,	29,

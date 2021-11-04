@@ -1,5 +1,5 @@
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 #define movw(w, S, D)	memmove(D, S, (w)*4)
 

@@ -1,5 +1,5 @@
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 /*
 	poly1305 implementation using 32 bit * 32 bit = 64 bit multiplication and 64 bit addition

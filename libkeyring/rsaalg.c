@@ -1,9 +1,9 @@
-#include <lib9.h>
-#include <kernel.h>
-#include <isa.h>
+#include "lib9.h"
+#include "kernel.h"
+#include "isa.h"
 #include "interp.h"
 #include "../libinterp/keyringif.h"
-#include "mp.h"
+#include "../include/mp.h"
 #include "libsec.h"
 #include "keys.h"
 

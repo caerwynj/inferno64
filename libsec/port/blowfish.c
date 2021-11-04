@@ -1,5 +1,5 @@
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 // Blowfish block cipher.  See:
 // 	Lecture Notes in Computer Science 809

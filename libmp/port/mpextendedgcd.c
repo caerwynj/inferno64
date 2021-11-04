@@ -1,5 +1,5 @@
 #include "os.h"
-#include <mp.h>
+#include "../include/mp.h"
 
 #define iseven(a)	(((a)->p[0] & 1) == 0)
 

@@ -1,5 +1,5 @@
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 extern void _sha256block(SHA256state*, uchar*);
 extern void _sha512block(SHA512state*, uchar*);

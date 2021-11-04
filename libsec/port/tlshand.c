@@ -1,8 +1,8 @@
 #include <u.h>
 #include <libc.h>
 #include <auth.h>
-#include <mp.h>
-#include <libsec.h>
+#include "../include/mp.h"
+#include "libsec.h"
 
 // The main groups of functions are:
 //		client/server - main handshake protocol definition

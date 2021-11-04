@@ -1,5 +1,5 @@
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 void
 aesOFBencrypt(uchar *p, int len, AESstate *s)

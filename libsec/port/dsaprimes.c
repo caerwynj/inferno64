@@ -1,6 +1,6 @@
 #include "os.h"
-#include <mp.h>
-#include <libsec.h>
+#include "../include/mp.h"
+#include "libsec.h"
 
 // NIST algorithm for generating DSA primes
 // Menezes et al (1997) Handbook of Applied Cryptography, p.151

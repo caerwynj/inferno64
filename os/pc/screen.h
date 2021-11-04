@@ -79,7 +79,7 @@ struct VGAdev {
 	void	(*enable)(VGAscr*);
 	void	(*disable)(VGAscr*);
 	void	(*page)(VGAscr*, int);
-	ulong	(*linear)(VGAscr*, int*, int*);
+	void	(*linear)(VGAscr*, int, int);
 	void	(*drawinit)(VGAscr*);
 	int	(*fill)(VGAscr*, Rectangle, ulong);
 	void	(*ovlctl)(VGAscr*, Chan*, void*, int);
@@ -159,9 +159,9 @@ extern int		hwaccel;	/* use hw acceleration; default on */
 extern int		hwblank;	/* use hw blanking; default on */
 extern int		panning;	/* use virtual screen panning; default off */
 extern void addvgaseg(char*, u32, u32);
-extern uchar* attachscreen(Rectangle*, ulong*, int*, int*, int*);
+extern Memdata* attachscreen(Rectangle*, ulong*, int*, int*, int*);
 extern void	flushmemscreen(Rectangle);
-extern int	cursoron(int);
+extern void	cursoron(void);
 extern void	cursoroff(void);
 extern void	setcursor(Cursor*);
 extern int	screensize(int, int, int, ulong);

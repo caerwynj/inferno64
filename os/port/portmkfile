@@ -41,7 +41,7 @@ rc-i$CONF.acid nt-i$CONF.acid:V: i$CONF
 			echo '//FILE: ' $i
 			$CC -I. $CFLAGS $LIBHDIRS '-DKERNDATE='$KERNDATE -a $i
 		}
-		echo 'include ("inferno");'
+		echo 'include ("'$ROOT'/lib/acid/9ferno");'
 	} >i$CONF.acid
 
 sh-i$CONF.acid:V: i$CONF

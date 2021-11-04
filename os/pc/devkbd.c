@@ -196,6 +196,7 @@ setleds(int leds)
 /*
  *  keyboard interrupt
  */
+char kickpanic[3] = {0};
 static void
 i8042intr(Ureg*, void*)
 {

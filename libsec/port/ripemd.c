@@ -1,6 +1,6 @@
 #include "os.h"
 
-#include <libsec.h>
+#include "libsec.h"
 
 #define BYTES_TO_DWORD(strptr)                    \
             (((u32int) *((strptr)+3) << 24) | \

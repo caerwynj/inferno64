@@ -1,5 +1,5 @@
 #include "os.h"
-#include <mp.h>
+#include "../include/mp.h"
 #include "dat.h"
 
 // diff = abs(b1) - abs(b2), i.e., subtract the magnitudes

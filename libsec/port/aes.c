@@ -29,7 +29,7 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 #define GETU32(pt) (((u32)(pt)[0]<<24) ^ ((u32)(pt)[1]<<16) ^ \
 		    ((u32)(pt)[2]<< 8) ^ ((u32)(pt)[3]))

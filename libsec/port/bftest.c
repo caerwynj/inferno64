@@ -1,6 +1,6 @@
 #include <u.h>
 #include <libc.h>
-#include <libsec.h>
+#include "libsec.h"
 
 enum{
 	Bsz = 8,

@@ -1,6 +1,6 @@
 #include "os.h"
-#include <mp.h>
-#include <libsec.h>
+#include "../include/mp.h"
+#include "libsec.h"
 
 mpint*
 dh_new(DHstate *dh, mpint *p, mpint *q, mpint *g)

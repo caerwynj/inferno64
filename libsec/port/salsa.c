@@ -1,5 +1,5 @@
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 /* little-endian data order */
 #define	GET4(p)		((p)[0]|((p)[1]<<8)|((p)[2]<<16)|((p)[3]<<24))

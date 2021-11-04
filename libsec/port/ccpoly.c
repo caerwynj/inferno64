@@ -1,5 +1,5 @@
 #include "os.h"
-#include <libsec.h>
+#include "libsec.h"
 
 static void
 ccpolyotk(Chachastate *cs, DigestState *ds)

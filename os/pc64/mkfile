@@ -32,7 +32,6 @@ OBJ=\
 	memmap.$O\
 	memory.$O\
 	mmu.$O\
-	irq.$O\
 	trap.$O\
 	bootargs.$O\
 	$CONF.root.$O\
@@ -52,10 +51,11 @@ HFILES=\
 	fns.h\
 	io.h\
 
-CFLAGS=-wFVT -I$ROOT/Inferno/$OBJTYPE/include -I$ROOT/include -I$ROOT/libinterp -I$ROOT/libip -I../port
+# use the CFLAGS set in ../../mkfiles/mkfile-Inferno-amd64
+CFLAGS=$CFLAGS -I$ROOT/libinterp -I$ROOT/libip -I../port
 KERNDATE=`{$NDATE}
 
-default:V: i$CONF
+default:V: i$CONF i$CONF.acid
 
 ETHERS=`{cd ../pc; echo devether.c ether*.c | sed 's/\.c/.'$O'/g'}
 AUDIO=`{cd ../pc; echo devaudio.c audio*.c | sed 's/\.c/.'$O'/g'}

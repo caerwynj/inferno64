@@ -173,9 +173,9 @@ main(void)
 	i8250console();
 	quotefmtinstall();
 	screeninit();
+	consdebug = rdb;
 	print("\nInferno release built at %lud\n", kerndate);
 	showconfig();
-ffmain();
 	cpuidentify();
 	meminit0();			/* builds the memmap */
 	doc("archinit");
