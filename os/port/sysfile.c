@@ -5,51 +5,132 @@
 #include	"fns.h"
 #include	"../port/error.h"
 
-static int
-growfd(Fgrp *f, int fd)
+static void
+unlockfgrp(Fgrp *f)
 {
-	int n;
-	Chan **nfd, **ofd;
+	int ex;
 
-	if(fd < f->nfd)
-		return 0;
-	n = f->nfd+DELTAFD;
-	if(n > MAXNFD)
-		n = MAXNFD;
-	if(fd >= n)
-		return -1;
-	nfd = malloc(n*sizeof(Chan*));
-	if(nfd == nil)
-		return -1;
-	ofd = f->fd;
-	memmove(nfd, ofd, f->nfd*sizeof(Chan *));
-	f->fd = nfd;
-	f->nfd = n;
-	free(ofd);
-	return 0;
+	ex = f->exceed;
+	f->exceed = 0;
+	unlock(f);
+	if(ex)
+		pprint("warning: process exceeds %d file descriptors\n", ex);
 }
 
 int
-newfd(Chan *c)
+growfd(Fgrp *f, int fd)	/* fd is always >= 0 */
 {
-	int i;
-	Fgrp *f = up->env->fgrp;
+	Chan **newfd, **oldfd;
+	uchar *newflag, *oldflag;
+	int nfd;
 
-	lock(f);
-	for(i=f->minfd; i<f->nfd; i++)
-		if(f->fd[i] == 0)
-			break;
-	if(i >= f->nfd && growfd(f, i) < 0){
-		unlock(f);
-		exhausted("file descriptors");
+	nfd = f->nfd;
+	if(fd < nfd)
+		return 0;
+	if(fd >= nfd+DELTAFD)
+		return -1;	/* out of range */
+	/*
+	 * Unbounded allocation is unwise; besides, there are only 16 bits
+	 * of fid in 9P
+	 */
+	if(nfd >= MAXNFD){
+    Exhausted:
+		print("no free file descriptors\n");
 		return -1;
 	}
-	f->minfd = i + 1;
-	if(i > f->maxfd)
-		f->maxfd = i;
-	f->fd[i] = c;
-	unlock(f);
-	return i;
+	oldfd = f->fd;
+	oldflag = f->flag;
+	newfd = malloc((nfd+DELTAFD)*sizeof(newfd[0]));
+	if(newfd == nil)
+		goto Exhausted;
+	memmove(newfd, oldfd, nfd*sizeof(newfd[0]));
+	newflag = malloc((nfd+DELTAFD)*sizeof(newflag[0]));
+	if(newflag == nil){
+		free(newfd);
+		goto Exhausted;
+	}
+	memmove(newflag, oldflag, nfd*sizeof(newflag[0]));
+	f->fd = newfd;
+	f->flag = newflag;
+	f->nfd = nfd+DELTAFD;
+	if(fd > f->maxfd){
+		if(fd/100 > f->maxfd/100)
+			f->exceed = (fd/100)*100;
+		f->maxfd = fd;
+	}
+	free(oldfd);
+	free(oldflag);
+	return 1;
+}
+
+/*
+ *  this assumes that the fgrp is locked
+ */
+int
+findfreefd(Fgrp *f, int start)
+{
+	int fd;
+
+	for(fd=start; fd<f->nfd; fd++)
+		if(f->fd[fd] == nil)
+			break;
+	if(fd >= f->nfd && growfd(f, fd) < 0)
+		return -1;
+	return fd;
+}
+
+int
+newfd(Chan *c, int mode)
+{
+	int fd, flag;
+	Fgrp *f;
+
+	f = up->env->fgrp;
+	lock(f);
+	fd = findfreefd(f, 0);
+	if(fd < 0){
+		unlockfgrp(f);
+		return -1;
+	}
+	if(fd > f->maxfd)
+		f->maxfd = fd;
+	f->fd[fd] = c;
+
+	/* per file-descriptor flags */
+	flag = 0;
+	if(mode & OCEXEC)
+		flag |= CCEXEC;
+	f->flag[fd] = flag;
+
+	unlockfgrp(f);
+	return fd;
+}
+
+int
+newfd2(int fd[2], Chan *c[2])
+{
+	Fgrp *f;
+
+	f = up->env->fgrp;
+	lock(f);
+	fd[0] = findfreefd(f, 0);
+	if(fd[0] < 0){
+		unlockfgrp(f);
+		return -1;
+	}
+	fd[1] = findfreefd(f, fd[0]+1);
+	if(fd[1] < 0){
+		unlockfgrp(f);
+		return -1;
+	}
+	if(fd[1] > f->maxfd)
+		f->maxfd = fd[1];
+	f->fd[fd[0]] = c[0];
+	f->fd[fd[1]] = c[1];
+	f->flag[fd[0]] = 0;
+	f->flag[fd[1]] = 0;
+	unlockfgrp(f);
+	return 0;
 }
 
 Chan*
@@ -205,7 +286,7 @@ kcreate(char *path, int mode, ulong perm)
 		cclose(c);
 		nexterror();
 	}
-	fd = newfd(c);
+	fd = newfd(c, mode);
 	if(fd < 0)
 		error(Enofd);
 	poperror();
@@ -231,7 +312,7 @@ kdup(int old, int new)
 	if(fd != -1){
 		lock(f);
 		if(fd<0 || growfd(f, fd) < 0) {
-			unlock(f);
+			unlockfgrp(f);
 			cclose(c);
 			error(Ebadfd);
 		}
@@ -239,7 +320,8 @@ kdup(int old, int new)
 			f->maxfd = fd;
 		oc = f->fd[fd];
 		f->fd[fd] = c;
-		unlock(f);
+		f->flag[fd] = 0;
+		unlockfgrp(f);
 		if(oc)
 			cclose(oc);
 	}else{
@@ -247,7 +329,7 @@ kdup(int old, int new)
 			cclose(c);
 			nexterror();
 		}
-		fd = newfd(c);
+		fd = newfd(c, 0);
 		if(fd < 0)
 			error(Enofd);
 		poperror();
@@ -288,13 +370,13 @@ kfd2path(int fd)
 		return nil;
 	c = fdtochan(up->env->fgrp, fd, -1, 0, 1);
 	s = nil;
-	if(c->name != nil){
-		s = malloc(c->name->len+1);
+	if(c->path != nil){
+		s = malloc(c->path->len+1);
 		if(s == nil){
 			cclose(c);
 			error(Enomem);
 		}
-		memmove(s, c->name->s, c->name->len+1);
+		memmove(s, c->path->s, c->path->len+1);
 		cclose(c);
 	}
 	poperror();
@@ -327,7 +409,7 @@ kfauth(int fd, char *aname)
 		nexterror();
 	}
 
-	fd = newfd(ac);
+	fd = newfd(ac, 0);
 	if(fd < 0)
 		error(Enofd);
 	poperror();	/* ac */
@@ -398,11 +480,7 @@ kpipe(int fd[2])
 		error(Egreg);
 	c[0] = d->open(c[0], ORDWR);
 	c[1] = d->open(c[1], ORDWR);
-	fd[0] = newfd(c[0]);
-	if(fd[0] < 0)
-		error(Enofd);
-	fd[1] = newfd(c[1]);
-	if(fd[1] < 0)
+	if(newfd2(fd, c) < 0)
 		error(Enofd);
 	poperror();
 	return 0;
@@ -556,7 +634,7 @@ kopen(char *path, int mode)
 		cclose(c);
 		nexterror();
 	}
-	fd = newfd(c);
+	fd = newfd(c, mode);
 	if(fd < 0)
 		error(Enofd);
 	poperror();

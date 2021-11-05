@@ -8,6 +8,14 @@
 static Ref pgrpid;
 static Ref mountid;
 
+enum {
+	Whinesecs = 10,		/* frequency of out-of-resources printing */
+};
+
+/* TODO code here is different from 9front. Need to understand why. */
+
+static Ref mountid;
+
 Pgrp*
 newpgrp(void)
 {
@@ -18,6 +26,23 @@ newpgrp(void)
 	p->pgrpid = incref(&pgrpid);
 	p->progmode = 0644;
 	return p;
+}
+
+Rgrp*
+newrgrp(void)
+{
+	Rgrp *r;
+
+	r = smalloc(sizeof(Rgrp));
+	r->ref = 1;
+	return r;
+}
+
+void
+closergrp(Rgrp *r)
+{
+	if(decref(r) == 0)
+		free(r);
 }
 
 void
@@ -78,60 +103,50 @@ pgrpcpy(Pgrp *to, Pgrp *from)
 {
 	int i;
 	Mount *n, *m, **link, *order;
-	Mhead *f, **tom, **l, *mh;
+	Mhead *f, **l, *mh;
 
-	wlock(&from->ns);
-	if(waserror()){
-		wunlock(&from->ns);
-		nexterror();
-	}
-	order = 0;
-	tom = to->mnthash;
+	wlock(&to->ns);
+	rlock(&from->ns);
+	order = nil;
 	for(i = 0; i < MNTHASH; i++) {
-		l = tom++;
-		for(f = from->mnthash[i]; f; f = f->hash) {
+		l = &to->mnthash[i];
+		for(f = from->mnthash[i]; f != nil; f = f->hash) {
 			rlock(&f->lock);
-			if(waserror()){
-				runlock(&f->lock);
-				nexterror();
-			}
-			mh = malloc(sizeof(Mhead));
-			if(mh == nil)
-				error(Enomem);
-			mh->from = f->from;
-			mh->ref = 1;
-			incref(mh->from);
+			mh = newmhead(f->from);
 			*l = mh;
 			l = &mh->hash;
 			link = &mh->mount;
-			for(m = f->mount; m; m = m->next) {
-				n = newmount(mh, m->to, m->mflag, m->spec);
-				m->copy = n;
-				pgrpinsert(&order, m);
+			for(m = f->mount; m != nil; m = m->next) {
+				n = smalloc(sizeof(Mount));
+				n->mountid = m->mountid;
+				n->mflag = m->mflag;
+				n->to = m->to;
+				incref(n->to);
+				if(m->spec != nil)
+					kstrdup(&n->spec, m->spec);
+				pgrpinsert(&order, n);
 				*link = n;
 				link = &n->next;
 			}
-			poperror();
 			runlock(&f->lock);
 		}
 	}
 	/*
 	 * Allocate mount ids in the same sequence as the parent group
 	 */
-	lock(&mountid.l);
-	for(m = order; m; m = m->order)
-		m->copy->mountid = mountid.ref++;
-	unlock(&mountid.l);
+	for(m = order; m != nil; m = m->order)
+		m->mountid = incref(&mountid);
 
 	to->progmode = from->progmode;
 	to->slash = cclone(from->slash);
 	to->dot = cclone(from->dot);
 	to->nodevs = from->nodevs;
 
-	poperror();
-	wunlock(&from->ns);
+	runlock(&from->ns);
+	wunlock(&to->ns);
 }
 
+/* not used by 9front. why? */
 Fgrp*
 newfgrp(Fgrp *old)
 {
@@ -156,30 +171,46 @@ newfgrp(Fgrp *old)
 Fgrp*
 dupfgrp(Fgrp *f)
 {
-	int i;
-	Chan *c;
 	Fgrp *new;
-	int n;
+	Chan *c;
+	int i;
 
 	new = smalloc(sizeof(Fgrp));
-	new->ref = 1;
+	if(f == nil){
+		new->flag = smalloc(DELTAFD*sizeof(new->flag[0]));
+		new->fd = smalloc(DELTAFD*sizeof(new->fd[0]));
+		new->nfd = DELTAFD;
+		new->ref = 1;
+		return new;
+	}
+
 	lock(f);
-	n = DELTAFD;
-	if(f->maxfd >= n)
-		n = (f->maxfd+1 + DELTAFD-1)/DELTAFD * DELTAFD;
-	new->nfd = n;
-	new->fd = malloc(n*sizeof(Chan*));
+	/* Make new fd list shorter if possible, preserving quantization */
+	new->nfd = f->maxfd+1;
+	i = new->nfd%DELTAFD;
+	if(i != 0)
+		new->nfd += DELTAFD - i;
+	new->fd = malloc(new->nfd*sizeof(new->fd[0]));
 	if(new->fd == nil){
 		unlock(f);
 		free(new);
-		error(Enomem);
+		error("no memory for fgrp");
 	}
+	new->flag = malloc(new->nfd*sizeof(new->flag[0]));
+	if(new->flag == nil){
+		unlock(f);
+		free(new->fd);
+		free(new);
+		error("no memory for fgrp");
+	}
+	new->ref = 1;
+
 	new->maxfd = f->maxfd;
-	new->minfd = f->minfd;
 	for(i = 0; i <= f->maxfd; i++) {
-		if(c = f->fd[i]){
+		if((c = f->fd[i]) != nil){
 			incref(c);
 			new->fd[i] = c;
+			new->flag[i] = f->flag[i];
 		}
 	}
 	unlock(f);
@@ -193,65 +224,113 @@ closefgrp(Fgrp *f)
 	int i;
 	Chan *c;
 
-	if(f == nil || decref(f) != 0)
+	if(f == nil || decref(f))
 		return;
 
+	/*
+	 * If we get into trouble, forceclosefgrp
+	 * will bail us out.
+	 */
+	up->env->closingfgrp = f;
 	for(i = 0; i <= f->maxfd; i++)
-		if(c = f->fd[i])
+		if((c = f->fd[i]) != nil){
+			f->fd[i] = nil;
 			cclose(c);
+		}
+	up->env->closingfgrp = nil;
 
 	free(f->fd);
+	free(f->flag);
 	free(f);
 }
 
+/*
+ * Called from interrupted() because up is in the middle
+ * of closefgrp and just got a kill ctl message.
+ * This usually means that up has wedged because
+ * of some kind of deadly embrace with mntclose
+ * trying to talk to itself.  To break free, hand the
+ * unclosed channels to the close queue.  Once they
+ * are finished, the blocked cclose that we've 
+ * interrupted will finish by itself.
+ */
+void
+forceclosefgrp(void)
+{
+	int i;
+	Chan *c;
+	Fgrp *f;
+
+	if(up->procctl != Proc_exitme || up->env->closingfgrp == nil){
+		print("bad forceclosefgrp call");
+		return;
+	}
+
+	f = up->env->closingfgrp;
+	for(i = 0; i <= f->maxfd; i++)
+		if((c = f->fd[i]) != nil){
+			f->fd[i] = nil;
+			ccloseq(c);
+		}
+}
+
 Mount*
-newmount(Mhead *mh, Chan *to, int flag, char *spec)
+newmount(Chan *to, int flag, char *spec)
 {
 	Mount *m;
 
 	m = smalloc(sizeof(Mount));
 	m->to = to;
-	m->head = mh;
 	incref(to);
 	m->mountid = incref(&mountid);
 	m->mflag = flag;
-	if(spec != 0)
+	if(spec != nil)
 		kstrdup(&m->spec, spec);
-
+	setmalloctag(m, getcallerpc(&to));
 	return m;
 }
-
 void
 mountfree(Mount *m)
 {
 	Mount *f;
 
-	while(m) {
-		f = m->next;
-		cclose(m->to);
-		m->mountid = 0;
-		free(m->spec);
-		free(m);
-		m = f;
+	while((f = m) != nil) {
+		m = m->next;
+		cclose(f->to);
+		free(f->spec);
+		free(f);
 	}
 }
 
 void
 resrcwait(char *reason)
 {
+	static ulong lastwhine;
+	ulong now;
 	char *p;
 
-	if(up == 0)
-		panic("resrcwait");
+	if(up == nil)
+		panic("resrcwait: %s", reason);
 
 	p = up->psstate;
-	if(reason) {
+	if(reason != nil) {
+		if(waserror()){
+			up->psstate = p;
+			nexterror();
+		}
 		up->psstate = reason;
-		print("%s\n", reason);
+		now = seconds();
+		/* don't tie up the console with complaints */
+		if(now - lastwhine > Whinesecs) {
+			lastwhine = now;
+			print("%s\n", reason);
+		}
 	}
-
-	tsleep(&up->sleep, return0, 0, 300);
-	up->psstate = p;
+	tsleep(&up->sleep, return0, 0, 100+nrand(200));
+	if(reason != nil) {
+		up->psstate = p;
+		poperror();
+	}
 }
 
 void

@@ -86,11 +86,6 @@ static char* mathmsg[] =
 	"precision loss",
 };
 
-enum
-{
-	NDebug,				/* print debug message */
-};
-
 static void
 mathnote(ulong status, uintptr pc)
 {

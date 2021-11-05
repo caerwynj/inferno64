@@ -406,7 +406,8 @@ exflushed(Export *fs, Exq *fq)
 			q->flusht = fq;
 			if(q->busy){
 				pid = q->slave->pid;
-				swiproc(q->slave, 0);
+				/* swiproc(q->slave, 0); */
+				postnote(q->slave, 1, "exflushed", NExit);
 			}
 			unlock(q);
 			unlock(fs);
@@ -455,7 +456,8 @@ exshutdown(Export *fs)
 		fs->work = q->next;
 		lock(q);
 		q->shut = 1;
-		swiproc(q->slave, 0);	/* whether busy or not */
+		/* swiproc(q->slave, 0);*/	/* whether busy or not */
+		postnote(q->slave, 1, "exshutdown", NExit);
 		unlock(q);
 	}
 	unlock(fs);
@@ -761,7 +763,7 @@ static Chan*
 exmount(Chan *c, Mhead **mp, int doname)
 {
 	Chan *nc;
-	Cname *oname;
+	Path *oname;
 
 	nc = nil;
 	if((c->flag & COPEN) == 0 && findmount(&nc, mp, c->type, c->dev, c->qid)){
@@ -772,10 +774,10 @@ exmount(Chan *c, Mhead **mp, int doname)
 		nc = cunique(nc);
 		poperror();
 		if(doname){
-			oname = c->name;
+			oname = c->path;
 			incref(oname);
-			cnameclose(nc->name);
-			nc->name = oname;
+			pathclose(nc->path);
+			nc->path = oname;
 		}
 		return nc;
 	}
@@ -981,7 +983,7 @@ Excreate(Export *fs, Fcall *t, Fcall *r)
 {
 	Fid *f;
 	volatile struct {Chan *c;} c, dc;
-	Cname *oname;
+	Path *oname;
 	Uqid *qid;
 	Mhead *m;
 
@@ -1009,10 +1011,10 @@ Excreate(Export *fs, Fcall *t, Fcall *r)
 		nexterror();
 	}
 	if(m != nil){
-		oname = c.c->name;
+		oname = c.c->path;
 		incref(oname);
 		if(waserror()){
-			cnameclose(oname);
+			pathclose(oname);
 			nexterror();
 		}
 		dc.c = createdir(c.c, m);
@@ -1022,12 +1024,12 @@ Excreate(Export *fs, Fcall *t, Fcall *r)
 		}
 		c.c = cunique(dc.c);
 		poperror();
-		cnameclose(c.c->name);
+		pathclose(c.c->path);
 		poperror();
-		c.c->name = oname;
+		c.c->path = oname;
 	}
 	devtab[c.c->type]->create(c.c, t->name, t->mode, t->perm);
-	c.c->name = addelem(c.c->name, t->name);
+	c.c->path = addelem(c.c->path, t->name, c.c);
 	if(t->mode & ORCLOSE)
 		c.c->flag |= CRCLOSE;
 	qid = uqidalloc(fs, c.c);

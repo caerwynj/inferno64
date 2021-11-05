@@ -487,7 +487,7 @@ progfdprint(Chan *c, int fd, int w, char *s, int ns)
 		&"r w rw"[(c->mode&3)<<1],
 		devtab[c->type]->dc, c->dev,
 		c->qid.path, w, c->qid.vers, c->qid.type,
-		c->iounit, c->offset, c->name->s);
+		c->iounit, c->offset, c->path->s);
 	return n;
 }
 
@@ -499,7 +499,7 @@ progfds(Osenv *o, char *va, int count, long offset)
 	int n, i, w, ww;
 
 	f = o->fgrp;	/* f is not locked because we've acquired */
-	n = readstr(0, va, count, o->pgrp->dot->name->s);
+	n = readstr(0, va, count, o->pgrp->dot->path->s);
 	n += snprint(va+n, count-n, "\n");
 	offset = progoffset(offset, va, &n);
 	/* compute width of qid.path */
@@ -887,19 +887,19 @@ progread(Chan *c, void *va, s32 n, s64 offset)
 		mntscan(mw, o->pgrp);
 		if(mw->mh == 0) {
 			mw->cddone = 1;
-			i = snprint(a, n, "cd %s\n", o->pgrp->dot->name->s);
+			i = snprint(a, n, "cd %s\n", o->pgrp->dot->path->s);
 			poperror();
 			release();
 			return i;
 		}
 		int2flag(mw->cm->mflag, flag);
-		if(strcmp(mw->cm->to->name->s, "#M") == 0){
+		if(strcmp(mw->cm->to->path->s, "#M") == 0){
 			i = snprint(a, n, "mount %s %s %s %s\n", flag,
-				mw->cm->to->mchan->name->s,
-				mw->mh->from->name->s, mw->cm->spec? mw->cm->spec : "");
+				mw->cm->to->mchan->path->s,
+				mw->mh->from->path->s, mw->cm->spec? mw->cm->spec : "");
 		}else
 			i = snprint(a, n, "bind %s %s %s\n", flag,
-				mw->cm->to->name->s, mw->mh->from->name->s);
+				mw->cm->to->path->s, mw->mh->from->path->s);
 		poperror();
 		release();
 		return i;

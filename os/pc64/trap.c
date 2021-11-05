@@ -406,7 +406,7 @@ static void
 linkproc(void)
 {
 	spllo();
-	up->kpfun(up->arg);
+	up->kpfun(up->kparg);
 	pexit("kproc dying", 0);
 }
 
@@ -422,7 +422,7 @@ kprocchild(Proc* p, void (*func)(void*), void* arg)
 	p->sched.sp = (uintptr)p->kstack+KSTACK-BY2WD;
 
 	p->kpfun = func;
-	p->arg = arg;
+	p->kparg = arg;
 }
 
 

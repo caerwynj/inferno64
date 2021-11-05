@@ -27,10 +27,3 @@ commonerror(void)
 {
 	return up->env->errstr;
 }
-
-int
-postnote(Proc *p, int, char *, int)
-{
-	swiproc(p, 0);
-	return 0;
-}

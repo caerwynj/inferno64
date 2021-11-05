@@ -24,7 +24,9 @@ typedef struct Mntrpc	Mntrpc;
 typedef struct Mntwalk	Mntwalk;
 typedef struct Mnt	Mnt;
 typedef struct Mhead	Mhead;
+typedef struct Note	Note;
 typedef struct Osenv	Osenv;
+typedef struct Path	Path;
 typedef struct Perf	Perf;
 typedef struct Pgrp	Pgrp;
 typedef struct Proc	Proc;
@@ -35,6 +37,7 @@ typedef struct Ref	Ref;
 typedef struct Rendez	Rendez;
 typedef struct Rept	Rept;
 typedef struct Rootdata	Rootdata;
+typedef struct Rgrp	Rgrp;
 typedef struct RWlock	RWlock;
 typedef struct Schedq	Schedq;
 typedef struct Signerkey Signerkey;
@@ -100,6 +103,10 @@ struct Osenv
 	s32	gid;		/* Numeric group id for system */
 	char*	user;		/* Inferno user name */
 	int	fpuostate;
+
+	/* from 9front */
+	Rgrp	*rgrp;		/* Rendez group */
+	Fgrp	*closingfgrp;	/* used during teardown */
 };
 
 enum
@@ -117,10 +124,13 @@ struct QLock
 
 struct RWlock
 {
-	Lock;				/* Lock modify lock */
-	QLock	x;			/* Mutual exclusion lock */
-	QLock	k;			/* Lock for waiting writers */
-	s32	readers;		/* Count of readers in lock */
+	Lock	use;
+	Proc	*head;		/* list of waiting processes */
+	Proc	*tail;
+	uintptr	wpc;		/* pc of writer */
+	Proc	*wproc;		/* writing proc */
+	int	readers;	/* number of readers */
+	int	writer;		/* number of writers */
 };
 
 struct Talarm
@@ -191,41 +201,49 @@ struct Block
 
 struct Chan
 {
-	Lock;
 	Ref;
+	Lock;
 	Chan*	next;			/* allocation */
 	Chan*	link;
-	s64	offset;			/* in file */
+	s64	offset;			/* in fd */
+	s64	devoffset;		/* in underlying device; see read */
 	u16	type;
 	u32	dev;
 	u16	mode;			/* read/write */
 	u16	flag;
 	Qid	qid;
 	s32	fid;			/* for devmnt */
-	u32	iounit;	/* chunk size for i/o; 0==default */
+	u32	iounit;			/* chunk size for i/o; 0==default */
 	Mhead*	umh;			/* mount point that derived Chan; used in unionread */
 	Chan*	umc;			/* channel in union; held for union read */
 	QLock	umqlock;		/* serialize unionreads */
 	s32	uri;			/* union read index */
 	s32	dri;			/* devdirread index */
-	u32	mountid;
-	Mntcache *mcp;			/* Mount cache pointer */
-	Mnt		*mux;		/* Mnt for clients using me for messages */
+	uchar*	dirrock;		/* directory entry rock for translations */
+	int	nrock;
+	int	mrock;
+	QLock	rockqlock;
+	int	ismtpt;
+	Mntcache*mcp;			/* Mount cache pointer */
+	Mnt*	mux;			/* Mnt for clients using me for messages */
 	union {
 		void*	aux;
-		char	tag[4];		/* for iproute */
+		u32	mid;		/* for ns in devproc */
 	};
 	Chan*	mchan;			/* channel to mounted server */
 	Qid	mqid;			/* qid of root of mount point */
-	Cname	*name;
+	Path*	path;
 };
 
-struct Cname
+struct Path
 {
 	Ref;
-	s32	alen;			/* allocated length */
-	s32	len;			/* strlen(s) */
 	char	*s;
+	Chan	**mtpt;			/* mtpt history */
+	int	len;			/* strlen(s) */
+	int	alen;			/* allocated length of s */
+	int	mlen;			/* number of path elements */
+	int	malen;			/* allocated length of mtpt */
 };
 
 struct Dev
@@ -286,8 +304,6 @@ struct Mount
 {
 	u32	mountid;
 	Mount*	next;
-	Mhead*	head;
-	Mount*	copy;
 	Mount*	order;
 	Chan*	to;			/* channel replacing channel */
 	s32	mflag;
@@ -320,6 +336,19 @@ struct Mnt
 
 enum
 {
+	NUser,				/* note provided externally */
+	NExit,				/* deliver note quietly */
+	NDebug,				/* print debug message */
+};
+
+struct Note
+{
+	char	msg[ERRMAX];
+	int	flag;			/* whether system posted it */
+};
+
+enum
+{
 	RENDLOG	=	5,
 	RENDHASH =	1<<RENDLOG,		/* Hash to lookup rendezvous tags */
 	MNTLOG	=	5,
@@ -328,6 +357,7 @@ enum
 	MAXNFD =		4000,		/* max per process file descriptors */
 	MAXKEY =		8,	/* keys for signed modules */
 };
+#define REND(p,s)	((p)->rendhash[(s)&((1<<RENDLOG)-1)])
 #define MOUNTH(p,qid)	((p)->mnthash[(qid).path&((1<<MNTLOG)-1)])
 
 struct Mntparam {
@@ -340,11 +370,12 @@ struct Mntparam {
 struct Pgrp
 {
 	Ref;				/* also used as a lock when mounting */
+	RWlock	ns;			/* Namespace n read/one write lock */
+	int	noattach;
+	Mhead*	mnthash[MNTHASH];
 	u32	pgrpid;
 	QLock	debug;			/* single access via devproc.c */
-	RWlock	ns;			/* Namespace n read/one write lock */
 	QLock	nsh;
-	Mhead*	mnthash[MNTHASH];
 	s32	progmode;
 	Chan*	dot;
 	Chan*	slash;
@@ -356,12 +387,20 @@ struct Fgrp
 {
 	Ref;
 	Lock;
+	Proc	*rendhash[RENDHASH];	/* Rendezvous tag hash */
 	Chan	**fd;
 	uchar	*flag;			/* per file-descriptor flags (CCEXEC) */
 	s32	nfd;			/* number allocated */
 	s32	maxfd;			/* highest fd in use */
 	s32	minfd;			/* lower bound on free fd */
 	s32	exceed;			/* debugging */
+};
+
+struct Rgrp
+{
+	Ref;
+	Lock;
+	Proc	*rendhash[RENDHASH];	/* Rendezvous tag hash */
 };
 
 struct Evalue
@@ -448,6 +487,8 @@ enum
 	Scheding,
 	Running,
 	Queueing,
+	QueueingR,
+	QueueingW,
 	Wakeme,
 	Broken,
 	Stopped,
@@ -459,7 +500,15 @@ enum
 	Proc_traceme,
 	Proc_exitbig,
 
+	TUser = 0, 		/* Proc.time */
+	TSys,
+	TReal,
+	TCUser,
+	TCSys,
+	TCReal,
+
 	NERR		= 30,
+	NNOTE = 5,
 
 	Unknown		= 0,
 	IdleGC,
@@ -488,64 +537,61 @@ struct Schedq
 	int	n;
 };
 
+/* inferno uses Osenv for environment information. It is cheaper to create
+ * new processes with a default environment
+ */
 struct Proc
 {
-	Label		sched;		/* known to l.s */
-	char*		kstack;		/* known to l.s */
-	Mach*		mach;		/* machine running this proc */
-	char		text[KNAMELEN];
-	Proc*		rnext;		/* next process in run queue */
-	Proc*		qnext;		/* next process on queue for a QLock */
-	QLock*		qlock;		/* addrof qlock being queued for DEBUG */
+	Label	sched;		/* known to l.s */
+	char	*kstack;	/* known to l.s */
+	Mach	*mach;		/* machine running this proc */
+	char	text[KNAMELEN];
+	/*	char	*user; 9front only */
+
+	/*
+	 * below 3 args fields are not used by 9ferno
+	 * leaving them alone to stay compatible with 9front
+	 */
+/*	char	*args;*/
+/*	int	nargs;		*//* number of bytes of args */
+/*	int	setargs;	*//* process changed its args */
+
+	Proc	*rnext;		/* next process in run queue */
+	Proc	*qnext;		/* next process on queue for a QLock */
+							/* check notes in proc.c for how these 2 fields are used */
+	void	*blockinglock;	/* address of QLock or RWLock being queued for, DEBUG */
+						/* not in 9front as we can reason that info from qpc */
+	uintptr	qpc;		/* last call that blocked in QLock or RWLock */
+
+	char	*psstate;	/* What /proc/#/status reports */
 	s32		state;
-	s32		type;
-	void*		prog;		/* Dummy Prog for interp release */
-	void*		iprog;
-	Osenv*		env;
-	Osenv		defenv;
-	s32		swipend;	/* software interrupt pending for Prog TODO replace with notepending? */
-	Lock		sysio;		/* note handler lock */
-	char*		psstate;	/* What /proc/#/status reports */
-	s32		pid;
-	s32		procctl;	/* Control for /proc debugging */
-	uintptr		pc;		/* DEBUG only */
-	Lock	rlock;	/* sync between sleep/swiproc for r */
-	Rendez*		r;		/* rendezvous point slept on */
-	Rendez		sleep;		/* place for syssleep/debug */
-	s32		killed;		/* by swiproc */
-	s32		kp;		/* true if a kernel process */
-	Proc	*palarm;	/* Next alarm time */
-	u32		alarm;		/* Time of call */
-	s32		priority;		/* scheduler priority */
-	u32		twhen;
 
-	Timer;			/* For tsleep and real-time */
-	Rendez*		trend;
-	Proc*		tlink;
-	s32		(*tfn)(void*);
-	void		(*kpfun)(void*);
-	void*		arg;
-	PFPU;				/* machine specific fpu state */
-	s32		scallnr;
-	s32		nerrlab;
-	Label		errlab[NERR];
-	char	genbuf[128];	/* buffer used e.g. for last name element from namec */
+	u32	pid;
+	u32	noteid;		/* Equivalent of note group */
+/*	u32	parentpid; *//* no single parent in inferno, send it to the process group */
 
-	Lock	*lockwait;
-	Lock	*lastlock;	/* debugging */
-	Lock	*lastilock;	/* debugging */
+/*	Proc	*parent;	*//* Process to send wait record on exit */
+/*	Lock	exl;		*//* Lock count and waitq */
+/*	Waitq	*waitq;		*//* Exited processes wait children */
+/*	int	nchild;		*//* Number of living children */
+/*	int	nwait;		*//* Number of uncollected wait records */
+/*	QLock	qwaitr;*/
+/*	Rendez	waitr;		*//* Place to hang out in wait */
 
-	Mach*		mp;		/* machine this process last ran on */
-	Mach*		wired;
-	int	nlocks;		/* number of locks held by proc */
-	/* obsoleted u32		movetime; */	/* next time process should switch processors */
-	u32		delaysched;
-	s32			preempted;	/* process yielding in interrupt */
-	uintptr		qpc;		/* last call that blocked in qlock */
-	void*		dbgreg;		/* User registers for devproc */
- 	s32		dbgstop;		/* don't run this kproc */
-	Edf*	edf;	/* if non-null, real-time proc, edf contains scheduling params */
+/*	QLock	seglock;	*//* locked whenever seg[] changes */
+/*	Segment	*seg[NSEG]; */
 
+/*	Pgrp	*pgrp;	*/	/* Process group for namespace */
+/*	Egrp 	*egrp;	*/	/* Environment group */
+/*	Fgrp	*fgrp;	*/	/* File descriptor group */
+/*	Rgrp	*rgrp;	*/	/* Rendez group */
+
+/*	Fgrp	*closingfgrp;*/	/* used during teardown */
+
+/*	int	insyscall;*/
+	u32	time[6];	/* User, Sys, Real; child U, S, R */
+
+/*	uvlong	kentry;	*/	/* Kernel entry time stamp (for profiling) */
 	/*
 	 * pcycles: cycles spent in this process (updated on procswitch)
 	 * when this is the current proc and we're in the kernel
@@ -554,19 +600,108 @@ struct Proc
 	 * when this is not the current process or we're in user mode
 	 * (procrestores and procsaves balance), it is pcycles.
 	 */
-	s64	pcycles;
+	vlong	pcycles;
 
-	PMMU;				/* TODO obsolete? machine specific mmu state */
-
-	/* TODO 9front fields that need to incorporated into 9ferno */
-	/* TODO replace swiproc() with postnote() */
-	u32	noteid;		/* Equivalent of note group */
 	QLock	debug;		/* to access debugging elements of User */
-	int	trace;		/* process being traced? */
-	ulong	procmode;	/* proc device default file mode */
+	Proc	*pdbg;		/* the debugging process */
+	/*
+	 * Pgrp.progmode is used by inferno and procmode by 9front
+	 * Leaving them different, for now
+	 */
+	u32	procmode;	/* proc device default file mode */
 	int	privatemem;	/* proc does not let anyone read mem */
 	int	noswap;		/* process is not swappable */
 	int	hang;		/* hang at next exec for debug */
+	int	procctl;	/* Control for /proc debugging */
+	uintptr	pc;		/* DEBUG only */
+
+	Lock	rlock;		/* sync sleep/wakeup with postnote */
+	Rendez	*r;		/* rendezvous point slept on */
+	Rendez	sleep;		/* place for syssleep/debug */
+	int	notepending;	/* note issued but not acted on */
+	int	kp;		/* true if a kernel process */
+	Proc	*palarm;	/* Next alarm time */
+	ulong	alarm;		/* Time of call */
+/*	int	newtlb;	*/	/* Pager has changed my pte's, I must flush */
+
+	uintptr	rendtag;	/* Tag for rendezvous */
+	uintptr	rendval;	/* Value for rendezvous */
+	Proc	*rendhash;	/* Hash list for tag values */
+
+	Timer;			/* For tsleep and real-time, has twhen of inferno */
+	Rendez	*trend;
+	int	(*tfn)(void*);
+	void	(*kpfun)(void*);
+	void	*kparg;
+
+/*	Sargs	s;		*//* syscall arguments */
+/*	int	scallnr;	*//* sys call number */
+	int	nerrlab;
+	Label	errlab[NERR];
+						/* below fields are in Osenv */
+/*	char	*syserrstr;	*//* last error from a system call, errbuf0 or 1 */
+/*	char	*errstr;	*//* reason we're unwinding the error stack, errbuf1 or 0 */
+/*	char	errbuf0[ERRMAX];*/
+/*	char	errbuf1[ERRMAX];*/
+	char	genbuf[128];	/* buffer used e.g. for last name element from namec */
+/*	Chan	*slash; part of Pgrp in inferno */
+/*	Chan	*dot; part of Pgrp in inferno */
+
+	Note	note[NNOTE];
+	short	nnote;
+	short	notified;	/* sysnoted is due */
+	Note	lastnote;
+	int	(*notify)(void*, char*);
+
+	Lock	*lockwait;
+	Lock	*lastlock;	/* debugging */
+	Lock	*lastilock;	/* debugging */
+
+	Mach	*wired;
+	Mach	*mp;		/* machine this process last ran on */
+	int	nlocks;		/* number of locks held by proc */
+	ulong	delaysched;
+	ulong	priority;	/* priority level */
+/*	ulong	basepri;	*//* base priority level */
+/*	uchar	fixedpri;	*//* priority level deson't change */
+/*	ulong	cpu;		*//* cpu average */
+/*	ulong	lastupdate;*/
+	uchar	yield;		/* non-zero if the process just did a sleep(0) */
+	ulong	readytime;	/* time process came ready */
+	int	preempted;	/* true if this process hasn't finished the interrupt
+				 *  that last preempted it
+				 */
+	Edf	*edf;		/* if non-null, real-time proc, edf contains scheduling params */
+	int	trace;		/* process being traced? */
+
+	QLock	*eql;		/* interruptable eqlock */
+
+	void	*ureg;		/* User registers for notes */
+	void	*dbgreg;	/* User registers for devproc */
+
+	PFPU;			/* machine specific fpu state */
+	PMMU;			/* machine specific mmu state, obsolete on 9ferno amd64? */
+
+/*	char	*syscalltrace;	*//* syscall trace */
+	
+	Watchpt	*watchpt;	/* watchpoints */
+	int	nwatchpt;
+
+	/* inferno specific fields */
+	s32		type;
+	void*		prog;		/* Dummy Prog for interp release */
+	void*		iprog;
+	Osenv*		env;
+	Osenv		defenv;
+	s32		swipend;	/* software interrupt pending for Prog TODO replace with notepending? */
+	Lock		sysio;		/* note handler lock */
+
+	/* inferno specific fields that are obsolete? */
+	int		fpstate;
+	int		killed;		/* by swiproc */
+	Proc*		tlink;
+	ulong		movetime;	/* next time process should switch processors */
+ 	int		dbgstop;		/* don't run this kproc */
 };
 
 enum

@@ -179,8 +179,8 @@ init0(void)
 	 */
 	o = up->env;
 	o->pgrp->slash = namec("#/", Atodir, 0, 0);
-	cnameclose(o->pgrp->slash->name);
-	o->pgrp->slash->name = newcname("/");
+	cnameclose(o->pgrp->slash->path);
+	o->pgrp->slash->path = newcname("/");
 	o->pgrp->dot = cclone(o->pgrp->slash);
 
 	chandevinit();

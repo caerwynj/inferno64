@@ -498,7 +498,7 @@ fddump()
 	for(i = 0; i <= o->fgrp->maxfd; i++) {
 		if((c = o->fgrp->fd[i]) == nil)
 			continue;
-		print("%d: %s\n", i, c->name == nil? "???": c->name->s);
+		print("%d: %s\n", i, c->path == nil? "???": c->path->s);
 	}
 }
 

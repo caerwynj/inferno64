@@ -869,8 +869,8 @@ Sys_pctl(void *fp)
 		dot = o->pgrp->dot;
 		np.np->dot = cclone(dot);
 		np.np->slash = cclone(dot);
-		cnameclose(np.np->slash->name);
-		np.np->slash->name = newcname("/");
+		pathclose(np.np->slash->path);
+		np.np->slash->path = newpath("/");
 		np.np->nodevs = o->pgrp->nodevs;
 		opg = o->pgrp;
 		o->pgrp = np.np;

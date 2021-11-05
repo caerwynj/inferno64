@@ -740,7 +740,6 @@ mntrdwr(int type, Chan *c, void *buf, s32 n, s64 off)
 void
 mountrpc(Mnt *m, Mntrpc *r)
 {
-	char *sn, *cn;
 	int t;
 
 	r->reply.tag = 0;
@@ -757,14 +756,8 @@ mountrpc(Mnt *m, Mntrpc *r)
 	default:
 		if(t == r->request.type+1)
 			break;
-		sn = "?";
-		if(m->c->name != nil)
-			sn = m->c->name->s;
-		cn = "?";
-		if(r->c != nil && r->c->name != nil)
-			cn = r->c->name->s;
-		print("mnt: proc %s %ud: mismatch from %s %s rep 0x%lux tag %d fid %ld T%d R%d rp %d\n",
-			up->text, up->pid, sn, cn,
+		print("mnt: proc %s %lud: mismatch from %s %s rep %#p tag %d fid %d T%d R%d rp %d\n",
+			up->text, up->pid, chanpath(m->c), chanpath(r->c),
 			r, r->request.tag, r->request.fid, r->request.type,
 			r->reply.type, r->reply.tag);
 		error(Emountrpc);
@@ -1142,12 +1135,12 @@ mntchk(Chan *c)
 	/* This routine is mostly vestiges of prior lives; now it's just sanity checking */
 
 	if(c->mchan == nil)
-		panic("mntchk 1: nil mchan c %s\n", channame(c));
+		panic("mntchk 1: nil mchan c %s\n", chanpath(c));
 
 	m = c->mchan->mux;
 
 	if(m == nil)
-		print("mntchk 2: nil mux c %s c->mchan %s \n", channame(c), channame(c->mchan));
+		print("mntchk 2: nil mux c %s c->mchan %s \n", chanpath(c), chanpath(c->mchan));
 
 	/*
 	 * Was it closed and reused (was error(Eshutdown); now, it can't happen)

@@ -314,11 +314,11 @@ swiprog(Prog *p)
 	q = proctab(0);
 	for(eq = q+conf.nproc; q < eq; q++) {
 		if(q->iprog == p) {
-			swiproc(q, 1);
+			postnote(q, 1, "interrupted", NUser);
 			return;
 		}
 	}
-	/*print("didn't find\n");*/
+	print("swigrog: didn't find proc\n");
 }
 
 static Prog*

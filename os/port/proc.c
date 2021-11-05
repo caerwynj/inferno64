@@ -393,6 +393,7 @@ found:
 	if(pt != nil)
 		pt(p, SRun, 0);
 */
+/* for debugging */
 /*	if(p->pid != prevpid){
 		prevpid = p->pid;
 		if(p->type == Interp && p->iprog != nil){
@@ -403,19 +404,6 @@ found:
 	}else
 		print(".");
 */
-	return p;
-}
-
-int
-setpri(int priority)
-{
-	int p;
-
-	/* called by up so not on run queue */
-	p = up->priority;
-	up->priority = priority;
-	if(up->state == Running && anyhigher())
-		sched();
 	return p;
 }
 
@@ -449,7 +437,7 @@ newproc(void)
 	p->mach = 0;
 	p->qnext = 0;
 	p->kp = 0;
-	p->killed = 0;
+	p->killed = 0; /* TODO replace these 2 with notepending */
 	p->swipend = 0;
 	p->nlocks = 0;
 	p->delaysched = 0;
@@ -477,6 +465,53 @@ newproc(void)
 	return p;
 }
 
+/*
+ * wire this proc to a machine
+ */
+void
+procwired(Proc *p, int bm)
+{
+	Proc *pp;
+	int i;
+	char nwired[MAXMACH];
+	Mach *wm;
+
+	if(bm < 0){
+		/* pick a machine to wire to */
+		memset(nwired, 0, sizeof(nwired));
+		p->wired = nil;
+		for(i=0; i<conf.nproc; i++){
+			pp = proctab(i);
+			wm = pp->wired;
+			if(wm != nil && pp->pid)
+				nwired[wm->machno]++;
+		}
+		bm = 0;
+		for(i=0; i<conf.nmach; i++)
+			if(nwired[i] < nwired[bm])
+				bm = i;
+	} else {
+		/* use the virtual machine requested */
+		bm = bm % conf.nmach;
+	}
+
+	p->wired = MACHP(bm);
+	p->mp = p->wired;
+}
+
+int
+setpri(int priority)
+{
+	int p;
+
+	/* called by up so not on run queue */
+	p = up->priority;
+	up->priority = priority;
+	if(up->state == Running && anyhigher())
+		sched();
+	return p;
+}
+
 void
 procinit(void)
 {
@@ -487,7 +522,8 @@ procinit(void)
 	p = xalloc(conf.nproc*sizeof(Proc));
 	if(p == nil){
 		xsummary();
-		panic("cannot allocate %ud procs (%udMB)", conf.nproc, conf.nproc*sizeof(Proc)/(1024*1024));
+		panic("cannot allocate %ud procs (%udMB)",
+			conf.nproc, conf.nproc*sizeof(Proc)/(1024*1024));
 	}
 	procalloc.arena = p;
 	procalloc.free = p;
@@ -508,13 +544,12 @@ procinit(void)
  *
  *  we lock both the process and the rendezvous to keep r->p
  *  and p->r synchronized.
- * TODO
- *  9front checks up->notepending instead of up->swipend
  */
 void
 sleep(Rendez *r, int (*f)(void*), void *arg)
 {
 	int s;
+/*	void (*pt)(Proc*, int, vlong);*/
 
 	if(up == nil)
 		panic("sleep() not in process (%zux)", getcallerpc(&r));
@@ -546,10 +581,11 @@ sleep(Rendez *r, int (*f)(void*), void *arg)
 	 */
 	r->p = up;
 
-	/*
-	 * if killed or condition happened, never mind
-	 */
-	if(up->killed || f(arg)){
+	if(up->notepending || f(arg)){
+		/*
+		 *  if condition happened or a note is pending
+		 *  never mind
+		 */
 		r->p = nil;
 		unlock(&up->rlock);
 		unlock(r);
@@ -568,13 +604,20 @@ sleep(Rendez *r, int (*f)(void*), void *arg)
 		procswitch();
 	}
 
-	if(up->killed || up->swipend) {
-		up->killed = 0;
-		up->swipend = 0;
+	if(up->notepending) {
+		up->notepending = 0;
 		splx(s);
-		error(Eintr);
+		interrupted();
 	}
 	splx(s);
+}
+
+void
+interrupted(void)
+{
+	if(up->procctl == Proc_exitme && up->env->closingfgrp != nil)
+		forceclosefgrp();
+	error(Eintr);
 }
 
 static int
@@ -659,36 +702,128 @@ wakeup(Rendez *r)
 	return p;
 }
 
-/* TODO replace with postnote()
- * man 9 tsleep of inferno
- * man 9 postnote of 9front
+/*
+ *  if waking a sleeping process, this routine must hold both
+ *  p->rlock and r->lock.  However, it can't know them in
+ *  the same order as wakeup causing a possible lock ordering
+ *  deadlock.  We break the deadlock by giving up the p->rlock
+ *  lock if we can't get the r->lock and retrying.
  */
-void
-swiproc(Proc *p, int interp)
+int
+postnote(Proc *p, int dolock, char *n, int flag)
 {
-	ulong s;
-	Rendez *r;
+	int s, ret;
+	QLock *q;
 
 	if(p == nil)
-		return;
+		return 0;
 
-	s = splhi();
-	lock(&p->rlock);
-	if(!interp)
-		p->killed = 1;
-	r = p->r;
-	if(r != nil) {
-		lock(r);
-		if(r->p == p){
-			p->swipend = 1;
+	if(dolock)
+		qlock(&p->debug);
+
+	if(p->pid == 0){
+		if(dolock)
+			qunlock(&p->debug);
+		return 0;
+	}
+
+	if(n != nil && flag != NUser && (p->notify == nil || p->notified))
+		p->nnote = 0;
+
+	ret = 0;
+	if(p->nnote < NNOTE && n != nil) {
+		kstrcpy(p->note[p->nnote].msg, n, ERRMAX);
+		p->note[p->nnote++].flag = flag;
+		ret = 1;
+	}
+	p->notepending = 1;
+	if(dolock)
+		qunlock(&p->debug);
+
+	/* this loop is to avoid lock ordering problems. */
+	for(;;){
+		Rendez *r;
+
+		s = splhi();
+		lock(&p->rlock);
+		r = p->r;
+
+		/* waiting for a wakeup? */
+		if(r == nil)
+			break;	/* no */
+
+		/* try for the second lock */
+		if(canlock(r)){
+			if(p->state != Wakeme || r->p != p)
+				panic("postnote: state %d %d %d", r->p != p, p->r != r, p->state);
+			p->r = nil;
 			r->p = nil;
 			ready(p);
+			unlock(r);
+			break;
 		}
-		unlock(r);
+
+		/* give other process time to get out of critical section and try again */
+		unlock(&p->rlock);
+		splx(s);
+		sched();
 	}
 	unlock(&p->rlock);
 	splx(s);
+
+	switch(p->state){
+	case Queueing:
+		/* Try and pull out of a eqlock */
+		if((q = p->eql) != nil){
+			lock(&q->use);
+			if(p->state == Queueing && p->eql == q){
+				Proc *d, *l;
+
+				for(l = nil, d = q->head; d != nil; l = d, d = d->qnext){
+					if(d == p){
+						if(l != nil)
+							l->qnext = p->qnext;
+						else
+							q->head = p->qnext;
+						if(p->qnext == nil)
+							q->tail = l;
+						p->qnext = nil;
+						p->eql = nil;	/* not taken */
+						ready(p);
+						break;
+					}
+				}
+			}
+			unlock(&q->use);
+		}
+		break;
+	case Rendezvous:
+		/* Try and pull out of a rendezvous */
+		lock(p->env->rgrp);
+		if(p->state == Rendezvous) {
+			Proc *d, **l;
+
+			l = &REND(p->env->rgrp, p->rendtag);
+			for(d = *l; d != nil; d = d->rendhash) {
+				if(d == p) {
+					*l = p->rendhash;
+					p->rendval = ~0;
+					ready(p);
+					break;
+				}
+				l = &d->rendhash;
+			}
+		}
+		unlock(p->env->rgrp);
+		break;
+	}
+	return ret;
 }
+
+/*
+ * 9front maintains broken processes. Not bothering with them
+ * as there should not be any broken proc's in inferno
+ */
 
 void
 notkilled(void)
@@ -782,7 +917,7 @@ kproc(char *name, void (*func)(void *), void *arg, int flags)
 	p->kp = 1;
 
 	p->fpsave = up->fpsave;
-	p->scallnr = up->scallnr;
+/*	p->scallnr = up->scallnr; */
 	p->nerrlab = 0;
 
 	kstrdup(&p->env->user, up->env->user);
@@ -803,24 +938,42 @@ kproc(char *name, void (*func)(void *), void *arg, int flags)
 		p->env->egrp = eg;
 	}
 
-/*	p->nnote = 0;
+	p->nnote = 0;
 	p->notify = nil;
 	p->notified = 0;
-	p->notepending = 0;*/
+	p->notepending = 0;
 
 	p->procmode = 0640;
 	p->privatemem = 1;
 	p->noswap = 1;
 	p->hang = 0;
 	p->kp = 1;
+
+/*	p->kpfun = func;
+	p->kparg = arg;
+	kprocchild(p, linkproc);*/
+/* this does all of the above 3 lines */
 	kprocchild(p, func, arg);
 
 	strcpy(p->text, name);
+
+/*	if(kpgrp == nil)
+		kpgrp = newpgrp();
+	p->pgrp = kpgrp;
+	incref(kpgrp);*/
+
+	memset(p->time, 0, sizeof(p->time));
+	p->time[TReal] = MACHP(0)->ticks;
+/*	cycles(&p->kentry);
+	p->pcycles = -p->kentry;*/
 
 	pidalloc(p);
 
 	qunlock(&p->debug);
 
+/*	procpriority(p, PriKproc, 0);*/
+
+	p->psstate = nil;
 	ready(p);
 }
 
