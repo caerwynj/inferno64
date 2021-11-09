@@ -896,6 +896,7 @@ procdump(void)
 			continue;
 
 		dumpaproc(p);
+		dumppgrp("	", p->env->pgrp);
 	}
 }
 

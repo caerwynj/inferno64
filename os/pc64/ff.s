@@ -6,6 +6,7 @@ The bigger goal is to replace the dis vm with ff
 ff outputs to screen now.
 But, the input needs to be fixed.
 make this into a devff like device that reads commands and outputs the result.
+replace variable with value (as in open firmware), to avoid exposing addresses
 
  ff kernel, amd64 9front variant
 

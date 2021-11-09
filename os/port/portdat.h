@@ -20,7 +20,9 @@ typedef struct Logflag	Logflag;
 typedef struct Mntcache Mntcache;
 typedef struct Mntparam Mntparam;
 typedef struct Mount	Mount;
+typedef struct Mntrah	Mntrah;
 typedef struct Mntrpc	Mntrpc;
+typedef struct Mntproc	Mntproc;
 typedef struct Mntwalk	Mntwalk;
 typedef struct Mnt	Mnt;
 typedef struct Mhead	Mhead;
@@ -62,6 +64,12 @@ typedef int    Devgen(Chan*, char*, Dirtab*, int, int, Dir*);
 #include "fcall.h"
 #include <pool.h>
 
+/*
+ * sticking with inferno's definition of Ref
+ * as it keeps the incref() and decref() simple
+ * and also puts the proc on the fast path by the
+ * scheduler's priorities (PriLock)
+ */
 struct Ref
 {
 	Lock	l;
@@ -116,10 +124,10 @@ enum
 
 struct QLock
 {
-	Lock	use;			/* to access Qlock structure */
-	Proc	*head;			/* next process waiting for object */
-	Proc	*tail;			/* last process waiting for object */
-	s32	locked;			/* flag */
+	Lock	use;	/* to access Qlock structure */
+	Proc	*head;	/* next process waiting for object */
+	Proc	*tail;	/* last process waiting for object */
+	s32	locked;		/* flag */
 };
 
 struct RWlock
@@ -203,8 +211,8 @@ struct Chan
 {
 	Ref;
 	Lock;
-	Chan*	next;			/* allocation */
-	Chan*	link;
+	Chan	*next;		/* allocation */
+	Chan	*link;
 	s64	offset;			/* in fd */
 	s64	devoffset;		/* in underlying device; see read */
 	u16	type;
@@ -214,32 +222,32 @@ struct Chan
 	Qid	qid;
 	s32	fid;			/* for devmnt */
 	u32	iounit;			/* chunk size for i/o; 0==default */
-	Mhead*	umh;			/* mount point that derived Chan; used in unionread */
-	Chan*	umc;			/* channel in union; held for union read */
-	QLock	umqlock;		/* serialize unionreads */
+	Mhead	*umh;		/* mount point that derived Chan; used in unionread */
+	Chan	*umc;		/* channel in union; held for union read */
+	QLock	umqlock;	/* serialize unionreads */
 	s32	uri;			/* union read index */
 	s32	dri;			/* devdirread index */
-	uchar*	dirrock;		/* directory entry rock for translations */
+	uchar	*dirrock;	/* directory entry rock for translations */
 	int	nrock;
 	int	mrock;
 	QLock	rockqlock;
 	int	ismtpt;
-	Mntcache*mcp;			/* Mount cache pointer */
-	Mnt*	mux;			/* Mnt for clients using me for messages */
+	Mntcache	*mcp;	/* Mount cache pointer */
+	Mnt	*mux;			/* Mnt for clients using me for messages */
 	union {
-		void*	aux;
+		void	*aux;
 		u32	mid;		/* for ns in devproc */
 	};
-	Chan*	mchan;			/* channel to mounted server */
+	Chan	*mchan;		/* channel to mounted server */
 	Qid	mqid;			/* qid of root of mount point */
-	Path*	path;
+	Path	*path;
 };
 
 struct Path
 {
 	Ref;
 	char	*s;
-	Chan	**mtpt;			/* mtpt history */
+	Chan	**mtpt;		/* mtpt history */
 	int	len;			/* strlen(s) */
 	int	alen;			/* allocated length of s */
 	int	mlen;			/* number of path elements */
@@ -249,7 +257,7 @@ struct Path
 struct Dev
 {
 	s32	dc;
-	char*	name;
+	char	*name;
 
 	void	(*reset)(void);
 	void	(*init)(void);
@@ -296,16 +304,23 @@ struct Mntwalk				/* state for /proc/#/ns */
 {
 	s32		cddone;
 	u32	id;
-	Mhead*	mh;
-	Mount*	cm;
+	Mhead	*mh;
+	Mount	*cm;
 };
 
+/*
+ * *order is used to build a temporary mountid sorted linked
+ * list by pgrpcpy() to preserve the mountid allocation order
+ * of the source pgrp.
+ * Alternative would be to build an array of copied mounts and
+ * qsort() it at the end before allocating mountid's.
+ */
 struct Mount
 {
 	u32	mountid;
-	Mount*	next;
-	Mount*	order;
-	Chan*	to;			/* channel replacing channel */
+	Mount	*next;
+	Mount	*order;
+	Chan	*to;			/* channel replacing channel */
 	s32	mflag;
 	char	*spec;
 };
@@ -314,9 +329,32 @@ struct Mhead
 {
 	Ref;
 	RWlock	lock;
-	Chan*	from;			/* channel mounted upon */
-	Mount*	mount;			/* what's mounted upon it */
-	Mhead*	hash;			/* Hash chain */
+	Chan	*from;			/* channel mounted upon */
+	Mount	*mount;			/* what's mounted upon it */
+	Mhead	*hash;			/* Hash chain */
+};
+
+struct Mntrah
+{
+	Rendez;
+
+	ulong	vers;
+
+	vlong	off;
+	vlong	seq;
+
+	uint	i;
+	Mntrpc	*r[8];
+};
+
+struct Mntproc
+{
+	Rendez;
+
+	Mnt	*m;
+	Mntrpc	*r;
+	void	*a;
+	void	(*f)(Mntrpc*, void*);
 };
 
 struct Mnt
@@ -326,6 +364,7 @@ struct Mnt
 	Chan	*c;		/* Channel to file service */
 	Proc	*rip;		/* Reader in progress */
 	Mntrpc	*queue;		/* Queue of pending requests on this channel */
+	Mntproc	defered[8];	/* Worker processes for defered RPCs (read ahead) */
 	u32	id;		/* Multiplexer id for channel check */
 	Mnt	*list;		/* Free list */
 	s32	flags;		/* cache */
@@ -367,6 +406,10 @@ struct Mntparam {
 	s32	flags;
 };
 
+/*
+ * All processes in a process group share the namespace.
+ * Hence, this can be called the namespace group too
+ */
 struct Pgrp
 {
 	Ref;				/* also used as a lock when mounting */
@@ -383,6 +426,11 @@ struct Pgrp
 	s32	pin;
 };
 
+/*
+ * Array of Chan* (Every file is a Chan* in the server).
+ * fd (file descriptor) is the file's index in that array.
+ * fdtochan(fd) => Chan*
+ */
 struct Fgrp
 {
 	Ref;

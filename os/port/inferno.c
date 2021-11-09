@@ -265,7 +265,7 @@ Sys_read(void *fp)
 	n = f->n;
 	if(f->buf == (Array*)H || n < 0) {
 		*f->ret = 0;
-		return;		
+		return;
 	}
 	if(n > f->buf->len)
 		n = f->buf->len;

@@ -5,6 +5,8 @@
 #include	"fns.h"
 #include	"../port/error.h"
 
+#define DBG if(0)print
+
 enum
 {
 	PATHSLOP	= 20,
@@ -54,30 +56,35 @@ isdotdot(char *p)
 	return p[0]=='.' && p[1]=='.' && p[2]=='\0';
 }
 
+/*
+ * sticking with inferno's definition of Ref
+ * as it keeps the incref() and decref() simple
+ * and also puts the proc on the fast path by the
+ * scheduler's priorities (PriLock)
+ */
 int
 incref(Ref *r)
 {
-	long old, new;
+	int x;
 
-	do {
-		old = r->ref;
-		new = old+1;
-	} while(!cmpswap(&r->ref, old, new));
-	return new;
+	lock(&r->l);
+	x = ++r->ref;
+	unlock(&r->l);
+	return x;
 }
 
 int
 decref(Ref *r)
 {
-	long old, new;
+	int x;
 
-	do {
-		old = r->ref;
-		if(old <= 0)
-			panic("decref pc=%#p", getcallerpc(&r));
-		new = old-1;
-	} while(!cmpswap(&r->ref, old, new));
-	return new;
+	lock(&r->l);
+	x = --r->ref;
+	unlock(&r->l);
+	if(x < 0)
+		panic("decref, pc=0x%zux", getcallerpc(&r));
+
+	return x;
 }
 
 /*
@@ -159,7 +166,7 @@ chandevreset(void)
 
 /*
  * closeproc() kproc is used by 9front not inferno
- * TODO not sure if closeproc() is needed for 9ferno
+ * used to close clunked chan's
  */
 static void closeproc(void*);
 
@@ -185,6 +192,12 @@ chandevshutdown(void)
 		devtab[i]->shutdown();
 }
 
+void
+dumpchan(char *s, Chan *c)
+{
+	print("%s chanpath %s\n", s, chanpath(c));
+}
+
 Chan*
 newchan(void)
 {
@@ -192,18 +205,19 @@ newchan(void)
 
 	lock(&chanalloc);
 	c = chanalloc.free;
-	if(c != 0)
+	if(c != nil){
 		chanalloc.free = c->next;
-	unlock(&chanalloc);
-
-	if(c == nil) {
+		c->next = nil;
+	} else {
+		unlock(&chanalloc);
 		c = smalloc(sizeof(Chan));
 		lock(&chanalloc);
-		c->fid = ++chanalloc.fid;
 		c->link = chanalloc.list;
 		chanalloc.list = c;
-		unlock(&chanalloc);
 	}
+	if(c->fid == 0)
+		c->fid = ++chanalloc.fid;
+	unlock(&chanalloc);
 
 	/* if you get an error before associating with a dev,
 	   close calls rootclose, a nop */
@@ -212,18 +226,23 @@ newchan(void)
 	c->ref = 1;
 	c->dev = 0;
 	c->offset = 0;
+	c->devoffset = 0;
 	c->iounit = 0;
-	c->umh = 0;
+	c->umh = nil;
+	c->umc = nil;
 	c->uri = 0;
 	c->dri = 0;
-	c->aux = 0;
-	c->mchan = 0;
-	c->mcp = 0;
-	c->mux = 0;
-	c->mqid.path = 0;
-	c->mqid.vers = 0;
-	c->mqid.type = 0;
+	c->dirrock = nil;
+	c->nrock = 0;
+	c->mrock = 0;
+	c->ismtpt = 0;
+	c->mcp = nil;
+	c->mux = nil;
+	c->aux = nil;
+	c->mchan = nil;
+	memset(&c->mqid, 0, sizeof(c->mqid));
 	c->path = nil;
+	
 	return c;
 }
 
@@ -288,9 +307,13 @@ pathclose(Path *p)
 
 	if(p == nil || decref(p))
 		return;
+	DBG("pathclose path %s mlen %d malen %d\n", p->s, p->mlen, p->malen);
 	for(i=0; i<p->mlen; i++)
-		if(p->mtpt[i] != nil)
+		if(p->mtpt[i] != nil){
+			DBG("pathclose i %d p->mtpt[i] path %s p->mtpt[i]->ref %d\n",
+				i, chanpath(p->mtpt[i]), p->mtpt[i]->ref);
 			cclose(p->mtpt[i]);
+		}
 	free(p->mtpt);
 	free(p->s);
 	free(p);
@@ -515,7 +538,8 @@ cclose(Chan *c)
 	if(c == nil)
 		return;
 	if(c->ref < 1 || c->flag&CFREE)
-		panic("cclose %#p", getcallerpc(&c));
+		panic("cclose %#p c->path %s c->ref %d c->flag 0x%ux",
+				getcallerpc(&c), chanpath(c), c->ref, c->flag);
 
 	if(decref(c))
 		return;
@@ -529,7 +553,7 @@ cclose(Chan *c)
 	}
 
 	if(!waserror()){
-		devtab[c->type]->close(c);
+		devtab[c->type]->close(c); 
 		poperror();
 	}
 	chanfree(c);

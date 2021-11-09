@@ -12,9 +12,59 @@ enum {
 	Whinesecs = 10,		/* frequency of out-of-resources printing */
 };
 
-/* TODO code here is different from 9front. Need to understand why. */
-
 static Ref mountid;
+
+void
+dumpmount(char *s, Mount *m)
+{
+	if(m == nil)
+		return;
+
+	print("%smountid %d spec %s",
+			s, m->mountid, m->spec);
+	dumpchan("to", m->to);
+}
+
+void
+dumpmhead(char *s, Mhead *mh)
+{
+	Mount *m;
+
+	if(mh == nil)
+		return;
+
+	dumpchan("		from ", mh->from);
+	print("			to\n");
+	m = mh->mount;
+	dumpmount("			", m);
+	print("				next\n");
+	for(m = m->next; m != nil; m = m->next) {
+		dumpmount("			", m);
+	}
+}
+
+void
+dumppgrp(char *s, Pgrp *p)
+{
+	int i;
+	Mhead *mh;
+
+	if(p == nil)
+		return;
+
+	rlock(&p->ns);
+	print("%s%p:%3ud slash %s dot %s\n		mnthash\n",
+			s, p, p->pgrpid, chanpath(p->slash), chanpath(p->dot));
+	for(i = 0; i<MNTHASH; i++){
+		print("		i %d\n", i);
+		for(mh = p->mnthash[i]; mh != nil; mh = mh->hash){
+			rlock(&mh->lock);
+			dumpmhead("		", mh);
+			runlock(&mh->lock);
+		}
+	}
+	runlock(&p->ns);
+}
 
 Pgrp*
 newpgrp(void)
@@ -48,43 +98,36 @@ closergrp(Rgrp *r)
 void
 closepgrp(Pgrp *p)
 {
-	Mhead **h, **e, *f, *next;
+	Mhead **h, **e, *f;
+	Mount *m;
 	
-	if(p == nil || decref(p) != 0)
+	if(p == nil || decref(p))
 		return;
-
-	wlock(&p->ns);
-	p->pgrpid = -1;
 
 	e = &p->mnthash[MNTHASH];
 	for(h = p->mnthash; h < e; h++) {
-		for(f = *h; f; f = next) {
+		while((f = *h) != nil){
+			*h = f->hash;
 			wlock(&f->lock);
-			cclose(f->from);
-			mountfree(f->mount);
+			m = f->mount;
 			f->mount = nil;
-			next = f->hash;
 			wunlock(&f->lock);
+			mountfree(m);
 			putmhead(f);
 		}
 	}
-	wunlock(&p->ns);
 	cclose(p->dot);
 	cclose(p->slash);
 	free(p);
 }
 
-void
+static void
 pgrpinsert(Mount **order, Mount *m)
 {
 	Mount *f;
 
-	m->order = 0;
-	if(*order == 0) {
-		*order = m;
-		return;
-	}
-	for(f = *order; f; f = f->order) {
+	m->order = nil;
+	for(f = *order; f != nil; f = f->order) {
 		if(m->mountid < f->mountid) {
 			m->order = f;
 			*order = m;
@@ -97,6 +140,8 @@ pgrpinsert(Mount **order, Mount *m)
 
 /*
  * pgrpcpy MUST preserve the mountid allocation order of the parent group
+ * Hence, uses Mount.order to build a sorted linked list of mounts while
+ * copying the mounts.
  */
 void
 pgrpcpy(Pgrp *to, Pgrp *from)
@@ -105,6 +150,8 @@ pgrpcpy(Pgrp *to, Pgrp *from)
 	Mount *n, *m, **link, *order;
 	Mhead *f, **l, *mh;
 
+/*	print("pgrpcpy to->pgrpid %d from->pgrpid %d\n", to->pgrpid, from->pgrpid);
+	dumppgrp("	from	\n	", from); */
 	wlock(&to->ns);
 	rlock(&from->ns);
 	order = nil;
@@ -144,6 +191,7 @@ pgrpcpy(Pgrp *to, Pgrp *from)
 
 	runlock(&from->ns);
 	wunlock(&to->ns);
+/*	dumppgrp("	to	\n	", to); */
 }
 
 /* not used by 9front. why? */
@@ -224,7 +272,7 @@ closefgrp(Fgrp *f)
 	int i;
 	Chan *c;
 
-	if(f == nil || decref(f))
+	if(f == nil || decref(f) != 0)
 		return;
 
 	/*
