@@ -176,6 +176,7 @@ root
 	/nvfs	/
 	/prog	/
 	/tmp	/
+	/proc	/
 	/dis/lib
 	/dis/svc
 	/dis/wm

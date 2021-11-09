@@ -7,7 +7,7 @@
 REG	R;			/* Virtual Machine registers */
 String	snil;			/* String known to be zero length */
 
-#define DP	if(1){}else print
+#define DBG	if(0)print
 #define Stmp	*((WORD*)(R.FP+NREG*IBY2WD))
 #define Dtmp	*((WORD*)(R.FP+(NREG+2)*IBY2WD))
 
@@ -220,7 +220,7 @@ OP(indx)
 
 	a = A(s);
 	i = W(d);
-	DP("indx a %p a->len %zd i %zd\n", a, a->len, i);
+	DBG("indx a %p a->len %zd i %zd\n", a, a->len, i);
 	if(a == H || i >= a->len){
 	print("indx a %p a->len %zd i %zd\n", a, a->len, i);
 		error(exBounds);
@@ -234,7 +234,7 @@ OP(indw)
 
 	a = A(s);
 	i = W(d);
-	DP("indw a %p a->len %zd i %zd\n", a, a->len, i);
+	DBG("indw a %p a->len %zd i %zd\n", a, a->len, i);
 	if(a == H || i >= a->len){
 	print("indw a %p a->len %zd i %zd\n", a, a->len, i);
 		error(exBounds);
@@ -248,7 +248,7 @@ OP(indf)
 
 	a = A(s);
 	i = W(d);
-	DP("indf a %p a->len %zd i %zd\n", a, a->len, i);
+	DBG("indf a %p a->len %zd i %zd\n", a, a->len, i);
 	if(a == H || i >= a->len){
 	print("indf a %p a->len %zd i %zd\n", a, a->len, i);
 		error(exBounds);
@@ -262,7 +262,7 @@ OP(indl)
 
 	a = A(s);
 	i = W(d);
-	DP("indl a %p a->len %zd i %zd\n", a, a->len, i);
+	DBG("indl a %p a->len %zd i %zd\n", a, a->len, i);
 	if(a == H || i >= a->len){
 	print("indl a %p a->len %zd i %zd\n", a, a->len, i);
 		error(exBounds);
@@ -276,7 +276,7 @@ OP(indb)
 
 	a = A(s);
 	i = W(d);
-	DP("indb a %p a->len %zd a->data 0x%p i %zd\n", a, a->len, a->data, i);
+	DBG("indb a %p a->len %zd a->data 0x%p i %zd\n", a, a->len, a->data, i);
 	if(a == H || i >= a->len){
 	print("indb a %p a->len %zd a->data 0x%p i %zd\n", a, a->len, a->data, i);
 		error(exBounds);
@@ -364,7 +364,7 @@ OP(frame)
 	R.SP  = nsp;
 	f->t  = t;
 	f->mr = nil;
-	DP("frame frame 0x%p t 0x%p t->size %d R.SP 0x%p\n",
+	DBG("frame frame 0x%p t 0x%p t->size %d R.SP 0x%p\n",
 		f, t, t->size, R.SP);
 	if (t->np)
 		initmem(t, f);
@@ -398,19 +398,19 @@ OP(mframe)
 		R.s = t;
 		extend();
 		T(d) = R.s;
-		DP("\t\textended frame at *R.d 0x%p\n", *(intptr**)R.d);
+		DBG("\t\textended frame at *R.d 0x%p\n", *(intptr**)R.d);
 		return;
 	}
 	f = (Frame*)R.SP;
 	R.SP = nsp;
 	f->t = t;
 	f->mr = nil;
-	DP("\t\tmframe frame 0x%p t 0x%p t->size %d R.SP 0x%p\n",
+	DBG("\t\tmframe frame 0x%p t 0x%p t->size %d R.SP 0x%p\n",
 		f, t, t->size, R.SP);
 	if (t->np)
 		initmem(t, f);
 	T(d) = f;
-	DP("\t\tframe at *R.d 0x%p is\n", *(intptr**)R.d);
+	DBG("\t\tframe at *R.d 0x%p is\n", *(intptr**)R.d);
 	if(0) showframe((void *)f, t);
 }
 void
@@ -715,7 +715,7 @@ OP(mspawn)
 void
 showREG(void)
 {
-	DP("REG PC 0x%p MP 0x%p FP 0x%p SP 0x%p\n"
+	DBG("REG PC 0x%p MP 0x%p FP 0x%p SP 0x%p\n"
 		"\tTS 0x%p EX 0x%p M 0x%p IC %d\n"
 		"\txpc 0x%p s 0x%p d 0x%p m 0x%p\n",
 		R.PC, R.MP, R.FP, R.SP,
@@ -729,7 +729,7 @@ OP(ret)
 
 	showREG();
 	f = (Frame*)R.FP;
-	DP("Frame at 0x%p lr 0x%p fp 0x%p mr 0x%p t 0x%p\n",
+	DBG("Frame at 0x%p lr 0x%p fp 0x%p mr 0x%p t 0x%p\n",
 		f, f->lr, f->fp, f->mr, f->t);
 	/* showframe((void*)f, f->t); */
 	R.FP = f->fp;
@@ -778,7 +778,7 @@ OP(iload)
 		error("obsolete dis");
 	}
 
-	DP("\t\tiload module %s for the ldt index %zd\n", n, W(m));
+	DBG("\t\tiload module %s for the ldt index %zd\n", n, W(m));
 	if(strcmp(n, "$self") == 0) {
 		m->ref++;
 		ml = linkmod(m, ldt, 0);
@@ -821,19 +821,19 @@ OP(mcall)
 	h = D2H(ml);
 	h->ref++;
 
-	DP("\t\tmcall frame at *R.s 0x%p is\n", f);
+	DBG("\t\tmcall frame at *R.s 0x%p is\n", f);
 	if(0 && f->t != nil)
 		showframe((void *)f, f->t);
 	o = W(m);
 	if(o >= 0){
 		l = &ml->links[o].u;
-		DP("\t\tlink o %d %s\n",
+		DBG("\t\tlink o %d %s\n",
 			o, ml->links[o].name);
-		DP("\t\text o %d %s sig 0x%x\n",
+		DBG("\t\text o %d %s sig 0x%x\n",
 			o, ml->m->ext[o].name, ml->m->ext[o].sig);
 	}else{
 		l = &ml->m->ext[-o-1].u;
-		DP("\t\text o %d %s sig 0x%x\n",
+		DBG("\t\text o %d %s sig 0x%x\n",
 			-o-1, ml->m->ext[-o-1].name, ml->m->ext[-o-1].sig);
 	}
 	if(ml->prog == nil) {
@@ -864,11 +864,12 @@ OP(lena)
 	WORD l;
 	Array *a;
 
+	DBG("lena R.s 0x%zx\n", R.s);
 	a = A(s);
 	l = 0;
 	if(a != H)
 		l = a->len;
-	DP("lena after A(s) l %zd a->len %zd\n", l, a->len);
+	DBG("lena after A(s) l %zd a->len %zd\n", l, a->len);
 	W(d) = l;
 }
 OP(lenl)
@@ -1733,9 +1734,9 @@ showprog(Prog *p)
 	Stkext *sx;
 	uchar *fp, *sp, *ex;
 
-	DP("Prog state %d pid %d ticks %lud\n",
+	DBG("Prog state %d pid %d ticks %lud\n",
 		p->state, p->pid, p->ticks);
-	DP("\tpc 0x%p module %s %s\n",
+	DBG("\tpc 0x%p module %s %s\n",
 		p->R.PC, p->R.M->m->name, p->R.M->m->path);
 	sp = p->R.SP;
 	ex = p->R.EX;
@@ -1748,7 +1749,7 @@ showprog(Prog *p)
 			if(t == nil)
 				t = sx->reg.TR;
 			fp += t->size;
-			DP("\tFrame 0x%p type 0x%p type size %d\n",
+			DBG("\tFrame 0x%p type 0x%p type size %d\n",
 				f, t, t->size);
 		}
 		ex = sx->reg.EX;
@@ -1777,21 +1778,22 @@ xec(Prog *p)
 	if(R.M->compiled)
 		comvec();
 	else do {
-		DP("step: %p: %s pid %d state %d %4zd %D:\tR.PC->op=0x%x R.PC->add=0x%x\n",
+		DBG("step: %p: %s pid %d state %d %4zd %D:\tR.PC->op=0x%x R.PC->add=0x%x\n",
 			p, R.M->m->name, p->pid, p->state, R.PC-R.M->prog, R.PC, R.PC->op,
 			R.PC->add);
 		dec[R.PC->add]();
 		op = R.PC->op;
 		R.PC++;
 		optab[op]();
-		DP(" end: %p: ", p);
-		DP("%s ", R.M->m->name);
-		DP("pid %d ", p->pid);
-		DP("state %d", p->state);
-		DP(" %4zd", R.PC-R.M->prog);
-		DP(" %D:\t", R.PC);
-		DP("R.PC->op=0x%x ", R.PC->op);
-		DP("R.PC->add=0x%x\n", R.PC->add);
+/*		DBG(" end: %p: ", p);
+		DBG("%s ", R.M->m->name);
+		DBG("pid %d ", p->pid);
+		DBG("state %d", p->state);
+		DBG(" %4zd", R.PC-R.M->prog);
+		DBG(" %D:\t", R.PC);
+		DBG("R.PC->op=0x%x ", R.PC->op);
+		DBG("R.PC->add=0x%x\n", R.PC->add);
+*/
 	} while(--R.IC != 0);
 
 	p->R = R;

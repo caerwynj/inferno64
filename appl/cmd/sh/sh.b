@@ -1536,11 +1536,23 @@ XXXenvstringtoval(v: string): list of ref Listnode
 	return ref Listnode(nil, v[0:start]) :: val;
 }
 
+# the correct way to set environment variables is to
+# be able to catch errors if there is a failure.
+# this is not happening and is propogating to a triple fault.
+# the shell should run this in an exception handler
+# When value is nil, setenv() tries to remove the
+# env file. If the file does not already exist,
+# that raises an unhandled exception which is causing a triple
+# fault
 setenv(name: string, val: list of ref Listnode)
 {
 	if (env == nil)
 		return;
-	env->setenv(name, quoted(val, 1));
+	valstr := quoted(val, 1);
+	if(valstr == nil && getenv(name) == nil){
+		return;
+	}
+	env->setenv(name, valstr);
 }
 
 

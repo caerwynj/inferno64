@@ -4,9 +4,7 @@
 #	configure boot devices
 #	setup /
 # sh -n /dis/init
-
-# disinit.b does this but not sure why it loses it later
-bind -c '#e' /env
+#	-n to avoid forking the namespace and losing the binds created by disinit.b
 
 load std
 mount {mntgen} /n
