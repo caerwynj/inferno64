@@ -4,6 +4,8 @@ typedef unsigned long size_t;
 #define	offsetof(s, m)	(u32)(&(((s*)0)->m))
 #define	assert(x)	if(x){}else _assert("x")
 
+#define	DBG	if(debug)print
+
 /*
  * mem routines
  */

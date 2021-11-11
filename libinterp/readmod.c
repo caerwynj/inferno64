@@ -4,6 +4,8 @@
 #include "kernel.h"
 #include "dynld.h"
 
+static int debug = 0;
+
 Module*
 readmod(char *path, Module *m, int sync)
 {

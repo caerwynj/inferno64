@@ -1,13 +1,14 @@
-#include <lib9.h>
+#include "lib9.h"
 #include "isa.h"
 #include "interp.h"
 #include "raise.h"
 #include "pool.h"
 
+static int debug = 0;
+
 REG	R;			/* Virtual Machine registers */
 String	snil;			/* String known to be zero length */
 
-#define DBG	if(0)print
 #define Stmp	*((WORD*)(R.FP+NREG*IBY2WD))
 #define Dtmp	*((WORD*)(R.FP+(NREG+2)*IBY2WD))
 

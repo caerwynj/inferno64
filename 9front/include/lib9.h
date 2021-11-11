@@ -12,3 +12,5 @@ typedef usize size_t;
 
 #define	setbinmode()
 #define	USE_FPdbleword
+
+#define	DBG	if(debug)print

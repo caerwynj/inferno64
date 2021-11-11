@@ -9,7 +9,7 @@
 #include <kernel.h>
 #include "raise.h"
 
-#define DBG if(0)print
+static int debug = 0;
 
 void	vmachine(void*);
 

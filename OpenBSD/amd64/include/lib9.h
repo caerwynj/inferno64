@@ -39,6 +39,7 @@ typedef struct Proc Proc;
 #define __LITTLE_ENDIAN
 
 #define	nil		((void*)0)
+#define	DBG	if(debug)print
 
 typedef unsigned int	mpdigit;	/* for /sys/include/mp.h */
 typedef unsigned char	uchar;

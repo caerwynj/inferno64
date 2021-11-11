@@ -5,7 +5,7 @@
 #include	"fns.h"
 #include	"../port/error.h"
 
-#define DBG if(0)print
+static int debug = 0;
 
 enum
 {

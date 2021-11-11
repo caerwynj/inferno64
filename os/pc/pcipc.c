@@ -7,7 +7,7 @@
 #include "../port/pci.h"
 #include "../port/error.h"
 
-#define DBG	if(1) print
+static int debug = 0;
 
 enum
 {	/* configuration mechanism #1 */

@@ -5,6 +5,8 @@
 #include	"fns.h"
 #include	"../port/error.h"
 
+static int debug = 0;
+
 /*
  * References are managed as follows:
  * The channel to the server - a network connection or pipe - has one

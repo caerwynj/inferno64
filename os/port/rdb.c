@@ -8,7 +8,7 @@
 
 int rdbstarted;
 
-#define DBG	if(1)scrprint
+#define DBGS	if(1)scrprint
 #pragma varargck argpos scrprint 1
 static Ureg ureg;
 
