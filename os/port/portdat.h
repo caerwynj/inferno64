@@ -95,21 +95,22 @@ struct Rept
 
 struct Osenv
 {
-	char	*syserrstr;	/* last error from a system call, errbuf0 or 1 */
+	char	*syserrstr;	/* last error from a system call, errbuf0 or 1 - obsolete in inferno */
+	intptr	errpc;
 	char	*errstr;	/* reason we're unwinding the error stack, errbuf1 or 0 */
 	char	errbuf0[ERRMAX];
 	char	errbuf1[ERRMAX];
-	Pgrp*	pgrp;		/* Ref to namespace, working dir and root */
-	Fgrp*	fgrp;		/* Ref to file descriptors */
-	Egrp*	egrp;	/* Environment vars */
-	Skeyset*	sigs;		/* Signed module keys */
-	Rendez*	rend;		/* Synchro point */
-	Queue*	waitq;		/* Info about dead children */
-	Queue*	childq;		/* Info about children for debuggers */
-	void*	debug;		/* Debugging master */
+	Pgrp	*pgrp;		/* Ref to namespace, working dir and root */
+	Fgrp	*fgrp;		/* Ref to file descriptors */
+	Egrp	*egrp;	/* Environment vars */
+	Skeyset	*sigs;		/* Signed module keys */
+	Rendez	*rend;		/* Synchro point */
+	Queue	*waitq;		/* Info about dead children */
+	Queue	*childq;		/* Info about children for debuggers */
+	void	*debug;		/* Debugging master */
 	s32	uid;		/* Numeric user id for system */
 	s32	gid;		/* Numeric group id for system */
-	char*	user;		/* Inferno user name */
+	char	*user;		/* Inferno user name */
 	int	fpuostate;
 
 	/* from 9front */
@@ -453,31 +454,24 @@ struct Rgrp
 
 struct Evalue
 {
-	union {
-		char	*name;
-		char	*var;
-	};
-	union {
-		char	*value;
-		char	*val;
-	};
+	char	*name;
+	char	*value;
 	s32	len;
 	Qid	qid;
-	Evalue	*next;
 };
 
 struct Egrp
 {
 	Ref;
-	QLock;
-	union{
+	RWlock;
+	union{		/* array of Evalue's */
 		Evalue	*entries;
 		Evalue	*ent;
 	};
 	int	nent;
 	int	ment;
-	ulong	path;	/* qid.path of next Evalue to be allocated */
-	ulong	vers;	/* of Egrp */
+	u32	path;	/* qid.path of next Evalue to be allocated */
+	u32	vers;	/* of Egrp */
 };
 
 struct Signerkey
@@ -737,17 +731,17 @@ struct Proc
 
 	/* inferno specific fields */
 	s32		type;
-	void*		prog;		/* Dummy Prog for interp release */
-	void*		iprog;
-	Osenv*		env;
-	Osenv		defenv;
+	void	*prog;		/* Dummy Prog for interp release */
+	void	*iprog;
+	Osenv	*env;
+	Osenv	defenv;
 	s32		swipend;	/* software interrupt pending for Prog TODO replace with notepending? */
 	Lock		sysio;		/* note handler lock */
 
 	/* inferno specific fields that are obsolete? */
 	int		fpstate;
 	int		killed;		/* by swiproc */
-	Proc*		tlink;
+	Proc	*tlink;
 	ulong		movetime;	/* next time process should switch processors */
  	int		dbgstop;		/* don't run this kproc */
 };

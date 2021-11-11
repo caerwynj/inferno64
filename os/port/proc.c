@@ -1011,12 +1011,15 @@ error(char *err)
 	if(up->nerrlab >= NERR)
 		panic("error stack too deep");
 	kstrcpy(up->env->errstr, err, ERRMAX);
-	/* proactively show issues */
-	/* if(err[0] != '\0')
-		print("up->nerrlab %d error %s raised by 0x%zx\n",
-			up->nerrlab, err, getcallerpc(&err));
-	showerrlabs();
-	*/
+	if(err[0] == '\0'){
+		up->env->errpc = 0;
+	}else{
+		up->env->errpc = getcallerpc(&err);
+		/* proactively show issues */
+		/* print("up->nerrlab %d error %s raised by 0x%zx\n",
+			up->nerrlab, err, getcallerpc(&err)); */
+		/* showerrlabs(); */
+	}
 	setlabel(&up->errlab[NERR-1]); /* to store the location where error() was raised(?) */
 	nexterror();
 }

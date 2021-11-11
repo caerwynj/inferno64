@@ -8,46 +8,78 @@
 #include	"dat.h"
 #include	"fns.h"
 
-static void envremove(Chan*);
-
 enum
 {
+	DELTAENV = 32,
 	Maxenvsize = 16300,
 };
 
+static Egrp	*envgrp(Chan *c);
+static int	envwriteable(Chan *c);
+
 static Egrp	confegrp;	/* global environment group containing the kernel configuration */
 
+static Evalue*
+envlookup(Egrp *eg, char *name, ulong qidpath)
+{
+	Evalue *e, *ee;
+
+	e = eg->ent;
+	for(ee = e + eg->nent; e < ee; e++){
+		if(e->qid.path == qidpath
+		|| (name != nil && name[0] == e->name[0] && strcmp(e->name, name) == 0))
+			return e;
+	}
+	return nil;
+}
+
 static int
-envgen(Chan *c, char*, Dirtab*, int, int s, Dir *dp)
+envgen(Chan *c, char *name, Dirtab*, int, int s, Dir *dp)
 {
 	Egrp *eg;
 	Evalue *e;
 
 	if(s == DEVDOTDOT){
-		devdir(c, c->qid, "#e", 0, eve, DMDIR|0775, dp);
+		devdir(c, c->qid, "#e", 0, eve, 0775, dp);
 		return 1;
 	}
-	eg = up->env->egrp;
-	qlock(eg);
-	for(e = eg->entries; e != nil && s != 0; e = e->next)
-		s--;
-	if(e == nil) {
-		qunlock(eg);
+
+	eg = envgrp(c);
+	rlock(eg);
+	if(name != nil)
+		e = envlookup(eg, name, -1);
+	else if(s < eg->nent)
+		e = &eg->ent[s];
+	else
+		e = nil;
+	if(e == nil || name != nil && (strlen(e->name) >= sizeof(up->genbuf))) {
+		runlock(eg);
 		return -1;
 	}
+
 	/* make sure name string continues to exist after we release lock */
-	kstrcpy(up->genbuf, e->var, sizeof up->genbuf);
-	devdir(c, e->qid, up->genbuf, e->len, eve, 0666, dp);
-	qunlock(eg);
+	kstrcpy(up->genbuf, e->name, sizeof up->genbuf);
+	devdir(c, e->qid, up->genbuf, e->len, eve,
+		eg == &confegrp || eg != up->env->egrp ? 0664: 0666, dp);
+	runlock(eg);
 	return 1;
 }
 
 static Chan*
 envattach(char *spec)
 {
-	if(up->env == nil || up->env->egrp == nil)
-		error(Enodev);
-	return devattach('e', spec);
+	Chan *c;
+	Egrp *egrp = nil;
+
+	if(spec != nil && *spec != '\0') {
+		if(strcmp(spec, "c") != 0)
+			error(Ebadarg);
+		egrp = &confegrp;
+	}
+
+	c = devattach('e', spec);
+	c->aux = egrp;
+	return c;
 }
 
 static Walkqid*
@@ -60,186 +92,225 @@ static int
 envstat(Chan *c, uchar *db, int n)
 {
 	if(c->qid.type & QTDIR)
-		c->qid.vers = up->env->egrp->vers;
+		c->qid.vers = envgrp(c)->vers;
 	return devstat(c, db, n, 0, 0, envgen);
 }
 
-static Chan *
-envopen(Chan *c, u32 mode)
+static Chan*
+envopen(Chan *c, u32 omode)
 {
 	Egrp *eg;
 	Evalue *e;
-	
+	int trunc;
+
+	eg = envgrp(c);
 	if(c->qid.type & QTDIR) {
-		if(mode != OREAD)
+		if(omode != OREAD)
 			error(Eperm);
-		c->mode = mode;
-		c->flag |= COPEN;
-		c->offset = 0;
-		return c;
 	}
-	eg = up->env->egrp;
-	qlock(eg);
-	for(e = eg->entries; e != nil; e = e->next)
-		if(e->qid.path == c->qid.path)
-			break;
-	if(e == nil) {
-		qunlock(eg);
-		error(Enonexist);
+	else {
+		trunc = omode & OTRUNC;
+		if(omode != OREAD && !envwriteable(c))
+			error(Eperm);
+		if(trunc)
+			wlock(eg);
+		else
+			rlock(eg);
+		e = envlookup(eg, nil, c->qid.path);
+		if(e == nil) {
+			if(trunc)
+				wunlock(eg);
+			else
+				runlock(eg);
+			error(Enonexist);
+		}
+		if(trunc && e->value != nil) {
+			e->qid.vers++;
+			free(e->value);
+			e->value = nil;
+			e->len = 0;
+		}
+		if(trunc)
+			wunlock(eg);
+		else
+			runlock(eg);
 	}
-	if((mode & OTRUNC) && e->val) {
-		free(e->val);
-		e->val = 0;
-		e->len = 0;
-		e->qid.vers++;
-	}
-	qunlock(eg);
-	c->mode = openmode(mode);
-	c->flag |= COPEN;
+	c->mode = openmode(omode);
+	incref(eg);
+	c->aux = eg;
 	c->offset = 0;
+	c->flag |= COPEN;
 	return c;
 }
 
 static void
-envcreate(Chan *c, char *name, u32 mode, u32)
+envcreate(Chan *c, char *name, u32 omode, u32)
 {
 	Egrp *eg;
-	Evalue *e, **le;
+	Evalue *e;
 
-	if(c->qid.type != QTDIR)
+	if(c->qid.type != QTDIR || !envwriteable(c))
 		error(Eperm);
+
 	if(strlen(name) >= sizeof(up->genbuf))
-		error("name too long");	/* needs to fit for stat */
-	mode = openmode(mode);
-	eg = up->env->egrp;
-	qlock(eg);
-	if(waserror()){
-		qunlock(eg);
+		error(Etoolong);
+
+	omode = openmode(omode);
+	eg = envgrp(c);
+	wlock(eg);
+	if(waserror()) {
+		wunlock(eg);
 		nexterror();
 	}
-	for(le = &eg->entries; (e = *le) != nil; le = &e->next)
-		if(strcmp(e->var, name) == 0)
-			error(Eexist);
-	e = smalloc(sizeof(Evalue));
-	e->var = smalloc(strlen(name)+1);
-	strcpy(e->var, name);
-	e->val = 0;
-	e->len = 0;
-	e->qid.path = ++eg->path;
-	e->next = nil;
-	e->qid.vers = 0;
-	*le = e;
-	c->qid = e->qid;
+
+	if(envlookup(eg, name, -1) != nil)
+		error(Eexist);
+
+	if(eg->nent == eg->ment){
+		Evalue *tmp;
+
+		eg->ment += DELTAENV;
+		if((tmp = realloc(eg->ent, sizeof(eg->ent[0])*eg->ment)) == nil){
+			eg->ment -= DELTAENV;
+			error(Enomem);
+		}
+		eg->ent = tmp;
+	}
 	eg->vers++;
+	e = &eg->ent[eg->nent++];
+	e->value = nil;
+	e->len = 0;
+	e->name = smalloc(strlen(name)+1);
+	strcpy(e->name, name);
+	mkqid(&e->qid, ++eg->path, 0, QTFILE);
+	c->qid = e->qid;
+
+	wunlock(eg);
 	poperror();
-	qunlock(eg);
+	incref(eg);
+	c->aux = eg;
 	c->offset = 0;
+	c->mode = omode;
 	c->flag |= COPEN;
-	c->mode = mode;
-}
-
-static void
-envclose(Chan *c)
-{
-	if(c->flag & CRCLOSE)
-		envremove(c);
-}
-
-static s32
-envread(Chan *c, void *a, s32 n, s64 offset)
-{
-	Egrp *eg;
-	Evalue *e;
-
-	if(c->qid.type & QTDIR)
-		return devdirread(c, a, n, 0, 0, envgen);
-	eg = up->env->egrp;
-	qlock(eg);
-	if(waserror()){
-		qunlock(eg);
-		nexterror();
-	}
-	for(e = eg->entries; e != nil; e = e->next)
-		if(e->qid.path == c->qid.path)
-			break;
-	if(e == nil)
-		error(Enonexist);
-	if(offset > e->len)	/* protects against overflow converting vlong to ulong */
-		n = 0;
-	else if(offset + n > e->len)
-		n = e->len - offset;
-	if(n <= 0)
-		n = 0;
-	else
-		memmove(a, e->val+offset, n);
-	poperror();
-	qunlock(eg);
-	return n;
-}
-
-static s32
-envwrite(Chan *c, void *a, s32 n, s64 offset)
-{
-	char *s;
-	ulong ve;
-	Egrp *eg;
-	Evalue *e;
-
-	if(n <= 0)
-		return 0;
-	ve = offset+n;
-	if(ve > Maxenvsize)
-		error(Etoobig);
-	eg = up->env->egrp;
-	qlock(eg);
-	if(waserror()){
-		qunlock(eg);
-		nexterror();
-	}
-	for(e = eg->entries; e != nil; e = e->next)
-		if(e->qid.path == c->qid.path)
-			break;
-	if(e == nil)
-		error(Enonexist);
-	if(ve > e->len) {
-		s = smalloc(ve);
-		memmove(s, e->val, e->len);
-		if(e->val != nil)
-			free(e->val);
-		e->val = s;
-		e->len = ve;
-	}
-	memmove(e->val+offset, a, n);
-	e->qid.vers++;
-	poperror();
-	qunlock(eg);
-	return n;
+	return;
 }
 
 static void
 envremove(Chan *c)
 {
 	Egrp *eg;
-	Evalue *e, **l;
+	Evalue *e;
 
-	if(c->qid.type & QTDIR)
+	if(c->qid.type & QTDIR || !envwriteable(c))
 		error(Eperm);
-	eg = up->env->egrp;
-	qlock(eg);
-	for(l = &eg->entries; (e = *l) != nil; l = &e->next)
-		if(e->qid.path == c->qid.path)
-			break;
-	if(e == nil) {
-		qunlock(eg);
+
+	eg = envgrp(c);
+	wlock(eg);
+	e = envlookup(eg, nil, c->qid.path);
+	if(e == nil){
+		wunlock(eg);
 		error(Enonexist);
 	}
-	*l = e->next;
+	free(e->name);
+	free(e->value);
+	*e = eg->ent[--eg->nent];
 	eg->vers++;
-	qunlock(eg);
-	free(e->var);
-	if(e->val != nil)
-		free(e->val);
-	free(e);
+	wunlock(eg);
+}
+
+static void
+envclose(Chan *c)
+{
+	if(c->flag & COPEN){
+		/*
+		 * cclose can't fail, so errors from remove will be ignored.
+		 * since permissions aren't checked,
+		 * envremove can't not remove it if its there.
+		 */
+		if(c->flag & CRCLOSE && !waserror()){
+			envremove(c);
+			poperror();
+		}
+		closeegrp((Egrp*)c->aux);
+		c->aux = nil;
+	}
+}
+
+static s32
+envread(Chan *c, void *a, s32 n, s64 off)
+{
+	Egrp *eg;
+	Evalue *e;
+	ulong offset = off;
+
+	if(c->qid.type & QTDIR)
+		return devdirread(c, a, n, 0, 0, envgen);
+
+	eg = envgrp(c);
+	rlock(eg);
+	if(waserror()){
+		runlock(eg);
+		nexterror();
+	}
+
+	e = envlookup(eg, nil, c->qid.path);
+	if(e == nil)
+		error(Enonexist);
+	if(offset >= e->len || e->value == nil)
+		n = 0;
+	else if(offset + n > e->len)
+		n = e->len - offset;
+	if(n <= 0)
+		n = 0;
+	else
+		memmove(a, e->value+offset, n);
+
+	runlock(eg);
+	poperror();
+	return n;
+}
+
+static s32
+envwrite(Chan *c, void *a, s32 n, s64 off)
+{
+	char *s;
+	ulong len;
+	Egrp *eg;
+	Evalue *e;
+	ulong offset = off;
+
+	if(n <= 0)
+		return 0;
+	if(offset > Maxenvsize || n > (Maxenvsize - offset))
+		error(Etoobig);
+
+	eg = envgrp(c);
+	wlock(eg);
+	if(waserror()){
+		wunlock(eg);
+		nexterror();
+	}
+
+	e = envlookup(eg, nil, c->qid.path);
+	if(e == nil)
+		error(Enonexist);
+
+	len = offset+n;
+	if(len > e->len) {
+		s = realloc(e->value, len);
+		if(s == nil)
+			error(Enomem);
+		memset(s+offset, 0, n);
+		e->value = s;
+		e->len = len;
+	}
+	memmove(e->value+offset, a, n);
+	e->qid.vers++;
+	eg->vers++;
+
+	wunlock(eg);
+	poperror();
+	return n;
 }
 
 Dev envdevtab = {
@@ -272,55 +343,69 @@ newegrp(void)
 	Egrp	*e;
 
 	e = smalloc(sizeof(Egrp));
-	e->ref = 1;
+	incref(e);
 	return e;
 }
 
 void
-closeegrp(Egrp *e)
+closeegrp(Egrp *eg)
 {
-	Evalue *el, *nl;
+	Evalue *e, *ee;
 
-	if(e == nil || decref(e) != 0)
+	if(eg == nil)
 		return;
-	for (el = e->entries; el != nil; el = nl) {
-		free(el->var);
-		if (el->val)
-			free(el->val);
-		nl = el->next;
-		free(el);
+	if(decref(eg) == 0 && eg != &confegrp){
+		e = eg->ent;
+		for(ee = e + eg->nent; e < ee; e++){
+			free(e->name);
+			free(e->value);
+		}
+		free(eg->ent);
+		free(eg);
 	}
-	free(e);
 }
 
+static Egrp*
+envgrp(Chan *c)
+{
+	if(c->aux == nil)
+		return up->env->egrp;
+	return c->aux;
+}
+
+static int
+envwriteable(Chan *c)
+{
+	return c->aux == nil || c->aux == up->env->egrp || iseve();
+}
+
+/* same as envcpy() of 9front */
 void
 egrpcpy(Egrp *to, Egrp *from)
 {
-	Evalue *e, *ne, **last;
+	Evalue *e, *ee, *ne;
 
-	if(from == nil)
-		return;
-	last = &to->entries;
-	qlock(from);
-	for (e = from->entries; e != nil; e = e->next) {
-		ne = smalloc(sizeof(Evalue));
-		ne->var = smalloc(strlen(e->var)+1);
-		strcpy(ne->var, e->var);
-		if (e->val) {
-			ne->val = smalloc(e->len);
-			memmove(ne->val, e->val, e->len);
+	rlock(from);
+	to->ment = ROUND(from->nent, DELTAENV);
+	to->ent = smalloc(to->ment*sizeof(to->ent[0]));
+	ne = to->ent;
+	e = from->ent;
+	for(ee = e + from->nent; e < ee; e++, ne++){
+		ne->name = smalloc(strlen(e->name)+1);
+		strcpy(ne->name, e->name);
+		if(e->value != nil){
+			ne->value = smalloc(e->len);
+			memmove(ne->value, e->value, e->len);
 			ne->len = e->len;
 		}
-		ne->qid.path = ++to->path;
-		*last = ne;
-		last = &ne->next;
+		mkqid(&ne->qid, ++to->path, 0, QTFILE);
 	}
-	qunlock(from);
+	to->nent = from->nent;
+	runlock(from);
 }
 
 /*
  *  to let the kernel set environment variables
- *	TODO 9ferno shows both #ec and #e variables for ls '#e' and ls '#ec'
  */
 void
 ksetenv(char *ename, char *eval, int conf)
@@ -329,18 +414,8 @@ ksetenv(char *ename, char *eval, int conf)
 	char buf[2*KNAMELEN];
 
 	snprint(buf, sizeof(buf), "#e%s/%s", conf?"c":"", ename);
-	if(waserror()){
-		return;
-	}
 	c = namec(buf, Acreate, OWRITE, 0666);
-	poperror();
-	if(!waserror()){
-		if(!waserror()){
-			devtab[c->type]->write(c, eval, strlen(eval), 0);
-			poperror();
-		}
-		poperror();
-	}
+	devtab[c->type]->write(c, eval, strlen(eval), 0);
 	cclose(c);
 }
 
@@ -357,9 +432,9 @@ getconfenv(void)
 	char *p, *q;
 	int n;
 
-	qlock(eg);
+	rlock(eg);
 	if(waserror()) {
-		qunlock(eg);
+		runlock(eg);
 		nexterror();
 	}
 	
@@ -384,7 +459,7 @@ getconfenv(void)
 	}
 	*q = '\0';
 	
-	qunlock(eg);
+	runlock(eg);
 	poperror();
 	return p;
 }
