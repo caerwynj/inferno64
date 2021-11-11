@@ -215,7 +215,6 @@ void	nmiscreen(void);
 int	kbdinready(void);
 
 #define	userureg(ur)	(((ur)->cs & 3) == 3)
-#define	waserror()	(up->nerrlab++, setlabel(&up->errlab[up->nerrlab-1]))
 #define getcallerpc(x)	(((uintptr*)(x))[-1])
 #define KADDR(a)	((void*)((uintptr)(a)|KZERO))
 #define PADDR(a)	((uintptr)(a)&~(uintptr)KZERO)

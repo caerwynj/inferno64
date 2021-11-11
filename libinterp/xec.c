@@ -735,7 +735,7 @@ OP(ret)
 	R.FP = f->fp;
 	if(R.FP == nil) {
 		R.FP = (uchar*)f;
-		error("");
+		error(""); /* goto vmachine()'s waserror() and call progexit() there */
 	}
 	R.SP = (uchar*)f;
 	R.PC = f->lr;

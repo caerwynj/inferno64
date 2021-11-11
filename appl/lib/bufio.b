@@ -36,12 +36,15 @@ open(filename: string, mode: int): ref Iobuf
 	return ref Iobuf(fd, array[Bufsize+Maxrune] of byte, 0, 0, 0, big 0, big 0, mode, mode);
 }
 
+# seeking on a pipe throws out an error in kseek(), hence the fd != 0
 fopen(fd: ref Sys->FD, mode: int): ref Iobuf
 {
 	if (sys == nil)
 		sys = load Sys Sys->PATH;
-	if ((filpos := sys->seek(fd, big 0, 1)) < big 0)
-		filpos = big 0;
+	filpos := big 0;
+#	stdin := sys->fildes(0);
+#	if ((fd != stdin) && (filpos = sys->seek(fd, big 0, 1)) < big 0)
+#		filpos = big 0;
 	return ref Iobuf(fd, array[Bufsize+Maxrune] of byte, 0, 0, 0, filpos, filpos, mode, mode);
 }
 

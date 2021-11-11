@@ -612,19 +612,23 @@ _cas32r0:
 
 /*
  * Label consists of a stack pointer and a programme counter
+ * We need to store the return PC so we can jump back to the
+ * 	same place on a gotolabel() but with a different return
+ *	value this time.
+ * emu uses jmp_buf and setjmp()/longjmp() to do the same
  */
 TEXT gotolabel(SB), 1, $-4
-	MOVQ	0(RARG), SP			/* restore SP */
-	MOVQ	8(RARG), AX			/* put return PC on the stack */
-	MOVQ	AX, 0(SP)
+	MOVQ	0(RARG), SP			/* restore SP from the address in the first argument */
+	MOVQ	8(RARG), BX			/* put return PC on the stack */
+	MOVQ	BX, 0(SP)			/*	to top of stack so the next RET uses it */
 	MOVL	$1, AX				/* return 1 */
 	RET
 
 TEXT setlabel(SB), 1, $-4
-	MOVQ	SP, 0(RARG)			/* store SP */
-	MOVQ	0(SP), BX			/* store return PC */
-	MOVQ	BX, 8(RARG)
-	MOVL	$0, AX				/* return 0 */
+	MOVQ	SP, 0(RARG)		/* store SP to the address in the first argument */
+	MOVQ	0(SP), BX		/* store return PC - top of stack */
+	MOVQ	BX, 8(RARG)		/*		to the next location at the same address */
+	MOVL	$0, AX			/* return 0 */
 	RET
 
 TEXT halt(SB), 1, $-4

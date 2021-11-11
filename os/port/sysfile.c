@@ -1086,8 +1086,18 @@ kseek(int fd, s64 o, int type)
 		cclose(c);
 		nexterror();
 	}
-	if(devtab[c->type]->dc == L'|')
+	if(devtab[c->type]->dc == L'|'){
+		/* print("kseek on stream called by 0x%p\n", getcallerpc(&fd)); */
+		/*
+		 * grep.b calls bufio.fopen() which seeks first.
+		 * An error() here breaks grep.b
+		 * fixed in bufio.fopen()
+		 */
+		/*cclose(c);
+		poperror();
+		return -1;*/
 		error(Eisstream);
+	}
 
 	off = 0;
 	switch(type){

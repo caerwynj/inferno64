@@ -1,4 +1,4 @@
-#!/dis/sh
+#!/dis/sh -n
 load std
 
 disks=$*
@@ -10,7 +10,9 @@ disks=$*
 # no plan 9 partition table will delete all extant partitions.
 fn setup {
 	disk=$1
+	parts=()
 	if {ftest -f $disk^/data && ftest -f $disk^/ctl} {
+		#disk/fdisk -p $disk^/data | grep -v '^delpart '
 		{ @{disk/fdisk -p $disk^/data} |
 			grep -v '^delpart ' >$disk^/ctl } >[2]/dev/null
 	}
@@ -21,13 +23,14 @@ fn setup {
 
 	for part in $parts {
 		if{ftest -f $part} {
+			#disk/prep -p $part | grep -v '^delpart '
 			{ disk/prep -p $part |
 				grep -v '^delpart ' >$disk^/ctl } >[2]/dev/null
 		}
 	}
 }
 
-if{~ $#disks 0}{
+if {~ $#disks 0}{
 	# set up any disk partitions
 	or { ftest -e /dev/sdctl } { bind -b '#S' /dev }
 	for disk in /dev/sd* { setup $disk }
@@ -44,6 +47,7 @@ if{~ $#disks 0}{
 	#}
 } {
 	for disk in $disks {
+		echo setup $disk
 		setup $disk
 	}
 }

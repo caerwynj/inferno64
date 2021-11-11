@@ -655,14 +655,14 @@ rread(int fd, void *va, long n, vlong *offp)
 	return n;
 }
 
-long
-kread(int fd, void *va, long n)
+s32
+kread(int fd, void *va, s32 n)
 {
 	return rread(fd, va, n, nil);
 }
 
-long
-kpread(int fd, void *va, long n, vlong off)
+s32
+kpread(int fd, void *va, s32 n, s64 off)
 {
 	return rread(fd, va, n, &off);
 }
@@ -865,14 +865,14 @@ rwrite(int fd, void *va, long n, vlong *offp)
 	return m;
 }
 
-long
-kwrite(int fd, void *va, long n)
+s32
+kwrite(int fd, void *va, s32 n)
 {
 	return rwrite(fd, va, n, nil);
 }
 
-long
-kpwrite(int fd, void *va, long n, vlong off)
+s32
+kpwrite(int fd, void *va, s32 n, s64 off)
 {
 	return rwrite(fd, va, n, &off);
 }

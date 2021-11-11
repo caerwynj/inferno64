@@ -213,7 +213,8 @@ ulong		perfticks(void);
 void		pexit(char*, int);
 void		pgrpcpy(Pgrp*, Pgrp*);
 ulong		pidalloc(Proc*);
-#define		poperror()		up->nerrlab--
+#define		waserror()	setlabel(&up->errlab[up->nerrlab++])
+#define		poperror()	up->nerrlab--
 int		poolread(char*, int, u64);
 void		poolsize(Pool *, u64, int);
 int		postnote(Proc *, int, char *, int);

@@ -94,7 +94,7 @@ OMASK: con 7;
 
 badmodule(path: string)
 {
-	sys->fprint(sys->fildes(2), "sh: cannot load %s: %r\n", path);
+	sys->fprint(sys->fildes(2), "sh: badmodule() cannot load %s: %r\n", path);
 	raise "fail:bad module" ;
 }
 
@@ -782,6 +782,7 @@ pathexpand(ctxt: ref Context, progname: string): string
 runexternal(ctxt: ref Context, args: list of ref Listnode, last: int): string
 {
 	progname := (hd args).word;
+	if (DEBUG) debug(sys->sprint("runexternal progname %s\n", progname));
 	disfile := 0;
 	if (len progname >= 4 && progname[len progname-4:] == ".dis")
 		disfile = 1;
@@ -801,9 +802,11 @@ runexternal(ctxt: ref Context, args: list of ref Listnode, last: int): string
 		else
 			path = progname;
 
+		if (DEBUG) debug(sys->sprint("runexternal path %s\n", path));
 		npath := path;
 		if (!disfile)
 			npath += ".dis";
+		if (DEBUG) debug(sys->sprint("runexternal npath %s\n", npath));
 		mod := load Command npath;
 		if (mod != nil) {
 			argv := list2stringlist(args);

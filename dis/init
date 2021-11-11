@@ -1,4 +1,4 @@
-#!/dis/sh
+#!/dis/sh -n
 
 # boot initialization
 #	configure boot devices
@@ -197,7 +197,7 @@ and {ftest -e '#e/bootargs'} {
 	# if tcp, bind ether0 as ipifc and get on with it
 
 	if { ~ $"connectmethod local }{
-		sh /dis/diskparts
+		sh -n /dis/diskparts
 		mountlocal $localdevice
 	} {~ $"connectmethod tcp}{
 		if{~ $"localdevice dhcp}{
@@ -227,10 +227,10 @@ and {ftest -e '#e/bootargs'} {
 	#	avoids putting machine specific stuff in devroot
 	and {! ~ $"sysname ''} {
 		ftest -f /lib/init/$sysname }{
-		sh /lib/init/$sysname
+		sh -n /lib/init/$sysname
 	}
 }
 
 # if I add /lib/sh/profile to devroot,
 #	all the above binds can be moved to $home/namespace
-sh -l -i #-l # to run the /lib/sh/profile
+sh -n -l -i #-l # to run the /lib/sh/profile

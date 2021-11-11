@@ -378,6 +378,7 @@ exhausted(char *resource)
 	error(buf);
 }
 
+/* os uses struct Label instead of jmp_buf */
 void
 showjmpbuf(char *str)
 {

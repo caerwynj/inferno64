@@ -991,17 +991,42 @@ errorf(char *fmt, ...)
 }
 
 void
+showerrlabs(void)
+{
+	int i;
+
+	for(i=0; i<up->nerrlab; i++){
+		print("i %d SP 0x%p PC 0x%p\n", i, up->errlab[i].sp, up->errlab[i].pc);
+	}
+}
+
+/* we set the errlab[NERR-1] to know where the error was raised(?) */
+void
 error(char *err)
 {
 	if(up == nil)
 		panic("error(%s) not in a process", err);
 	spllo();
-	if(up->nerrlab > NERR)
+
+	if(up->nerrlab >= NERR)
 		panic("error stack too deep");
-	if(err != up->env->errstr)
-		kstrcpy(up->env->errstr, err, ERRMAX);
-	setlabel(&up->errlab[NERR-1]);
+	kstrcpy(up->env->errstr, err, ERRMAX);
+	/* proactively show issues */
+	/* if(err[0] != '\0')
+		print("up->nerrlab %d error %s raised by 0x%zx\n",
+			up->nerrlab, err, getcallerpc(&err));
+	showerrlabs();
+	*/
+	setlabel(&up->errlab[NERR-1]); /* to store the location where error() was raised(?) */
 	nexterror();
+}
+
+void
+nexterror(void)
+{
+	if(up->nerrlab < 1)
+		panic("nothing on the error stack to go back to");
+	gotolabel(&up->errlab[--up->nerrlab]);
 }
 
 #include "errstr.h"
@@ -1052,12 +1077,6 @@ werrstr(char *fmt, ...)
 	vseprint(buf, buf+sizeof(buf), fmt, arg);
 	va_end(arg);
 	kstrcpy(up->env->errstr, buf, ERRMAX);
-}
-
-void
-nexterror(void)
-{
-	gotolabel(&up->errlab[--up->nerrlab]);
 }
 
 /* for dynamic modules - functions not macros */
