@@ -794,7 +794,8 @@ OP(iload)
 		m = readmod(n, lookmod(n), 1);
 		ml = linkmod(m, ldt, 1);
 	}
-
+	if(ml == nil)
+		print("iload module %s not loaded ml == nil\n", n);
 	mp = R.d;
 	t = *mp;
 	*mp = ml;

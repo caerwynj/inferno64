@@ -210,7 +210,7 @@ END{
 			printf "%s\n", code[i];
 
 		printf "char* conffile = \"%s\";\n", ARGV[1];
-		printf "ulong kerndate = KERNDATE;\n";
+		printf "u32 kerndate = KERNDATE;\n";
 
 		exit
 }' $*

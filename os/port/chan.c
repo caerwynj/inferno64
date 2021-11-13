@@ -1508,7 +1508,8 @@ namec(char *aname, int amode, int omode, ulong perm)
 
 			/* save registers else error() in open has wrong value of c saved */
 			saveregisters();
-
+			DBG("namec walk c->type %d devtab[c->type]->name %s c->path %s\n",
+					c->type, devtab[c->type]->name, chanpath(c));
 			c = devtab[c->type]->open(c, omode&~OCEXEC);
 			if(omode & ORCLOSE)
 				c->flag |= CRCLOSE;

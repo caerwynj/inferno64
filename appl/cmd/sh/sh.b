@@ -809,13 +809,17 @@ runexternal(ctxt: ref Context, args: list of ref Listnode, last: int): string
 		if (DEBUG) debug(sys->sprint("runexternal npath %s\n", npath));
 		mod := load Command npath;
 		if (mod != nil) {
+			if (DEBUG) debug(sys->sprint("runexternal npath %s mod != nil\n", npath));
 			argv := list2stringlist(args);
 			export(ctxt.env.localenv);
 
+			if (DEBUG) debug(sys->sprint("runexternal mod != nil\n"));
 			if (last) {
 				{
 					sys->pctl(Sys->NEWFD, ctxt.keepfds);
+					if (DEBUG) debug(sys->sprint("runexternal before mod->init\n"));
 					mod->init(ctxt.drawcontext, argv);
+					if (DEBUG) debug(sys->sprint("runexternal after mod->init\n"));
 					exit;
 				} exception e {
 				EPIPE =>
@@ -830,6 +834,7 @@ runexternal(ctxt: ref Context, args: list of ref Listnode, last: int): string
 			if (DEBUG) debug("started external externalexec; pid is "+string pid);
 			return waitfor(ctxt, pid :: nil);
 		}
+		if (DEBUG) debug(sys->sprint("runexternal npath %s mod == nil\n", npath));
 		err = sys->sprint("%r");
 		if (nonexistent(err)) {
 			# try and run it as a shell script

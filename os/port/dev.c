@@ -5,10 +5,10 @@
 #include	"fns.h"
 #include	"../port/error.h"
 
-extern ulong	kerndate;
+extern u32	kerndate;
 
 void
-mkqid(Qid *q, vlong path, ulong vers, int type)
+mkqid(Qid *q, s64 path, u32 vers, u32 type)
 {
 	q->type = type;
 	q->vers = vers;
@@ -224,8 +224,10 @@ devwalk(Chan *c, Chan *nc, char **name, int nname, Dirtab *tab, int ntab, Devgen
 			switch((*gen)(nc, n, tab, ntab, i, &dir)){
 			case -1:
 			Notfound:
-				if(j == 0)
+				if(j == 0){
+/* print("devwalk c %s nc %s n %s name %s caller 0x%p\n", chanpath(c), chanpath(nc), n, *name, getcallerpc(&c)); */
 					error(Enonexist);
+				}
 				kstrcpy(up->env->errstr, Enonexist, ERRMAX);
 				goto Done;
 			case 0:

@@ -13,7 +13,7 @@ readmod(char *path, Module *m, int sync)
 	int fd, n, dynld;
 	uchar *code;
 	Module *ans;
-	ulong length;
+	u32 length;
 
 	if(path[0] == '$') {
 		if(m == nil)
@@ -31,16 +31,21 @@ readmod(char *path, Module *m, int sync)
 
 	d = nil;
 	fd = kopen(path, OREAD);
-	if(fd < 0)
+	if(fd < 0){
+		DBG("readmod path %s, fd < 0\n", path);
 		goto done;
+	}
 
-	if((d = kdirfstat(fd)) == nil)
+	if((d = kdirfstat(fd)) == nil){
+		DBG("readmod (d = kdirfstat(fd)) == nil for path %s\n", path);
 		goto done;
+	}
 
 	if(m != nil) {
 		if(d->dev == m->dev && d->type == m->dtype &&
 		   d->mtime == m->mtime &&
 		   d->qid.type == m->qid.type && d->qid.path == m->qid.path && d->qid.vers == m->qid.vers) {
+			DBG("readmod check failed for path %s\n", path);
 			ans = m;
 			goto done;
 		}
@@ -61,6 +66,7 @@ readmod(char *path, Module *m, int sync)
 
 	n = kread(fd, code, length);
 	if(n != length) {
+		DBG("readmod kread failed on path %s length %d, read n %d\n", path, length, n);
 		free(code);
 		code = nil;
 	}

@@ -429,6 +429,7 @@ newproc(void)
 	p->psstate = "New";
 	p->fpstate = FPinit;
 	p->procctl = 0;
+	p->ureg = nil;
 	p->dbgreg = nil;
 	p->nerrlab = 0;
 	p->type = Unknown;
@@ -446,6 +447,12 @@ newproc(void)
 	kstrdup(&p->env->user, "*nouser");
 	p->env->errstr = p->env->errbuf0;
 	p->env->syserrstr = p->env->errbuf1;
+
+	/* clear any previous notes */
+	p->nnote = 0;
+	p->notify = nil;
+	p->notified = 0;
+	p->notepending = 0;
 
 	/* sched params */
 	p->mp = 0;
@@ -605,6 +612,7 @@ sleep(Rendez *r, int (*f)(void*), void *arg)
 	}
 
 	if(up->notepending) {
+		up->nnote = 0;
 		up->notepending = 0;
 		splx(s);
 		interrupted();
@@ -700,6 +708,18 @@ wakeup(Rendez *r)
 	splx(s);
 
 	return p;
+}
+
+void
+shownotes(Proc *p)
+{
+	int i;
+
+	print("p 0x%p pid %d nnote %d notified %d lastnote flag %d msg %s\n",
+		p, p->pid, p->nnote, p->notified, p->lastnote.flag, p->lastnote.msg);
+	for(i = 0; i < p->nnote; i++){
+		print("i %d msg %s flag %d\n", i, p->note[i].msg, p->note[i].flag);
+	}
 }
 
 /*

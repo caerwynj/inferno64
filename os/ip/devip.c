@@ -131,7 +131,7 @@ ip1gen(Chan *c, int i, Dir *dp)
 	int prot;
 	int len = 0;
 	Fs *f;
-	extern ulong	kerndate;
+	extern u32 kerndate;
 
 	f = ipfs[c->dev];
 

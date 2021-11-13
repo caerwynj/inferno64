@@ -47,10 +47,10 @@ static struct Mntalloc
 	Mnt*	list;		/* Mount devices in use */
 	Mnt*	mntfree;	/* Free list */
 	Mntrpc*	rpcfree;
-	ulong	nrpcfree;
-	ulong	nrpcused;
-	ulong	id;
-	u32int	tagmask[NMASK];
+	u32	nrpcfree;
+	u32	nrpcused;
+	u32	id;
+	u32	tagmask[NMASK];
 } mntalloc;
 
 static Chan*	mntchan(void);
@@ -62,7 +62,7 @@ static void	mntfree(Mntrpc*);
 static void	mntgate(Mnt*);
 static void	mntqrm(Mnt*, Mntrpc*);
 static Mntrpc*	mntralloc(Chan*);
-static long	mntrdwr(int, Chan*, void*, long, vlong);
+static s32	mntrdwr(int, Chan*, void*, s32, s64);
 static int	mntrpcread(Mnt*, Mntrpc*);
 static void	mountio(Mnt*, Mntrpc*);
 static void	mountmux(Mnt*, Mntrpc*);
@@ -701,13 +701,13 @@ mntcache(Mntrpc *r)
 	}
 }
 
-static long
-mntrdwr(int type, Chan *c, void *buf, long n, vlong off)
+static s32
+mntrdwr(int type, Chan *c, void *buf, s32 n, s64 off)
 {
 	Mnt *m;
  	Mntrpc *r;
 	char *uba;
-	ulong cnt, nr, nreq;
+	u32 cnt, nr, nreq;
 
 	m = mntchk(c);
 	uba = buf;
@@ -728,6 +728,7 @@ mntrdwr(int type, Chan *c, void *buf, long n, vlong off)
 
 		r = mntralloc(c);
 		if(waserror()) {
+			DBG("mntrdwr something failed\n");
 			mntfree(r);
 			nexterror();
 		}
@@ -999,7 +1000,7 @@ mountrpc(Mnt *m, Mntrpc *r)
 	default:
 		if(t == r->request.type+1)
 			break;
-		print("mnt: proc %s %lud: mismatch from %s %s rep %#p tag %d fid %d T%d R%d rp %d\n",
+		print("mnt: proc %s %ud: mismatch from %s %s rep %#p tag %d fid %d T%d R%d rp %d\n",
 			up->text, up->pid, chanpath(m->c), chanpath(r->c),
 			r, r->request.tag, r->request.fid, r->request.type,
 			r->reply.type, r->reply.tag);

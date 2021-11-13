@@ -2,7 +2,7 @@
 #include	"fns.h"
 #include	"error.h"
 
-extern ulong	kerndate;
+extern u32	kerndate;
 
 void
 mkqid(Qid *q, vlong path, ulong vers, int type)

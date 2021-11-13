@@ -882,12 +882,15 @@ kopen(char *path, int mode)
 	int fd;
 	Chan *c;
 
-	if(waserror())
+	if(waserror()){
+		DBG("kopen: namec failed on path %s\n", path);
 		return -1;
+	}
 
 	openmode(mode);                         /* error check only */
 	c = namec(path, Aopen, mode, 0);
 	if(waserror()){
+		DBG("kopen: newfd failed on path %s\n", path);
 		cclose(c);
 		nexterror();
 	}

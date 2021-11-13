@@ -14,12 +14,12 @@ struct {
 } rwstats;
 
 /*
-	lock()
+	*lock()
 		blockinglock = qpc = nil
-	unlock()
+	*unlock()
 		blockinglock = qpc = nil
 
-	lock()
+	*lock()
 		blockinglock = qpc = nil
 	placed in the queue
 		blockinglock = lock address
@@ -27,7 +27,7 @@ struct {
 	out of the queue, ready to run
 		blockinglock = nil
 		qpc = pc that called lock()
-	unlock()
+	*unlock()
 		blockinglock = qpc = nil
  */
 

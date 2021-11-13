@@ -14,7 +14,7 @@
 Conf conf;
 int idle_spin;
 
-extern ulong kerndate;
+extern u32 kerndate;
 extern void bootscreeninit(void);
 extern int main_pool_pcnt;
 extern int heap_pool_pcnt;
@@ -174,7 +174,7 @@ main(void)
 	quotefmtinstall();
 	screeninit();
 	consdebug = rdb;
-	print("\nInferno release built at %lud\n", kerndate);
+	print("\nInferno release built at %ud\n", kerndate);
 	showconfig();
 	cpuidentify();
 	meminit0();			/* builds the memmap */

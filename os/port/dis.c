@@ -980,9 +980,8 @@ progexit(void)
 			if(pc != nil)
 				R.PC = r->R.PC = (Inst*)strtol(pc+3, nil, 0);	/* for debugging */
 		}
-		print("[%s] Broken: \"%s\"\n", m->name, estr);
+		print("[%s] Broken: \"%s\" at 0x%p\n", m->name, estr, up->env->errpc);
 	}
-
 	if(r->exstr != nil)
 		DBG("progexit pid %d name %s estr %s exval %p exstr %s\n",
 			r->pid, m->name, estr, r->exval, r->exstr);

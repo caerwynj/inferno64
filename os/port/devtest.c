@@ -72,7 +72,7 @@ testclose(Chan *)
 {
 }
 
-extern ulong kerndate;
+extern u32 kerndate;
 
 static long
 testread(Chan* c, void* a, long n, vlong offset)
