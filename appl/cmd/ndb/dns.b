@@ -144,8 +144,11 @@ init(nil: ref Draw->Context, args: list of string)
 	stderr = sys->fildes(2);
 	readservers();
 	now = time();
-	sys->remove(svcname+"/dns");
-	sys->unmount(svcname, mntpt);
+	(ok, nil) := sys->stat(svcname+"/dns");
+	if(ok == 0) {
+		sys->remove(svcname+"/dns");
+		sys->unmount(svcname, mntpt);
+	}
 	publish(svcname);
 	if(sys->bind(svcname, mntpt, Sys->MBEFORE) < 0)
 		error(sys->sprint("can't bind #s on %s: %r", mntpt));

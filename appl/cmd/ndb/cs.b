@@ -119,8 +119,11 @@ init(ctxt: ref Draw->Context, args: list of string)
 	if(srv != nil)
 		srv->init();
 
-	sys->remove(svcname+"/cs");
-	sys->unmount(svcname, mntpt);
+	(ok, nil) := sys->stat(svcname+"/cs");
+	if(ok == 0) {
+		sys->remove(svcname+"/cs");
+		sys->unmount(svcname, mntpt);
+	}
 	publish(svcname);
 	if(sys->bind(svcname, mntpt, Sys->MBEFORE) < 0)
 		error(sys->sprint("can't bind #s on %s: %r", mntpt));
