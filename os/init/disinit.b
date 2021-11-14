@@ -40,6 +40,7 @@ init(nil: ref Draw->Context, nil: list of string)
 	sys->bind("#m","/dev",sys->MAFTER);     # pointer/mouse
 	sys->bind("#p", "/prog", sys->MREPL);	# prog device
 	sys->bind("#r", "/dev", sys->MAFTER);	# rtc
+	sys->bind("#s", "/chan", sys->MREPL);	# server registry
 	sys->bind("#t", "/dev", sys->MAFTER);	# serial line
 #	sys->bind("#v","/dev",sys->MAFTER);     # VGA
 	sys->bind("#I0", "/net", sys->MAFTER);	# IP

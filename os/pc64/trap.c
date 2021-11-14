@@ -253,7 +253,7 @@ dumpregs2(Ureg* ureg)
 	print("  CS %4.4zux  DS %4.4ux  ES %4.4ux  FS %4.4ux  GS %4.4ux\n",
 		ureg->cs & 0xFFFF, ureg->ds & 0xFFFF, ureg->es & 0xFFFF,
 		ureg->fs & 0xFFFF, ureg->gs & 0xFFFF);
-	print("  R8 %4.4zux  R9 %4.4zzux  R10 %4.4zux  R11 %4.4zux  R12 %4.4zux\n",
+	print("  R8 %8.8zux  R9 %8.8zzux  R10 %8.8zux  R11 %8.8zux  R12 %8.8zux\n",
 		ureg->r8, ureg->r9, ureg->r10, ureg->r11, ureg->r12);
 }
 

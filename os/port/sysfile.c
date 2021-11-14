@@ -1287,9 +1287,6 @@ kwstat(char *path, uchar *buf, int n)
 	long l;
 	int namelen;
 
-	if(waserror())
-		return -1;
-
 	validstat(buf, n);
 	c = namec(path, Aaccess, 0, 0);
 	if(waserror()){
