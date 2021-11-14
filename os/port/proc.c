@@ -6,6 +6,8 @@
 #include	"../port/error.h"
 #include	<interp.h>
 
+static int debug = 0;
+
 /* Ref	pidalloc; */
 int	schedgain = 30;	/* units in seconds */
 int	nrdy;

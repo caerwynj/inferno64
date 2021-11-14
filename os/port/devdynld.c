@@ -16,7 +16,8 @@
  *	- is Dev.shutdown the right function to call?  Dev.config perhaps?
  */
 
-#define	DBG	if(1) print
+static int debug = 0;
+
 #define	NATIVE
 
 

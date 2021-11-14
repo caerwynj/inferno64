@@ -4,7 +4,8 @@
 #include "raise.h"
 #include <pool.h>
 
-#define DP if(1){}else print
+static int debug = 0;
+
 #define T(r)	*((void**)(R.r))
 
 /* same as the one in xec.c */
@@ -68,7 +69,7 @@ newstack(Prog *p)
 	p->R.SP = ns->reg.tos.fu + t->size;
 	p->R.FP = ns->reg.tos.fu;
 
-	DP("newstack R.EX stack extend 0x%p\n"
+	DBG("newstack R.EX stack extend 0x%p\n"
 		"\tTR type register 0x%p R.SP 0x%p R.TS top of stack 0x%p\n"
 		"\tR.FP=0x%p R.SP-R.FP=%zd t->size=%d called by 0x%p\n",
 		p->R.EX, ns->reg.TR,

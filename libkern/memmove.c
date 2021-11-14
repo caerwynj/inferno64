@@ -1,29 +1,33 @@
-#include	<lib9.h>
+#include	"lib9.h"
 
 /* for testing only */
 void*
-memcpy(void *a1, void *a2, ulong n)
+memcpy(void *a1, void *a2, uintptr n)
 {
 	return memmove(a1, a2, n);
 }
 
 void*
-memmove(void *a1, void *a2, ulong n)
+memmove(void *a1, void *a2, uintptr n)
 {
-	int m = (int)n;
-	uchar *s, *d;
-	
-	d = a1;
-	s = a2;
-	if(d > s){
-		s += m;
-		d += m;
-		while(--m >= 0)
-			*--d = *--s;
+	char *s1, *s2;
+
+	s1 = a1;
+	s2 = a2;
+	if((s2 < s1) && (s2+n > s1))
+		goto back;
+	while(n > 0) {
+		*s1++ = *s2++;
+		n--;
 	}
-	else{
-		while(--m >= 0)
-			*d++ = *s++;
+	return a1;
+
+back:
+	s1 += n;
+	s2 += n;
+	while(n > 0) {
+		*--s1 = *--s2;
+		n--;
 	}
 	return a1;
 }
