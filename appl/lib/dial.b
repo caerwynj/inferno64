@@ -288,7 +288,7 @@ accept(c: ref Connection): ref Sys->FD
 {
 	if(sys == nil)
 		sys = load Sys Sys->PATH;
-	sys->fprint(c.cfd, "accept %s", lastname(c.dir));	# ignore return value, network might not need accepts
+	#sys->fprint(c.cfd, "accept %s", lastname(c.dir));	# ignore return value, network might not need accepts
 	return sys->open(c.dir+"/data", Sys->ORDWR);
 }
 
