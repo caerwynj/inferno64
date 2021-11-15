@@ -97,7 +97,14 @@ init(ctxt: ref Draw->Context, argv: list of string)
 	if (c == nil)
 		error(sys->sprint("cannot announce on %s: %r", addr));
 	if(!trusted){
-		sys->unmount(nil, "/mnt/keys");	# should do for now
+		(ok, nil) := sys->stat("/mnt/keys");
+		if(ok == 0) {
+			{
+				sys->unmount(nil, "/mnt/keys");	# should do for now
+			} exception {
+				"*" => ; # ignore it
+			}
+		}
 		# become none?
 	}
 
