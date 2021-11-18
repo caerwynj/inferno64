@@ -22,10 +22,10 @@ TEXT	ff_to_c(SB), 1, $-4	/* ( argn .. arg2 arg1 nargs -- ) (G move args to C sta
 	TESTQ $0, CX
 	JZ .ff_to_c_done /* no args */
 	MOVQ TOS, RARG	/* 1st argument is put in RARG also */
-.ff_to_c_again
+.ff_to_c_again:
 	PUSHQ TOS
 	POP(TOS)
-	LOOP .ff_to_cagain
+	LOOP .ff_to_c_again
 .ff_to_c_done:
 	PUSH(TOS)
 	PUSH(RSP)
@@ -42,7 +42,7 @@ TEXT	c_to_ff_0(SB), 1, $-4	/* no returned argument */
 	POP(TOS)
 	RET
 TEXT	c_to_ff_1(SB), 1, $-4	/* there is a returned argument */
-	call c_to_ff_0(SB)
+	CALL c_to_ff_0(SB)
 	PUSH(TOS)
 	MOVQ AX, TOS	/* C puts the return value in AX */
 	RET
@@ -59,7 +59,7 @@ TEXT	close(SB), 1, $-4	/* ( fd -- n ) */
 	PUSH(TOS)
 	MOVQ $1, TOS
 	CALL ff_to_c(SB)
-	CALL kclose
+	CALL kclose(SB)
 	CALL c_to_ff_1(SB)
 	NEXT
 

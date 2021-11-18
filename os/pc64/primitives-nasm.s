@@ -3,7 +3,6 @@ dict:
   MENTRY "!", store, 1
   MENTRY "c@", cfetch, 2
   MENTRY "c!", cstore, 2
-  MENTRY "testfsopen", testfsopen, 10
   MENTRY "errstr", errstr, 6
   MENTRY "read", read, 4
   MENTRY "write", write, 5

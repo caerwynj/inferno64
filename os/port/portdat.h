@@ -702,8 +702,8 @@ struct Proc
 	Mach	*wired;
 	Mach	*mp;		/* machine this process last ran on */
 	int	nlocks;		/* number of locks held by proc */
-	ulong	delaysched;
-	ulong	priority;	/* priority level */
+	u32	delaysched;
+	u32	priority;	/* priority level */
 /*	ulong	basepri;	*//* base priority level */
 /*	uchar	fixedpri;	*//* priority level deson't change */
 /*	ulong	cpu;		*//* cpu average */

@@ -54,6 +54,12 @@ Parameter stack 4096 bytes at FFEND-4096
 SSTACK_END = FFEND
 */
 
+#define TOS BX /* top of stack register */
+#define PSP DX /* parameter stack pointer, grows towards lower memory (downwards) */
+#define RSP R8 /* return stack pointer, grows towards higher memory (upwards) */
+#define IP  R9 /* instruction pointer */
+#define W   R10/* work register (holds CFA) */
+
 #define SSTACK_SIZE 4096
 #define RSTACK_SIZE 4096
 #define	LAST $centry_c_boot(SB) /* last defined word, should generate this */
@@ -67,79 +73,6 @@ SSTACK_END = FFEND
 	v_ for colon variable word cfa
  */
 #include "primitives.s"
-#include "bindings.s"
-
-#define PUSHALL \
-	PUSHQ	R13; \
-	PUSHQ	R12; \
-	PUSHQ	R11; \
-	PUSHQ	R10; \
-	PUSHQ	R9; \
-	PUSHQ	R8; \
-	PUSHQ	R8; \
-	PUSHQ	R10; \
-	PUSHQ	R9; \
-	PUSHQ	DX; \
-	PUSHQ	CX; \
-	PUSHQ	BX; \
-	PUSHQ	TOS;
-#define POPALL \
-	POPQ	TOS; \
-	POPQ	BX; \
-	POPQ	CX; \
-	POPQ	DX; \
-	POPQ	R9; \
-	POPQ	R10; \
-	POPQ	R8; \
-	POPQ	R8; \
-	POPQ	R9; \
-	POPQ	R10; \
-	POPQ	R11; \
-	POPQ	R12; \
-	POPQ	R13;
-#define PUSHREGS \
-	PUSHQ	R8; \
-	PUSHQ	R10; \
-	PUSHQ	R9; \
-	PUSHQ	TOS;
-#define POPREGS \
-	POPQ	TOS; \
-	POPQ	R9; \
-	POPQ	R10; \
-	POPQ	R8;
-
-#define FF_TO_C_0 \
-	PUSHREGS; \
-	MOVQ DX, forthsp<>(SB); \
-	MOVQ csp<>(SB), DX; \
-	POPREGS;
-
-#define FF_TO_C_1 \
-	MOVQ TOS, BX; \
-	POPQ TOS; /* drop TOS from the parameter stack */ \
-	FF_TO_C_0 \
-	MOVQ BX, R8; /* 1st argument in R8 == RARG */
-
-/* ( 1st_parameter 2nd_parameter -- ) */
-#define FF_TO_C_2 /* for calling a c function with 2 parameters */ \
-	MOVQ TOS, CX; \
-	POPQ TOS; \
-	FF_TO_C_1 \
-	MOVQ CX, 8(DX) \
-
-/* ( 1st_parameter 2nd_parameter 3rd_parameter -- ) */
-#define FF_TO_C_3 /* for calling a c function with 3 parameters */ \
-	MOVQ TOS, DX; \
-	POPQ TOS; \
-	FF_TO_C_2 \
-	MOVQ DX, 16(DX) \
-
-/* no arguments when calling ff from C, for now */
-#define C_TO_FF \
-	PUSHREGS; \
-	MOVQ DX, csp<>(SB); \
-	MOVQ ffsp<>(SB), DX; \
-	POPREGS;
 
 TEXT	forthmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
 	/* The last dictionary entry address is stored in dtop.
@@ -164,7 +97,7 @@ TEXT	forthmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
 	ADDQ $16, TOS	/* TOS += link (8 bytes) + len (1 byte) + minimum for align to 8 bytes */
 	XORQ CX, CX
 	MOVB 8(SI), CL	/* CL = length of boot name */
-	ADDQ CX, TOS		/* TOS += len */
+	ADDQ CX, TOS	/* TOS += len */
 	ANDQ $~7, TOS	/* TOS = address of boot's code - 8 bytes */
 	LEAQ 8(TOS), IP	/* IP = L257 = start of boot code = has docol address there
 					 * skipping over docol as we do not need to save the IP
@@ -172,12 +105,7 @@ TEXT	forthmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
 
 /* lodsl could make this simpler. But, this is more comprehensible
 	why not JMP* (W)?
- */
-#define NEXT	MOVQ (IP), W; /* W = Address next to the DOCOL of boot */ \
-		ADDQ $8, IP; /* move IP further = DOCOL address + 16 */ \
-		MOVQ (W), TOS; /* TOS = code field address of the 1st instruction after DOCOL of boot */ \
-		JMP* TOS; /* Start executing that code field address */
-/*
+
 Address   0     8    16
 aword : docol  40   ...
 Address   40    48
@@ -230,17 +158,19 @@ TEXT	jump(SB), 1, $-4	/* ( -- ) */
 	MOVQ (IP),IP
 	NEXT
 
-/* ( f -- ) cjump address
+/*
+	( f -- ) cjump address
 	if true, skip the address and continue
-	else, go to the address */
+	else, go to the address
+ */
 TEXT	cjump(SB), 1, $-4	/* ( f -- ) */
-	MOVQ (IP), TOS	/* get the next address */
+	MOVQ (IP), CX	/* get the next address */
 	ADDQ $8, IP	/* move esi beyond that */
 	TESTQ TOS, TOS
 	JNZ .l1		/* if true, move along */
-	MOVQ TOS, IP	/* if false, go to the above address */
+	MOVQ CX, IP	/* if false, go to the above address */
 .l1:
-	POP(TOS
+	POP(TOS)
 	NEXT
 
 /* TODO change to allow only fetches from a certain memory range */
@@ -267,6 +197,7 @@ TEXT	cstore(SB), 1, $-4	/* ( c a -- ) */
 	POP(TOS)
 	NEXT
 
+/* TODO fix this */
 TEXT	terminate(SB), 1, $-4	/* ( n -- ) */
 	XORQ CX, CX
 	TESTQ TOS, TOS
@@ -278,24 +209,6 @@ TEXT	terminate(SB), 1, $-4	/* ( n -- ) */
 	MOVQ CX, a0+0(FP)	/* address of exit status? status = nil? */
 	MOVQ $8, RARG	/* EXITS */
 	SYSCALL		/* TODO syscall for exit */
-
-TEXT	testfsopen(SB), 1, $-4
-	PUSHQ SI	/* for some reason, the syscall is changing IP and W */
-	PUSHQ BP
-	PUSHQ $0	/* OREAD */
-	PUSHQ $name(SB)
-	PUSHQ $0	/* dummy retaddr */
-	MOVQ $14, RARG	/* open */
-	SYSCALL
-	ADDQ $24, PSP
-	POPQ RSP
-	POPQ IP
-	NEXT
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
 
 #include "bindings.s"
 

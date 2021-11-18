@@ -24,7 +24,7 @@ KTZERO=0x200000
 
 OBJ=\
 	l.$O\
-	ff.$O\
+	forth.$O\
 	fpu.$O\
 	portclock.$O\
 	tod.$O\
@@ -90,7 +90,7 @@ fault386.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
 main.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h rebootcode.i
 trap.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
 
-ff.$O:	primitives.s words.s
+forth.$O:	primitives.s words.s bindings.s
 primitives.s:	primitives.awk primitives-nasm.s
 	cat primitives-nasm.s | ./primitives.awk > primitives.s
 words.s:	words.awk words-nasm.s

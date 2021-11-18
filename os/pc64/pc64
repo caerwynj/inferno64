@@ -4,6 +4,7 @@ dev
 	cons
 	arch
 	env
+	forth
 	mnt
 	pipe
 	proc

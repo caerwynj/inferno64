@@ -463,10 +463,9 @@ newproc(void)
 	p->noteid = 0;
 	p->trace = 0;
 
-	/* replaced with pidalloc() in kproc */
-/*	p->pid = incref(&pidalloc);
+	pidalloc(p);
 	if(p->pid == 0)
-		panic("pidalloc"); */
+		panic("pidalloc");
 	if(p->kstack == 0)
 		p->kstack = smalloc(KSTACK);
 	addprog(p);
@@ -881,11 +880,12 @@ pexit(char*, int)
 	panic("pexit");
 }
 
-/* 9front uses a macro for this. why? */
+/* macro for speed? */
 Proc*
 proctab(int i)
 {
-	return &procalloc.arena[i];
+#define proctab(x) (&procalloc.arena[(x)])
+	return proctab(i);
 }
 
 void
@@ -990,10 +990,9 @@ kproc(char *name, void (*func)(void *), void *arg, int flags)
 /*	cycles(&p->kentry);
 	p->pcycles = -p->kentry;*/
 
-	pidalloc(p);
-
 	qunlock(&p->debug);
 
+	/* leaving the priority at PriNormal */
 /*	procpriority(p, PriKproc, 0);*/
 
 	p->psstate = nil;
@@ -1031,13 +1030,14 @@ error(char *err)
 
 	if(up->nerrlab >= NERR)
 		panic("error stack too deep");
+	if(err == nil)
+		panic("error: nil parameter");
+	kstrcpy(up->env->errstr, err, ERRMAX);
 	if(emptystr(err) == 1){
 		DBG("error nil error err %s caller 0x%p\n", err, getcallerpc(&err));
-		up->env->errstr[0] = '\0';
 		up->env->errpc = 0;
 		/* showerrlabs(); */
 	}else{
-		kstrcpy(up->env->errstr, err, ERRMAX);
 		up->env->errpc = getcallerpc(&err);
 		/* proactively show issues */
 		/* print("up->nerrlab %d error %s raised by 0x%zx\n",

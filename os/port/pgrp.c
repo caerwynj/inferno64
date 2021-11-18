@@ -194,7 +194,10 @@ pgrpcpy(Pgrp *to, Pgrp *from)
 /*	dumppgrp("	to	\n	", to); */
 }
 
-/* not used by 9front. why? */
+/* not used by 9front. why?
+ *	because, we need to be connected to the parent to communicate
+ *	hence, dupfgrp() is used
+ */
 Fgrp*
 newfgrp(Fgrp *old)
 {

@@ -102,6 +102,7 @@ void		fdclose(Fgrp*, int, int);
 Chan*		fdtochan(Fgrp*, int, int, int, int);
 int		findmount(Chan**, Mhead**, int, int, Qid);
 void		forceclosefgrp(void);
+void		forthmain(void *);
 void		free(void*);
 void		freeb(Block*);
 void		freeblist(Block*);
