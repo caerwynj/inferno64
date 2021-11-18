@@ -292,12 +292,18 @@ L79:
  dd m_cstore		; variable iobuf has character
  dd v_iobuf			; variable iobuf address
  dd m_literal
- dd 1				; ( iobuf 1 -- )
- dd m_ffprint		; calls c screenput()
+ dd 1
+ dd swap			; ( iobuf 1 --  1 iobuf )
+ dd m_literal
+ dd 1				; stdout
+ dd write			; ( 1 iobuf 1 --  )
  dd m_exitcolon
 
  CENTRY `type`, c_type, 4	; ( addr n -- ) 
- dd m_ffprint
+ dd swap			; ( addr n --  n addr )
+ dd m_literal
+ dd 1				; stdout
+ dd write			; ( n addr 1 --  )
  dd m_exitcolon
 
  CENTRY `cr`, c_cr, 2

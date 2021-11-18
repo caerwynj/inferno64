@@ -2,13 +2,13 @@
 
 /*
 
-The bigger goal is to replace the dis vm with ff
-ff outputs to screen now.
+The bigger goal is to replace the dis vm with forth
+forth outputs to stdout.
 But, the input needs to be fixed.
-make this into a devff like device that reads commands and outputs the result.
+make this into a devforth like device that reads commands and outputs the result.
 replace variable with value (as in open firmware), to avoid exposing addresses
 
- ff kernel, amd64 9front variant
+ forth kernel, amd64 9front variant
 
  Register usage:
 
@@ -67,6 +67,7 @@ SSTACK_END = FFEND
 	v_ for colon variable word cfa
  */
 #include "primitives.s"
+#include "bindings.s"
 
 #define PUSHALL \
 	PUSHQ	R13; \
@@ -109,7 +110,7 @@ SSTACK_END = FFEND
 
 #define FF_TO_C_0 \
 	PUSHREGS; \
-	MOVQ DX, ffsp<>(SB); \
+	MOVQ DX, forthsp<>(SB); \
 	MOVQ csp<>(SB), DX; \
 	POPREGS;
 
@@ -140,7 +141,7 @@ SSTACK_END = FFEND
 	MOVQ ffsp<>(SB), DX; \
 	POPREGS;
 
-TEXT	ffmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
+TEXT	forthmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
 	/* The last dictionary entry address is stored in dtop.
 	 * The location of dtop is stored in the variable dp.
 	 * To get the location of dtop, get the value in the parameter field
@@ -578,7 +579,7 @@ TEXT	cas(SB), 1, $-4	/* ( a old new -- f ) */
 	/* pause -- no equivalent in 6a ? */
 	NEXT
 
-TEXT	ffend(SB), 1, $-4
+TEXT	forthend(SB), 1, $-4
 
 #include "words.s"
 
@@ -611,7 +612,7 @@ GLOBL	htop(SB), $8
 DATA	heapend(SB)/8, $0
 GLOBL	heapend(SB), $8
 
-GLOBL	ffsp<>(SB), $8
+GLOBL	forthsp<>(SB), $8
 GLOBL	csp<>(SB), $8
 
 	END

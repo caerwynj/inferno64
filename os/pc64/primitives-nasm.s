@@ -5,11 +5,11 @@ dict:
   MENTRY "c!", cstore, 2
   MENTRY "testfsopen", testfsopen, 10
   MENTRY "errstr", errstr, 6
-  MENTRY "fsread", fsread, 6
-  MENTRY "fswrite", fswrite, 7
-  MENTRY "fsseek", fsseek, 6
-  MENTRY "fsopen", fsopen, 6
-  MENTRY "fsclose", fsclose, 7
+  MENTRY "read", read, 4
+  MENTRY "write", write, 5
+  MENTRY "seek", seek, 4
+  MENTRY "open", open, 4
+  MENTRY "close", close, 5
   MENTRY "mmap", mmap, 4
   MENTRY "halt", terminate, 4
   MENTRY "clear", clear, 5
@@ -63,4 +63,3 @@ dict:
   MVENTRY "_end", textend, ffend, 4
   MENTRY "cas", cas, 3
   MENTRY "(deferred)", deferred, 10
-  MENTRY "ffprint", ffprint, 7
