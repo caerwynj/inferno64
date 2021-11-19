@@ -30,7 +30,8 @@ plan9 assembler puts the first argument in BP (RARG), return value in AX.
  RSP: R8 return stack pointer, grows towards higher memory (upwards)
  IP:  R9 instruction pointer
  W:   R10 work register (holds CFA)
-	CX, SI, DI, R11-R15 temporary registers
+ H0:  R11 register holding the start of this process's heap memory
+	CX, SI, DI, R12-R15 temporary registers
 
 coding standard
 : <name> (S input-stack --- output-stack) (R --- )
@@ -38,32 +39,82 @@ coding standard
 	f1 f2  ( interim stack picture) \ programmers explanatory comment
 		.. fn ;
 
-Memory map:
-Return stack 4096 bytes at FFSTART
+Heap memory map: uses 8 pages at the start, will increase by *2 when filled up
+Variables
+	system variables
+		heap start, heapstart, also in H0
+		heap size, heapsize
+		forth stack pointer, forthsp
+		dictionary top, dtop
+	error string buffer 128 bytes
+	word buffer 512 bytes
+	tib, text input buffer 1024 bytes (until the next page?)
+User dictionary	upto 6 pages from the start
+Return stack 1 page (4096 bytes, BY2PG, 512 entries) at FFSTART
 	|
 	|
 	v (grows downwards)
-Others 4096 bytes
-	system variables
-	word buffer
-	tib, text input buffer
-Parameter stack 4096 bytes at FFEND-4096
+Parameter stack 1 page (BY2PG, 512 entries) at FFEND-4096
 	^ (grows upwards)
 	|
 	|
-SSTACK_END = FFEND
+SSTACK_END = FORTHEND
 */
 
-#define TOS BX /* top of stack register */
+#define TOP BX /* top of stack register */
 #define PSP DX /* parameter stack pointer, grows towards lower memory (downwards) */
 #define RSP R8 /* return stack pointer, grows towards higher memory (upwards) */
 #define IP  R9 /* instruction pointer */
 #define W   R10/* work register (holds CFA) */
+#define H0	R11/* start of heap memory */
 
-#define SSTACK_SIZE 4096
-#define RSTACK_SIZE 4096
+#define PSTACK_SIZE BY2PG
+#define RSTACK_SIZE BY2PG
+
+#define HEAPSTART	(0ull)
+#define HEAPSIZE	(HEAPSTART+8)
+#define FORTHSP		(HEAPSTART+16)
+#define DTOP		(HEAPSTART+24)
+#define ERRSTR		(HEAPSTART+32)
+#define WORDB		(HEAPSTART+160)	/* word buffer */
+#define TIB			(HEAPSTART+672)	/* text input buffer */
+#define DICTIONARY	(HEAPSTART+2048)
+#define DICTIONARY_END	(HEAPSTART+(6*BY2PG))
+#define RSTACK		(HEAPSTART+(6*BY2PG))
+#define PSTACK_END	(RSTACK+(2*BY2PG))
+#define FORTHEND 	PSTACK_END
+
 #define	LAST $centry_c_boot(SB) /* last defined word, should generate this */
-#define	SSTACK_END FFEND
+
+TEXT	tib(SB), 1, $-4
+	MOVQ H0, TOP
+	ADDQ $TIB, TOP
+	NEXT
+
+TEXT	wordb(SB), 1, $-4
+	MOVQ H0, TOP
+	ADDQ $WORDB, TOP
+	NEXT
+
+TEXT	h(SB), 1, $-4
+	MOVQ H0, TOP
+	ADDQ $DTOP, TOP
+	NEXT
+
+TEXT	dp(SB), 1, $-4
+	MOVQ H0, TOP
+	ADDQ $DTOP, TOP
+	NEXT
+
+TEXT	s0(SB), 1, $-4
+	MOVQ H0, TOP
+	ADDQ $FORTHEND, TOP
+	NEXT
+
+TEXT	forthsp(SB), 1, $-4
+	MOVQ H0, TOP
+	ADDQ $FORTHSP, TOP
+	NEXT
 
 /* putting this above the asm code as the v_dp define is needed by _main */
 /*	m_ for primitive/macro word cfa
@@ -75,33 +126,51 @@ SSTACK_END = FFEND
 #include "primitives.s"
 
 TEXT	forthmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
+	/* Argument has the start of heap */
+	MOVQ RARG, H0		/* start of heap memory */
+
+	MOVQ H0, RSP
+	ADDQ $RSTACK, RSP	/* return stack pointer */
+
+	MOVQ H0, PSP
+	ADDQ $FORTHEND, PSP	/* parameter stack pointer - stack setup */
+
+	MOVQ H0, TOP
+	ADDQ $HEAPSTART, TOP
+	MOVQ TOP, (H0)		/* store the start address at that address too - magic check */
+	ADDQ $FORTHEND, TOP
+	MOVQ TOP, $HEAPSIZE
+
 	/* The last dictionary entry address is stored in dtop.
 	 * The location of dtop is stored in the variable dp.
 	 * To get the location of dtop, get the value in the parameter field
 	 * (link + name(1+2) + code field address = 24 bytes) of the dp
 	 * dictionary entry.
 	 */
-	MOVQ $FFEND, PSP	/* setting up stack */
 	/*
 	 * dtop address is stored in the parameter field address(24-32 bytes) of mventry_dp
 	 */
 	MOVQ mventry_dp+24(SB), SI	/* now, SI = dtop address */
-	MOVQ (SI), TOS	/* TOS = *CX = $LAST = boot word address (defined last, stored at dtop) */
+	MOVQ (SI), TOP	/* TOP = *CX = $LAST = boot word address (defined last, stored at dtop) */
 				/* if 6a allows multiple symbols per address, then 
 					the above 3 instructions would have been
-					MOVQ (($mventry_dp+24(SB))), TOS */
+					MOVQ (($mventry_dp+24(SB))), TOP */
 	/*
 	 * Could do this instead of the calculations below
-	 * LEAQ 24(TOS), IP
+	 * LEAQ 24(TOP), IP
 	 */
-	ADDQ $16, TOS	/* TOS += link (8 bytes) + len (1 byte) + minimum for align to 8 bytes */
+	ADDQ $16, TOP	/* TOP += link (8 bytes) + len (1 byte) + minimum for align to 8 bytes */
 	XORQ CX, CX
 	MOVB 8(SI), CL	/* CL = length of boot name */
-	ADDQ CX, TOS	/* TOS += len */
-	ANDQ $~7, TOS	/* TOS = address of boot's code - 8 bytes */
-	LEAQ 8(TOS), IP	/* IP = L257 = start of boot code = has docol address there
+	ADDQ CX, TOP	/* TOP += len */
+	ANDQ $~7, TOP	/* TOP = address of boot's code - 8 bytes */
+	LEAQ 8(TOP), IP	/* IP = L257 = start of boot code = has docol address there
 					 * skipping over docol as we do not need to save the IP
 					 */
+
+	MOVQ $centry_c_boot(SB), IP
+	ADDQ $24, IP	/* to get to the parameter field address of boot word */
+	
 
 /* lodsl could make this simpler. But, this is more comprehensible
 	why not JMP* (W)?
@@ -116,9 +185,9 @@ at docol address, some assembly instruction
 Assume IP = 8
  */
 #define NEXT	MOVQ (IP), W;	/* W = 40, contents of address in IP, some word's code field address */ \
-		MOVQ (W), TOS;	/* TOS = docol, Get the address in the address in IP = code field address */ \
+		MOVQ (W), TOP;	/* TOP = docol, Get the address in the address in IP = code field address */ \
 		ADDQ $8, IP; 	/* move IP further, IP = 16 */ \
-		JMP* TOS; /* Start executing at docol address, JMP* = jump to a non-relative address */
+		JMP* TOP; /* Start executing at docol address, JMP* = jump to a non-relative address */
 
 #define PUSH(r)	SUBQ $8, PSP; \
 			MOVQ r, (PSP)
@@ -150,8 +219,8 @@ TEXT	dodoes(SB), 1, $-4	/* ( -- a ) */
 	MOVQ IP,(RSP)
 	ADDQ $8,RSP
 	MOVQ 8(W),IP
-	PUSH(TOS)
-	LEAQ 16(W), TOS
+	PUSH(TOP)
+	LEAQ 16(W), TOP
 	NEXT
 
 TEXT	jump(SB), 1, $-4	/* ( -- ) */
@@ -166,43 +235,43 @@ TEXT	jump(SB), 1, $-4	/* ( -- ) */
 TEXT	cjump(SB), 1, $-4	/* ( f -- ) */
 	MOVQ (IP), CX	/* get the next address */
 	ADDQ $8, IP	/* move esi beyond that */
-	TESTQ TOS, TOS
+	TESTQ TOP, TOP
 	JNZ .l1		/* if true, move along */
 	MOVQ CX, IP	/* if false, go to the above address */
 .l1:
-	POP(TOS)
+	POP(TOP)
 	NEXT
 
 /* TODO change to allow only fetches from a certain memory range */
 TEXT	fetch(SB), 1, $-4	/* ( a -- n) */
-	MOVQ (TOS), TOS
+	MOVQ (TOP), TOP
 	NEXT
 
 /* TODO change to allow stores to a certain memory range only */
 TEXT	store(SB), 1, $-4	/* ( n a -- ) */
 	POP(CX)
-	MOVQ CX, (TOS)
-	POP(TOS)
+	MOVQ CX, (TOP)
+	POP(TOP)
 	NEXT
 
 TEXT	cfetch(SB), 1, $-4	/* ( a -- c ) */
 	XORQ CX, CX
-	MOVB (TOS), CL
-	POP(TOS)
+	MOVB (TOP), CL
+	POP(TOP)
 	NEXT
 
 TEXT	cstore(SB), 1, $-4	/* ( c a -- ) */
 	POP(CX)
-	MOVB CL, (TOS)
-	POP(TOS)
+	MOVB CL, (TOP)
+	POP(TOP)
 	NEXT
 
 /* TODO fix this */
 TEXT	terminate(SB), 1, $-4	/* ( n -- ) */
 	XORQ CX, CX
-	TESTQ TOS, TOS
+	TESTQ TOP, TOP
 	JZ .l2
-	MOVQ $failtext(SB), TOS
+	MOVQ $failtext(SB), TOP
 .l2:
 	/* PUSHQ CX */
 	/* SUBQ $8, PSP */	/* dummy retaddr */
@@ -213,41 +282,41 @@ TEXT	terminate(SB), 1, $-4	/* ( n -- ) */
 #include "bindings.s"
 
 TEXT	mmap(SB), 1, $-4	/* ( a1 -- a2 ) */
-	MOVQ $-1, TOS	/* unimplemented */
+	MOVQ $-1, TOP	/* unimplemented */
 
 TEXT	variable(SB), 1, $-4	/* ( -- a ) */
-	PUSH(TOS)
-	LEAQ 8(W), TOS
+	PUSH(TOP)
+	LEAQ 8(W), TOP
 	NEXT
 
 TEXT	constant(SB), 1, $-4	/* ( -- n ) */
-	PUSH(TOS)
-	MOVQ 8(W), TOS
+	PUSH(TOP)
+	MOVQ 8(W), TOP
 	NEXT
 
 TEXT	literal(SB), 1, $-4	/* ( -- n ) */
-	PUSH(TOS)
-	MOVQ (IP), TOS
+	PUSH(TOP)
+	MOVQ (IP), TOP
 	ADDQ $8, IP
 	NEXT
 
 TEXT	sliteral(SB), 1, $-4	/* ( -- a n ) */
-	PUSH(TOS)
-	XORQ TOS,TOS
+	PUSH(TOP)
+	XORQ TOP,TOP
 	MOVB (IP), BL
 	INCQ IP
 	PUSH(IP)
-	ADDQ TOS, IP
+	ADDQ TOP, IP
 	ADDQ $7, IP
 	ANDQ $~7, IP
 	NEXT
 
 /* puts the top 2 entries of the data stack in the return stack */
 TEXT	doinit(SB), 1, $-4	/* ( hi lo -- ) */
-	MOVQ TOS, (RSP)
-	POP(TOS)
-	MOVQ TOS, 8(RSP)
-	POP(TOS)
+	MOVQ TOP, (RSP)
+	POP(TOP)
+	MOVQ TOP, 8(RSP)
+	POP(TOP)
 	ADDQ $16, RSP
 	NEXT
 
@@ -274,51 +343,51 @@ doloop1:
 	NEXT
 
 TEXT	doploop(SB), 1, $-4	/* ( n -- ) */
-	ADDQ TOS, -16(RSP)
-	POP(TOS)
+	ADDQ TOP, -16(RSP)
+	POP(TOP)
 	JMP doloop1
 
 TEXT	rfetch(SB), 1, $-4	/* ( -- n ) */
-	PUSH(TOS)
-	MOVQ -8(RSP), TOS
+	PUSH(TOP)
+	MOVQ -8(RSP), TOP
 	NEXT
 
 TEXT	rpush(SB), 1, $-4	/* ( n -- ) */
-	MOVQ TOS,(RSP)
-	POP(TOS)
+	MOVQ TOP,(RSP)
+	POP(TOP)
 	ADDQ $8,RSP
 	NEXT
 
 TEXT	rpop(SB), 1, $-4	/* ( -- n ) */
-	PUSH(TOS)
+	PUSH(TOP)
 	SUBQ $8, RSP
-	MOVQ (RSP), TOS
+	MOVQ (RSP), TOP
 	NEXT
 
 TEXT	i(SB), 1, $-4	/* ( -- n ) */
-	PUSH(TOS)
-	MOVQ -16(RSP), TOS
+	PUSH(TOP)
+	MOVQ -16(RSP), TOP
 	NEXT
 
 TEXT	j(SB), 1, $-4	/* ( -- n ) */
-	PUSH(TOS)
-	MOVQ -32(RSP), TOS
+	PUSH(TOP)
+	MOVQ -32(RSP), TOP
 	NEXT
 
 TEXT	plus(SB), 1, $-4	/* ( n1 n2 -- n ) */
 	POP(CX)
-	ADDQ CX, TOS
+	ADDQ CX, TOP
 	NEXT  
 
 TEXT	minus(SB), 1, $-4	/* ( n1 n2 -- n ) */
-	MOVQ TOS, CX
-	POP(TOS)
-	SUBQ CX, TOS
+	MOVQ TOP, CX
+	POP(TOP)
+	SUBQ CX, TOP
 	NEXT
 
 TEXT	multiply(SB), 1, $-4	/* ( n1 n2 -- n1*n2 ) */
 	POP(CX)
-	IMULQ CX,TOS
+	IMULQ CX,TOP
 	NEXT
 
 TEXT	slashmod(SB), 1, $-4	/* ( n1 n2 -- remainder quotient ) n1/n2 */
@@ -328,9 +397,9 @@ TEXT	slashmod(SB), 1, $-4	/* ( n1 n2 -- remainder quotient ) n1/n2 */
 	XORQ DX, DX /* DX = 0 */
 	MOVQ CX, AX /* AX = n1 */
 	CDQ 		/* RAX -> RDX:RAX sign extension */
-	IDIVQ TOS	/* RDX:RAX / TOS => Quotient in RAX, Remainder in RDX */
+	IDIVQ TOP	/* RDX:RAX / TOP => Quotient in RAX, Remainder in RDX */
 	MOVQ DX, CX	/* CX = remainder */
-	MOVQ AX, TOS /* TOS = quotient */
+	MOVQ AX, TOP /* TOP = quotient */
 	POPQ AX
 	POPQ DX
 	MOVQ CX, (PSP) /* -- remainder quotient */
@@ -342,69 +411,69 @@ TEXT	uslashmod(SB), 1, $-4	/* ( u1 u2 -- uremainder uquotient ) */
 	PUSHQ AX
 	XORQ DX, DX /* DX = 0 */
 	MOVQ CX, AX /* AX = n1 */
-	IDIVQ TOS	/* RDX:RAX / TOS => Quotient in RAX, Remainder in RDX */
+	IDIVQ TOP	/* RDX:RAX / TOP => Quotient in RAX, Remainder in RDX */
 	MOVQ DX, CX	/* CX = remainder */
-	MOVQ AX, TOS /* TOS = quotient */
+	MOVQ AX, TOP /* TOP = quotient */
 	POPQ AX
 	POPQ DX
 	MOVQ CX, (PSP) /* -- uremainder uquotient */
 	NEXT
 
-	MOVQ TOS, TOS
-	MOVQ (PSP), TOS
+	MOVQ TOP, TOP
+	MOVQ (PSP), TOP
 	XORQ PSP, PSP
-	DIVQ TOS
+	DIVQ TOP
 	MOVQ PSP, (PSP)
 	NEXT
 
 TEXT	binand(SB), 1, $-4	/* ( n1 n2 -- n ) */
-	ANDQ (PSP), TOS
+	ANDQ (PSP), TOP
 	ADDQ $8, PSP
 	NEXT
 
 TEXT	binor(SB), 1, $-4	/* ( n1 n2 -- n ) */
-	ORQ (PSP), TOS
+	ORQ (PSP), TOP
 	ADDQ $8, PSP
 	NEXT
 
 TEXT	binxor(SB), 1, $-4	/* ( n1 n2 -- n ) */
-	XORQ (PSP), TOS
+	XORQ (PSP), TOP
 	ADDQ $8, PSP
 	NEXT
 
 TEXT	xswap(SB), 1, $-4	/* ( x y -- y x ) */
-	XCHGQ TOS, (PSP)
+	XCHGQ TOP, (PSP)
 	NEXT
 
 TEXT	drop(SB), 1, $-4	/* ( x -- ) */
-	POP(TOS)
+	POP(TOP)
 	NEXT
 
 TEXT	dup(SB), 1, $-4	/* ( x -- x x ) */
-	PUSH(TOS)
+	PUSH(TOP)
 	NEXT
 
 TEXT	over(SB), 1, $-4	/* ( x y -- x y x ) */
-	PUSH(TOS)
-	MOVQ 8(PSP), TOS
+	PUSH(TOP)
+	MOVQ 8(PSP), TOP
 	NEXT
 
 TEXT	equal(SB), 1, $-4	/* ( x y -- f ) */
 	POP(CX)
-	CMPQ CX, TOS
+	CMPQ CX, TOP
 	JEQ .true
-	XORQ TOS, TOS
+	XORQ TOP, TOP
 	NEXT
 TEXT	true(SB), 1, $-4
 .true:
-	MOVQ $-1, TOS
+	MOVQ $-1, TOP
 	NEXT
 	
 TEXT	greater(SB), 1, $-4	/* ( x y -- f ) */
 	POP(CX)
-	CMPQ CX, TOS
+	CMPQ CX, TOP
 	JGT .true
-	XORQ TOS, TOS
+	XORQ TOP, TOP
 	NEXT
 
 /* if x < y then y - x > 0, no sign flag
@@ -414,37 +483,37 @@ TEXT	greater(SB), 1, $-4	/* ( x y -- f ) */
  */
 TEXT	less(SB), 1, $-4	/* ( x y -- f ) */
 	POP(CX)
-	CMPQ CX, TOS
+	CMPQ CX, TOP
 	JLT .true
-	XORQ TOS, TOS
+	XORQ TOP, TOP
 	NEXT
 
-TEXT	stackptr(SB), 1, $-4	/* ( -- a ) does not include TOS! */
-	PUSH(TOS)
-	MOVQ PSP, TOS
+TEXT	stackptr(SB), 1, $-4	/* ( -- a ) does not include TOP! */
+	PUSH(TOP)
+	MOVQ PSP, TOP
 	NEXT
 
 TEXT	lshift(SB), 1, $-4	/* ( n1 n2 -- n ) */
-	MOVQ TOS, CX
-	POP(TOS)
-	SHLQ CL, TOS
+	MOVQ TOP, CX
+	POP(TOP)
+	SHLQ CL, TOP
 	NEXT
 	
 TEXT	rshift(SB), 1, $-4	/* ( n1 n2 -- n ) */
-	MOVQ TOS, CX
-	POP(TOS)
-	SHRQ CL, TOS
+	MOVQ TOP, CX
+	POP(TOP)
+	SHRQ CL, TOP
 	NEXT
 
 TEXT	rshifta(SB), 1, $-4	/* ( n1 n2 -- n ) */
-	MOVQ TOS, CX
-	POP(TOS)
-	SARQ CL, TOS
+	MOVQ TOP, CX
+	POP(TOP)
+	SARQ CL, TOP
 	NEXT
 
 TEXT	execute(SB), 1, $-4	/* ( ... a -- ... ) */
-	MOVQ TOS, W
-	POP(TOS)
+	MOVQ TOP, W
+	POP(TOP)
 	MOVQ (W), CX
 	JMP CX
 
@@ -458,74 +527,42 @@ TEXT	unloop(SB), 1, $-4
 	NEXT
 
 TEXT	cmove(SB), 1, $-4	/* ( a1 a2 n -- ) */
-	MOVQ TOS, CX
+	MOVQ TOP, CX
 	POP(W)
 	MOVQ IP, CX
 	POP(IP)
 	REP; MOVSB
 	MOVQ CX, IP
-	POP(TOS)
+	POP(TOP)
 	NEXT
 
 TEXT	cmoveb(SB), 1, $-4	/* ( a1 a2 n -- ) */
-	MOVQ TOS, CX
+	MOVQ TOP, CX
 	POP(W)
-	DECQ TOS
-	ADDQ TOS, W
+	DECQ TOP
+	ADDQ TOP, W
 	MOVQ IP, CX
 	POP(IP)
-	ADDQ TOS, IP
+	ADDQ TOP, IP
 	STD
 	REP; MOVSB
 	CLD
 	MOVQ CX, IP
-	POP(TOS)
+	POP(TOP)
 	NEXT
 
 TEXT	cas(SB), 1, $-4	/* ( a old new -- f ) */
-	MOVQ TOS, DI	/* new */
-	POP(TOS)	/* old */
+	MOVQ TOP, DI	/* new */
+	POP(TOP)	/* old */
 	POP(SI)	/* addr */
 	LOCK; CMPXCHGQ DI, (SI)
 	JE .true
-	XORQ TOS, TOS
+	XORQ TOP, TOP
 	/* pause -- no equivalent in 6a ? */
 	NEXT
 
 TEXT	forthend(SB), 1, $-4
 
 #include "words.s"
-
-DATA	failtext(SB)/6, $"error\z"
-GLOBL	failtext(SB), $6
-
-DATA	name(SB)/8, $"/tmp/tes"
-DATA	name+8(SB)/6, $"t.txt\z"
-GLOBL	name(SB), $14
-
-DATA	errstrbuffer(SB)/1, $0
-GLOBL	errstrbuffer(SB), $128	/* matches ERRMTOS of libc.h */
-
-DATA	tibuffer(SB)/1, $0
-GLOBL	tibuffer(SB), $1024
-DATA	wordbuffer(SB)/1, $0
-GLOBL	wordbuffer(SB), $256
-/* TODO there should not be a heap limit, get rid of this */
-/*
-DATA	heap(SB)/1, $0
-GLOBL	heap(SB), $HEIP_IPZE
-*/
-
-
-DATA	dtop(SB)/8, LAST
-GLOBL	dtop(SB), $8
-/* 0's until heap allocated */
-DATA	htop(SB)/8, $0
-GLOBL	htop(SB), $8
-DATA	heapend(SB)/8, $0
-GLOBL	heapend(SB), $8
-
-GLOBL	forthsp<>(SB), $8
-GLOBL	csp<>(SB), $8
 
 	END

@@ -3,7 +3,6 @@ dict:
   MENTRY "!", store, 1
   MENTRY "c@", cfetch, 2
   MENTRY "c!", cstore, 2
-  MENTRY "errstr", errstr, 6
   MENTRY "read", read, 4
   MENTRY "write", write, 5
   MENTRY "seek", seek, 4
@@ -13,8 +12,8 @@ dict:
   MENTRY "halt", terminate, 4
   MENTRY "clear", clear, 5
   MENTRY "reset", reset, 5
-  MVENTRY "h", h, htop, 1
-  MVENTRY "dp", dp, dtop, 2
+  MENTRY "h", h, 1
+  MENTRY "dp", dp, 2
   MENTRY "exitcolon", exitcolon, 4
   MENTRY "(literal)", literal, 9
   MENTRY "(sliteral)", sliteral, 10
@@ -43,8 +42,8 @@ dict:
   MENTRY "=", equal, 1
   MENTRY ">", greater, 1
   MENTRY "<", less, 1
-  MVENTRY "tib", tib, tibuffer, 3
-  MVENTRY "wordb", wordb, wordbuffer, 5
+  MENTRY "tib", tib, 3
+  MENTRY "wordb", wordb, 5
   MENTRY "s@", stackptr, 2
   MENTRY "lshift", lshift, 6
   MENTRY "rshift", rshift, 6
@@ -57,8 +56,5 @@ dict:
   MENTRY "(constant)", constant, 10
   MENTRY "(:)", colon, 3
   MENTRY "(does)", dodoes, 6
-  MVENTRY "heaptop", heaptop, heapend, 7
-  MVENTRY "_start", textbase, ffmain, 6
-  MVENTRY "_end", textend, ffend, 4
   MENTRY "cas", cas, 3
   MENTRY "(deferred)", deferred, 10

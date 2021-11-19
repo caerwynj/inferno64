@@ -271,7 +271,7 @@ L52:
  dd 1
  dd v_stdin		; variable stdin
  dd m_fetch	; ( iobuf 1 0 -- )
- dd m_fsread
+ dd m_read
  dd c_0eq
  dd m_cjump
  dd L78
@@ -293,17 +293,17 @@ L79:
  dd v_iobuf			; variable iobuf address
  dd m_literal
  dd 1
- dd swap			; ( iobuf 1 --  1 iobuf )
+ dd m_xswap			; ( iobuf 1 --  1 iobuf )
  dd m_literal
  dd 1				; stdout
- dd write			; ( 1 iobuf 1 --  )
+ dd m_write			; ( 1 iobuf 1 --  )
  dd m_exitcolon
 
  CENTRY `type`, c_type, 4	; ( addr n -- ) 
- dd swap			; ( addr n --  n addr )
+ dd m_xswap			; ( addr n --  n addr )
  dd m_literal
  dd 1				; stdout
- dd write			; ( n addr 1 --  )
+ dd m_write			; ( n addr 1 --  )
  dd m_exitcolon
 
  CENTRY `cr`, c_cr, 2
@@ -1631,31 +1631,31 @@ L236:
  dd m_rpop
  dd m_literal
  dd 420
- dd m_fsopen
+ dd m_open
  dd m_dup
  dd m_literal
  dd -1
  dd m_greater
  dd m_exitcolon
  CENTRY `close-file`, c_close_file, 10
- dd m_fsclose
+ dd m_close
  dd c_0eq
  dd m_exitcolon
  CENTRY `read-file`, c_read_file, 9
- dd m_fsread
+ dd m_read
  dd m_dup
  dd m_literal
  dd -1
  dd c_neq
  dd m_exitcolon
  CENTRY `write-file`, c_write_file, 10
- dd m_fswrite
+ dd m_write
  dd m_literal
  dd -1
  dd c_neq
  dd m_exitcolon
  CENTRY `reposition-file`, c_reposition_file, 15
- dd m_fsseek
+ dd m_seek
  dd m_literal
  dd -1
  dd c_neq
@@ -1671,7 +1671,6 @@ L236:
  dd 9
  dd c_type
  dd c_cr
- dd m_errstr
  dd c_abort
 L246:
  dd m_exitcolon
