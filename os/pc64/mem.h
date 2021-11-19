@@ -206,4 +206,4 @@
 #define RMACH		R15			/* m-> */
 #define RUSER		R14			/* up-> */
 
-#define FORTHHEAPSIZE	(8*BY2PG)
+#define FORTHHEAPSIZE	(9*BY2PG)

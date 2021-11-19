@@ -40,24 +40,32 @@ coding standard
 		.. fn ;
 
 Heap memory map: uses 8 pages at the start, will increase by *2 when filled up
-Variables
-	system variables
+H0: variables
 		heap start, heapstart, also in H0
 		heap size, heapsize
 		forth stack pointer, forthsp
-		dictionary top, dtop
+		dictionary pointer, Dp
+		latest dictionary entry, Dtop
+			need this as the system definitions and
+			user definitions are not continuous
 	error string buffer 128 bytes
 	word buffer 512 bytes
-	tib, text input buffer 1024 bytes (until the next page?)
-User dictionary	upto 6 pages from the start
-Return stack 1 page (4096 bytes, BY2PG, 512 entries) at FFSTART
+User dictionary	upto  pages from the start
 	|
 	|
 	v (grows downwards)
-Parameter stack 1 page (BY2PG, 512 entries) at FFEND-4096
 	^ (grows upwards)
 	|
 	|
+Parameter stack 1 page (BY2PG, 512 entries) at FFEND-4096
+tib, text input buffer 1024 bytes (until the next page?)
+	|
+	|
+	v (grows downwards)
+	^ (grows upwards)
+	|
+	|
+Return stack 1 page (4096 bytes, BY2PG, 512 entries) at FFSTART
 SSTACK_END = FORTHEND
 */
 
@@ -71,36 +79,45 @@ SSTACK_END = FORTHEND
 #define PSTACK_SIZE BY2PG
 #define RSTACK_SIZE BY2PG
 
+/*
+ * user table at the start unlike in Starting Forth as it will be
+ * easy to get to the variables with an offset
+ */
 #define HEAPSTART	(0ull)
-#define HEAPEND		(HEAPSTART+8)
-#define FORTHSP		(HEAPSTART+16)
-#define DTOP		(HEAPSTART+24)
+#define HEAPEND		(HEAPSTART+(BY2WD*1))
+#define FORTHSP		(HEAPSTART+(BY2WD*2))
+#define DP			(HEAPSTART+(BY2WD*3))	/* cannot use H as it is nil in inferno
+												next available cell for the dictionary */
+#define	DTOP		(HEAPSTART+(BY2WD*4))
 	/* variables used by the core words */
-#define	TOIN		(HEAPSTART+32)
-#define	TOLIMIT		(HEAPSTART+40)
-#define	FINDADR		(HEAPSTART+48)
-#define	BLK			(HEAPSTART+56)
-#define	ARGS		(HEAPSTART+64)
-#define	IOBUF		(HEAPSTART+72)
-#define	SEARCHLEN	(HEAPSTART+80)
-#define	BASE		(HEAPSTART+88)
-#define	TONUM		(HEAPSTART+96)
-#define	STATE		(HEAPSTART+104)
-#define	ABORTVEC	(HEAPSTART+112)
-#define	SOURCEBUF	(HEAPSTART+120)
-#define	WORDBUF		(HEAPSTART+128)
-#define	INFD		(HEAPSTART+136)
-#define	OUTFD		(HEAPSTART+144)
-#define	ERRFD		(HEAPSTART+152)
+#define	TOIN		(HEAPSTART+(BY2WD*5))
+#define	TOLIMIT		(HEAPSTART+(BY2WD*6))
+#define	FINDADR		(HEAPSTART+(BY2WD*7))
+#define	BLK			(HEAPSTART+(BY2WD*8))
+#define	ARGS		(HEAPSTART+(BY2WD*9))
+#define	IOBUF		(HEAPSTART+(BY2WD*10))
+#define	SEARCHLEN	(HEAPSTART+(BY2WD*11))
+#define	BASE		(HEAPSTART+(BY2WD*12))
+#define	TONUM		(HEAPSTART+(BY2WD*13))
+#define	STATE		(HEAPSTART+(BY2WD*14))
+#define	ABORTVEC	(HEAPSTART+(BY2WD*15))
+#define	SOURCEBUF	(HEAPSTART+(BY2WD*16))
+#define	WORDBUF		(HEAPSTART+(BY2WD*17))
+#define	INFD		(HEAPSTART+(BY2WD*18))
+#define	OUTFD		(HEAPSTART+(BY2WD*19))
+#define	ERRFD		(HEAPSTART+(BY2WD*20))
 
-#define ERRSTR		(HEAPSTART+160)
-#define WORDB		(HEAPSTART+288)	/* word buffer */
-#define TIB			(HEAPSTART+792)	/* text input buffer */
-#define DICTIONARY	(HEAPSTART+2048)
+#define ERRSTR		(HEAPSTART+(BY2WD*32))
+#define WORDB		(HEAPSTART+(BY2WD*160))	/* word buffer */
+
+#define DICTIONARY	(HEAPSTART+2048)	/* dictionary */
 #define DICTIONARY_END	(HEAPSTART+(6*BY2PG))
-#define RSTACK		(HEAPSTART+(6*BY2PG))
-#define PSTACK_END	(RSTACK+(2*BY2PG))
-#define FORTHEND 	PSTACK_END
+#define PSTACK		(HEAPSTART+(6*BY2PG))
+#define PSTACK_END	(HEAPSTART+(7*BY2PG))
+#define TIB			(HEAPSTART+(7*BY2PG))	/* text input buffer */
+#define RSTACK		(HEAPSTART+(8*BY2PG))
+#define RSTACK_END	(HEAPSTART+(9*BY2PG))
+#define FORTHEND 	RSTACK_END
 #define HEAPSIZE 	FORTHEND
 
 #define	LAST $centry_c_boot(SB) /* last defined word, should generate this */
@@ -123,10 +140,11 @@ TEXT	forthmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
 	MOVQ RARG, H0		/* start of heap memory */
 
 	MOVQ H0, RSP
-	ADDQ $RSTACK, RSP	/* return stack pointer, reset */
+	ADDQ $RSTACK_END, RSP	/* return stack pointer, reset */
 
 	MOVQ H0, PSP
-	ADDQ $FORTHEND, PSP	/* parameter stack pointer - stack setup, clear */
+	ADDQ $PSTACK_END, PSP	/* parameter stack pointer - stack setup, clear */
+	MOVQ PSP, 16(H0)		/* parameter stack pointer store, for forth to c */
 
 	MOVQ H0, TOP
 	ADDQ $HEAPSTART, TOP
@@ -134,8 +152,10 @@ TEXT	forthmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
 	ADDQ $(HEAPSIZE-1), TOP
 	MOVQ TOP, 8(H0)		/* heap end */
 
-	MOVQ PSP, 16(H0)	/* parameter stack pointer */
-	MOVQ $centry_c_boot(SB), 24(H0)	/* Last dictionary entry address */
+	MOVQ H0, TOP
+	ADDQ $DICTIONARY, TOP
+	MOVQ TOP, 24(H0)	/* dictionary pointer */
+	MOVQ $centry_c_boot(SB), 24(H0)	/* Latest dictionary entry address */
 
 	/* execute boot */
 	MOVQ $centry_c_boot(SB), IP
@@ -162,33 +182,34 @@ Assume IP = 8
 			MOVQ r, (PSP)
 #define POP(r)	MOVQ (PSP), r; \
 			ADDQ $8, PSP
+#define RPUSH(r)	SUBQ $8, RSP; \
+			MOVQ r, (RSP)
+#define RPOP(r)	MOVQ (RSP), r; \
+			ADDQ $8, RSP
 
 	NEXT
 
 TEXT	reset(SB), 1, $-4
 	MOVQ H0, RSP
-	ADDQ $RSTACK, RSP
+	ADDQ $RSTACK_END, RSP
 	NEXT
 
 TEXT	clear(SB), 1, $-4
 	MOVQ H0, PSP
-	ADDQ $FFEND, PSP
+	ADDQ $PSTACK_END, PSP
 	NEXT
 
 TEXT	colon(SB), 1, $-4
-	MOVQ IP,(RSP)
-	ADDQ $8, RSP
+	RPUSH(IP)
 	LEAQ 8(W), IP
 	NEXT
 
 TEXT	exitcolon(SB), 1, $-4
-	SUBQ $8, RSP
-	MOVQ (RSP), IP
+	RPOP(IP)
 	NEXT
 
 TEXT	dodoes(SB), 1, $-4	/* ( -- a ) */
-	MOVQ IP,(RSP)
-	ADDQ $8,RSP
+	RPUSH(IP)
 	MOVQ 8(W),IP
 	PUSH(TOP)
 	LEAQ 16(W), TOP
@@ -306,25 +327,23 @@ doloop1:
 	NEXT
 
 TEXT	doploop(SB), 1, $-4	/* ( n -- ) */
-	ADDQ TOP, -16(RSP)
+	ADDQ TOP, 16(RSP)
 	POP(TOP)
 	JMP doloop1
 
-TEXT	rfetch(SB), 1, $-4	/* ( -- n ) */
+TEXT	rfetch(SB), 1, $-4	/* ( -- n ) no change in RSP */
 	PUSH(TOP)
-	MOVQ -8(RSP), TOP
-	NEXT
-
-TEXT	rpush(SB), 1, $-4	/* ( n -- ) */
-	MOVQ TOP,(RSP)
-	POP(TOP)
-	ADDQ $8,RSP
+	MOVQ (RSP), TOP
 	NEXT
 
 TEXT	rpop(SB), 1, $-4	/* ( -- n ) */
 	PUSH(TOP)
-	SUBQ $8, RSP
-	MOVQ (RSP), TOP
+	RPOP(TOP)
+	NEXT
+
+TEXT	rpush(SB), 1, $-4	/* ( n -- ) */
+	RPUSH(TOP)
+	POP(TOP)
 	NEXT
 
 TEXT	i(SB), 1, $-4	/* ( -- n ) */
@@ -526,7 +545,7 @@ TEXT	cas(SB), 1, $-4	/* ( a old new -- f ) */
 
 TEXT	s0(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
 	MOVQ H0, TOP
-	ADDQ $FORTHEND, TOP
+	ADDQ $PSTACK_END, TOP
 	NEXT
 
 /* store the forth sp here when going to C */
@@ -545,7 +564,8 @@ TEXT	forthsp(SB), 1, $-4
 VARIABLE(Tib, $TIB)
 VARIABLE(Wordb, $WORDB)
 VARIABLE(Hzero, $HEAPSTART)
-VARIABLE(Dp, $DTOP)
+VARIABLE(Dp, $DP)
+VARIABLE(Dtop, $DTOP)
 VARIABLE(toIn, $TOIN)
 VARIABLE(toLimit, $TOLIMIT)
 VARIABLE(Findadr, $FINDADR)
