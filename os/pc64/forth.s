@@ -23,7 +23,7 @@ replace variable with value (as in open firmware), to avoid exposing addresses
 plan9 assembler puts the first argument in BP (RARG), return value in AX.
 
 	Changed to
- Leaving AX, SP, BP (RARG) alone to not mess with the C environment
+ Leaving AX, SP, BP (RARG), R14, R15 alone to not mess with the C environment
 
  TOS: BX top of stack register
  PSP: DX parameter stack pointer, grows towards lower memory (downwards)
@@ -31,7 +31,7 @@ plan9 assembler puts the first argument in BP (RARG), return value in AX.
  IP:  R9 instruction pointer
  W:   R10 work register (holds CFA)
  H0:  R11 register holding the start of this process's heap memory
-	CX, SI, DI, R12-R15 temporary registers
+	CX, SI, DI, R12-R13 temporary registers
 
 coding standard
 : <name> (S input-stack --- output-stack) (R --- )
@@ -72,49 +72,38 @@ SSTACK_END = FORTHEND
 #define RSTACK_SIZE BY2PG
 
 #define HEAPSTART	(0ull)
-#define HEAPSIZE	(HEAPSTART+8)
+#define HEAPEND		(HEAPSTART+8)
 #define FORTHSP		(HEAPSTART+16)
 #define DTOP		(HEAPSTART+24)
-#define ERRSTR		(HEAPSTART+32)
-#define WORDB		(HEAPSTART+160)	/* word buffer */
-#define TIB			(HEAPSTART+672)	/* text input buffer */
+	/* variables used by the core words */
+#define	TOIN		(HEAPSTART+32)
+#define	TOLIMIT		(HEAPSTART+40)
+#define	FINDADR		(HEAPSTART+48)
+#define	BLK			(HEAPSTART+56)
+#define	ARGS		(HEAPSTART+64)
+#define	IOBUF		(HEAPSTART+72)
+#define	SEARCHLEN	(HEAPSTART+80)
+#define	BASE		(HEAPSTART+88)
+#define	TONUM		(HEAPSTART+96)
+#define	STATE		(HEAPSTART+104)
+#define	ABORTVEC	(HEAPSTART+112)
+#define	SOURCEBUF	(HEAPSTART+120)
+#define	WORDBUF		(HEAPSTART+128)
+#define	INFD		(HEAPSTART+136)
+#define	OUTFD		(HEAPSTART+144)
+#define	ERRFD		(HEAPSTART+152)
+
+#define ERRSTR		(HEAPSTART+160)
+#define WORDB		(HEAPSTART+288)	/* word buffer */
+#define TIB			(HEAPSTART+792)	/* text input buffer */
 #define DICTIONARY	(HEAPSTART+2048)
 #define DICTIONARY_END	(HEAPSTART+(6*BY2PG))
 #define RSTACK		(HEAPSTART+(6*BY2PG))
 #define PSTACK_END	(RSTACK+(2*BY2PG))
 #define FORTHEND 	PSTACK_END
+#define HEAPSIZE 	FORTHEND
 
 #define	LAST $centry_c_boot(SB) /* last defined word, should generate this */
-
-TEXT	tib(SB), 1, $-4
-	MOVQ H0, TOP
-	ADDQ $TIB, TOP
-	NEXT
-
-TEXT	wordb(SB), 1, $-4
-	MOVQ H0, TOP
-	ADDQ $WORDB, TOP
-	NEXT
-
-TEXT	h(SB), 1, $-4
-	MOVQ H0, TOP
-	ADDQ $DTOP, TOP
-	NEXT
-
-TEXT	dp(SB), 1, $-4
-	MOVQ H0, TOP
-	ADDQ $DTOP, TOP
-	NEXT
-
-TEXT	s0(SB), 1, $-4
-	MOVQ H0, TOP
-	ADDQ $FORTHEND, TOP
-	NEXT
-
-TEXT	forthsp(SB), 1, $-4
-	MOVQ H0, TOP
-	ADDQ $FORTHSP, TOP
-	NEXT
 
 /* putting this above the asm code as the v_dp define is needed by _main */
 /*	m_ for primitive/macro word cfa
@@ -122,6 +111,10 @@ TEXT	forthsp(SB), 1, $-4
 	c_ for colon word cfa
 	ci_ for colon immediate word cfa
 	v_ for colon variable word cfa
+
+	CONSTANTS - capital letters
+	Variables - initial capital case
+	words - lower case
  */
 #include "primitives.s"
 
@@ -130,47 +123,23 @@ TEXT	forthmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
 	MOVQ RARG, H0		/* start of heap memory */
 
 	MOVQ H0, RSP
-	ADDQ $RSTACK, RSP	/* return stack pointer */
+	ADDQ $RSTACK, RSP	/* return stack pointer, reset */
 
 	MOVQ H0, PSP
-	ADDQ $FORTHEND, PSP	/* parameter stack pointer - stack setup */
+	ADDQ $FORTHEND, PSP	/* parameter stack pointer - stack setup, clear */
 
 	MOVQ H0, TOP
 	ADDQ $HEAPSTART, TOP
 	MOVQ TOP, (H0)		/* store the start address at that address too - magic check */
-	ADDQ $FORTHEND, TOP
-	MOVQ TOP, $HEAPSIZE
+	ADDQ $(HEAPSIZE-1), TOP
+	MOVQ TOP, 8(H0)		/* heap end */
 
-	/* The last dictionary entry address is stored in dtop.
-	 * The location of dtop is stored in the variable dp.
-	 * To get the location of dtop, get the value in the parameter field
-	 * (link + name(1+2) + code field address = 24 bytes) of the dp
-	 * dictionary entry.
-	 */
-	/*
-	 * dtop address is stored in the parameter field address(24-32 bytes) of mventry_dp
-	 */
-	MOVQ mventry_dp+24(SB), SI	/* now, SI = dtop address */
-	MOVQ (SI), TOP	/* TOP = *CX = $LAST = boot word address (defined last, stored at dtop) */
-				/* if 6a allows multiple symbols per address, then 
-					the above 3 instructions would have been
-					MOVQ (($mventry_dp+24(SB))), TOP */
-	/*
-	 * Could do this instead of the calculations below
-	 * LEAQ 24(TOP), IP
-	 */
-	ADDQ $16, TOP	/* TOP += link (8 bytes) + len (1 byte) + minimum for align to 8 bytes */
-	XORQ CX, CX
-	MOVB 8(SI), CL	/* CL = length of boot name */
-	ADDQ CX, TOP	/* TOP += len */
-	ANDQ $~7, TOP	/* TOP = address of boot's code - 8 bytes */
-	LEAQ 8(TOP), IP	/* IP = L257 = start of boot code = has docol address there
-					 * skipping over docol as we do not need to save the IP
-					 */
+	MOVQ PSP, 16(H0)	/* parameter stack pointer */
+	MOVQ $centry_c_boot(SB), 24(H0)	/* Last dictionary entry address */
 
+	/* execute boot */
 	MOVQ $centry_c_boot(SB), IP
 	ADDQ $24, IP	/* to get to the parameter field address of boot word */
-	
 
 /* lodsl could make this simpler. But, this is more comprehensible
 	why not JMP* (W)?
@@ -197,11 +166,13 @@ Assume IP = 8
 	NEXT
 
 TEXT	reset(SB), 1, $-4
-	MOVQ $FFSTART, RSP
+	MOVQ H0, RSP
+	ADDQ $RSTACK, RSP
 	NEXT
 
 TEXT	clear(SB), 1, $-4
-	MOVQ $FFEND, PSP
+	MOVQ H0, PSP
+	ADDQ $FFEND, PSP
 	NEXT
 
 TEXT	colon(SB), 1, $-4
@@ -268,16 +239,8 @@ TEXT	cstore(SB), 1, $-4	/* ( c a -- ) */
 
 /* TODO fix this */
 TEXT	terminate(SB), 1, $-4	/* ( n -- ) */
-	XORQ CX, CX
-	TESTQ TOP, TOP
-	JZ .l2
-	MOVQ $failtext(SB), TOP
-.l2:
-	/* PUSHQ CX */
-	/* SUBQ $8, PSP */	/* dummy retaddr */
-	MOVQ CX, a0+0(FP)	/* address of exit status? status = nil? */
-	MOVQ $8, RARG	/* EXITS */
-	SYSCALL		/* TODO syscall for exit */
+	POP(TOP)
+	NEXT
 
 #include "bindings.s"
 
@@ -560,6 +523,46 @@ TEXT	cas(SB), 1, $-4	/* ( a old new -- f ) */
 	XORQ TOP, TOP
 	/* pause -- no equivalent in 6a ? */
 	NEXT
+
+TEXT	s0(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
+	MOVQ H0, TOP
+	ADDQ $FORTHEND, TOP
+	NEXT
+
+/* store the forth sp here when going to C */
+TEXT	forthsp(SB), 1, $-4
+	MOVQ H0, TOP
+	ADDQ $FORTHSP, TOP
+	NEXT
+
+/* variables used by the core words */
+
+#define	VARIABLE(name, location)	TEXT	name(SB), 1, $-4 ;\
+	MOVQ H0, TOP ;\
+	ADDQ location, TOP ;\
+	NEXT;
+
+VARIABLE(Tib, $TIB)
+VARIABLE(Wordb, $WORDB)
+VARIABLE(Hzero, $HEAPSTART)
+VARIABLE(Dp, $DTOP)
+VARIABLE(toIn, $TOIN)
+VARIABLE(toLimit, $TOLIMIT)
+VARIABLE(Findadr, $FINDADR)
+VARIABLE(Blk, $BLK)
+VARIABLE(Args, $ARGS)
+VARIABLE(Iobuf, $IOBUF)
+VARIABLE(Searchlen, $SEARCHLEN)
+VARIABLE(Base, $BASE)
+VARIABLE(toNum, $TONUM)
+VARIABLE(State, $STATE)
+VARIABLE(Abortvec, $ABORTVEC)
+VARIABLE(Sourcebuf, $SOURCEBUF)
+VARIABLE(Wordbuf, $WORDBUF)
+VARIABLE(Errstr, $ERRSTR)
+VARIABLE(Infd, $INFD)
+VARIABLE(Outfd, $OUTFD)
+VARIABLE(Errfd, $ERRFD)
 
 TEXT	forthend(SB), 1, $-4
 

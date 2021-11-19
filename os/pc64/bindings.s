@@ -17,71 +17,71 @@ there is no forth word for this. It is call'able by the bindings subroutines
 */
 TEXT	ff_to_c(SB), 1, $-4	/* ( argn .. arg2 arg1 nargs -- ) (G move args to C stack) */
 	POPQ SI			/* get the return PC from the stack */
-	MOVQ TOS, CX	/* check nargs */
-	POP(TOS)
+	MOVQ TOP, CX	/* check nargs */
+	POP(TOP)
 	TESTQ $0, CX
 	JZ .ff_to_c_done /* no args */
-	MOVQ TOS, RARG	/* 1st argument is put in RARG also */
+	MOVQ TOP, RARG	/* 1st argument is put in RARG also */
 .ff_to_c_again:
-	PUSHQ TOS
-	POP(TOS)
+	PUSHQ TOP
+	POP(TOP)
 	LOOP .ff_to_c_again
 .ff_to_c_done:
-	PUSH(TOS)
+	PUSH(TOP)
 	PUSH(RSP)
 	PUSH(IP)
 	PUSH(W)
-	MOVQ PSP, ffsp(SB);
+	MOVQ PSP, forthsp(SB);
 	JMP* SI /* go back to the caller */
 
 TEXT	c_to_ff_0(SB), 1, $-4	/* no returned argument */
-	MOVQ ffsp(SB), PSP
+	MOVQ forthsp(SB), PSP
 	POP(W)
 	POP(IP)
 	POP(RSP)
-	POP(TOS)
+	POP(TOP)
 	RET
 TEXT	c_to_ff_1(SB), 1, $-4	/* there is a returned argument */
 	CALL c_to_ff_0(SB)
-	PUSH(TOS)
-	MOVQ AX, TOS	/* C puts the return value in AX */
+	PUSH(TOP)
+	MOVQ AX, TOP	/* C puts the return value in AX */
 	RET
 
-TEXT	open(SB), 1, $-4	/* ( mode cstr -- fd ) */
-	PUSH(TOS)
-	MOVQ $2, TOS
+TEXT	fthopen(SB), 1, $-4	/* ( mode cstr -- fd ) */
+	PUSH(TOP)
+	MOVQ $2, TOP
 	CALL ff_to_c(SB)
 	CALL kopen(SB)
 	CALL c_to_ff_1(SB)
 	NEXT
 
-TEXT	close(SB), 1, $-4	/* ( fd -- n ) */
-	PUSH(TOS)
-	MOVQ $1, TOS
+TEXT	fthclose(SB), 1, $-4	/* ( fd -- n ) */
+	PUSH(TOP)
+	MOVQ $1, TOP
 	CALL ff_to_c(SB)
 	CALL kclose(SB)
 	CALL c_to_ff_1(SB)
 	NEXT
 
-TEXT	read(SB), 1, $-4	/* ( n a fd -- n2 ) */
-	PUSH(TOS)
-	MOVQ $3, TOS
+TEXT	fthread(SB), 1, $-4	/* ( n a fd -- n2 ) */
+	PUSH(TOP)
+	MOVQ $3, TOP
 	CALL ff_to_c(SB)
 	CALL kread(SB)
 	CALL c_to_ff_1(SB)
 	NEXT
 
-TEXT	write(SB), 1, $-4	/* ( n a fd -- n2 ) */
-	PUSH(TOS)
-	MOVQ $3, TOS
+TEXT	fthwrite(SB), 1, $-4	/* ( n a fd -- n2 ) */
+	PUSH(TOP)
+	MOVQ $3, TOP
 	CALL ff_to_c(SB)
 	CALL kwrite(SB)
 	CALL c_to_ff_1(SB)
 	NEXT
 
-TEXT	seek(SB), 1, $-4	/* ( type pos fd -- n ) */
-	PUSH(TOS)
-	MOVQ $3, TOS
+TEXT	fthseek(SB), 1, $-4	/* ( type pos fd -- n ) */
+	PUSH(TOP)
+	MOVQ $3, TOP
 	CALL ff_to_c(SB)
 	CALL kseek(SB)
 	CALL c_to_ff_1(SB)

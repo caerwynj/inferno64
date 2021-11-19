@@ -63,7 +63,7 @@ $2 == "MVENTRY" {
 	lines[++nlines]=sprintf("DATA	mventry_%s+%d(SB)/8, $constant(SB)\n", label, tot);
 	lines[++nlines]=sprintf("#define	mc_%s(SB) mventry_%s+%d(SB)\n", label, label, tot);
 	tot += 8;
-	lines[++nlines]=sprintf("DATA	mventry_%s+%d(SB)/8, $%s(SB)\n", label, tot, $5);
+	lines[++nlines]=sprintf("DATA	mventry_%s+%d(SB)/8, $%s\n", label, tot, $5);
 	tot += 8;
 	addrlabel = sprintf("mventry_%s", label)
 }

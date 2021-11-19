@@ -20,8 +20,8 @@
 #define	BI2WD		32			/* bits per word */
 #define	BY2WD		8			/* bytes per word */
 #define	BY2V		8			/* bytes per double word */
-#define	BY2PG		(0x1000ull)		/* bytes per page */
-#define	WD2PG		(BY2PG/BY2WD)		/* words per page */
+#define	BY2PG		(0x1000ull)	/* bytes per page */
+#define	WD2PG		(BY2PG/BY2WD)	/* words per page */
 #define	PGSHIFT		12			/* log(BY2PG) */
 #define	ROUND(s, sz)	(((s)+((sz)-1))&~((sz)-1))
 #define	PGROUND(s)	ROUND(s, BY2PG)
@@ -205,3 +205,5 @@
 
 #define RMACH		R15			/* m-> */
 #define RUSER		R14			/* up-> */
+
+#define FORTHHEAPSIZE	(8*BY2PG)

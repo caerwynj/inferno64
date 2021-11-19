@@ -778,8 +778,8 @@ meminit(void)
 	print("meminit: conf.mem entries\n");
 	for(i = 0; i < nelem(conf.mem); i++)
 		if(conf.mem[i].base != 0)
-			print("%d base 0x%zx 0x%zp npage 0x%zx %zd\n",
-				i, conf.mem[i].base, conf.mem[i].base,
+			print("%d base 0x%zx npage 0x%zx %zd\n",
+				i, conf.mem[i].base,
 				conf.mem[i].npage, conf.mem[i].npage);
 
 	/* memmapdump(); */

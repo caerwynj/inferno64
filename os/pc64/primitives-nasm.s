@@ -3,17 +3,15 @@ dict:
   MENTRY "!", store, 1
   MENTRY "c@", cfetch, 2
   MENTRY "c!", cstore, 2
-  MENTRY "read", read, 4
-  MENTRY "write", write, 5
-  MENTRY "seek", seek, 4
-  MENTRY "open", open, 4
-  MENTRY "close", close, 5
+  MENTRY "read", fthread, 4
+  MENTRY "write", fthwrite, 5
+  MENTRY "seek", fthseek, 4
+  MENTRY "open", fthopen, 4
+  MENTRY "close", fthclose, 5
   MENTRY "mmap", mmap, 4
   MENTRY "halt", terminate, 4
   MENTRY "clear", clear, 5
   MENTRY "reset", reset, 5
-  MENTRY "h", h, 1
-  MENTRY "dp", dp, 2
   MENTRY "exitcolon", exitcolon, 4
   MENTRY "(literal)", literal, 9
   MENTRY "(sliteral)", sliteral, 10
@@ -42,9 +40,6 @@ dict:
   MENTRY "=", equal, 1
   MENTRY ">", greater, 1
   MENTRY "<", less, 1
-  MENTRY "tib", tib, 3
-  MENTRY "wordb", wordb, 5
-  MENTRY "s@", stackptr, 2
   MENTRY "lshift", lshift, 6
   MENTRY "rshift", rshift, 6
   MENTRY "rshifta", rshifta, 7
@@ -52,6 +47,35 @@ dict:
   MENTRY "unloop", unloop, 6
   MENTRY "cmove", cmove, 5
   MENTRY "cmove>", cmoveb, 6
+
+  MENTRY "Tib", Tib, 3			; variables from here, puts address on stack, mixed case
+  MENTRY "Wordb", Wordb, 5
+  MENTRY "Hzero", Hzero, 5
+  MENTRY "Dp", Dp, 2
+  MENTRY `>In`, toIn, 3
+  MENTRY `>Limit`, toLimit, 6
+  MENTRY `Findadr`, Findadr, 7
+  MENTRY `Blk`, Blk, 3
+  MENTRY `Args`, Args, 4
+  MENTRY `Iobuf`, Iobuf, 5
+  MENTRY `Searchlen`, Searchlen, 9
+  MENTRY `Base`, Base, 4
+  MENTRY `>Num`, toNum, 4
+  MENTRY `State`, State, 5
+  MENTRY `Abortvec`, Abortvec, 8	; not sure if these 3 can be constants instead?
+  MENTRY `Sourcebuf`, Sourcebuf, 9
+  MENTRY `Wordbuf`, Wordbuf, 7
+  MENTRY `Infd`, Infd, 7
+  MENTRY `Outfd`, Outfd, 7
+  MENTRY `Errfd`, Errfd, 7
+
+  MVENTRY "STDIN", STDIN, 0, 5		; 4 constants from here, CAPITALS
+  MVENTRY "STDOUT", STDOUT, 1, 6
+  MVENTRY "STDERR", STDERR, 2, 6
+  MVENTRY "EOF", EOF, 0, 3
+
+  MENTRY "s0", s0, 2
+  MENTRY "s@", stackptr, 2		; puts PSP on stack
   MENTRY "(variable)", variable, 10
   MENTRY "(constant)", constant, 10
   MENTRY "(:)", colon, 3

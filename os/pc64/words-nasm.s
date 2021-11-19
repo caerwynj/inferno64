@@ -10,15 +10,13 @@
  dd m_literal
  dd 32
  dd m_exitcolon
- VENTRY `s0`, v_s0, 2
- VENTRY `args`, v_args, 4
- CENTRY `on`, c_on, 2
+ CENTRY `on`, c_on, 2		; ( a --  ) (G stores -1 at a )
  dd m_literal
  dd -1
  dd m_xswap
  dd m_store
  dd m_exitcolon
- CENTRY `off`, c_off, 3
+ CENTRY `off`, c_off, 3		; ( a --  ) (G stores 0 at a )
  dd m_literal
  dd 0
  dd m_xswap
@@ -49,8 +47,7 @@
  dd m_plus
  dd m_exitcolon
  CENTRY `depth`, c_depth, 5
- dd v_s0
- dd m_fetch
+ dd m_s0
  dd m_stackptr
  dd m_minus
  dd m_literal
@@ -260,50 +257,45 @@ L47:
  dd c_negate
 L52:
  dd m_exitcolon
- VENTRY `iobuf`, v_iobuf, 5
- VENTRY `stdin`, v_stdin, 5
- VENTRY `stdout`, v_stdout, 6
- VENTRY `eof`, v_eof, 3
 
  CENTRY `key`, c_key, 3
- dd v_iobuf		; variable iobuf
+ dd m_Iobuf		; variable iobuf
  dd m_literal
  dd 1
- dd v_stdin		; variable stdin
- dd m_fetch	; ( iobuf 1 0 -- )
- dd m_read
+ dd m_Infd		; constant stdin
+ dd m_fthread
  dd c_0eq
  dd m_cjump
  dd L78
- dd v_eof
+ dd mc_EOF
  dd c_on
  dd m_literal
  dd -1
  dd m_jump
  dd L79
 L78:
- dd v_iobuf
+ dd m_Iobuf
  dd m_cfetch
 L79:
  dd m_exitcolon
 
  CENTRY `emit`, c_emit, 4	; ( character -- )
- dd v_iobuf			; variable iobuf address
+ dd m_Iobuf			; variable iobuf address
  dd m_cstore		; variable iobuf has character
- dd v_iobuf			; variable iobuf address
+ dd m_Iobuf			; variable iobuf address
  dd m_literal
  dd 1
  dd m_xswap			; ( iobuf 1 --  1 iobuf )
  dd m_literal
  dd 1				; stdout
- dd m_write			; ( 1 iobuf 1 --  )
+ dd m_fthwrite			; ( 1 iobuf 1 --  )
  dd m_exitcolon
 
  CENTRY `type`, c_type, 4	; ( addr n -- ) 
  dd m_xswap			; ( addr n --  n addr )
  dd m_literal
  dd 1				; stdout
- dd m_write			; ( n addr 1 --  )
+ dd m_fthwrite			; ( n addr 1 --  )
  dd m_exitcolon
 
  CENTRY `cr`, c_cr, 2
@@ -408,14 +400,13 @@ L60:
  dd c_bl
  dd c_fill
  dd m_exitcolon
- VENTRY `searchlen`, v_searchlen, 9
  CENTRY `search`, c_search, 6
- dd v_searchlen
+ dd m_Searchlen
  dd m_store
  dd m_xswap
  dd m_dup
  dd m_rpush
- dd v_searchlen
+ dd m_Searchlen
  dd m_fetch
  dd m_minus
  dd c_1plus
@@ -427,10 +418,10 @@ L64:
  dd m_i
  dd m_plus
  dd m_over
- dd v_searchlen
+ dd m_Searchlen
  dd m_fetch
  dd m_xswap
- dd v_searchlen
+ dd m_Searchlen
  dd m_fetch
  dd c_compare
  dd c_0eq
@@ -454,7 +445,7 @@ L65:
  dd c_false
  dd m_exitcolon
  CENTRY `here`, c_here, 4
- dd mc_h
+ dd m_Hzero
  dd m_fetch
  dd m_exitcolon
  CENTRY `,`, c_comma, 1
@@ -462,7 +453,7 @@ L65:
  dd m_store
  dd m_literal
  dd 8
- dd mc_h
+ dd m_Hzero
  dd c_plusstore
  dd m_exitcolon
  CENTRY `c,`, c_c, 2
@@ -470,11 +461,11 @@ L65:
  dd m_cstore
  dd m_literal
  dd 1
- dd mc_h
+ dd m_Hzero
  dd c_plusstore
  dd m_exitcolon
  CENTRY `allot`, c_allot, 5
- dd mc_h
+ dd m_Hzero
  dd c_plusstore
  dd m_exitcolon
  CENTRY `pad`, c_pad, 3
@@ -486,27 +477,25 @@ L65:
  CENTRY `align`, c_align, 5
  dd c_here
  dd c_aligned
- dd mc_h
+ dd m_Hzero
  dd m_store
  dd m_exitcolon
  CENTRY `unused`, c_unused, 6
- dd mc_heaptop
+ dd m_Hzero
  dd m_fetch
  dd c_here
  dd m_minus
  dd m_exitcolon
- VENTRY `base`, v_base, 4
- VENTRY `>num`, v_tonum, 4
  CENTRY `<#`, c_fromhash, 2
  dd c_pad
  dd m_literal
  dd 1024
  dd m_plus
- dd v_tonum
+ dd m_toNum
  dd m_store
  dd m_exitcolon
  CENTRY `#`, c_hash, 1
- dd v_base
+ dd m_Base
  dd m_fetch
  dd m_uslashmod
  dd m_xswap
@@ -529,11 +518,11 @@ L92:
  dd 48
  dd m_plus
 L93:
- dd v_tonum
+ dd m_toNum
  dd m_fetch
  dd c_1minus
  dd m_dup
- dd v_tonum
+ dd m_toNum
  dd m_store
  dd m_cstore
  dd m_exitcolon
@@ -549,7 +538,7 @@ L96:
  dd m_exitcolon
  CENTRY `#>`, c_hashfrom, 2
  dd m_drop
- dd v_tonum
+ dd m_toNum
  dd m_fetch
  dd m_dup
  dd c_pad
@@ -560,14 +549,14 @@ L96:
  dd m_minus
  dd m_exitcolon
  CENTRY `hold`, c_hold, 4
- dd v_tonum
+ dd m_toNum
  dd m_fetch
  dd c_1minus
  dd m_dup
  dd m_rpush
  dd m_cstore
  dd m_rpop
- dd v_tonum
+ dd m_toNum
  dd m_store
  dd m_exitcolon
  CENTRY `sign`, c_sign, 4
@@ -611,13 +600,13 @@ L100:
  CENTRY `hex`, c_hex, 3
  dd m_literal
  dd 16
- dd v_base
+ dd m_Base
  dd m_store
  dd m_exitcolon
  CENTRY `decimal`, c_decimal, 7
  dd m_literal
  dd 10
- dd v_base
+ dd m_Base
  dd m_store
  dd m_exitcolon
  CENTRY `digit`, c_digit, 5
@@ -670,7 +659,7 @@ L111:
 L109:
 L107:
  dd m_dup
- dd v_base
+ dd m_Base
  dd m_fetch
  dd m_less
  dd m_cjump
@@ -715,7 +704,7 @@ L116:
  dd 0
  dd m_doinit
 L117:
- dd v_base
+ dd m_Base
  dd m_fetch
  dd m_multiply
  dd m_over
@@ -746,58 +735,49 @@ L119:
  dd m_multiply
  dd c_true
  dd m_exitcolon
- VENTRY `>in`, v_toin, 3
- VENTRY `>limit`, v_tolimit, 6
- VENTRY `wordbuf`, v_wordbuf, 7
- VENTRY `abortvec`, v_abortvec, 8
- VENTRY `findadr`, v_findadr, 7
- VENTRY `sourcebuf`, v_sourcebuf, 9
- VENTRY `blk`, v_blk, 3
  CENTRY `abort`, c_abort, 5
- dd v_abortvec
+ dd m_Abortvec
  dd m_fetch
  dd m_execute
  dd m_exitcolon
  CENTRY `source`, c_source, 6
- dd v_sourcebuf
+ dd m_Sourcebuf
  dd m_fetch
  dd m_exitcolon
  CENTRY `current-input`, c_current_input, 13
- dd v_toin
+ dd m_toIn
  dd m_fetch
  dd c_source
  dd m_plus
  dd m_cfetch
  dd m_exitcolon
  CENTRY `save-input`, c_save_input, 10
- dd v_stdin
+ dd m_Infd 
+ dd m_toIn
  dd m_fetch
- dd v_toin
+ dd m_toLimit
  dd m_fetch
- dd v_tolimit
+ dd m_Sourcebuf
  dd m_fetch
- dd v_sourcebuf
- dd m_fetch
- dd v_blk
+ dd m_Blk
  dd m_fetch
  dd m_literal
  dd 5
  dd m_exitcolon
  CENTRY `default-input`, c_default_input, 13
- dd v_stdin
+ dd mc_STDIN
+ dd m_toIn
  dd c_off
- dd v_toin
+ dd m_toLimit
  dd c_off
- dd v_tolimit
- dd c_off
- dd mc_tib
- dd v_sourcebuf
+ dd m_Tib
+ dd m_Sourcebuf
  dd m_store
- dd v_blk
+ dd m_Blk
  dd c_off
  dd m_exitcolon
  CENTRY `restore-input`, c_restore_input, 13
- dd v_eof
+ dd mc_EOF
  dd c_off
  dd m_literal
  dd 5
@@ -809,15 +789,15 @@ L119:
  dd m_jump
  dd L134
 L133:
- dd v_blk
+ dd m_Blk
  dd m_store
- dd v_sourcebuf
+ dd m_Sourcebuf
  dd m_store
- dd v_tolimit
+ dd m_toLimit
  dd m_store
- dd v_toin
+ dd m_toIn
  dd m_store
- dd v_stdin
+ dd m_Infd
  dd m_store
  dd c_true
 L134:
@@ -838,9 +818,9 @@ L134:
 L136:
  dd m_exitcolon
  CENTRY `next-input`, c_next_input, 10
- dd v_toin
+ dd m_toIn
  dd m_fetch
- dd v_tolimit
+ dd m_toLimit
  dd m_fetch
  dd m_less
  dd m_cjump
@@ -857,7 +837,7 @@ L140:
  dd m_exitcolon
  CENTRY `parse`, c_parse, 5
  dd m_rpush
- dd v_wordbuf
+ dd m_Wordbuf
  dd m_fetch
  dd c_1plus
 L142:
@@ -873,18 +853,18 @@ L142:
  dd c_1plus
  dd m_literal
  dd 1
- dd v_toin
+ dd m_toIn
  dd c_plusstore
  dd m_jump
  dd L142
 L143:
  dd m_literal
  dd 1
- dd v_toin
+ dd m_toIn
  dd c_plusstore
  dd m_rpop
  dd m_drop
- dd v_wordbuf
+ dd m_Wordbuf
  dd m_fetch
  dd m_dup
  dd m_rpush
@@ -905,7 +885,7 @@ L145:
  dd L146
  dd m_literal
  dd 1
- dd v_toin
+ dd m_toIn
  dd c_plusstore
  dd m_jump
  dd L145
@@ -956,15 +936,15 @@ L149:		; n == 0 ( -- ) (R a a -- )
  dd m_exitcolon
 
  CENTRY `query`, c_query, 5
- dd v_eof	; variable eof
+ dd mc_EOF	; variable eof
  dd c_off	; off sets variable eof = 0
- dd mc_tib	; constant puts address of tibuffer on the top
+ dd m_Tib	; constant puts address of tibuffer on the top
  dd m_literal
  dd 1024	; ( tibuffer -- tibuffer 1024 )
  dd c_accept	; ( tibuffer 1024 -- n )
  dd m_dup
  dd c_0eq
- dd v_eof
+ dd mc_EOF
  dd m_fetch
  dd m_binand
  dd m_cjump
@@ -974,15 +954,15 @@ L149:		; n == 0 ( -- ) (R a a -- )
  dd m_jump
  dd L153
 L152:
- dd v_tolimit
+ dd m_toLimit
  dd m_store
- dd v_toin
+ dd m_toIn
  dd c_off
 L153:
  dd m_exitcolon
 
  CENTRY `refill`, c_refill, 6
- dd v_blk
+ dd m_Blk
  dd m_fetch
  dd m_cjump
  dd L155
@@ -994,10 +974,11 @@ L155:
  dd c_true
 L156:
  dd m_exitcolon
+
  CENTRY `findname`, c_findname, 8 ; ( a1 -- a2 f ) ; loop through the dictionary names
- dd v_findadr
+ dd m_Findadr
  dd m_store
- dd mc_dp
+ dd m_Dp
  dd m_fetch	; get dictionary link
 L158:
  dd c_qdup
@@ -1021,7 +1002,7 @@ L160:		; valid length? ( a -- )
  dd m_literal
  dd 63
  dd m_binand	; ( a1 a1+8+1 n 63 -- a1 a1+8+1 n&63 )
- dd v_findadr
+ dd m_Findadr
  dd m_fetch
  dd c_count	; ( a1 a1+8+1 n&63 a2 n2 -- a1 a1+8+1 n&63 a2+1 n2 )
  dd c_compare	; ( -- a1 n ) compare dictionary entry with name
@@ -1037,7 +1018,7 @@ L161:
  dd m_jump
  dd L158
 L159:
- dd v_findadr
+ dd m_Findadr
  dd m_fetch
  dd c_false
  dd m_exitcolon
@@ -1097,8 +1078,7 @@ L169:
  dd m_exitcolon
  CENTRY `?stack`, c_qstack, 6
  dd m_stackptr
- dd v_s0
- dd m_fetch
+ dd m_s0
  dd m_greater
  dd m_cjump
  dd L172
@@ -1153,7 +1133,7 @@ L176:
  dd c_align
  dd c_here
  dd m_rpush
- dd mc_dp
+ dd m_Dp
  dd m_fetch
  dd c_comma
  dd c_bl
@@ -1174,7 +1154,7 @@ L176:
  dd m_fetch
  dd c_comma
  dd m_rpop
- dd mc_dp
+ dd m_Dp
  dd m_store
  dd m_exitcolon
  CENTRY `variable`, c_variable, 8
@@ -1196,9 +1176,8 @@ L176:
  dd m_store
  dd c_comma
  dd m_exitcolon
- VENTRY `state`, v_state, 5
  CENTRY `immediate`, c_immediate, 9
- dd mc_dp
+ dd m_Dp
  dd m_fetch
  dd c_cellplus
  dd m_dup
@@ -1265,7 +1244,7 @@ L194:
 L191:
  dd m_exitcolon
  CENTRY `]`, c_close_bracket, 1
- dd v_state
+ dd m_State
  dd c_on
 L196:
  dd c_bl
@@ -1281,7 +1260,7 @@ L196:
  dd L198
 L197:
  dd c_compile
- dd v_state
+ dd m_State
  dd m_fetch
 L198:
  dd m_cjump
@@ -1291,11 +1270,11 @@ L198:
 L199:
  dd m_exitcolon
  CIENTRY `[`, ci_open_bracket, 1
- dd v_state
+ dd m_State
  dd c_off
  dd m_exitcolon
  CENTRY `smudge`, c_smudge, 6
- dd mc_dp
+ dd m_Dp
  dd m_fetch
  dd c_cellplus
  dd m_dup
@@ -1307,7 +1286,7 @@ L199:
  dd m_cstore
  dd m_exitcolon
  CENTRY `reveal`, c_reveal, 6
- dd mc_dp
+ dd m_Dp
  dd m_fetch
  dd c_cellplus
  dd m_dup
@@ -1337,12 +1316,12 @@ L199:
  dd m_literal
  dd m_exitcolon
  dd c_comma
- dd v_state
+ dd m_State
  dd c_off
  dd c_reveal
  dd m_exitcolon
  CIENTRY `recurse`, ci_recurse, 7
- dd mc_dp
+ dd m_Dp
  dd m_fetch
  dd c_cellplus
  dd c_tocfa
@@ -1409,11 +1388,11 @@ L199:
  dd m_drop
  dd m_exitcolon
  CIENTRY `\`, ci_backslash, 1
- dd v_blk
+ dd m_Blk
  dd m_fetch
  dd m_cjump
  dd L214
- dd v_toin
+ dd m_toIn
  dd m_fetch
  dd m_literal
  dd 63
@@ -1422,19 +1401,19 @@ L199:
  dd 63
  dd c_invert
  dd m_binand
- dd v_toin
+ dd m_toIn
  dd m_store
  dd m_jump
  dd L215
 L214:
- dd v_tolimit
+ dd m_toLimit
  dd m_fetch
- dd v_toin
+ dd m_toIn
  dd m_store
 L215:
  dd m_exitcolon
  CENTRY `(?abort)`, c_qabort_parens, 8
- dd v_state
+ dd m_State
  dd m_cjump
  dd L217
  dd c_space
@@ -1631,31 +1610,31 @@ L236:
  dd m_rpop
  dd m_literal
  dd 420
- dd m_open
+ dd m_fthopen
  dd m_dup
  dd m_literal
  dd -1
  dd m_greater
  dd m_exitcolon
  CENTRY `close-file`, c_close_file, 10
- dd m_close
+ dd m_fthclose
  dd c_0eq
  dd m_exitcolon
  CENTRY `read-file`, c_read_file, 9
- dd m_read
+ dd m_fthread
  dd m_dup
  dd m_literal
  dd -1
  dd c_neq
  dd m_exitcolon
  CENTRY `write-file`, c_write_file, 10
- dd m_write
+ dd m_fthwrite
  dd m_literal
  dd -1
  dd c_neq
  dd m_exitcolon
  CENTRY `reposition-file`, c_reposition_file, 15
- dd m_seek
+ dd m_fthseek
  dd m_literal
  dd -1
  dd c_neq
@@ -1683,9 +1662,9 @@ L246:
  dd c_bl
  dd c_word
  dd m_rpush
- dd v_tolimit
+ dd m_toLimit
  dd m_fetch
- dd v_toin
+ dd m_toIn
  dd m_store
  dd c_save_input
  dd m_rpop
@@ -1693,7 +1672,7 @@ L246:
  dd c_ro
  dd c_open_file
  dd c_qfcheck
- dd v_stdin
+ dd m_Infd
  dd m_store
  dd m_exitcolon
  CENTRY `crash`, c_crash, 5
@@ -1712,7 +1691,7 @@ L246:
 L253:
  dd c_query
  dd c_interpret
- dd v_stdin
+ dd m_Infd
  dd m_fetch	; ( 0 -- )
  dd c_0eq
  dd m_cjump
@@ -1729,83 +1708,94 @@ L254:
  dd m_exitcolon
 
  CENTRY `(abort)`, c_parenabort, 7 ; TODO correct below stack notations
- dd v_state	; ( v_state -- )
+ dd m_State	; ( m_State -- )
  dd c_off		; off sets variable state = 0
- dd mc_tib	; constant puts address of tibuffer on the top of stack
- dd v_sourcebuf	; variable sourcebuf
+ dd m_Tib	; constant puts address of tibuffer on the top of stack
+ dd m_Sourcebuf	; variable sourcebuf
  dd m_store	; variable sourcebuf = address of tibuffer
- dd v_blk	; variable blk
+ dd m_Blk	; variable blk
  dd c_off		; off variable blk = 0
- dd v_stdin		; variable stdin
- dd c_off		; off variable stdin = 0
- dd m_literal
- dd 1		; ( 1 -- )
- dd v_stdout		; variable stdout
- dd m_store	; variable stdout = 1
+ dd mc_STDIN		; stdin
+ dd m_Infd		; variable
+ dd m_store		; variable Infd = STDIN
+ dd mc_STDOUT
+ dd m_Outfd		; variable
+ dd m_store	; variable Outfd = STDOUT
  dd c_quit	; quit resets return stack and data stack
  dd m_exitcolon
 
- CENTRY `oldboot`, c_oldboot, 7 ; TODO correct below stack notations
+ CENTRY `oldboot`, c_oldboot, 7 ; TODO correct below stack notations and this is obsolete. leaving it here for reference until it all works well
  dd m_reset
  dd m_clear	; SP = sstack_end
  dd m_stackptr	; (D -- FFEND)
- dd v_s0
+ dd m_s0
  dd m_store	; s0 = FFEND
- dd mc_heaptop	; heaptop = heapend
+ dd m_Hzero	; heaptop = heapend
  dd m_fetch	; ( heapend -- )
  dd m_literal
  dd 1		; ( heapend 1 -- )
  dd c_cells	; cells ( heapend 8 -- ) 
  dd m_minus	; ( heapend-8 -- )
  dd m_fetch	; ( contents_from_heapend-8 -- )
- dd v_args	; variable args
+ dd m_Args	; variable args
  dd m_store	; args = contents_from_heapend-8
  dd m_literal
  dd c_parenabort ; ( (abort) -- )
- dd v_abortvec	; variable abortvec
+ dd m_Abortvec	; variable abortvec
  dd m_store	; variable abortvec = (abort) code address
- dd mc_wordb	; constant puts address of wordbuffer on the top of stack
- dd v_wordbuf	; variable wordbuf
+ dd m_Wordb	; constant puts address of wordbuffer on the top of stack
+ dd m_Wordbuf	; variable wordbuf
  dd m_store	; variable wordbuf = address of wordbuffer
- dd mc_tib	; constant puts address of tibuffer on the top of stack
- dd v_sourcebuf	; variable sourcebuf
+ dd m_Tib	; constant puts address of tibuffer on the top of stack
+ dd m_Sourcebuf	; variable sourcebuf
  dd m_store	; variable sourcebuf = address of tibuffer
  dd m_literal
  dd 0
- dd v_stdin
+ dd m_Infd
  dd m_store	; stdin = 0
  dd m_literal
  dd 1
- dd v_stdout
+ dd m_Outfd
  dd m_store	; stdout = 1
- dd v_state
+ dd m_State
  dd c_off	; off stores 0 at state
  dd c_decimal	; decimal setting base = 0
  dd c_quit	; quit
  dd m_exitcolon
+
  CENTRY `boot`, c_boot, 4
  dd m_reset ; initialize return stack
  dd m_clear	; SP = sstack_end, initialize data stack
- dd m_stackptr	; ( -- FFEND)
- dd v_s0
- dd m_store	; s0 = FFEND
+			; s0 puts FFEND on the stack
 			; no args
+
  dd m_literal
  dd c_parenabort ; ( (abort) -- )
- dd v_abortvec	; variable abortvec
+ dd m_Abortvec	; constant that puts (abort) code address on the stack
  dd m_store	; variable abortvec = (abort) code address
- dd mc_wordb	; constant puts address of wordbuffer on the top of stack
- dd v_wordbuf	; variable wordbuf
+
+ dd m_Wordb	; constant puts address of wordbuffer on the top of stack
+ dd m_Wordbuf	; variable wordbuf
  dd m_store	; variable wordbuf = address of wordbuffer
- dd mc_tib	; constant puts address of tibuffer on the top of stack
- dd v_sourcebuf	; variable sourcebuf
+
+ dd m_Tib	; constant puts address of tibuffer on the top of stack
+ dd m_Sourcebuf	; variable sourcebuf
  dd m_store	; variable sourcebuf = address of tibuffer
-			; no stdin or stdout
- dd v_state
+
+			; stdin, stdout and stderr are constants
+ dd mc_STDIN
+ dd m_Infd
+ dd m_store	; stdin = 0
+ dd mc_STDOUT
+ dd m_Outfd
+ dd m_store	; stdout = 1
+
+ dd m_State
  dd c_off	; off stores 0 at state
  dd c_decimal	; decimal setting base = 0
  dd c_quit	; quit
  dd m_exitcolon
+
 L137:
  db 'unable to restore input'
 L170:
