@@ -505,7 +505,7 @@ TEXT	deferred(SB), 1, $-4
 	JMP CX
 
 TEXT	unloop(SB), 1, $-4
-	SUBQ $16, RSP
+	ADDQ $16, RSP
 	NEXT
 
 TEXT	cmove(SB), 1, $-4	/* ( a1 a2 n -- ) */
@@ -544,12 +544,14 @@ TEXT	cas(SB), 1, $-4	/* ( a old new -- f ) */
 	NEXT
 
 TEXT	s0(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
+	PUSH(TOP)
 	MOVQ H0, TOP
 	ADDQ $PSTACK_END, TOP
 	NEXT
 
 /* store the forth sp here when going to C */
 TEXT	forthsp(SB), 1, $-4
+	PUSH(TOP)
 	MOVQ H0, TOP
 	ADDQ $FORTHSP, TOP
 	NEXT
@@ -557,6 +559,7 @@ TEXT	forthsp(SB), 1, $-4
 /* variables used by the core words */
 
 #define	VARIABLE(name, location)	TEXT	name(SB), 1, $-4 ;\
+	PUSH(TOP); \
 	MOVQ H0, TOP ;\
 	ADDQ location, TOP ;\
 	NEXT;

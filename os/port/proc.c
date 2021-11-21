@@ -1012,12 +1012,13 @@ errorf(char *fmt, ...)
 }
 
 void
-showerrlabs(void)
+showerrlabs(char *str)
 {
 	int i;
 
+	print("%s caller 0x%zx\n", str, getcallerpc(&str));
 	for(i=0; i<up->nerrlab; i++){
-		print("i %d SP 0x%p PC 0x%p\n", i, up->errlab[i].sp, up->errlab[i].pc);
+		print("	i %d SP 0x%p PC 0x%p\n", i, up->errlab[i].sp, up->errlab[i].pc);
 	}
 }
 
@@ -1027,7 +1028,6 @@ error(char *err)
 	if(up == nil)
 		panic("error(%s) not in a process", err);
 	spllo();
-
 	if(up->nerrlab >= NERR)
 		panic("error stack too deep");
 	if(err == nil)
@@ -1036,13 +1036,14 @@ error(char *err)
 	if(emptystr(err) == 1){
 		DBG("error nil error err %s caller 0x%p\n", err, getcallerpc(&err));
 		up->env->errpc = 0;
-		/* showerrlabs(); */
+		/* showerrlabs("error == nil"); */
 	}else{
+		DBG("error err %s caller 0x%p\n", err, getcallerpc(&err));
 		up->env->errpc = getcallerpc(&err);
 		/* proactively show issues */
 		/* print("up->nerrlab %d error %s raised by 0x%zx\n",
 			up->nerrlab, err, getcallerpc(&err)); */
-		/* showerrlabs(); */
+		/* showerrlabs("error != nil"); */
 	}
 	nexterror();
 }

@@ -936,16 +936,14 @@ L149:		; n == 0 ( -- ) (R a a -- )
  dd m_exitcolon
 
  CENTRY `query`, c_query, 5
- dd mc_EOF	; variable eof
- dd c_off	; off sets variable eof = 0
+ dd mc_EOF	; constant eof = 0
  dd m_Tib	; constant puts address of tibuffer on the top
  dd m_literal
- dd 1024	; ( tibuffer -- tibuffer 1024 )
- dd c_accept	; ( tibuffer 1024 -- n )
+ dd 4096	; ( EOF tibuffer -- EOF tibuffer 4096 )
+ dd c_accept	; ( EOF tibuffer 4096 -- n )
  dd m_dup
  dd c_0eq
  dd mc_EOF
- dd m_fetch
  dd m_binand
  dd m_cjump
  dd L152
@@ -1771,11 +1769,11 @@ L254:
 
  dd m_literal
  dd c_parenabort ; ( (abort) -- )
- dd m_Abortvec	; constant that puts (abort) code address on the stack
+ dd m_Abortvec	; variable that puts (abort) code address on the stack
  dd m_store	; variable abortvec = (abort) code address
 
- dd m_Wordb	; constant puts address of wordbuffer on the top of stack
- dd m_Wordbuf	; variable wordbuf
+ dd m_Wordb	; variable puts address of wordbuffer on the top of stack
+ dd m_Wordbuf ; variable wordbuf
  dd m_store	; variable wordbuf = address of wordbuffer
 
  dd m_Tib	; constant puts address of tibuffer on the top of stack

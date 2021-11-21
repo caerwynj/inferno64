@@ -922,17 +922,19 @@ unionread(Chan *c, void *va, long n)
 	nr = 0;
 	while(mount != nil) {
 		/* Error causes component of union to be skipped */
-		if(mount->to && !waserror()) {
-			if(c->umc == nil){
-				c->umc = cclone(mount->to);
-				c->umc = devtab[c->umc->type]->open(c->umc, OREAD);
-			}
+		if(mount->to != nil){
+			if(waserror() == 0) { /* no error */
+				if(c->umc == nil){
+					c->umc = cclone(mount->to);
+					c->umc = devtab[c->umc->type]->open(c->umc, OREAD);
+				}
 	
-			nr = devtab[c->umc->type]->read(c->umc, va, n, c->umc->offset);
-			if(nr < 0)
-				nr = 0;	/* dev.c can return -1 */
-			c->umc->offset += nr;
-			poperror();
+				nr = devtab[c->umc->type]->read(c->umc, va, n, c->umc->offset);
+				if(nr < 0)
+					nr = 0;	/* dev.c can return -1 */
+				c->umc->offset += nr;
+				poperror();
+			}
 		}
 		if(nr > 0)
 			break;

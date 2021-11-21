@@ -1591,7 +1591,7 @@ namec(char *aname, int amode, int omode, ulong perm)
 		 */
 		m = nil;
 		cnew = nil;	/* is this assignment necessary? */
-		if(!waserror()){	/* try create */
+		if(waserror() == 0){	/* try create, no error condition */
 			if(!nomount && findmount(&cnew, &m, c->type, c->dev, c->qid))
 				cnew = createdir(cnew, m);
 			else{
