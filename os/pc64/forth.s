@@ -44,7 +44,7 @@ Heap memory map: uses 8 pages at the start, will increase by *2 when filled up
 UP: variables
 		heap start, heapstart, also in UP
 		heap size, heapsize
-		forth stack pointer, forthsp
+		forth stack pointer, forthpsp
 		dictionary pointer, Dp
 		latest dictionary entry, Dtop
 			need this as the system definitions and
@@ -86,33 +86,17 @@ SSTACK_END = FORTHEND
  */
 #define HEAPSTART	(0ull)
 #define HEAPEND		(HEAPSTART+(BY2WD*1))
-#define FORTHSP		(HEAPSTART+(BY2WD*2))
-#define DP			(HEAPSTART+(BY2WD*3))	/* cannot use H as it is nil in inferno
-												next available cell for the dictionary */
-#define	DTOP		(HEAPSTART+(BY2WD*4))
-	/* variables used by the core words */
-#define	TOIN		(HEAPSTART+(BY2WD*5))
-#define	TOLIMIT		(HEAPSTART+(BY2WD*6))
-#define	FINDADR		(HEAPSTART+(BY2WD*7))
-#define	BLK			(HEAPSTART+(BY2WD*8))
-#define	ARGS		(HEAPSTART+(BY2WD*9))
-#define	IOBUF		(HEAPSTART+(BY2WD*10))
-#define	SEARCHLEN	(HEAPSTART+(BY2WD*11))
-#define	BASE		(HEAPSTART+(BY2WD*12))
-#define	TONUM		(HEAPSTART+(BY2WD*13))
-#define	STATE		(HEAPSTART+(BY2WD*14))
-#define	ABORTVEC	(HEAPSTART+(BY2WD*15))
-#define	SOURCEBUF	(HEAPSTART+(BY2WD*16))
-#define	WORDBUF		(HEAPSTART+(BY2WD*17))
-#define	INFD		(HEAPSTART+(BY2WD*18))
-#define	OUTFD		(HEAPSTART+(BY2WD*19))
-#define	ERRFD		(HEAPSTART+(BY2WD*20))
-#define	EOF			(HEAPSTART+(BY2WD*21))
+#define FORTHTOP	(HEAPSTART+(BY2WD*2))
+#define FORTHPSP	(HEAPSTART+(BY2WD*3))
+#define FORTHRSP	(HEAPSTART+(BY2WD*4))
+#define FORTHIP	(HEAPSTART+(BY2WD*5))
+#define FORTHW	(HEAPSTART+(BY2WD*6))
+#define FORTHUP	(HEAPSTART+(BY2WD*7))
+#define ARGS		(HEAPSTART+(BY2WD*3))
+#define ERRSTR		(HEAPSTART+(BY2WD*16))
+#define WORDB		(HEAPSTART+(BY2WD*144))	/* word buffer */
 
-#define ERRSTR		(HEAPSTART+(BY2WD*32))
-#define WORDB		(HEAPSTART+(BY2WD*160))	/* word buffer */
-
-#define DICTIONARY	(HEAPSTART+2048)	/* dictionary */
+#define DICTIONARY	(HEAPSTART+(BY2WD*256))	/* dictionary */
 #define DICTIONARY_END	(HEAPSTART+(6*BY2PG))
 #define PSTACK		(HEAPSTART+(6*BY2PG))
 #define PSTACK_END	(HEAPSTART+(7*BY2PG))
@@ -123,7 +107,6 @@ SSTACK_END = FORTHEND
 #define HEAPSIZE 	FORTHEND
 
 #define	LAST $centry_c_boot(SB) /* last defined word, should generate this */
-
 /* putting this above the asm code as the v_dp define is needed by _main */
 /*	m_ for primitive/macro word cfa
 	mc_ for primtive/macro word constants
@@ -156,8 +139,10 @@ TEXT	forthmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
 
 	MOVQ UP, TOP
 	ADDQ $DICTIONARY, TOP
-	MOVQ TOP, 24(UP)	/* dictionary pointer */
-	MOVQ $centry_c_boot(SB), 24(UP)	/* Latest dictionary entry address */
+	MOVQ $mventry_Dp(SB), CX
+	MOVQ TOP, 24(CX)	/* dictionary pointer */
+	MOVQ $mventry_Dtop(SB), CX
+	MOVQ $centry_c_boot(SB), 24(CX)	/* Latest dictionary entry address */
 
 	/* execute boot */
 	MOVQ $centry_c_boot(SB), IP
@@ -176,9 +161,9 @@ at docol address, some assembly instruction
 Assume IP = 8
  */
 #define NEXT	MOVQ (IP), W;	/* W = 40, contents of address in IP, some word's code field address */ \
-		MOVQ (W), TOP;	/* TOP = docol, Get the address in the address in IP = code field address */ \
+		MOVQ (W), CX;	/* TOP = docol, Get the address in the address in IP = code field address */ \
 		ADDQ $8, IP; 	/* move IP further, IP = 16 */ \
-		JMP* TOP; /* Start executing at docol address, JMP* = jump to a non-relative address */
+		JMP* CX; /* Start executing at docol address, JMP* = jump to a non-relative address */
 
 #define PUSH(r)	SUBQ $8, PSP; \
 			MOVQ r, (PSP)
@@ -238,11 +223,13 @@ TEXT	cjump(SB), 1, $-4	/* ( f -- ) */
 
 /* TODO change to allow only fetches from a certain memory range */
 TEXT	fetch(SB), 1, $-4	/* ( a -- n) */
+	ADDQ UP, TOP
 	MOVQ (TOP), TOP
 	NEXT
 
 /* TODO change to allow stores to a certain memory range only */
 TEXT	store(SB), 1, $-4	/* ( n a -- ) */
+	ADDQ UP, TOP
 	POP(CX)
 	MOVQ CX, (TOP)
 	POP(TOP)
@@ -250,6 +237,7 @@ TEXT	store(SB), 1, $-4	/* ( n a -- ) */
 
 /* TODO change to allow only fetches from a certain memory range */
 TEXT	cfetch(SB), 1, $-4	/* ( a -- c ) */
+	ADDQ UP, TOP
 	XORQ CX, CX
 	MOVB (TOP), CL
 	POP(TOP)
@@ -257,6 +245,7 @@ TEXT	cfetch(SB), 1, $-4	/* ( a -- c ) */
 
 /* TODO change to allow only fetches from a certain memory range */
 TEXT	cstore(SB), 1, $-4	/* ( c a -- ) */
+	ADDQ UP, TOP
 	POP(CX)
 	MOVB CL, (TOP)
 	POP(TOP)
@@ -553,44 +542,26 @@ TEXT	s0(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
 	ADDQ $PSTACK_END, TOP
 	NEXT
 
-/* store the forth sp here when going to C */
-TEXT	forthsp(SB), 1, $-4
+TEXT	h0(SB), 1, $-4	/* user pointer, start of heap */
 	PUSH(TOP)
 	MOVQ UP, TOP
-	ADDQ $FORTHSP, TOP
 	NEXT
 
-/* variables used by the core words */
+TEXT	args(SB), 1, $-4
+	PUSH(TOP)
+	MOVQ UP, TOP
+	ADDQ $ARGS, TOP
+	NEXT
 
+/*
+ * variables used by the core words. Using variable code word instead of known locations.
 #define	VARIABLE(name, location)	TEXT	name(SB), 1, $-4 ;\
 	PUSH(TOP); \
 	MOVQ UP, TOP ;\
 	ADDQ location, TOP ;\
 	NEXT;
-
 VARIABLE(Tib, $TIB)
-VARIABLE(Wordb, $WORDB)
-VARIABLE(Hzero, $HEAPSTART)
-VARIABLE(Dp, $DP)
-VARIABLE(Dtop, $DTOP)
-VARIABLE(toIn, $TOIN)
-VARIABLE(toLimit, $TOLIMIT)
-VARIABLE(Findadr, $FINDADR)
-VARIABLE(Blk, $BLK)
-VARIABLE(Args, $ARGS)
-VARIABLE(Iobuf, $IOBUF)
-VARIABLE(Searchlen, $SEARCHLEN)
-VARIABLE(Base, $BASE)
-VARIABLE(toNum, $TONUM)
-VARIABLE(State, $STATE)
-VARIABLE(Abortvec, $ABORTVEC)
-VARIABLE(Sourcebuf, $SOURCEBUF)
-VARIABLE(Wordbuf, $WORDBUF)
-VARIABLE(Errstr, $ERRSTR)
-VARIABLE(Infd, $INFD)
-VARIABLE(Outfd, $OUTFD)
-VARIABLE(Errfd, $ERRFD)
-VARIABLE(Eof, $EOF)
+ */
 
 TEXT	forthend(SB), 1, $-4
 

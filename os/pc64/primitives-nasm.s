@@ -48,34 +48,35 @@ dict:
   MENTRY "cmove", cmove, 5
   MENTRY "cmove>", cmoveb, 6
 
-  MENTRY "Tib", Tib, 3			; variables from here, puts address on stack, mixed case
-  MENTRY "Wordb", Wordb, 5
-  MENTRY "Hzero", Hzero, 5
-  MENTRY "Dp", Dp, 2
-  MENTRY ">In", toIn, 3
-  MENTRY ">Limit", toLimit, 6
-  MENTRY "Findadr", Findadr, 7
-  MENTRY "Blk", Blk, 3
-  MENTRY "Args", Args, 4
-  MENTRY "Iobuf", Iobuf, 5
-  MENTRY "Searchlen", Searchlen, 9
-  MENTRY "Base", Base, 4
-  MENTRY ">Num", toNum, 4
-  MENTRY "State", State, 5
-  MENTRY "Abortvec", Abortvec, 8	; not sure if these 3 can be constants instead?
-  MENTRY "Sourcebuf", Sourcebuf, 9
-  MENTRY "Wordbuf", Wordbuf, 7
-  MENTRY "Infd", Infd, 5
-  MENTRY "Outfd", Outfd, 6
-  MENTRY "Errfd", Errfd, 4
-  MENTRY "Eof", Eof, 0, 3
+  MVENTRY "Dp", Dp, 0, 2			; cannot use H as it is nil in inferno, next available cell for the dictionary
+  MVENTRY "Dtop", Dtop, centry_c_boot(SB),4	; cannot use H as it is nil in inferno, next available cell for the dictionary
+  MVENTRY "Iobuf", Iobuf, 0, 5
+  MVENTRY "Sourcebuf", Sourcebuf, 0, 9	; is there a need for this?
+  MVENTRY "Wordbuf", Wordbuf, 0, 7		; is there a need for this?
+  MVENTRY ">In", toIn, 0, 3
+  MVENTRY ">Limit", toLimit, 0, 6
+  MVENTRY "Findadr", Findadr, 0, 7
+  MVENTRY "Blk", Blk, 0, 3
+  MVENTRY "Searchlen", Searchlen, 0, 9
+  MVENTRY "Base", Base, 0, 4
+  MVENTRY ">Num", toNum, 0, 4
+  MVENTRY "State", State, 0, 5
+  MVENTRY "Abortvec", Abortvec, 0, 8	; not sure if these 3 can be constants instead?
+  MVENTRY "Infd", Infd, 0, 5
+  MVENTRY "Outfd", Outfd, 0, 6
+  MVENTRY "Errfd", Errfd, 0, 4
+  MVENTRY "Eof", Eof, 0, 3
 
   MCENTRY "STDIN", STDIN, 0, 5		; 3 constants from here, CAPITALS
   MCENTRY "STDOUT", STDOUT, 1, 6
   MCENTRY "STDERR", STDERR, 2, 6
+  MCENTRY "WORDB", WORDB, WORDB, 5
+  MCENTRY "TIB", TIB, TIB, 3
 
   MENTRY "s0", s0, 2
   MENTRY "s@", stackptr, 2		; puts PSP on stack
+  MENTRY "h0", h0, 2
+  MENTRY "args", args, 3
   MENTRY "(variable)", variable, 10
   MENTRY "(constant)", constant, 10
   MENTRY "(:)", colon, 3

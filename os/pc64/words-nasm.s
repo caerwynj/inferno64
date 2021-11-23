@@ -261,33 +261,33 @@ L52:
  CENTRY `key`, c_key, 3	 ; ( -- c ) (G read a single character from the input onto the stack )
  dd m_literal
  dd 1			; ( 1 -- )
- dd m_Iobuf		; variable iobuf to store the character read
- dd m_Infd
+ dd mv_Iobuf		; variable iobuf to store the character read
+ dd mv_Infd
  dd m_fetch		; ( 1 Iobuf -- 1 Iobuf infd )
  dd m_fthread	; ( 1 Iobuf infd -- n )
  dd c_0eq
  dd m_cjump		; if 0 characters read
  dd L78			; if qread n != 0, jump to L78. If n == 0, jump over
- dd m_Eof
+ dd mv_Eof
  dd c_on		; EOF
  dd m_literal
  dd -1			; return -1 when EOF
  dd m_jump
  dd L79
 L78:
- dd m_Iobuf		; get the character from Iobuf to stack
+ dd mv_Iobuf		; get the character from Iobuf to stack
  dd m_cfetch	; ( -- c ) return the character read if not EOF
 L79:
  dd m_exitcolon
 
  CENTRY `emit`, c_emit, 4	; ( character -- )
- dd m_Iobuf		; variable iobuf address
+ dd mv_Iobuf		; variable iobuf address
  dd m_cstore	; variable iobuf has character
- dd m_Iobuf		; variable iobuf address
+ dd mv_Iobuf		; variable iobuf address
  dd m_literal
  dd 1
  dd m_xswap		; ( iobuf 1 --  1 iobuf )
- dd m_Outfd
+ dd mv_Outfd
  dd m_fetch		; outfd
  dd m_fthwrite	; ( 1 iobuf outfd --  )
  dd m_exitcolon
@@ -402,12 +402,12 @@ L60:
  dd c_fill
  dd m_exitcolon
  CENTRY `search`, c_search, 6
- dd m_Searchlen
+ dd mv_Searchlen
  dd m_store
  dd m_xswap
  dd m_dup
  dd m_rpush
- dd m_Searchlen
+ dd mv_Searchlen
  dd m_fetch
  dd m_minus
  dd c_1plus
@@ -419,10 +419,10 @@ L64:
  dd m_i
  dd m_plus
  dd m_over
- dd m_Searchlen
+ dd mv_Searchlen
  dd m_fetch
  dd m_xswap
- dd m_Searchlen
+ dd mv_Searchlen
  dd m_fetch
  dd c_compare
  dd c_0eq
@@ -446,7 +446,7 @@ L65:
  dd c_false
  dd m_exitcolon
  CENTRY `here`, c_here, 4
- dd m_Hzero
+ dd m_h0
  dd m_fetch
  dd m_exitcolon
  CENTRY `,`, c_comma, 1
@@ -454,7 +454,7 @@ L65:
  dd m_store
  dd m_literal
  dd 8
- dd m_Hzero
+ dd m_h0
  dd c_plusstore
  dd m_exitcolon
  CENTRY `c,`, c_c, 2
@@ -462,11 +462,11 @@ L65:
  dd m_cstore
  dd m_literal
  dd 1
- dd m_Hzero
+ dd m_h0
  dd c_plusstore
  dd m_exitcolon
  CENTRY `allot`, c_allot, 5
- dd m_Hzero
+ dd m_h0
  dd c_plusstore
  dd m_exitcolon
  CENTRY `pad`, c_pad, 3
@@ -478,11 +478,11 @@ L65:
  CENTRY `align`, c_align, 5
  dd c_here
  dd c_aligned
- dd m_Hzero
+ dd m_h0
  dd m_store
  dd m_exitcolon
  CENTRY `unused`, c_unused, 6
- dd m_Hzero
+ dd m_h0
  dd m_fetch
  dd c_here
  dd m_minus
@@ -492,11 +492,11 @@ L65:
  dd m_literal
  dd 1024
  dd m_plus
- dd m_toNum
+ dd mv_toNum
  dd m_store
  dd m_exitcolon
  CENTRY `#`, c_hash, 1
- dd m_Base
+ dd mv_Base
  dd m_fetch
  dd m_uslashmod
  dd m_xswap
@@ -519,11 +519,11 @@ L92:
  dd 48
  dd m_plus
 L93:
- dd m_toNum
+ dd mv_toNum
  dd m_fetch
  dd c_1minus
  dd m_dup
- dd m_toNum
+ dd mv_toNum
  dd m_store
  dd m_cstore
  dd m_exitcolon
@@ -539,7 +539,7 @@ L96:
  dd m_exitcolon
  CENTRY `#>`, c_hashfrom, 2
  dd m_drop
- dd m_toNum
+ dd mv_toNum
  dd m_fetch
  dd m_dup
  dd c_pad
@@ -550,14 +550,14 @@ L96:
  dd m_minus
  dd m_exitcolon
  CENTRY `hold`, c_hold, 4
- dd m_toNum
+ dd mv_toNum
  dd m_fetch
  dd c_1minus
  dd m_dup
  dd m_rpush
  dd m_cstore
  dd m_rpop
- dd m_toNum
+ dd mv_toNum
  dd m_store
  dd m_exitcolon
  CENTRY `sign`, c_sign, 4
@@ -601,13 +601,13 @@ L100:
  CENTRY `hex`, c_hex, 3
  dd m_literal
  dd 16
- dd m_Base
+ dd mv_Base
  dd m_store
  dd m_exitcolon
  CENTRY `decimal`, c_decimal, 7
  dd m_literal
  dd 10
- dd m_Base
+ dd mv_Base
  dd m_store
  dd m_exitcolon
  CENTRY `digit`, c_digit, 5
@@ -660,7 +660,7 @@ L111:
 L109:
 L107:
  dd m_dup
- dd m_Base
+ dd mv_Base
  dd m_fetch
  dd m_less
  dd m_cjump
@@ -705,7 +705,7 @@ L116:
  dd 0
  dd m_doinit
 L117:
- dd m_Base
+ dd mv_Base
  dd m_fetch
  dd m_multiply
  dd m_over
@@ -737,48 +737,48 @@ L119:
  dd c_true
  dd m_exitcolon
  CENTRY `abort`, c_abort, 5
- dd m_Abortvec
+ dd mv_Abortvec
  dd m_fetch
  dd m_execute
  dd m_exitcolon
  CENTRY `source`, c_source, 6
- dd m_Sourcebuf
+ dd mv_Sourcebuf
  dd m_fetch
  dd m_exitcolon
  CENTRY `current-input`, c_current_input, 13 ; ( -- c ) read the next character from the location in Sourcebuf
- dd m_toIn
+ dd mv_toIn
  dd m_fetch
  dd c_source
  dd m_plus		; Sourcebuf + >In
  dd m_cfetch
  dd m_exitcolon
  CENTRY `save-input`, c_save_input, 10
- dd m_Infd 
- dd m_toIn
+ dd mv_Infd 
+ dd mv_toIn
  dd m_fetch
- dd m_toLimit
+ dd mv_toLimit
  dd m_fetch
- dd m_Sourcebuf
+ dd mv_Sourcebuf
  dd m_fetch
- dd m_Blk
+ dd mv_Blk
  dd m_fetch
  dd m_literal
  dd 5
  dd m_exitcolon
  CENTRY `default-input`, c_default_input, 13
  dd mc_STDIN
- dd m_toIn
+ dd mv_toIn
  dd c_off
- dd m_toLimit
+ dd mv_toLimit
  dd c_off
- dd m_Tib
- dd m_Sourcebuf
+ dd mc_TIB
+ dd mv_Sourcebuf
  dd m_store
- dd m_Blk
+ dd mv_Blk
  dd c_off
  dd m_exitcolon
  CENTRY `restore-input`, c_restore_input, 13
- dd m_Eof
+ dd mv_Eof
  dd c_off
  dd m_literal
  dd 5
@@ -790,15 +790,15 @@ L119:
  dd m_jump
  dd L134
 L133:
- dd m_Blk
+ dd mv_Blk
  dd m_store
- dd m_Sourcebuf
+ dd mv_Sourcebuf
  dd m_store
- dd m_toLimit
+ dd mv_toLimit
  dd m_store
- dd m_toIn
+ dd mv_toIn
  dd m_store
- dd m_Infd
+ dd mv_Infd
  dd m_store
  dd c_true
 L134:
@@ -820,9 +820,9 @@ L136:
  dd m_exitcolon
 
  CENTRY `next-input`, c_next_input, 10 ; when >In < >Limit ( -- true c ). ( --  0 false ) otherwise
- dd m_toIn
+ dd mv_toIn
  dd m_fetch
- dd m_toLimit
+ dd mv_toLimit
  dd m_fetch
  dd m_less
  dd m_cjump
@@ -840,7 +840,7 @@ L140:
 
  CENTRY `parse`, c_parse, 5	; ( c -- a ) Place the counted string in the address in Wordbuf and return that address. c = word delimiter.
  dd m_rpush		; ( c -- ) (R -- c )
- dd m_Wordbuf
+ dd mv_Wordbuf
  dd m_fetch		; ( -- Wordb )
  dd c_1plus		; ( Wordb -- Wordb+1 )
 L142:
@@ -856,18 +856,18 @@ L142:
  dd c_1plus		; ( Wordb+1 -- Wordb+2 )
  dd m_literal
  dd 1
- dd m_toIn
+ dd mv_toIn
  dd c_plusstore	; >In++
  dd m_jump
  dd L142		; ( Wordb+2 ) repeat
 L143:		; ( Wordb+1 ) >In >= >Limit || cinitial == cnew
  dd m_literal
  dd 1
- dd m_toIn
+ dd mv_toIn
  dd c_plusstore	; >In++
  dd m_rpop		; (Wordb+1 -- Wordb+1 c) (R c -- )
  dd m_drop		; (Wordb+1 c -- Wordb+1)
- dd m_Wordbuf
+ dd mv_Wordbuf
  dd m_fetch		; (Wordb+1 -- Wordb+1 Wordb)
  dd m_dup		; (Wordb+1 Wordb -- Wordb+1 Wordb Wordb)
  dd m_rpush		; (Wordb+1 Wordb Wordb -- Wordb+1 Wordb) (R -- Wordb)
@@ -889,7 +889,7 @@ L145:
  dd L146		; >In >= >Limit || cinitial != cnew
  dd m_literal	; >In < >Limit && cinitial == cnew
  dd 1
- dd m_toIn
+ dd mv_toIn
  dd c_plusstore	; >In++
  dd m_jump		; repeat
  dd L145
@@ -940,15 +940,15 @@ L149:		; n == 0 ( -- ) (R a1 a2 -- )
  dd m_exitcolon
 
  CENTRY `query`, c_query, 5	; read from input stream into the Text Input Buffer
- dd m_Eof
+ dd mv_Eof
  dd c_off		; clear EOF flag
- dd m_Tib	; constant puts address of tibuffer on the top
+ dd mc_TIB	; constant puts address of tibuffer on the top
  dd m_literal
  dd 4096	; ( tibuffer -- tibuffer 4096 )
  dd c_accept ; ( tibuffer 4096 -- n )
  dd m_dup	; ( n -- n n )
  dd c_0eq	; ( n n -- n f )
- dd m_Eof
+ dd mv_Eof
  dd m_fetch
  dd m_binand	; n == 0 && EOF
  dd m_cjump
@@ -958,15 +958,15 @@ L149:		; n == 0 ( -- ) (R a1 a2 -- )
  dd m_jump
  dd L153
 L152:			; n > 0
- dd m_toLimit
+ dd mv_toLimit
  dd m_store		; number of characters to read, >Limit = n
- dd m_toIn
+ dd mv_toIn
  dd c_off		; start from 0, >In = 0
 L153:
  dd m_exitcolon
 
  CENTRY `refill`, c_refill, 6
- dd m_Blk
+ dd mv_Blk
  dd m_fetch
  dd m_cjump
  dd L155
@@ -980,9 +980,9 @@ L156:
  dd m_exitcolon
 
  CENTRY `findname`, c_findname, 8 ; ( a1 -- a2 f ) ; loop through the dictionary names
- dd m_Findadr
+ dd mv_Findadr
  dd m_store
- dd m_Dp
+ dd mv_Dp
  dd m_fetch	; get dictionary link
 L158:
  dd c_qdup
@@ -1006,7 +1006,7 @@ L160:		; valid length? ( a -- )
  dd m_literal
  dd 63
  dd m_binand	; ( a1 a1+8+1 n 63 -- a1 a1+8+1 n&63 )
- dd m_Findadr
+ dd mv_Findadr
  dd m_fetch
  dd c_count	; ( a1 a1+8+1 n&63 a2 n2 -- a1 a1+8+1 n&63 a2+1 n2 )
  dd c_compare	; ( -- a1 n ) compare dictionary entry with name
@@ -1022,7 +1022,7 @@ L161:
  dd m_jump
  dd L158
 L159:
- dd m_Findadr
+ dd mv_Findadr
  dd m_fetch
  dd c_false
  dd m_exitcolon
@@ -1139,7 +1139,7 @@ L176:
  dd c_align
  dd c_here
  dd m_rpush
- dd m_Dp
+ dd mv_Dp
  dd m_fetch
  dd c_comma
  dd c_bl
@@ -1160,7 +1160,7 @@ L176:
  dd m_fetch
  dd c_comma
  dd m_rpop
- dd m_Dp
+ dd mv_Dp
  dd m_store
  dd m_exitcolon
  CENTRY `variable`, c_variable, 8
@@ -1183,7 +1183,7 @@ L176:
  dd c_comma
  dd m_exitcolon
  CENTRY `immediate`, c_immediate, 9
- dd m_Dp
+ dd mv_Dp
  dd m_fetch
  dd c_cellplus
  dd m_dup
@@ -1250,7 +1250,7 @@ L194:
 L191:
  dd m_exitcolon
  CENTRY `]`, c_close_bracket, 1
- dd m_State
+ dd mv_State
  dd c_on
 L196:
  dd c_bl
@@ -1266,7 +1266,7 @@ L196:
  dd L198
 L197:
  dd c_compile
- dd m_State
+ dd mv_State
  dd m_fetch
 L198:
  dd m_cjump
@@ -1276,11 +1276,11 @@ L198:
 L199:
  dd m_exitcolon
  CIENTRY `[`, ci_open_bracket, 1
- dd m_State
+ dd mv_State
  dd c_off
  dd m_exitcolon
  CENTRY `smudge`, c_smudge, 6
- dd m_Dp
+ dd mv_Dp
  dd m_fetch
  dd c_cellplus
  dd m_dup
@@ -1292,7 +1292,7 @@ L199:
  dd m_cstore
  dd m_exitcolon
  CENTRY `reveal`, c_reveal, 6
- dd m_Dp
+ dd mv_Dp
  dd m_fetch
  dd c_cellplus
  dd m_dup
@@ -1322,12 +1322,12 @@ L199:
  dd m_literal
  dd m_exitcolon
  dd c_comma
- dd m_State
+ dd mv_State
  dd c_off
  dd c_reveal
  dd m_exitcolon
  CIENTRY `recurse`, ci_recurse, 7
- dd m_Dp
+ dd mv_Dp
  dd m_fetch
  dd c_cellplus
  dd c_tocfa
@@ -1394,11 +1394,11 @@ L199:
  dd m_drop
  dd m_exitcolon
  CIENTRY `\`, ci_backslash, 1
- dd m_Blk
+ dd mv_Blk
  dd m_fetch
  dd m_cjump
  dd L214
- dd m_toIn
+ dd mv_toIn
  dd m_fetch
  dd m_literal
  dd 63
@@ -1407,19 +1407,19 @@ L199:
  dd 63
  dd c_invert
  dd m_binand
- dd m_toIn
+ dd mv_toIn
  dd m_store
  dd m_jump
  dd L215
 L214:
- dd m_toLimit
+ dd mv_toLimit
  dd m_fetch
- dd m_toIn
+ dd mv_toIn
  dd m_store
 L215:
  dd m_exitcolon
  CENTRY `(?abort)`, c_qabort_parens, 8
- dd m_State
+ dd mv_State
  dd m_cjump
  dd L217
  dd c_space
@@ -1669,9 +1669,9 @@ L246:
  dd c_bl
  dd c_word
  dd m_rpush
- dd m_toLimit
+ dd mv_toLimit
  dd m_fetch
- dd m_toIn
+ dd mv_toIn
  dd m_store
  dd c_save_input
  dd m_rpop
@@ -1679,7 +1679,7 @@ L246:
  dd c_ro
  dd c_open_file
  dd c_qfcheck
- dd m_Infd
+ dd mv_Infd
  dd m_store
  dd m_exitcolon
 
@@ -1704,21 +1704,21 @@ L253:
  dd m_exitcolon	; why is this needed?
 
  CENTRY `(abort)`, c_parenabort, 7 ; TODO correct below stack notations
- dd m_State	; ( m_State -- )
+ dd mv_State	; ( mv_State -- )
  dd c_off		; off sets variable state = 0
- dd m_Tib	; constant puts address of tibuffer on the top of stack
- dd m_Sourcebuf	; variable sourcebuf
+ dd mc_TIB	; constant puts address of tibuffer on the top of stack
+ dd mv_Sourcebuf	; variable sourcebuf
  dd m_store	; variable sourcebuf = address of tibuffer
- dd m_Blk	; variable blk
+ dd mv_Blk	; variable blk
  dd c_off	; off variable blk = 0
  dd mc_STDIN
- dd m_Infd
+ dd mv_Infd
  dd m_store
  dd mc_STDOUT
- dd m_Outfd
+ dd mv_Outfd
  dd m_store
  dd mc_STDERR
- dd m_Errfd
+ dd mv_Errfd
  dd m_store
  dd c_quit	; quit resets stacks and is the interpreter loop
  dd m_exitcolon	; why is this needed? quit does not return unless it breaks
@@ -1729,34 +1729,34 @@ L253:
  dd m_stackptr	; (D -- FFEND)
  dd m_s0
  dd m_store	; s0 = FFEND
- dd m_Hzero	; heaptop = heapend
+ dd m_h0	; heaptop = heapend
  dd m_fetch	; ( heapend -- )
  dd m_literal
  dd 1		; ( heapend 1 -- )
  dd c_cells	; cells ( heapend 8 -- ) 
  dd m_minus	; ( heapend-8 -- )
  dd m_fetch	; ( contents_from_heapend-8 -- )
- dd m_Args	; variable args
+ dd m_args	; variable args
  dd m_store	; args = contents_from_heapend-8
  dd m_literal
  dd c_parenabort ; ( (abort) -- )
- dd m_Abortvec	; variable abortvec
+ dd mv_Abortvec	; variable abortvec
  dd m_store	; variable abortvec = (abort) code address
- dd m_Wordb	; constant puts address of wordbuffer on the top of stack
- dd m_Wordbuf	; variable wordbuf
+ dd mc_WORDB	; constant puts address of wordbuffer on the top of stack
+ dd mv_Wordbuf	; variable wordbuf
  dd m_store	; variable wordbuf = address of wordbuffer
- dd m_Tib	; constant puts address of tibuffer on the top of stack
- dd m_Sourcebuf	; variable sourcebuf
+ dd mc_TIB	; constant puts address of tibuffer on the top of stack
+ dd mv_Sourcebuf	; variable sourcebuf
  dd m_store	; variable sourcebuf = address of tibuffer
  dd m_literal
  dd 0
- dd m_Infd
+ dd mv_Infd
  dd m_store	; stdin = 0
  dd m_literal
  dd 1
- dd m_Outfd
+ dd mv_Outfd
  dd m_store	; stdout = 1
- dd m_State
+ dd mv_State
  dd c_off	; off stores 0 at state
  dd c_decimal	; decimal setting base = 0
  dd c_quit	; quit
@@ -1770,28 +1770,28 @@ L253:
 
  dd m_literal
  dd c_parenabort ; ( (abort) -- )
- dd m_Abortvec	; variable that puts (abort) code address on the stack
+ dd mv_Abortvec	; variable that puts (abort) code address on the stack
  dd m_store	; variable abortvec = (abort) code address
 
- dd m_Wordb	; variable puts address of wordbuffer on the top of stack
- dd m_Wordbuf ; variable wordbuf
+ dd mc_WORDB	; variable puts address of wordbuffer on the top of stack
+ dd mv_Wordbuf ; variable wordbuf
  dd m_store	; variable wordbuf = address of wordbuffer
 
- dd m_Tib	; constant puts address of tibuffer on the top of stack
- dd m_Sourcebuf	; variable sourcebuf
+ dd mc_TIB	; constant puts address of tibuffer on the top of stack
+ dd mv_Sourcebuf	; variable sourcebuf
  dd m_store	; variable sourcebuf = address of tibuffer
 
  dd mc_STDIN
- dd m_Infd
+ dd mv_Infd
  dd m_store	; stdin = 0
  dd mc_STDOUT
- dd m_Outfd
+ dd mv_Outfd
  dd m_store
  dd mc_STDERR
- dd m_Errfd
+ dd mv_Errfd
  dd m_store
 
- dd m_State
+ dd mv_State
  dd c_off	; off stores 0 at state
  dd c_decimal	; decimal setting base = 0
  dd c_quit	; quit
