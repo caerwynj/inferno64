@@ -30,8 +30,9 @@ plan9 assembler puts the first argument in BP (RARG), return value in AX.
  RSP: R8 return stack pointer, grows towards higher memory (upwards)
  IP:  R9 instruction pointer
  W:   R10 work register (holds CFA)
- H0:  R11 register holding the start of this process's heap memory
-	CX, SI, DI, R12-R13 temporary registers
+ UP:  R11 register holding the start of this process's heap memory
+ UPE: R12 register holding the end of this process's heap memory -- TODO, use this
+	CX, SI, DI, R13 temporary registers
 
 coding standard
 : <name> (S input-stack --- output-stack) (R --- )
@@ -40,8 +41,8 @@ coding standard
 		.. fn ;
 
 Heap memory map: uses 8 pages at the start, will increase by *2 when filled up
-H0: variables
-		heap start, heapstart, also in H0
+UP: variables
+		heap start, heapstart, also in UP
 		heap size, heapsize
 		forth stack pointer, forthsp
 		dictionary pointer, Dp
@@ -74,7 +75,7 @@ SSTACK_END = FORTHEND
 #define RSP R8 /* return stack pointer, grows towards higher memory (upwards) */
 #define IP  R9 /* instruction pointer */
 #define W   R10/* work register (holds CFA) */
-#define H0	R11/* start of heap memory */
+#define UP	R11/* start of heap memory */
 
 #define PSTACK_SIZE BY2PG
 #define RSTACK_SIZE BY2PG
@@ -106,6 +107,7 @@ SSTACK_END = FORTHEND
 #define	INFD		(HEAPSTART+(BY2WD*18))
 #define	OUTFD		(HEAPSTART+(BY2WD*19))
 #define	ERRFD		(HEAPSTART+(BY2WD*20))
+#define	EOF			(HEAPSTART+(BY2WD*21))
 
 #define ERRSTR		(HEAPSTART+(BY2WD*32))
 #define WORDB		(HEAPSTART+(BY2WD*160))	/* word buffer */
@@ -137,25 +139,25 @@ SSTACK_END = FORTHEND
 
 TEXT	forthmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
 	/* Argument has the start of heap */
-	MOVQ RARG, H0		/* start of heap memory */
+	MOVQ RARG, UP		/* start of heap memory */
 
-	MOVQ H0, RSP
+	MOVQ UP, RSP
 	ADDQ $RSTACK_END, RSP	/* return stack pointer, reset */
 
-	MOVQ H0, PSP
+	MOVQ UP, PSP
 	ADDQ $PSTACK_END, PSP	/* parameter stack pointer - stack setup, clear */
-	MOVQ PSP, 16(H0)		/* parameter stack pointer store, for forth to c */
+	MOVQ PSP, 16(UP)		/* parameter stack pointer store, for forth to c */
 
-	MOVQ H0, TOP
+	MOVQ UP, TOP
 	ADDQ $HEAPSTART, TOP
-	MOVQ TOP, (H0)		/* store the start address at that address too - magic check */
+	MOVQ TOP, (UP)		/* store the start address at that address too - magic check */
 	ADDQ $(HEAPSIZE-1), TOP
-	MOVQ TOP, 8(H0)		/* heap end */
+	MOVQ TOP, 8(UP)		/* heap end */
 
-	MOVQ H0, TOP
+	MOVQ UP, TOP
 	ADDQ $DICTIONARY, TOP
-	MOVQ TOP, 24(H0)	/* dictionary pointer */
-	MOVQ $centry_c_boot(SB), 24(H0)	/* Latest dictionary entry address */
+	MOVQ TOP, 24(UP)	/* dictionary pointer */
+	MOVQ $centry_c_boot(SB), 24(UP)	/* Latest dictionary entry address */
 
 	/* execute boot */
 	MOVQ $centry_c_boot(SB), IP
@@ -190,12 +192,12 @@ Assume IP = 8
 	NEXT
 
 TEXT	reset(SB), 1, $-4
-	MOVQ H0, RSP
+	MOVQ UP, RSP
 	ADDQ $RSTACK_END, RSP
 	NEXT
 
 TEXT	clear(SB), 1, $-4
-	MOVQ H0, PSP
+	MOVQ UP, PSP
 	ADDQ $PSTACK_END, PSP
 	NEXT
 
@@ -246,12 +248,14 @@ TEXT	store(SB), 1, $-4	/* ( n a -- ) */
 	POP(TOP)
 	NEXT
 
+/* TODO change to allow only fetches from a certain memory range */
 TEXT	cfetch(SB), 1, $-4	/* ( a -- c ) */
 	XORQ CX, CX
 	MOVB (TOP), CL
 	POP(TOP)
 	NEXT
 
+/* TODO change to allow only fetches from a certain memory range */
 TEXT	cstore(SB), 1, $-4	/* ( c a -- ) */
 	POP(CX)
 	MOVB CL, (TOP)
@@ -545,14 +549,14 @@ TEXT	cas(SB), 1, $-4	/* ( a old new -- f ) */
 
 TEXT	s0(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
 	PUSH(TOP)
-	MOVQ H0, TOP
+	MOVQ UP, TOP
 	ADDQ $PSTACK_END, TOP
 	NEXT
 
 /* store the forth sp here when going to C */
 TEXT	forthsp(SB), 1, $-4
 	PUSH(TOP)
-	MOVQ H0, TOP
+	MOVQ UP, TOP
 	ADDQ $FORTHSP, TOP
 	NEXT
 
@@ -560,7 +564,7 @@ TEXT	forthsp(SB), 1, $-4
 
 #define	VARIABLE(name, location)	TEXT	name(SB), 1, $-4 ;\
 	PUSH(TOP); \
-	MOVQ H0, TOP ;\
+	MOVQ UP, TOP ;\
 	ADDQ location, TOP ;\
 	NEXT;
 
@@ -586,6 +590,7 @@ VARIABLE(Errstr, $ERRSTR)
 VARIABLE(Infd, $INFD)
 VARIABLE(Outfd, $OUTFD)
 VARIABLE(Errfd, $ERRFD)
+VARIABLE(Eof, $EOF)
 
 TEXT	forthend(SB), 1, $-4
 

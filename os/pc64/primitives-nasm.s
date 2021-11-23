@@ -52,27 +52,27 @@ dict:
   MENTRY "Wordb", Wordb, 5
   MENTRY "Hzero", Hzero, 5
   MENTRY "Dp", Dp, 2
-  MENTRY `>In`, toIn, 3
-  MENTRY `>Limit`, toLimit, 6
-  MENTRY `Findadr`, Findadr, 7
-  MENTRY `Blk`, Blk, 3
-  MENTRY `Args`, Args, 4
-  MENTRY `Iobuf`, Iobuf, 5
-  MENTRY `Searchlen`, Searchlen, 9
-  MENTRY `Base`, Base, 4
-  MENTRY `>Num`, toNum, 4
-  MENTRY `State`, State, 5
-  MENTRY `Abortvec`, Abortvec, 8	; not sure if these 3 can be constants instead?
-  MENTRY `Sourcebuf`, Sourcebuf, 9
-  MENTRY `Wordbuf`, Wordbuf, 7
-  MENTRY `Infd`, Infd, 7
-  MENTRY `Outfd`, Outfd, 7
-  MENTRY `Errfd`, Errfd, 7
+  MENTRY ">In", toIn, 3
+  MENTRY ">Limit", toLimit, 6
+  MENTRY "Findadr", Findadr, 7
+  MENTRY "Blk", Blk, 3
+  MENTRY "Args", Args, 4
+  MENTRY "Iobuf", Iobuf, 5
+  MENTRY "Searchlen", Searchlen, 9
+  MENTRY "Base", Base, 4
+  MENTRY ">Num", toNum, 4
+  MENTRY "State", State, 5
+  MENTRY "Abortvec", Abortvec, 8	; not sure if these 3 can be constants instead?
+  MENTRY "Sourcebuf", Sourcebuf, 9
+  MENTRY "Wordbuf", Wordbuf, 7
+  MENTRY "Infd", Infd, 5
+  MENTRY "Outfd", Outfd, 6
+  MENTRY "Errfd", Errfd, 4
+  MENTRY "Eof", Eof, 0, 3
 
-  MVENTRY "STDIN", STDIN, 0, 5		; 4 constants from here, CAPITALS
-  MVENTRY "STDOUT", STDOUT, 1, 6
-  MVENTRY "STDERR", STDERR, 2, 6
-  MVENTRY "EOF", EOF, 0, 3
+  MCENTRY "STDIN", STDIN, 0, 5		; 3 constants from here, CAPITALS
+  MCENTRY "STDOUT", STDOUT, 1, 6
+  MCENTRY "STDERR", STDERR, 2, 6
 
   MENTRY "s0", s0, 2
   MENTRY "s@", stackptr, 2		; puts PSP on stack

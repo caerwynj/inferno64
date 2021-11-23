@@ -42,7 +42,7 @@ $2 == "MENTRY" {
 	tot += 8
 	addrlabel = sprintf("mentry_%s", label)
 }
-$2 == "MVENTRY" {
+$2 == "MCENTRY" {
 	if(label != ""){
 		lines[++nlines]=sprintf("GLOBL	%s, $%d\n", last, tot);
 	}
@@ -50,22 +50,22 @@ $2 == "MVENTRY" {
 	name = $3
 	label = $4
 	tot = 0
-	writelast("mventry", label, last)
-	last=sprintf("mventry_%s(SB)", label);
-	lines[++nlines]=sprintf("DATA	mventry_%s+8(SB)/1, $%d\n", label, length(name));
+	writelast("mcentry", label, last)
+	last=sprintf("mcentry_%s(SB)", label);
+	lines[++nlines]=sprintf("DATA	mcentry_%s+8(SB)/1, $%d\n", label, length(name));
 	for(i=1; i<=length(name); i++){
-		lines[++nlines]=sprintf("DATA	mventry_%s+%d(SB)/1, $'%c'\n", label, 8+i, substr(name,i,1));
+		lines[++nlines]=sprintf("DATA	mcentry_%s+%d(SB)/1, $'%c'\n", label, 8+i, substr(name,i,1));
 	}
 	tot = 8+i;
 	# for alignment
 	if(tot%8 > 0)
 		tot += 8-(tot%8);
-	lines[++nlines]=sprintf("DATA	mventry_%s+%d(SB)/8, $constant(SB)\n", label, tot);
-	lines[++nlines]=sprintf("#define	mc_%s(SB) mventry_%s+%d(SB)\n", label, label, tot);
+	lines[++nlines]=sprintf("DATA	mcentry_%s+%d(SB)/8, $constant(SB)\n", label, tot);
+	lines[++nlines]=sprintf("#define	mc_%s(SB) mcentry_%s+%d(SB)\n", label, label, tot);
 	tot += 8;
-	lines[++nlines]=sprintf("DATA	mventry_%s+%d(SB)/8, $%s\n", label, tot, $5);
+	lines[++nlines]=sprintf("DATA	mcentry_%s+%d(SB)/8, $%s\n", label, tot, $5);
 	tot += 8;
-	addrlabel = sprintf("mventry_%s", label)
+	addrlabel = sprintf("mcentry_%s", label)
 }
 $1 ~ /:$/ && $1 !~ /^dict:$/ {
 	l=$1

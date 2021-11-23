@@ -258,37 +258,38 @@ L47:
 L52:
  dd m_exitcolon
 
- CENTRY `key`, c_key, 3
- dd m_Iobuf		; variable iobuf
+ CENTRY `key`, c_key, 3	 ; ( -- c ) (G read a single character from the input onto the stack )
  dd m_literal
- dd 1
- dd m_Infd		; constant stdin
- dd m_fthread
+ dd 1			; ( 1 -- )
+ dd m_Iobuf		; variable iobuf to store the character read
+ dd m_Infd
+ dd m_fetch		; ( 1 Iobuf -- 1 Iobuf infd )
+ dd m_fthread	; ( 1 Iobuf infd -- n )
  dd c_0eq
- dd m_cjump
- dd L78
- dd mc_EOF
- dd c_on
+ dd m_cjump		; if 0 characters read
+ dd L78			; if qread n != 0, jump to L78. If n == 0, jump over
+ dd m_Eof
+ dd c_on		; EOF
  dd m_literal
- dd -1
+ dd -1			; return -1 when EOF
  dd m_jump
  dd L79
 L78:
- dd m_Iobuf
- dd m_cfetch
+ dd m_Iobuf		; get the character from Iobuf to stack
+ dd m_cfetch	; ( -- c ) return the character read if not EOF
 L79:
  dd m_exitcolon
 
  CENTRY `emit`, c_emit, 4	; ( character -- )
- dd m_Iobuf			; variable iobuf address
- dd m_cstore		; variable iobuf has character
- dd m_Iobuf			; variable iobuf address
+ dd m_Iobuf		; variable iobuf address
+ dd m_cstore	; variable iobuf has character
+ dd m_Iobuf		; variable iobuf address
  dd m_literal
  dd 1
- dd m_xswap			; ( iobuf 1 --  1 iobuf )
- dd m_literal
- dd 1				; stdout
- dd m_fthwrite			; ( 1 iobuf 1 --  )
+ dd m_xswap		; ( iobuf 1 --  1 iobuf )
+ dd m_Outfd
+ dd m_fetch		; outfd
+ dd m_fthwrite	; ( 1 iobuf outfd --  )
  dd m_exitcolon
 
  CENTRY `type`, c_type, 4	; ( addr n -- ) 
@@ -744,11 +745,11 @@ L119:
  dd m_Sourcebuf
  dd m_fetch
  dd m_exitcolon
- CENTRY `current-input`, c_current_input, 13
+ CENTRY `current-input`, c_current_input, 13 ; ( -- c ) read the next character from the location in Sourcebuf
  dd m_toIn
  dd m_fetch
  dd c_source
- dd m_plus
+ dd m_plus		; Sourcebuf + >In
  dd m_cfetch
  dd m_exitcolon
  CENTRY `save-input`, c_save_input, 10
@@ -777,7 +778,7 @@ L119:
  dd c_off
  dd m_exitcolon
  CENTRY `restore-input`, c_restore_input, 13
- dd mc_EOF
+ dd m_Eof
  dd c_off
  dd m_literal
  dd 5
@@ -817,16 +818,17 @@ L134:
  dd c_abort
 L136:
  dd m_exitcolon
- CENTRY `next-input`, c_next_input, 10
+
+ CENTRY `next-input`, c_next_input, 10 ; when >In < >Limit ( -- true c ). ( --  0 false ) otherwise
  dd m_toIn
  dd m_fetch
  dd m_toLimit
  dd m_fetch
  dd m_less
  dd m_cjump
- dd L139
- dd c_true
- dd c_current_input
+ dd L139	; >In >= >Limit
+ dd c_true	; >In < >Limit
+ dd c_current_input	; ( -- c )
  dd m_jump
  dd L140
 L139:
@@ -835,66 +837,68 @@ L139:
  dd c_false
 L140:
  dd m_exitcolon
- CENTRY `parse`, c_parse, 5
- dd m_rpush
+
+ CENTRY `parse`, c_parse, 5	; ( c -- a ) Place the counted string in the address in Wordbuf and return that address. c = word delimiter.
+ dd m_rpush		; ( c -- ) (R -- c )
  dd m_Wordbuf
- dd m_fetch
- dd c_1plus
+ dd m_fetch		; ( -- Wordb )
+ dd c_1plus		; ( Wordb -- Wordb+1 )
 L142:
- dd c_next_input
- dd m_rfetch
- dd c_neq
+ dd c_next_input ; ( Wordb+1 -- Wordb+1 f c )
+ dd m_rfetch 	; ( Wordb+1 f c -- Wordb+1 f  cinitial ) (R c -- c )
+ dd c_neq 		; ( Wordb+1 f c cinitial -- Wordb+1 f f(c!=cinitial) )
  dd m_binand
  dd m_cjump
- dd L143
- dd c_current_input
+ dd L143		; ( Wordb+1 ) >In >= >Limit || cinitial == cnew
+ dd c_current_input	; ( Wordb+1 -- Wordb+1 c )
  dd m_over
- dd m_cstore
- dd c_1plus
+ dd m_cstore	; ( Wordb+1 c Wordb+1 -- Wordb+1 ) store c at Wordb+1
+ dd c_1plus		; ( Wordb+1 -- Wordb+2 )
  dd m_literal
  dd 1
  dd m_toIn
- dd c_plusstore
+ dd c_plusstore	; >In++
  dd m_jump
- dd L142
-L143:
+ dd L142		; ( Wordb+2 ) repeat
+L143:		; ( Wordb+1 ) >In >= >Limit || cinitial == cnew
  dd m_literal
  dd 1
  dd m_toIn
- dd c_plusstore
- dd m_rpop
- dd m_drop
+ dd c_plusstore	; >In++
+ dd m_rpop		; (Wordb+1 -- Wordb+1 c) (R c -- )
+ dd m_drop		; (Wordb+1 c -- Wordb+1)
  dd m_Wordbuf
- dd m_fetch
- dd m_dup
- dd m_rpush
- dd m_minus
- dd c_1minus
- dd m_rfetch
- dd m_cstore
- dd m_rpop
+ dd m_fetch		; (Wordb+1 -- Wordb+1 Wordb)
+ dd m_dup		; (Wordb+1 Wordb -- Wordb+1 Wordb Wordb)
+ dd m_rpush		; (Wordb+1 Wordb Wordb -- Wordb+1 Wordb) (R -- Wordb)
+ dd m_minus		; (Wordb+1 Wordb -- Wordb+1-Wordb) (R -- Wordb)
+ dd c_1minus	; (Wordb+1-Wordb -- Wordb+1-Wordb-1) (R -- Wordb)
+ dd m_rfetch	; (Wordb+1-Wordb-1 Wordb -- Wordb+1-Wordb-1 Wordb) (R -- Wordb)
+ dd m_cstore	; store the length of the string found at Wordb[0]. Counted string at Wordb now.
+ dd m_rpop		; ( -- Wordb) (R Wordb -- )
  dd m_exitcolon
- CENTRY `word`, c_word, 4 ; ( c -- )
+
+ CENTRY `word`, c_word, 4 ; ( c -- a ) skip the c's. Placed the counted string in a (as in Wordbuf)
  dd m_rpush	; ( -- ) (R -- c )
 L145:
- dd c_next_input ; ( -- c2 ) (R c1 -- )
- dd m_rfetch
- dd m_equal
- dd m_binand
+ dd c_next_input ; ( -- f c2 ) (R c1 -- )
+ dd m_rfetch	; ( f cnew -- f cnew cinitial ) (R cinitial -- cinitial )
+ dd m_equal		; ( f cnew cinitial -- f f(cnew==cinitial) ) (R cinitial -- cinitial )
+ dd m_binand	; ( f f2 -- f&&f2 ) (R cinitial -- cinitial )
  dd m_cjump
- dd L146
- dd m_literal
+ dd L146		; >In >= >Limit || cinitial != cnew
+ dd m_literal	; >In < >Limit && cinitial == cnew
  dd 1
  dd m_toIn
- dd c_plusstore
- dd m_jump
+ dd c_plusstore	; >In++
+ dd m_jump		; repeat
  dd L145
 L146:
- dd m_rpop
+ dd m_rpop		; ( -- cinitial ) Sourcebuf+>In = location of first non-matching character
  dd c_parse
  dd m_exitcolon
 
- CENTRY `accept`, c_accept, 6	; ( a n -- ) TODO correct below stack notations
+ CENTRY `accept`, c_accept, 6	; ( a n -- n ) get line or n chars or EOF from input and store at a
  dd m_xswap	; ( n a -- )
  dd m_dup	; ( n a a -- )
  dd m_rpush
@@ -903,59 +907,61 @@ L148:
  dd c_qdup	; ( n n -- ) (R a a -- )
  dd m_cjump	; (if)
  dd L149	; n == 0
- dd c_key	; n > 0 ( n c -- )
- dd m_dup	; ( n c c -- )
+ dd c_key	; n > 0 ( n -- n c )
+ dd m_dup	; ( -- n c c )
  dd m_literal
- dd 10		; ( n c c 10 -- )
- dd m_equal	; ( n c f -- )
- dd m_over	; ( n c f n -- )
+ dd 10		; ( -- n c c 10 )
+ dd m_equal	; ( n c c 10 -- n c f ) checking for newline
+ dd m_over	; ( -- n c f c )
  dd m_literal
- dd -1		; ( n c f n -1 -- )
- dd m_equal	; ( n c f1 f2 -- )
- dd m_binor	; ( n c f -- )
+ dd -1		; ( -- n c f c -1 )
+ dd m_equal	; ( -- n c f1 f2 )
+ dd m_binor	; ( -- n c f )
  dd m_cjump
  dd L150
  dd c_2drop	; n == -1 || n == 10 (	-- )
  dd m_rpop
  dd m_rpop
- dd m_minus
- dd m_exitcolon	; ( 0 -- ) (R -- )
-L150:
+ dd m_minus	; ( -- a2-a1 )
+ dd m_exitcolon	; ( -- n ) (R -- )
+L150:		; not EOF or newline, continue
  dd m_rfetch	; ( n c a -- ) (R a a -- )
- dd m_cstore
+ dd m_cstore	; store the character at a
  dd m_rpop	; ( n a -- ) (R a -- )
  dd c_1plus
- dd m_rpush	; ( n -- ) (R a1 a2 -- )
- dd c_1minus	; ( n-1 -- ) (R a1 a2 -- )
+ dd m_rpush	; ( n -- ) (R a1 -- a1 a2 ) a1 = begin address, a2 = current address
+ dd c_1minus	; ( n -- n-1 )
  dd m_jump
- dd L148
-L149:		; n == 0 ( -- ) (R a a -- )
- dd m_rpop
- dd m_rpop	; ( a a -- )
- dd m_minus	; ( 0 -- )
+ dd L148	; loop again for the next character
+L149:		; n == 0 ( -- ) (R a1 a2 -- )
+ dd m_rpop	; ( -- a2 ) (R a1 a2 -- a1 )
+ dd m_rpop	; ( a2 a1 -- ) (R a1 -- )
+ dd m_minus	; ( a2 a1 -- a2-a1 )
  dd m_exitcolon
 
- CENTRY `query`, c_query, 5
- dd mc_EOF	; constant eof = 0
+ CENTRY `query`, c_query, 5	; read from input stream into the Text Input Buffer
+ dd m_Eof
+ dd c_off		; clear EOF flag
  dd m_Tib	; constant puts address of tibuffer on the top
  dd m_literal
- dd 4096	; ( EOF tibuffer -- EOF tibuffer 4096 )
- dd c_accept	; ( EOF tibuffer 4096 -- n )
- dd m_dup
- dd c_0eq
- dd mc_EOF
- dd m_binand
+ dd 4096	; ( tibuffer -- tibuffer 4096 )
+ dd c_accept ; ( tibuffer 4096 -- n )
+ dd m_dup	; ( n -- n n )
+ dd c_0eq	; ( n n -- n f )
+ dd m_Eof
+ dd m_fetch
+ dd m_binand	; n == 0 && EOF
  dd m_cjump
- dd L152
- dd m_drop
+ dd L152		; false condition
+ dd m_drop		; n == 0 && EOF ( n -- )
  dd c_qrestore_input
  dd m_jump
  dd L153
-L152:
+L152:			; n > 0
  dd m_toLimit
- dd m_store
+ dd m_store		; number of characters to read, >Limit = n
  dd m_toIn
- dd c_off
+ dd c_off		; start from 0, >In = 0
 L153:
  dd m_exitcolon
 
@@ -1089,15 +1095,16 @@ L169:
  dd c_abort
 L172:
  dd m_exitcolon
- CENTRY `interpret`, c_interpret, 9
+
+ CENTRY `interpret`, c_interpret, 9 ; there is stuff in TIB to be interpreted, >In and >Limit are set
 L175:
  dd c_bl
- dd c_word
+ dd c_word	; ( bl -- a )
  dd m_dup
  dd m_cfetch
  dd c_0neq
  dd m_cjump
- dd L176
+ dd L176	; count at a = 0
  dd c_find	; ( a -- ) a = address of counted string
  dd m_cjump
  dd L177
@@ -1125,8 +1132,9 @@ L178:
  dd m_jump
  dd L175
 L176:
- dd m_drop
+ dd m_drop	; count at a = 0, ( a -- )
  dd m_exitcolon
+
  CENTRY `create`, c_create, 6
  dd c_align
  dd c_here
@@ -1656,6 +1664,7 @@ L246:
  dd 0
  dd m_terminate
  dd m_exitcolon
+
  CENTRY `include`, c_include, 7
  dd c_bl
  dd c_word
@@ -1673,6 +1682,7 @@ L246:
  dd m_Infd
  dd m_store
  dd m_exitcolon
+
  CENTRY `crash`, c_crash, 5
  dd m_literal
  dd L251
@@ -1683,27 +1693,15 @@ L246:
  dd c_abort
  dd m_exitcolon
 
- CENTRY `quit`, c_quit, 4 ; TODO correct below stack notations
+ CENTRY `quit`, c_quit, 4 ; interpreter loop
  dd m_reset ; initialize return stack
  dd m_clear	; SP = sstack_end, initialize data stack
 L253:
  dd c_query
  dd c_interpret
- dd m_Infd
- dd m_fetch	; ( 0 -- )
- dd c_0eq
- dd m_cjump
- dd L254
- dd m_literal
- dd L255	; address of string ok
- dd m_literal
- dd 3
- dd c_type	; ( addr n -- ) type 
- dd c_cr	; cr
-L254:
  dd m_jump
  dd L253
- dd m_exitcolon
+ dd m_exitcolon	; why is this needed?
 
  CENTRY `(abort)`, c_parenabort, 7 ; TODO correct below stack notations
  dd m_State	; ( m_State -- )
@@ -1712,15 +1710,18 @@ L254:
  dd m_Sourcebuf	; variable sourcebuf
  dd m_store	; variable sourcebuf = address of tibuffer
  dd m_Blk	; variable blk
- dd c_off		; off variable blk = 0
- dd mc_STDIN		; stdin
- dd m_Infd		; variable
- dd m_store		; variable Infd = STDIN
+ dd c_off	; off variable blk = 0
+ dd mc_STDIN
+ dd m_Infd
+ dd m_store
  dd mc_STDOUT
- dd m_Outfd		; variable
- dd m_store	; variable Outfd = STDOUT
- dd c_quit	; quit resets return stack and data stack
- dd m_exitcolon
+ dd m_Outfd
+ dd m_store
+ dd mc_STDERR
+ dd m_Errfd
+ dd m_store
+ dd c_quit	; quit resets stacks and is the interpreter loop
+ dd m_exitcolon	; why is this needed? quit does not return unless it breaks
 
  CENTRY `oldboot`, c_oldboot, 7 ; TODO correct below stack notations and this is obsolete. leaving it here for reference until it all works well
  dd m_reset
@@ -1780,13 +1781,15 @@ L254:
  dd m_Sourcebuf	; variable sourcebuf
  dd m_store	; variable sourcebuf = address of tibuffer
 
-			; stdin, stdout and stderr are constants
  dd mc_STDIN
  dd m_Infd
  dd m_store	; stdin = 0
  dd mc_STDOUT
  dd m_Outfd
- dd m_store	; stdout = 1
+ dd m_store
+ dd mc_STDERR
+ dd m_Errfd
+ dd m_store
 
  dd m_State
  dd c_off	; off stores 0 at state
