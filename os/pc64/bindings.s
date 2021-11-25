@@ -8,7 +8,7 @@ plan9 assembler puts the first argument in R8 (RARG), return value in AX.
 #define STORE(x,y) \
 	MOVQ $y, CX; \
 	ADDQ UP, CX; \
-	MOVQ x, 0(CX)
+	MOVQ x, 0(CX);
 
 #define	STOREFORTH \
 	STORE(TOP,FORTHTOP);\
@@ -16,7 +16,8 @@ plan9 assembler puts the first argument in R8 (RARG), return value in AX.
 	STORE(RSP,FORTHRSP);\
 	STORE(IP,FORTHIP);\
 	STORE(W,FORTHW);\
-	STORE(UP,FORTHUP);
+	STORE(UP,FORTHUP);\
+	STORE(UPE,FORTHUPE);
 
 #define RESTORE(x,y) \
 	MOVQ $x, CX; \
@@ -29,7 +30,8 @@ plan9 assembler puts the first argument in R8 (RARG), return value in AX.
 	RESTORE(FORTHRSP,RSP);\
 	RESTORE(FORTHIP,IP);\
 	RESTORE(FORTHW,W);\
-	RESTORE(FORTHUP,UP);
+	RESTORE(FORTHUP,UP);\
+	RESTORE(FORTHUPE,UPE);
 
 /*
 using
@@ -87,14 +89,18 @@ TEXT	ff_to_c(SB), $0	/* ( argn .. arg2 arg1 nargs -- ) (G move args to C stack) 
 	STOREFORTH;
 
 TEXT	fthopen(SB), 1, $-4	/* ( mode cstr -- fd ) */
+	PUSHQ UP
 	F_TO_C_2
 	CALL kopen(SB)
+	POPQ UP
 	C_TO_F_1
 	NEXT
 
 TEXT	fthclose(SB), 1, $-4	/* ( fd -- n ) */
+	PUSHQ UP
 	F_TO_C_1
 	CALL kclose(SB)
+	POPQ UP
 	C_TO_F_1
 	NEXT
 
@@ -102,22 +108,27 @@ TEXT	fthread(SB), 1, $-4	/* ( n a fd -- n2 ) */
 	MOVQ (PSP), CX	/* address = start of heap + address */
 	ADDQ UP, CX
 	MOVQ CX, (PSP)
+	PUSHQ UP
 	F_TO_C_3
 	CALL kread(SB)
+	POPQ UP
 	C_TO_F_1
 	NEXT
 
-TEXT	fthwrite(SB), 1, $-4	/* ( n a fd -- n2 ) */
+TEXT	fthwrite(SB), 1, $24	/* ( n a fd -- n2 ) */
 	MOVQ (PSP), CX	/* address = start of heap + address */
 	ADDQ UP, CX
 	MOVQ CX, (PSP)
+	PUSHQ UP
 	F_TO_C_3
 	CALL kwrite(SB)
-	C_TO_F_1
+	POPQ UP
 	NEXT
 
 TEXT	fthseek(SB), 1, $-4	/* ( type pos fd -- n ) */
+	PUSHQ UP
 	F_TO_C_3
 	CALL kseek(SB)
+	POPQ UP
 	C_TO_F_1
 	NEXT

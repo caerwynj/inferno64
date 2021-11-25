@@ -24,8 +24,12 @@ _efgfmt(Fmt*)
 	return -1;
 }
 
+/* %r does not do anything when used within the kernel.
+ * It works from limbo though as the lib9 errfmt() is
+ * different.
+ */
 int
-errfmt(Fmt*)
+errfmt(Fmt *)
 {
 	return -1;
 }

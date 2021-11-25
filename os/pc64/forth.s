@@ -25,7 +25,7 @@ plan9 assembler puts the first argument in BP (RARG), return value in AX.
 	Changed to
  Leaving AX, SP, BP (RARG), R14, R15 alone to not mess with the C environment
 
- TOS: BX top of stack register
+ TOP: BX top of stack register
  PSP: DX parameter stack pointer, grows towards lower memory (downwards)
  RSP: R8 return stack pointer, grows towards higher memory (upwards)
  IP:  R9 instruction pointer
@@ -76,6 +76,7 @@ SSTACK_END = FORTHEND
 #define IP  R9 /* instruction pointer */
 #define W   R10/* work register (holds CFA) */
 #define UP	R11/* start of heap memory */
+#define UPE	R12/* end of heap memory */
 
 #define PSTACK_SIZE BY2PG
 #define RSTACK_SIZE BY2PG
@@ -92,7 +93,8 @@ SSTACK_END = FORTHEND
 #define FORTHIP	(HEAPSTART+(BY2WD*5))
 #define FORTHW	(HEAPSTART+(BY2WD*6))
 #define FORTHUP	(HEAPSTART+(BY2WD*7))
-#define ARGS		(HEAPSTART+(BY2WD*3))
+#define FORTHUPE	(HEAPSTART+(BY2WD*8))
+#define ARGS		(HEAPSTART+(BY2WD*9))
 #define ERRSTR		(HEAPSTART+(BY2WD*16))
 #define WORDB		(HEAPSTART+(BY2WD*144))	/* word buffer */
 
@@ -166,13 +168,13 @@ Assume IP = 8
 		JMP* CX; /* Start executing at docol address, JMP* = jump to a non-relative address */
 
 #define PUSH(r)	SUBQ $8, PSP; \
-			MOVQ r, (PSP)
+			MOVQ r, (PSP);
 #define POP(r)	MOVQ (PSP), r; \
-			ADDQ $8, PSP
+			ADDQ $8, PSP;
 #define RPUSH(r)	SUBQ $8, RSP; \
-			MOVQ r, (RSP)
+			MOVQ r, (RSP);
 #define RPOP(r)	MOVQ (RSP), r; \
-			ADDQ $8, RSP
+			ADDQ $8, RSP;
 
 	NEXT
 
