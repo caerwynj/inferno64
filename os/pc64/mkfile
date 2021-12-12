@@ -90,13 +90,13 @@ fault386.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
 main.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h rebootcode.i
 trap.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
 
-forth.$O:	primitives.s words.s bindings.s
-primitives.s:	primitives.awk primitives-nasm.s
-	cat primitives-nasm.s | ./primitives.awk > primitives.s
-words.s:	words.awk words-nasm.s
-	cat words-nasm.s | ./words.awk > words.s
+forth.$O:	forth.h bindings.s
+forth.h:	forth.head.h mkdict.awk primitives-nasm.s words-nasm.s
+	cp forth.head.h $target
+	cat primitives-nasm.s words-nasm.s | ./mkdict.awk >> $target
+devforth.$O: forth.h
 
-CLEANEXTRA=words.s primitives.s
+CLEANEXTRA=words.s primitives.s forth.h
 
 devether.$O $ETHERS:	etherif.h ../port/netif.h
 $IP devip.$O:		../ip/ip.h

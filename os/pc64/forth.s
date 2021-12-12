@@ -120,7 +120,6 @@ SSTACK_END = FORTHEND
 	Variables - initial capital case
 	words - lower case
  */
-#include "primitives.s"
 
 TEXT	forthmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
 	/* Argument has the start of heap */
@@ -566,7 +565,5 @@ VARIABLE(Tib, $TIB)
  */
 
 TEXT	forthend(SB), 1, $-4
-
-#include "words.s"
 
 	END

@@ -5,7 +5,10 @@
 #include	"fns.h"
 #include	"../port/error.h"
 
+#include	"forth.h"
+
 static int debug = 0;
+extern Fentry fentries[];
 
 /*
  * 1. Provides #f/forth/new to start new forth processes
