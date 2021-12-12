@@ -25,5 +25,5 @@ struct Fentry
 		Hdr hdr;
 		intptr p;
 		char *str;
-	} u;
+	};
 };

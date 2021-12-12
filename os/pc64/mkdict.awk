@@ -27,7 +27,7 @@ function header(len, name, prefix, label, cfa, immediate){
 		type = "IHeader"
 	else
 		type = "Header"
-	fentries = fentries "	{.type " type ", .u {.hdr { " len ", " name ", /* " labels[nlabels-1] " */ " cfa " }}}, /* " $0 " h " h " */\n";
+	fentries = fentries "	{.type " type ", {.hdr { " len ", " name ", /* " labels[nlabels-1] " */ " cfa " }}}, /* " $0 " h " h " */\n";
 	# print(prefix label " @ " labels[nlabels-1]);
 }
 $1 == "MENTRY" {
@@ -38,13 +38,13 @@ $1 == "MCENTRY" {
 	name = $2
 	header($5, name, "MC_", $3, "constant")
 	h+=8;
-	fentries = fentries "	{.type Absolute, .u {.p " $4"}},		/* " h " */\n"
+	fentries = fentries "	{.type Absolute, {.p " $4"}},		/* " h " */\n"
 }
 $1 == "MVENTRY" {
 	name = $2
 	header($5, name, "MV_", $3, "variable")
 	h+=8;
-	fentries = fentries "	{.type Absolute, .u {.p " $4 "}},		/* " h " */\n"
+	fentries = fentries "	{.type Absolute, {.p " $4 "}},		/* " h " */\n"
 }
 $1 == "CENTRY" {
 	name = $2
@@ -53,11 +53,11 @@ $1 == "CENTRY" {
 }
 $1 == "dd" && $2 ~ literal {
 	h+=8
-	fentries = fentries "	{.type Absolute, .u {.p " $2 "}},		/* " $0 " " h " */\n"
+	fentries = fentries "	{.type Absolute, {.p " $2 "}},		/* " $0 " " h " */\n"
 }
 $1 == "dd" && $2 ~ "^[M_|C_|(MC_)|(MV_)|L]" {
 	h+=8
-	fentries = fentries "	{.type FromH0, .u {.p " $2 "}},		/* " $0 " " h " */\n"
+	fentries = fentries "	{.type FromH0, {.p " $2 "}},		/* " $0 " " h " */\n"
 }
 $1 ~ branchlabel {
 	gsub(/:/,"", $1)
@@ -66,7 +66,7 @@ $1 ~ branchlabel {
 $1 == "db" {
 	gsub(/^db /,"", $0)
 	h += length($0)-2+1; # -2 for the quotes, +1 for the null character
-	fentries = fentries "	{.type Chars, .u {.str " $0 "}},		/* " h " */\n"
+	fentries = fentries "	{.type Chars, {.str " $0 "}},		/* " h " */\n"
 }
 $0 ~ /^$/ {
 	fentries = fentries $0
