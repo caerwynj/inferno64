@@ -19,12 +19,12 @@
 
 #ifndef _PTRDIFF_T
 #define	_PTRDIFF_T
-typedef long ptrdiff_t;
+typedef long long ptrdiff_t;
 #endif
 #undef _BSD_PTRDIFF_T
 #ifndef _SIZE_T
 #define _SIZE_T
-typedef unsigned long size_t;
+typedef unsigned long long size_t;
 #endif
 #undef _BSD_SIZE_T
 #ifndef _WCHAR_T
