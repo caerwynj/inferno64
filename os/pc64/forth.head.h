@@ -1,8 +1,6 @@
 /*
  * Forth dictionary
  */
-#define WORDB		(BY2WD*144)	/* word buffer */
-#define TIB			(7*BY2PG)	/* text input buffer */
 enum {
 	Header,
 	IHeader,	/* Immediate dictionary definition */
@@ -12,11 +10,11 @@ enum {
 };
 
 typedef struct Hdr Hdr;
-		struct Hdr {
-			int len;
-			char *name;
-			void *cfa;
-		};
+struct Hdr {
+	int len;
+	char name[64];
+	void *cfa;
+};
 typedef struct Fentry Fentry;
 struct Fentry
 {
@@ -24,6 +22,6 @@ struct Fentry
 	union {
 		Hdr hdr;
 		intptr p;
-		char *str;
+		char str[128];
 	};
 };

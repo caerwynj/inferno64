@@ -41,33 +41,35 @@ coding standard
 		.. fn ;
 
 Heap memory map: uses 8 pages at the start, will increase by *2 when filled up
-UP: variables
-		heap start, heapstart, also in UP
-		heap size, heapsize
-		forth stack pointer, forthpsp
-		dictionary pointer, Dp
+high memory
+Return stack 1 page (4096 bytes, BY2PG, 512 entries) at FFSTART
+	|
+	|
+	v (grows downwards)
+	^ (grows upwards)
+	|
+	|
+tib, text input buffer 1024 bytes (until the next page?)
+Parameter stack 1 page (BY2PG, 512 entries) at FFEND-4096
+	|
+	|
+	v (grows downwards)
+Pad
+	^ (grows upwards)
+	|
+	|
+User dictionary	upto  pages from the start
+	word buffer 512 bytes
+	error string buffer 128 bytes
 		latest dictionary entry, Dtop
 			need this as the system definitions and
 			user definitions are not continuous
-	error string buffer 128 bytes
-	word buffer 512 bytes
-User dictionary	upto  pages from the start
-	|
-	|
-	v (grows downwards)
-	^ (grows upwards)
-	|
-	|
-Parameter stack 1 page (BY2PG, 512 entries) at FFEND-4096
-tib, text input buffer 1024 bytes (until the next page?)
-	|
-	|
-	v (grows downwards)
-	^ (grows upwards)
-	|
-	|
-Return stack 1 page (4096 bytes, BY2PG, 512 entries) at FFSTART
-SSTACK_END = FORTHEND
+		dictionary pointer, Dp
+		forth stack pointer, forthpsp
+		heap size, heapsize
+		heap start, heapstart, also in UP
+UP: forth variables
+low memory
 */
 
 #define TOP BX /* top of stack register */
@@ -81,34 +83,6 @@ SSTACK_END = FORTHEND
 #define PSTACK_SIZE BY2PG
 #define RSTACK_SIZE BY2PG
 
-/*
- * user table at the start unlike in Starting Forth as it will be
- * easy to get to the variables with an offset
- */
-#define HEAPSTART	(0ull)
-#define HEAPEND		(HEAPSTART+(BY2WD*1))
-#define FORTHTOP	(HEAPSTART+(BY2WD*2))
-#define FORTHPSP	(HEAPSTART+(BY2WD*3))
-#define FORTHRSP	(HEAPSTART+(BY2WD*4))
-#define FORTHIP	(HEAPSTART+(BY2WD*5))
-#define FORTHW	(HEAPSTART+(BY2WD*6))
-#define FORTHUP	(HEAPSTART+(BY2WD*7))
-#define FORTHUPE	(HEAPSTART+(BY2WD*8))
-#define ARGS		(HEAPSTART+(BY2WD*9))
-#define ERRSTR		(HEAPSTART+(BY2WD*16))
-#define WORDB		(HEAPSTART+(BY2WD*144))	/* word buffer */
-
-#define DICTIONARY	(HEAPSTART+(BY2WD*256))	/* dictionary */
-#define DICTIONARY_END	(HEAPSTART+(6*BY2PG))
-#define PSTACK		(HEAPSTART+(6*BY2PG))
-#define PSTACK_END	(HEAPSTART+(7*BY2PG))
-#define TIB			(HEAPSTART+(7*BY2PG))	/* text input buffer */
-#define RSTACK		(HEAPSTART+(8*BY2PG))
-#define RSTACK_END	(HEAPSTART+(9*BY2PG))
-#define FORTHEND 	RSTACK_END
-#define HEAPSIZE 	FORTHEND
-
-#define	LAST $centry_c_boot(SB) /* last defined word, should generate this */
 /* putting this above the asm code as the v_dp define is needed by _main */
 /*	m_ for primitive/macro word cfa
 	mc_ for primtive/macro word constants
@@ -121,7 +95,7 @@ SSTACK_END = FORTHEND
 	words - lower case
  */
 
-TEXT	forthmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
+TEXT	forthmain(SB), 1, $0		/* not a tail function, can RET back to the caller */
 	/* Argument has the start of heap */
 	MOVQ RARG, UP		/* start of heap memory */
 
@@ -132,21 +106,9 @@ TEXT	forthmain(SB), 1, $-4		/* _main(SB), 1, $-4 without the libc */
 	ADDQ $PSTACK_END, PSP	/* parameter stack pointer - stack setup, clear */
 	MOVQ PSP, 16(UP)		/* parameter stack pointer store, for forth to c */
 
-	MOVQ UP, TOP
-	ADDQ $HEAPSTART, TOP
-	MOVQ TOP, (UP)		/* store the start address at that address too - magic check */
-	ADDQ $(HEAPSIZE-1), TOP
-	MOVQ TOP, 8(UP)		/* heap end */
-
-	MOVQ UP, TOP
-	ADDQ $DICTIONARY, TOP
-	MOVQ $mventry_Dp(SB), CX
-	MOVQ TOP, 24(CX)	/* dictionary pointer */
-	MOVQ $mventry_Dtop(SB), CX
-	MOVQ $centry_c_boot(SB), 24(CX)	/* Latest dictionary entry address */
-
 	/* execute boot */
-	MOVQ $centry_c_boot(SB), IP
+	MOVQ UP, IP
+	ADDQ $DTOP, IP	/* last defined word should be c_boot */
 	ADDQ $24, IP	/* to get to the parameter field address of boot word */
 
 /* lodsl could make this simpler. But, this is more comprehensible
@@ -537,18 +499,30 @@ TEXT	cas(SB), 1, $-4	/* ( a old new -- f ) */
 	/* pause -- no equivalent in 6a ? */
 	NEXT
 
-TEXT	s0(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
+TEXT	S0(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
 	PUSH(TOP)
 	MOVQ UP, TOP
 	ADDQ $PSTACK_END, TOP
 	NEXT
 
-TEXT	h0(SB), 1, $-4	/* user pointer, start of heap */
+TEXT	H0(SB), 1, $-4	/* user pointer, start of heap */
 	PUSH(TOP)
 	MOVQ UP, TOP
 	NEXT
 
-TEXT	args(SB), 1, $-4
+TEXT	Dp(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
+	PUSH(TOP)
+	MOVQ UP, TOP
+	ADDQ $HERE, TOP
+	NEXT
+
+TEXT	Dtop(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
+	PUSH(TOP)
+	MOVQ UP, TOP
+	ADDQ $DTOP, TOP
+	NEXT
+
+TEXT	Args(SB), 1, $-4
 	PUSH(TOP)
 	MOVQ UP, TOP
 	ADDQ $ARGS, TOP

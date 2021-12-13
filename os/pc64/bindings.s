@@ -4,6 +4,31 @@ plan9 assembler puts the first argument in R8 (RARG), return value in AX.
 	Caller saves registers - plan9 convention
 	not maintaining the values of the temporary registers or EFLAGS
 */
+/*
+using
+	( 2nd_parameter 1st_parameter -- )	mode fd open
+		simpler code, more comprehensible with the 1st arg next to the call - my opinion
+instead of
+	( 1st_parameter 2nd_parameter -- ) 	fd mode open
+might revisit this later after a trial
+
+there is no forth word for this. It is call'able by the bindings subroutines
+cannot get this to work and I cannot decipher it with all the psuedo register nonsense
+*/
+//TEXT	ff_to_c(SB), $0	/* ( argn .. arg2 arg1 nargs -- ) (G move args to C stack) */
+//	POPQ SI			/* get my return PC from the stack */
+//	MOVQ TOP, CX	/* check nargs */
+//	POP(TOP)
+//	TESTQ $0, CX
+//	JZ .ff_to_c_done /* no args */
+//	MOVQ TOP, RARG	/* 1st argument is put in RARG also */
+//.ff_to_c_again:
+//	PUSHQ TOP
+//	POP(TOP)
+//	LOOP .ff_to_c_again
+//.ff_to_c_done:
+//	STOREFORTH
+//	JMP* SI /* go back to the caller */
 
 #define STORE(x,y) \
 	MOVQ $y, CX; \
@@ -32,32 +57,6 @@ plan9 assembler puts the first argument in R8 (RARG), return value in AX.
 	RESTORE(FORTHW,W);\
 	RESTORE(FORTHUP,UP);\
 	RESTORE(FORTHUPE,UPE);
-
-/*
-using
-	( 2nd_parameter 1st_parameter -- )	mode fd open
-		simpler code, more comprehensible with the 1st arg next to the call - my opinion
-instead of
-	( 1st_parameter 2nd_parameter -- ) 	fd mode open
-might revisit this later after a trial
-
-there is no forth word for this. It is call'able by the bindings subroutines
-cannot get this to work and I cannot decipher it with all the psuedo register nonsense
-*/
-TEXT	ff_to_c(SB), $0	/* ( argn .. arg2 arg1 nargs -- ) (G move args to C stack) */
-	POPQ SI			/* get my return PC from the stack */
-	MOVQ TOP, CX	/* check nargs */
-	POP(TOP)
-	TESTQ $0, CX
-	JZ .ff_to_c_done /* no args */
-	MOVQ TOP, RARG	/* 1st argument is put in RARG also */
-.ff_to_c_again:
-	PUSHQ TOP
-	POP(TOP)
-	LOOP .ff_to_c_again
-.ff_to_c_done:
-	STOREFORTH
-	JMP* SI /* go back to the caller */
 
 #define C_TO_F_0 \
 	RESTOREFORTH;
@@ -88,7 +87,7 @@ TEXT	ff_to_c(SB), $0	/* ( argn .. arg2 arg1 nargs -- ) (G move args to C stack) 
 	POP(TOP);\
 	STOREFORTH;
 
-TEXT	fthopen(SB), 1, $-4	/* ( mode cstr -- fd ) */
+TEXT	fthopen(SB), 1, $24	/* ( mode cstr -- fd ) */
 	PUSHQ UP
 	F_TO_C_2
 	CALL kopen(SB)
@@ -96,7 +95,7 @@ TEXT	fthopen(SB), 1, $-4	/* ( mode cstr -- fd ) */
 	C_TO_F_1
 	NEXT
 
-TEXT	fthclose(SB), 1, $-4	/* ( fd -- n ) */
+TEXT	fthclose(SB), 1, $16	/* ( fd -- n ) */
 	PUSHQ UP
 	F_TO_C_1
 	CALL kclose(SB)
@@ -104,7 +103,7 @@ TEXT	fthclose(SB), 1, $-4	/* ( fd -- n ) */
 	C_TO_F_1
 	NEXT
 
-TEXT	fthread(SB), 1, $-4	/* ( n a fd -- n2 ) */
+TEXT	fthread(SB), 1, $32	/* ( n a fd -- n2 ) */
 	MOVQ (PSP), CX	/* address = start of heap + address */
 	ADDQ UP, CX
 	MOVQ CX, (PSP)
@@ -115,17 +114,23 @@ TEXT	fthread(SB), 1, $-4	/* ( n a fd -- n2 ) */
 	C_TO_F_1
 	NEXT
 
-TEXT	fthwrite(SB), 1, $24	/* ( n a fd -- n2 ) */
+/* no link register in amd64
+ * 8 bytes for saving UP
+ * 24 bytes for the arguments to write
+ * the space for the return PC is taken care of by the compiler
+ */
+TEXT	fthwrite(SB), 1, $32	/* ( n a fd -- n2 ) */
 	MOVQ (PSP), CX	/* address = start of heap + address */
 	ADDQ UP, CX
 	MOVQ CX, (PSP)
-	PUSHQ UP
+	MOVQ UP, 24(SP)
 	F_TO_C_3
 	CALL kwrite(SB)
-	POPQ UP
+	MOVQ 24(SP), UP
+	C_TO_F_1
 	NEXT
 
-TEXT	fthseek(SB), 1, $-4	/* ( type pos fd -- n ) */
+TEXT	fthseek(SB), 1, $32	/* ( type pos fd -- n ) */
 	PUSHQ UP
 	F_TO_C_3
 	CALL kseek(SB)

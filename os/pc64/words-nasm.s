@@ -47,7 +47,7 @@ dd C_cells
 dd M_plus
 dd M_exitcolon
 CENTRY "depth" c_depth 5
-dd M_s0
+dd M_S0
 dd M_stackptr
 dd M_minus
 dd M_literal
@@ -446,7 +446,7 @@ dd M_rpop
 dd C_false
 dd M_exitcolon
 CENTRY "here" c_here 4
-dd M_h0
+dd M_H0
 dd M_fetch
 dd M_exitcolon
 CENTRY "," c_comma 1
@@ -454,7 +454,7 @@ dd C_here
 dd M_store
 dd M_literal
 dd 8
-dd M_h0
+dd M_H0
 dd C_plusstore
 dd M_exitcolon
 CENTRY "c" c_c 2
@@ -462,11 +462,11 @@ dd C_here
 dd M_cstore
 dd M_literal
 dd 1
-dd M_h0
+dd M_H0
 dd C_plusstore
 dd M_exitcolon
 CENTRY "allot" c_allot 5
-dd M_h0
+dd M_H0
 dd C_plusstore
 dd M_exitcolon
 CENTRY "pad" c_pad 3
@@ -478,11 +478,11 @@ dd M_exitcolon
 CENTRY "align" c_align 5
 dd C_here
 dd C_aligned
-dd M_h0
+dd M_H0
 dd M_store
 dd M_exitcolon
 CENTRY "unused" c_unused 6
-dd M_h0
+dd M_H0
 dd M_fetch
 dd C_here
 dd M_minus
@@ -982,7 +982,7 @@ dd M_exitcolon
 CENTRY "findname" c_findname 8 ; ( a1 -- a2 f ) ; loop through the dictionary names
 dd MV_Findadr
 dd M_store
-dd MV_Dp
+dd M_Dp
 dd M_fetch	; get dictionary link
 L158:
 dd C_qdup
@@ -1082,7 +1082,7 @@ L169:
 dd M_exitcolon
 CENTRY "?stack" c_qstack 6
 dd M_stackptr
-dd M_s0
+dd M_S0
 dd M_greater
 dd M_cjump
 dd L172
@@ -1139,7 +1139,7 @@ CENTRY "create" c_create 6
 dd C_align
 dd C_here
 dd M_rpush
-dd MV_Dp
+dd M_Dp
 dd M_fetch
 dd C_comma
 dd C_bl
@@ -1160,7 +1160,7 @@ dd M_variable
 dd M_fetch
 dd C_comma
 dd M_rpop
-dd MV_Dp
+dd M_Dp
 dd M_store
 dd M_exitcolon
 CENTRY "variable" c_variable 8
@@ -1183,7 +1183,7 @@ dd M_store
 dd C_comma
 dd M_exitcolon
 CENTRY "immediate" c_immediate 9
-dd MV_Dp
+dd M_Dp
 dd M_fetch
 dd C_cellplus
 dd M_dup
@@ -1280,7 +1280,7 @@ dd MV_State
 dd C_off
 dd M_exitcolon
 CENTRY "smudge" c_smudge 6
-dd MV_Dp
+dd M_Dp
 dd M_fetch
 dd C_cellplus
 dd M_dup
@@ -1292,7 +1292,7 @@ dd M_xswap
 dd M_cstore
 dd M_exitcolon
 CENTRY "reveal" c_reveal 6
-dd MV_Dp
+dd M_Dp
 dd M_fetch
 dd C_cellplus
 dd M_dup
@@ -1327,7 +1327,7 @@ dd C_off
 dd C_reveal
 dd M_exitcolon
 CIENTRY "recurse" ci_recurse 7
-dd MV_Dp
+dd M_Dp
 dd M_fetch
 dd C_cellplus
 dd C_tocfa
@@ -1727,16 +1727,16 @@ CENTRY "oldboot" c_oldboot 7 ; TODO correct below stack notations and this is ob
 dd M_reset
 dd M_clear	; SP = sstack_end
 dd M_stackptr	; (D -- FFEND)
-dd M_s0
+dd M_S0
 dd M_store	; s0 = FFEND
-dd M_h0	; heaptop = heapend
+dd M_H0	; heaptop = heapend
 dd M_fetch	; ( heapend -- )
 dd M_literal
 dd 1		; ( heapend 1 -- )
 dd C_cells	; cells ( heapend 8 -- )
 dd M_minus	; ( heapend-8 -- )
 dd M_fetch	; ( contents_from_heapend-8 -- )
-dd M_args	; variable args
+dd M_Args	; variable args
 dd M_store	; args = contents_from_heapend-8
 dd M_literal
 dd C_parenabort ; ( (abort) -- )

@@ -206,4 +206,33 @@
 #define RMACH		R15			/* m-> */
 #define RUSER		R14			/* up-> */
 
+/* forth locations */
+/*
+ * user table at the start unlike in Starting Forth as it will be
+ * easy to get to the variables with a known offset from C
+ */
 #define FORTHHEAPSIZE	(9*BY2PG)
+#define HEAPSTART	(0ull)
+#define HEAPEND		(HEAPSTART+(BY2WD*1))
+#define FORTHTOP	(HEAPSTART+(BY2WD*2))
+#define FORTHPSP	(HEAPSTART+(BY2WD*3))
+#define FORTHRSP	(HEAPSTART+(BY2WD*4))
+#define FORTHIP		(HEAPSTART+(BY2WD*5))
+#define FORTHW		(HEAPSTART+(BY2WD*6))
+#define FORTHUP		(HEAPSTART+(BY2WD*7))
+#define FORTHUPE	(HEAPSTART+(BY2WD*8))
+#define HERE		(HEAPSTART+(BY2WD*9))
+#define DTOP		(HEAPSTART+(BY2WD*10))
+#define ARGS		(HEAPSTART+(BY2WD*11))
+#define ERRSTR		(HEAPSTART+(BY2WD*16))
+#define WORDB		(HEAPSTART+(BY2WD*144))	/* word buffer */
+
+#define DICTIONARY	(HEAPSTART+(BY2WD*256))	/* dictionary */
+#define DICTIONARY_END	(HEAPSTART+(6*BY2PG))
+#define PSTACK		(HEAPSTART+(6*BY2PG))
+#define PSTACK_END	(HEAPSTART+(7*BY2PG))
+#define TIB			(HEAPSTART+(7*BY2PG))	/* text input buffer */
+#define RSTACK		(HEAPSTART+(8*BY2PG))
+#define RSTACK_END	(HEAPSTART+(9*BY2PG))
+#define FORTHEND 	RSTACK_END
+#define HEAPSIZE 	FORTHEND

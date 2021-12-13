@@ -76,25 +76,68 @@ funlock(void)
 	qunlock(&forthlock);
 }
 
-extern intptr forthmain(char *);
+void
+loadforthdictionary(u8 *fmem)
+{
+	intptr i;
+	Fentry *f;
+	u8 *h, *dtop;
+
+	h = fmem+DICTIONARY;
+	dtop = nil;
+	for(i=0; i < nelem(fentries); i++){
+		f = &fentries[i];
+		if(f->type == Header){
+			*(intptr*)h = (intptr)dtop;
+			dtop = h;
+			h += sizeof(intptr);
+			strncpy((s8*)h, f->hdr.name, f->hdr.len);
+			*h = f->hdr.len;
+			h++;
+			if(f->hdr.len%8 > 0)
+				h += 8-(f->hdr.len%8);
+			*(intptr*)h = (intptr)f->hdr.cfa;
+		}else if(f->type == IHeader){
+			*(intptr*)h = (intptr)dtop;
+			dtop = h;
+			h += sizeof(intptr);
+			strncpy((s8*)h, f->hdr.name, f->hdr.len);
+			*h = f->hdr.len | (1<<7);
+			h++;
+			if(f->hdr.len%8 > 0)
+				h += 8-(f->hdr.len%8);
+			*(intptr*)h = (intptr)f->hdr.cfa;
+		}else if(f->type == Absolute){
+			*(intptr*)h = f->p;
+			h += sizeof(intptr);
+		}else if(f->type == FromH0){
+			*(intptr*)h = (intptr)fmem+f->p;
+			h += sizeof(intptr);
+		}else if(f->type == Chars){
+			strcpy((s8*)h, f->str);
+			h += strlen(f->str);
+			h++; /* leave the terminating null byte alone, though not required by forth */
+		} else {
+			panic("loadforthdictionary unknown Fentry\n");
+		}
+	}
+	*(intptr*)(fmem + HERE) = (intptr)h;
+	*(intptr*)(fmem + DTOP) = (intptr)dtop;
+}
+
+extern intptr forthmain(u8 *);
 void
 forthentry(void *fmem)
 {
-	intptr n;
-
-	up->type = Unknown;
+	up->type = Forth;
 	print("forthentry pid %d forthmem 0x%zx\n", up->pid, (intptr)fmem);
+	loadforthdictionary((u8*)fmem);
 
-	if(waserror()){
-		print("forthentry waserror(): %r\n");
-	for(;;){up->state = Dead;
-	sched();}
-	}
-	n = forthmain(fmem);
-print("forthentry n %d n 0x%zx\n", n, n);
-/*	pexit("exit", 0);*/
-	for(;;){up->state = Dead;
-	sched();}
+	/* load dictionary */
+	print("fentries[0].name %s\n", fentries[0].hdr.name);
+	print("fentries[1].name %s nfentries %d\n", fentries[1].hdr.name, nelem(fentries));
+
+	pexit("exit", 0);
 }
 
 Forthproc *
@@ -155,7 +198,9 @@ newforthproc(void)
 	if(forthmem == nil)
 		panic("newforthproc forthmem == nil\n");
 
-	((intptr*)forthmem)[0] = (intptr)forthmem;
+	/* store the start address at that address too - magic check */
+	((intptr*)forthmem)[0] = (intptr)forthmem;	/* heap start */
+	((intptr*)forthmem)[1] = (intptr)forthmem+FORTHHEAPSIZE-1; /* heap end */
 	if(fhead == nil){
 		fhead = ftail = f;
 	}else{

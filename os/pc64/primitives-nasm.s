@@ -1,3 +1,5 @@
+MENTRY "Dp" Dp 2		; cannot use H as it is nil in inferno, next available cell for the dictionary
+MENTRY "Dtop" Dtop 4	; last defined header
 MENTRY "@" fetch 1
 MENTRY "!" store 1
 MENTRY "c@" cfetch 2
@@ -47,8 +49,6 @@ MENTRY "unloop" unloop 6
 MENTRY "cmove" cmove 5
 MENTRY "cmove>" cmoveb 6
 
-MVENTRY "Dp" Dp 0 2			; cannot use H as it is nil in inferno next available cell for the dictionary
-MVENTRY "Dtop" Dtop 0 4	; TODO put centry_c_boot here. cannot use H as it is nil in inferno next available cell for the dictionary
 MVENTRY "Iobuf" Iobuf 0 5
 MVENTRY "Sourcebuf" Sourcebuf 0 9	; is there a need for this?
 MVENTRY "Wordbuf" Wordbuf 0 7		; is there a need for this?
@@ -72,10 +72,10 @@ MCENTRY "STDERR" STDERR 2 6
 MCENTRY "WORDB" WORDB WORDB 5
 MCENTRY "TIB" TIB TIB 3
 
-MENTRY "s0" s0 2
+MENTRY "S0" S0 2
 MENTRY "s@" stackptr 2		; puts PSP on stack
-MENTRY "h0" h0 2
-MENTRY "args" args 3
+MENTRY "H0" H0 2
+MENTRY "Args" Args 3
 MENTRY "(variable)" variable 10
 MENTRY "(constant)" constant 10
 MENTRY "(:)" colon 3

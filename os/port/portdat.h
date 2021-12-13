@@ -555,6 +555,7 @@ enum
 	Unknown		= 0,
 	IdleGC,
 	Interp,
+	Forth,
 	BusyGC,
 
 	PriLock		= 0,	/* Holding Spin lock */
