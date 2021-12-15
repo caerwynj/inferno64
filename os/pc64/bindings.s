@@ -104,10 +104,13 @@ TEXT	fthclose(SB), 1, $16	/* ( fd -- n ) */
 	NEXT
 
 TEXT	fthread(SB), 1, $32	/* ( n a fd -- n2 ) */
-	MOVQ(PSP), CX
 	PUSH(TOP)
-	MOVQ CX, TOP	/* ( n a fd -- n a fd a ) */
-	CALL inup(SB)
+	MOVQ 16(PSP), TOP
+	MOVQ 8(PSP), CX
+	PUSH(TOP)
+	MOVQ CX, TOP	/* ( n a fd -- n a fd n a ) */
+
+	CALL bufinup(SB)
 	MOVQ TOP, CX
 	POP(TOP)
 	CMPQ CX, $0
@@ -130,10 +133,13 @@ invalidaddress:
  * Hence, need 32 bytes on the stack
  */
 TEXT	fthwrite(SB), 1, $32	/* ( n a fd -- n2|-1 ) */
-	MOVQ(PSP), CX
 	PUSH(TOP)
-	MOVQ CX, TOP	/* ( n a fd -- n a fd a ) */
-	CALL inup(SB)
+	MOVQ 16(PSP), TOP
+	MOVQ 8(PSP), CX
+	PUSH(TOP)
+	MOVQ CX, TOP	/* ( n a fd -- n a fd n a ) */
+
+	CALL bufinup(SB)
 	MOVQ TOP, CX
 	POP(TOP)
 	CMPQ CX, $0

@@ -168,6 +168,29 @@ aboveupe:
 	MOVQ $1, TOP
 	RET
 
+/*
+callable by UP using forth macro entries to check address
+	( n a -- -1|0|1 )
+	argument 1 in TOP = address
+	return value in TOP
+	-1			0			1
+	if UP < address && address+n < UPE
+		return 0	within range
+	else if address < UP
+		return -1	below UP
+	else if UPE < address+n
+		return 1	above UP
+ */
+TEXT	bufinup(SB), 1, $-4
+	MOVQ (PSP), CX
+	ADDQ CX, TOP
+	CMPQ CX, UPE
+	JGT aboveupe
+	CMPQ TOP, UP
+	JLT belowup
+	MOVQ $0, TOP
+	RET
+
 TEXT	reset(SB), 1, $-4
 	MOVQ UP, RSP
 	ADDQ $RSTACK_END, RSP
