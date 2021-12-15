@@ -115,9 +115,9 @@ TEXT	fthread(SB), 1, $32	/* ( n a fd -- n2 ) */
 	NEXT
 
 /* no link register in amd64
- * 8 bytes for saving UP
- * 24 bytes for the arguments to write
- * the space for the return PC is taken care of by the compiler
+ * 3 arguments for kwrite = 24 bytes
+ * 1 local for storing UP = 8 bytes
+ * Hence, need 32 bytes on the stack
  */
 TEXT	fthwrite(SB), 1, $32	/* ( n a fd -- n2 ) */
 	MOVQ (PSP), CX	/* address = start of heap + address */

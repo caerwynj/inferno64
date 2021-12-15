@@ -59,16 +59,39 @@ static void pidinit(void);
 static void pidfree(Proc*);
 
 /*
- * The kernel scheduler state is in m->sched. It is set to the address
- * of schedinit().
- * When sched() is switching processes, it transfers control to the kernel
- * scheduler by using the m->sched label. The kernel scheduler then updates
- * the running process's state and picks the next process to run.
- * By using m->sched, we are creating a loop from sched() to schedinit()
- * after every process switch.
- *
- * inferno does not change the process priorities. So, ignoring updatecpu().
- * process priorities are set with setpri()
+ There is a loop created between schedinit() and a process' run path.
+ In schedinit(), setlabel(&m->sched) sets a pc and stack pointer
+	in the Mach for a process to return to.
+ In procswitch()(called by sched(), the setlabel(&up->sched) stores the
+	return pc and stack pointer of the run path in Proc and goes to the pc
+	in m->sched to start the scheduler loop.
+ In sched(), we use the pc and sp in Proc.sched to resume execution later on.
+ Thus the stacks and execution paths are switched from the Mach (scheduler)
+	to that of a specific process.
+
+ The execution path from Mach.sched to Proc.sched is the kernel scheduler run path
+ The execution path from Proc.sched to Mach.sched is the process run path
+
+ first process on entering schedinit() sets up Mach.sched
+ process run path calls sched(), which calls procswitch()
+	stack and pc changed to the contents of Mach.sched() - scheduler run path
+	schedinit() adds the current running process to the end of ready queue, sets up = nil
+		and calls sched()
+	sched() picks the next process to run (runproc()) and switches to
+		that Proc's pc and sp.
+
+	schedinit() calls sched() after setting up = nil and putting the running process in the ready queue
+
+  The kernel scheduler state is in m->sched. It is set to the address
+  of schedinit().
+  When sched() is switching processes, it transfers control to the kernel
+  scheduler by using the m->sched label. The kernel scheduler then updates
+  the running process's state and picks the next process to run.
+  By using m->sched, we are creating a loop from sched() to schedinit()
+  after every process switch.
+
+  inferno does not change the process priorities. So, ignoring updatecpu().
+  process priorities are set with setpri()
  */
 /*
  * Always splhi()'ed.
@@ -78,12 +101,14 @@ schedinit(void)		/* never returns */
 {
 	setlabel(&m->sched);
 	if(up != nil) {
+		if(up->pid == 28 || up->pid == 0)
+			print("schedinit up->pid = %d up->state %d\n", up->pid, up->state);
 /*
 		if((e = up->edf) && (e->flags & Admitted))
 			edfrecord(up);
 */
 		m->proc = nil;
-		switch(up->state) {
+		switch(up->state){
 		case Running:
 			/*
 			 * process state from Runnning -> Ready
@@ -133,7 +158,7 @@ procswitch(void)
 
 	procsave(up);
 
-	if(!setlabel(&up->sched))
+	if(setlabel(&up->sched) == 0) /* always returns 0 */
 		gotolabel(&m->sched);
 
 	/* process wakes up here next time */

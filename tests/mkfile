@@ -16,4 +16,6 @@ LIBS=	bio\
 
 BIN=$ROOT/$OBJDIR/bin
 
+$O.asmconventions:		asmconventions.$O asmconventions_asm.$O
+
 <$ROOT/mkfiles/mkmany-$SHELLTYPE

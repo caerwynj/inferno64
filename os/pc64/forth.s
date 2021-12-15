@@ -95,9 +95,11 @@ low memory
 	words - lower case
  */
 
+/* HEAPSTART, HEAPEND, HERE, DTOP are loaded by the caller */
 TEXT	forthmain(SB), 1, $0		/* not a tail function, can RET back to the caller */
 	/* Argument has the start of heap */
 	MOVQ RARG, UP		/* start of heap memory */
+	MOVQ 8(UP), UPE		/* HEAPEND populated by the caller */
 
 	MOVQ UP, RSP
 	ADDQ $RSTACK_END, RSP	/* return stack pointer, reset */
