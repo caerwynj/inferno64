@@ -16,6 +16,8 @@ LIBS=	bio\
 
 BIN=$ROOT/$OBJDIR/bin
 
-$O.asmconventions:		asmconventions.$O asmconventions_asm.$O
+$O.asmconventions:	asmconventions.$O asmconventions_asm.$O
+$O.cmp:	cmp.$O
+	$LD -o $target /amd64/lib/libc.a $prereq
 
 <$ROOT/mkfiles/mkmany-$SHELLTYPE
