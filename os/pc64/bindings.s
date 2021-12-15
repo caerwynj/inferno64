@@ -88,30 +88,40 @@ cannot get this to work and I cannot decipher it with all the psuedo register no
 	STOREFORTH;
 
 TEXT	fthopen(SB), 1, $24	/* ( mode cstr -- fd ) */
-	PUSHQ UP
+	MOVQ UP, 16(SP)
 	F_TO_C_2
 	CALL kopen(SB)
-	POPQ UP
+	MOVQ 16(SP), UP
 	C_TO_F_1
 	NEXT
 
 TEXT	fthclose(SB), 1, $16	/* ( fd -- n ) */
-	PUSHQ UP
+	MOVQ UP, 8(SP)
 	F_TO_C_1
 	CALL kclose(SB)
-	POPQ UP
+	MOVQ 24(SP), UP
 	C_TO_F_1
 	NEXT
 
 TEXT	fthread(SB), 1, $32	/* ( n a fd -- n2 ) */
-	MOVQ (PSP), CX	/* address = start of heap + address */
-	ADDQ UP, CX
-	MOVQ CX, (PSP)
-	PUSHQ UP
+	MOVQ(PSP), CX
+	PUSH(TOP)
+	MOVQ CX, TOP	/* ( n a fd -- n a fd a ) */
+	CALL inup(SB)
+	MOVQ TOP, CX
+	POP(TOP)
+	CMPQ CX, $0
+	JNE	invalidaddress
+
+	MOVQ UP, 24(SP)
 	F_TO_C_3
 	CALL kread(SB)
-	POPQ UP
+	MOVQ 24(SP), UP
 	C_TO_F_1
+	NEXT
+invalidaddress:
+	ADDQ $16, PSP
+	MOVQ $-1, TOP
 	NEXT
 
 /* no link register in amd64
@@ -119,10 +129,16 @@ TEXT	fthread(SB), 1, $32	/* ( n a fd -- n2 ) */
  * 1 local for storing UP = 8 bytes
  * Hence, need 32 bytes on the stack
  */
-TEXT	fthwrite(SB), 1, $32	/* ( n a fd -- n2 ) */
-	MOVQ (PSP), CX	/* address = start of heap + address */
-	ADDQ UP, CX
-	MOVQ CX, (PSP)
+TEXT	fthwrite(SB), 1, $32	/* ( n a fd -- n2|-1 ) */
+	MOVQ(PSP), CX
+	PUSH(TOP)
+	MOVQ CX, TOP	/* ( n a fd -- n a fd a ) */
+	CALL inup(SB)
+	MOVQ TOP, CX
+	POP(TOP)
+	CMPQ CX, $0
+	JNE	invalidaddress
+
 	MOVQ UP, 24(SP)
 	F_TO_C_3
 	CALL kwrite(SB)
@@ -131,9 +147,9 @@ TEXT	fthwrite(SB), 1, $32	/* ( n a fd -- n2 ) */
 	NEXT
 
 TEXT	fthseek(SB), 1, $32	/* ( type pos fd -- n ) */
-	PUSHQ UP
+	MOVQ UP, 24(SP)
 	F_TO_C_3
 	CALL kseek(SB)
-	POPQ UP
+	MOVQ 24(SP), UP
 	C_TO_F_1
 	NEXT

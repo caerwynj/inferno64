@@ -141,6 +141,33 @@ Assume IP = 8
 
 	NEXT
 
+/*
+callable by UP using forth macro entries to check address
+	( a -- -1|0|1 )
+	argument 1 in TOP = address
+	return value in TOP
+	-1			0			1
+	if UP < address < UPE
+		return 0	within range
+	else if address < UP
+		return -1	below UP
+	else if UPE < address
+		return 1	above UP
+ */
+TEXT	inup(SB), 1, $-4
+	CMPQ TOP, UPE
+	JGT aboveupe
+	CMPQ TOP, UP
+	JLT belowup
+	MOVQ $0, TOP
+	RET
+belowup:
+	MOVQ $-1, TOP
+	RET
+aboveupe:
+	MOVQ $1, TOP
+	RET
+
 TEXT	reset(SB), 1, $-4
 	MOVQ UP, RSP
 	ADDQ $RSTACK_END, RSP
