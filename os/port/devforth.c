@@ -11,12 +11,10 @@ static int debug = 0;
 extern Fentry fentries[];
 
 /*
- * 1. Provides #f/forth/new to start new forth processes
- * 2. pipe data between the readers and writers of #f/forth/pid/(stdin stdout stderr)
+ 1. Provides #f/forth/new to start new forth processes
+ 2. pipe data between the readers and writers of #f/forth/pid/(stdin stdout stderr)
 		do not do this. too much work. use the existing mechanism.
 		use the parent's Fgrp - easy, simple and it works fine
-	TODO
-	add memory, variables, dictionary, return stack, parameter stack
  */
 enum
 {
@@ -90,51 +88,51 @@ loadforthdictionary(u8 *fmem)
 		f = &fentries[i];
 		if(f->type == Header){
 			*(intptr*)h = (intptr)dtop;
-			print("Header 0x%zx: 0x%zx 0x%zx ", h, *(intptr*)h, dtop);
+			DBG("Header 0x%zx: 0x%zx 0x%zx ", h, *(intptr*)h, dtop);
 			dtop = h;
 			h += sizeof(intptr);
 			*h = f->hdr.len;
-			print("len 0x%zx: 0x%d ", h, *h);
+			DBG("len 0x%zx: 0x%d ", h, *h);
 			h++;
 			strncpy((s8*)h, f->hdr.name, f->hdr.len);
-			print("name 0x%zx: ", h);
+			DBG("name 0x%zx: ", h);
 			for(n = 0; n < f->hdr.len; n++){
-				print("%c", *(h+n));
+				DBG("%c", *(h+n));
 			}
 			h += f->hdr.len;
 			if((f->hdr.len+1)%8 > 0){
 				h += 8-((f->hdr.len+1)%8);
 			}
 			*(intptr*)h = (intptr)f->hdr.cfa;
-			print(" cfa 0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)f->hdr.cfa);
+			DBG(" cfa 0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)f->hdr.cfa);
 			h += sizeof(intptr);
 		}else if(f->type == IHeader){
 			*(intptr*)h = (intptr)dtop;
-			print("IHeader 0x%zx: 0x%zx 0x%zx ", h, *(intptr*)h, dtop);
+			DBG("IHeader 0x%zx: 0x%zx 0x%zx ", h, *(intptr*)h, dtop);
 			dtop = h;
 			h += sizeof(intptr);
 			*h = f->hdr.len | (1<<7);
-			print("len 0x%zx: 0x%d ", h, *h);
+			DBG("len 0x%zx: 0x%d ", h, *h);
 			h++;
 			strncpy((s8*)h, f->hdr.name, f->hdr.len);
-			print("name 0x%zx: ", h);
+			DBG("name 0x%zx: ", h);
 			for(n = 0; n < f->hdr.len; n++){
-				print("%c", *(h+n));
+				DBG("%c", *(h+n));
 			}
 			h += f->hdr.len;
 			if((f->hdr.len+1)%8 > 0){
 				h += 8-((f->hdr.len+1)%8);
 			}
 			*(intptr*)h = (intptr)f->hdr.cfa;
-			print(" cfa 0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)f->hdr.cfa);
+			DBG(" cfa 0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)f->hdr.cfa);
 			h += sizeof(intptr);
 		}else if(f->type == Absolute){
 			*(intptr*)h = f->p;
-			print("	0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)f->p);
+			DBG("	0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)f->p);
 			h += sizeof(intptr);
 		}else if(f->type == FromH0){
 			*(intptr*)h = (intptr)fmem+DICTIONARY+f->p;
-			print("	0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)fmem+DICTIONARY+f->p);
+			DBG("	0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)fmem+DICTIONARY+f->p);
 			h += sizeof(intptr);
 		}else if(f->type == Chars){
 			strcpy((s8*)h, f->str);
@@ -146,7 +144,7 @@ loadforthdictionary(u8 *fmem)
 	}
 	*(intptr*)(fmem + HERE) = (intptr)h;
 	*(intptr*)(fmem + DTOP) = (intptr)dtop;
-	print("loadforthdictionary fmem 0x%zx h 0x%zx dtop 0x%zx (intptr*)(fmem + DTOP) 0x%zx *(intptr*)(fmem + DTOP) 0x%zx\n",
+	DBG("loadforthdictionary fmem 0x%zx h 0x%zx dtop 0x%zx (intptr*)(fmem + DTOP) 0x%zx *(intptr*)(fmem + DTOP) 0x%zx\n",
 		fmem, (intptr)h, (intptr)dtop, (intptr*)(fmem + DTOP), *(intptr*)(fmem + DTOP));
 }
 

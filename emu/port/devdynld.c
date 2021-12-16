@@ -4,7 +4,7 @@
 #include	<a.out.h>
 #include	<dynld.h>
 
-#define	DBG	if(1) print
+static int debug = 0;
 
 extern ulong ndevs;
 
