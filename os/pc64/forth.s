@@ -96,7 +96,7 @@ low memory
  */
 
 /* HEAPSTART, HEAPEND, HERE, DTOP are loaded by the caller */
-TEXT	forthmain(SB), 1, $0		/* not a tail function, can RET back to the caller */
+TEXT	forthmain(SB), 1, $-4		/* no stack storage required */
 	/* Argument has the start of heap */
 	MOVQ RARG, UP		/* start of heap memory */
 	MOVQ 8(UP), UPE		/* HEAPEND populated by the caller */
@@ -106,11 +106,12 @@ TEXT	forthmain(SB), 1, $0		/* not a tail function, can RET back to the caller */
 
 	MOVQ UP, PSP
 	ADDQ $PSTACK_END, PSP	/* parameter stack pointer - stack setup, clear */
-	MOVQ PSP, 16(UP)		/* parameter stack pointer store, for forth to c */
+	MOVQ PSP, 24(UP)		/* parameter stack pointer store, for forth to c */
 
 	/* execute boot */
-	MOVQ UP, IP
-	ADDQ $DTOP, IP	/* last defined word should be c_boot */
+	MOVQ UP, CX
+	ADDQ $DTOP, CX	/* address of last defined word (c_boot) is at DTOP */
+	MOVQ (CX), IP	/* IP = address of c_boot */
 	ADDQ $24, IP	/* to get to the parameter field address of boot word */
 
 /* lodsl could make this simpler. But, this is more comprehensible
@@ -128,7 +129,7 @@ Assume IP = 8
 #define NEXT	MOVQ (IP), W;	/* W = 40, contents of address in IP, some word's code field address */ \
 		MOVQ (W), CX;	/* TOP = docol, Get the address in the address in IP = code field address */ \
 		ADDQ $8, IP; 	/* move IP further, IP = 16 */ \
-		JMP* CX; /* Start executing at docol address, JMP* = jump to a non-relative address */
+		JMP* CX;		/* Start executing at docol address, JMP* = jump to a non-relative address */
 
 #define PUSH(r)	SUBQ $8, PSP; \
 			MOVQ r, (PSP);
@@ -140,56 +141,6 @@ Assume IP = 8
 			ADDQ $8, RSP;
 
 	NEXT
-
-/*
-callable by UP using forth macro entries to check address
-	( a -- -1|0|1 )
-	argument 1 in TOP = address
-	return value in TOP
-	-1			0			1
-	if UP < address < UPE
-		return 0	within range
-	else if address < UP
-		return -1	below UP
-	else if UPE < address
-		return 1	above UP
- */
-TEXT	inup(SB), 1, $-4
-	CMPQ TOP, UPE
-	JGT aboveupe
-	CMPQ TOP, UP
-	JLT belowup
-	MOVQ $0, TOP
-	RET
-belowup:
-	MOVQ $-1, TOP
-	RET
-aboveupe:
-	MOVQ $1, TOP
-	RET
-
-/*
-callable by UP using forth macro entries to check address
-	( n a -- -1|0|1 )
-	argument 1 in TOP = address
-	return value in TOP
-	-1			0			1
-	if UP < address && address+n < UPE
-		return 0	within range
-	else if address < UP
-		return -1	below UP
-	else if UPE < address+n
-		return 1	above UP
- */
-TEXT	bufinup(SB), 1, $-4
-	MOVQ (PSP), CX
-	ADDQ CX, TOP
-	CMPQ CX, UPE
-	JGT aboveupe
-	CMPQ TOP, UP
-	JLT belowup
-	MOVQ $0, TOP
-	RET
 
 TEXT	reset(SB), 1, $-4
 	MOVQ UP, RSP
@@ -236,31 +187,103 @@ TEXT	cjump(SB), 1, $-4	/* ( f -- ) */
 	POP(TOP)
 	NEXT
 
-/* TODO change to allow only fetches from a certain memory range */
+/*
+callable by forth asm functions to check address
+	( a -- -1|0|1 )
+	argument 1 in TOP = address
+	return value in TOP
+	-1			0			1
+	if UP < address < UPE
+		return 0	within range
+	else if address < UP
+		return -1	below UP
+	else if UPE < address
+		return 1	above UP
+ */
+TEXT	inup(SB), 1, $-4
+	CMPQ TOP, UPE
+	JGT aboveupe	/* a > UPE */
+	CMPQ TOP, UP
+	JLT belowup		/* a < UP */
+	MOVQ $0, TOP	/* could use XORQ TOP, TOP to zero too */
+	RET
+belowup:
+	MOVQ $-1, TOP
+	RET
+aboveupe:
+	MOVQ $1, TOP
+	RET
+
+/*
+callable by forth asm functions to check address
+	( n a -- -1|0|1 )
+	argument 1 in TOP = address
+	return value in TOP
+	-1			0			1
+	if UP < address && address+n < UPE
+		return 0	within range
+	else if address < UP
+		return -1	below UP
+	else if UPE < address+n
+		return 1	above UP
+ */
+TEXT	bufinup(SB), 1, $-4
+	POP(CX)
+	CMPQ CX, $0 	/* negative n? */
+	JLT belowup		/* TODO have an appropriate error message */
+	ADDQ TOP, CX
+	CMPQ CX, UPE	/* a+n, UPE */
+	JGT aboveupe	/* a+n > UPE */
+	CMPQ TOP, UP
+	JLT belowup		/* a < UP */
+	MOVQ $0, TOP
+	RET
+
+invalidaddress:
+	/* TODO need error reporting here */
+	RET
+
+TEXT validateaddress(SB), 1, $0 /* a -- */
+	CALL inup(SB)
+	MOVQ TOP, CX
+	POP(TOP)
+	CMPQ CX, $0
+	JNE	invalidaddress
+	RET
+
+TEXT validatebuffer(SB), 1, $0 /* n a -- */
+	CALL bufinup(SB)
+	MOVQ TOP, CX
+	POP(TOP)
+	CMPQ CX, $0
+	JNE	invalidaddress
+	RET
+
 TEXT	fetch(SB), 1, $-4	/* ( a -- n) */
-	ADDQ UP, TOP
+	PUSH(TOP)
+	CALL validateaddress(SB)	/* a a -- a */
 	MOVQ (TOP), TOP
 	NEXT
 
-/* TODO change to allow stores to a certain memory range only */
 TEXT	store(SB), 1, $-4	/* ( n a -- ) */
-	ADDQ UP, TOP
+	PUSH(TOP)
+	CALL validateaddress(SB)	/* a a -- a */
 	POP(CX)
 	MOVQ CX, (TOP)
 	POP(TOP)
 	NEXT
 
-/* TODO change to allow only fetches from a certain memory range */
 TEXT	cfetch(SB), 1, $-4	/* ( a -- c ) */
-	ADDQ UP, TOP
+	PUSH(TOP)
+	CALL validateaddress(SB)	/* a a -- a */
 	XORQ CX, CX
 	MOVB (TOP), CL
-	POP(TOP)
+	MOVQ CX, TOP
 	NEXT
 
-/* TODO change to allow only fetches from a certain memory range */
 TEXT	cstore(SB), 1, $-4	/* ( c a -- ) */
-	ADDQ UP, TOP
+	PUSH(TOP)
+	CALL validateaddress(SB)	/* c a a -- c a */
 	POP(CX)
 	MOVB CL, (TOP)
 	POP(TOP)
@@ -292,6 +315,7 @@ TEXT	literal(SB), 1, $-4	/* ( -- n ) */
 	ADDQ $8, IP
 	NEXT
 
+/* TODO not sure about this */
 TEXT	sliteral(SB), 1, $-4	/* ( -- a n ) */
 	PUSH(TOP)
 	XORQ TOP,TOP
@@ -305,14 +329,14 @@ TEXT	sliteral(SB), 1, $-4	/* ( -- a n ) */
 
 /* puts the top 2 entries of the data stack in the return stack */
 TEXT	doinit(SB), 1, $-4	/* ( hi lo -- ) */
-	MOVQ TOP, (RSP)
+	RPUSH(TOP)
 	POP(TOP)
-	MOVQ TOP, 8(RSP)
+	RPUSH(TOP)
 	POP(TOP)
-	ADDQ $16, RSP
 	NEXT
 
-/* not sure if this works, needs testing to follow https://github.com/mark4th/x64
+/*
+not sure if this works, needs testing to follow https://github.com/mark4th/x64
 	check the notes
 	return stack would have
 		current index
@@ -349,16 +373,18 @@ TEXT	rpop(SB), 1, $-4	/* ( -- n ) */
 	RPOP(TOP)
 	NEXT
 
-TEXT	rpush(SB), 1, $-4	/* ( n -- ) */
+TEXT	rpush(SB), 1, $-4	/* ( n -- ) (R -- n ) */
 	RPUSH(TOP)
 	POP(TOP)
 	NEXT
 
+/* TODO not sure about this */
 TEXT	i(SB), 1, $-4	/* ( -- n ) */
 	PUSH(TOP)
-	MOVQ -16(RSP), TOP
+	MOVQ 16(RSP), TOP
 	NEXT
 
+/* TODO not sure about this */
 TEXT	j(SB), 1, $-4	/* ( -- n ) */
 	PUSH(TOP)
 	MOVQ -32(RSP), TOP
@@ -466,10 +492,13 @@ TEXT	greater(SB), 1, $-4	/* ( x y -- f ) */
 	XORQ TOP, TOP
 	NEXT
 
-/* if x < y then y - x > 0, no sign flag
+/*
+if x < y then y - x > 0, no sign flag
 	intel manual says destination operand - source operand
-	but, 9front assemblers seem to work differently
-	compare x and y == CMP x, y
+	9front comparision operators make the usage more english-like
+	For, CMP x,y; JGT greater can be read as
+	compare x and y; if x > y, goto greater
+	check tests/cmp.s for tests
  */
 TEXT	less(SB), 1, $-4	/* ( x y -- f ) */
 	POP(CX)
@@ -483,13 +512,13 @@ TEXT	stackptr(SB), 1, $-4	/* ( -- a ) does not include TOP! */
 	MOVQ PSP, TOP
 	NEXT
 
-TEXT	lshift(SB), 1, $-4	/* ( n1 n2 -- n ) */
+TEXT	lshift(SB), 1, $-4	/* ( n1 n2 -- n1<<n2 ) */
 	MOVQ TOP, CX
 	POP(TOP)
 	SHLQ CL, TOP
 	NEXT
 	
-TEXT	rshift(SB), 1, $-4	/* ( n1 n2 -- n ) */
+TEXT	rshift(SB), 1, $-4	/* ( n1 n2 -- n1>>n2 ) */
 	MOVQ TOP, CX
 	POP(TOP)
 	SHRQ CL, TOP
@@ -502,6 +531,8 @@ TEXT	rshifta(SB), 1, $-4	/* ( n1 n2 -- n ) */
 	NEXT
 
 TEXT	execute(SB), 1, $-4	/* ( ... a -- ... ) */
+	PUSH(TOP)
+	CALL validateaddress(SB)	/* a a -- a */
 	MOVQ TOP, W
 	POP(TOP)
 	MOVQ (W), CX
@@ -516,6 +547,7 @@ TEXT	unloop(SB), 1, $-4
 	ADDQ $16, RSP
 	NEXT
 
+/* TODO validateaddress on both addresses */
 TEXT	cmove(SB), 1, $-4	/* ( a1 a2 n -- ) */
 	MOVQ TOP, CX
 	POP(W)
@@ -526,6 +558,7 @@ TEXT	cmove(SB), 1, $-4	/* ( a1 a2 n -- ) */
 	POP(TOP)
 	NEXT
 
+/* TODO validateaddress on both addresses */
 TEXT	cmoveb(SB), 1, $-4	/* ( a1 a2 n -- ) */
 	MOVQ TOP, CX
 	POP(W)
@@ -560,6 +593,18 @@ TEXT	S0(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
 TEXT	H0(SB), 1, $-4	/* user pointer, start of heap */
 	PUSH(TOP)
 	MOVQ UP, TOP
+	NEXT
+
+TEXT	Wordb(SB), 1, $-4	/* WORDB location */
+	PUSH(TOP)
+	MOVQ UP, TOP
+	ADDQ $WORDB, TOP
+	NEXT
+
+TEXT	Tib(SB), 1, $-4		/* TIB location */
+	PUSH(TOP)
+	MOVQ UP, TOP
+	ADDQ $TIB, TOP
 	NEXT
 
 TEXT	Dp(SB), 1, $-4	/* S0 needs a calculation to come up with the value */

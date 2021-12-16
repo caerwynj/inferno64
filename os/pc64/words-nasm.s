@@ -457,7 +457,7 @@ dd 8
 dd M_H0
 dd C_plusstore
 dd M_exitcolon
-CENTRY "c" c_c 2
+CENTRY "c," c_c 2
 dd C_here
 dd M_cstore
 dd M_literal
@@ -771,7 +771,7 @@ dd MV_toIn
 dd C_off
 dd MV_toLimit
 dd C_off
-dd MC_TIB
+dd M_Tib
 dd MV_Sourcebuf
 dd M_store
 dd MV_Blk
@@ -942,7 +942,7 @@ dd M_exitcolon
 CENTRY "query" c_query 5	; read from input stream into the Text Input Buffer
 dd MV_Eof
 dd C_off		; clear EOF flag
-dd MC_TIB	; constant puts address of tibuffer on the top
+dd M_Tib	; constant puts address of tibuffer on the top
 dd M_literal
 dd 4096	; ( tibuffer -- tibuffer 4096 )
 dd C_accept ; ( tibuffer 4096 -- n )
@@ -1706,7 +1706,7 @@ dd M_exitcolon	; why is this needed?
 CENTRY "(abort)" c_parenabort 7 ; TODO correct below stack notations
 dd MV_State	; ( mv_State -- )
 dd C_off		; off sets variable state = 0
-dd MC_TIB	; constant puts address of tibuffer on the top of stack
+dd M_Tib	; constant puts address of tibuffer on the top of stack
 dd MV_Sourcebuf	; variable sourcebuf
 dd M_store	; variable sourcebuf = address of tibuffer
 dd MV_Blk	; variable blk
@@ -1742,10 +1742,10 @@ dd M_literal
 dd C_parenabort ; ( (abort) -- )
 dd MV_Abortvec	; variable abortvec
 dd M_store	; variable abortvec = (abort) code address
-dd MC_WORDB	; constant puts address of wordbuffer on the top of stack
+dd M_Wordb	; constant puts address of wordbuffer on the top of stack
 dd MV_Wordbuf	; variable wordbuf
 dd M_store	; variable wordbuf = address of wordbuffer
-dd MC_TIB	; constant puts address of tibuffer on the top of stack
+dd M_Tib	; constant puts address of tibuffer on the top of stack
 dd MV_Sourcebuf	; variable sourcebuf
 dd M_store	; variable sourcebuf = address of tibuffer
 dd M_literal
@@ -1763,19 +1763,18 @@ dd C_quit	; quit
 dd M_exitcolon
 
 CENTRY "boot" c_boot 4
-
 dd M_literal	; this is not working TEST
 dd 66
-dd MC_WORDB
+dd M_Wordb
 dd M_store
 dd M_literal
 dd 1
-dd MC_WORDB
+dd M_Wordb
 dd MC_STDOUT
 dd M_fthwrite
 dd M_literal
 dd 1
-dd MC_WORDB
+dd M_Wordb
 dd MC_STDIN
 dd M_fthread	; this is not working TODO
 
@@ -1789,11 +1788,11 @@ dd C_parenabort ; ( (abort) -- )
 dd MV_Abortvec	; variable that puts (abort) code address on the stack
 dd M_store	; variable abortvec = (abort) code address
 
-dd MC_WORDB	; variable puts address of wordbuffer on the top of stack
+dd M_Wordb	; variable puts address of wordbuffer on the top of stack
 dd MV_Wordbuf ; variable wordbuf
 dd M_store	; variable wordbuf = address of wordbuffer
 
-dd MC_TIB	; constant puts address of tibuffer on the top of stack
+dd M_Tib	; constant puts address of tibuffer on the top of stack
 dd MV_Sourcebuf	; variable sourcebuf
 dd M_store	; variable sourcebuf = address of tibuffer
 

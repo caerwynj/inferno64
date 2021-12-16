@@ -110,21 +110,13 @@ TEXT	fthread(SB), 1, $32	/* ( n a fd -- n2 ) */
 	PUSH(TOP)
 	MOVQ CX, TOP	/* ( n a fd -- n a fd n a ) */
 
-	CALL bufinup(SB)
-	MOVQ TOP, CX
-	POP(TOP)
-	CMPQ CX, $0
-	JNE	invalidaddress
+	CALL validatebuffer(SB)
 
 	MOVQ UP, 24(SP)
 	F_TO_C_3
 	CALL kread(SB)
 	MOVQ 24(SP), UP
 	C_TO_F_1
-	NEXT
-invalidaddress:
-	ADDQ $16, PSP
-	MOVQ $-1, TOP
 	NEXT
 
 /* no link register in amd64
@@ -133,17 +125,13 @@ invalidaddress:
  * Hence, need 32 bytes on the stack
  */
 TEXT	fthwrite(SB), 1, $32	/* ( n a fd -- n2|-1 ) */
-	PUSH(TOP)
-	MOVQ 16(PSP), TOP
-	MOVQ 8(PSP), CX
-	PUSH(TOP)
-	MOVQ CX, TOP	/* ( n a fd -- n a fd n a ) */
+	PUSH(TOP)			/* ( -- n a fd fd ) */
+	MOVQ 16(PSP), TOP	/* TOP = n */
+	MOVQ 8(PSP), CX		/* CX = a */
+	PUSH(TOP)			/* ( -- n a fd n n ) */
+	MOVQ CX, TOP		/* ( n a fd -- n a fd n a ) */
 
-	CALL bufinup(SB)
-	MOVQ TOP, CX
-	POP(TOP)
-	CMPQ CX, $0
-	JNE	invalidaddress
+	CALL validatebuffer(SB)
 
 	MOVQ UP, 24(SP)
 	F_TO_C_3

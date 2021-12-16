@@ -82,6 +82,7 @@ loadforthdictionary(u8 *fmem)
 	intptr i;
 	Fentry *f;
 	u8 *h, *dtop;
+	int n;
 
 	h = fmem+DICTIONARY;
 	dtop = nil;
@@ -89,29 +90,51 @@ loadforthdictionary(u8 *fmem)
 		f = &fentries[i];
 		if(f->type == Header){
 			*(intptr*)h = (intptr)dtop;
+			print("Header 0x%zx: 0x%zx 0x%zx ", h, *(intptr*)h, dtop);
 			dtop = h;
 			h += sizeof(intptr);
-			strncpy((s8*)h, f->hdr.name, f->hdr.len);
 			*h = f->hdr.len;
+			print("len 0x%zx: 0x%d ", h, *h);
 			h++;
-			if(f->hdr.len%8 > 0)
-				h += 8-(f->hdr.len%8);
+			strncpy((s8*)h, f->hdr.name, f->hdr.len);
+			print("name 0x%zx: ", h);
+			for(n = 0; n < f->hdr.len; n++){
+				print("%c", *(h+n));
+			}
+			h += f->hdr.len;
+			if((f->hdr.len+1)%8 > 0){
+				h += 8-((f->hdr.len+1)%8);
+			}
 			*(intptr*)h = (intptr)f->hdr.cfa;
+			print(" cfa 0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)f->hdr.cfa);
+			h += sizeof(intptr);
 		}else if(f->type == IHeader){
 			*(intptr*)h = (intptr)dtop;
+			print("IHeader 0x%zx: 0x%zx 0x%zx ", h, *(intptr*)h, dtop);
 			dtop = h;
 			h += sizeof(intptr);
-			strncpy((s8*)h, f->hdr.name, f->hdr.len);
 			*h = f->hdr.len | (1<<7);
+			print("len 0x%zx: 0x%d ", h, *h);
 			h++;
-			if(f->hdr.len%8 > 0)
-				h += 8-(f->hdr.len%8);
+			strncpy((s8*)h, f->hdr.name, f->hdr.len);
+			print("name 0x%zx: ", h);
+			for(n = 0; n < f->hdr.len; n++){
+				print("%c", *(h+n));
+			}
+			h += f->hdr.len;
+			if((f->hdr.len+1)%8 > 0){
+				h += 8-((f->hdr.len+1)%8);
+			}
 			*(intptr*)h = (intptr)f->hdr.cfa;
+			print(" cfa 0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)f->hdr.cfa);
+			h += sizeof(intptr);
 		}else if(f->type == Absolute){
 			*(intptr*)h = f->p;
+			print("	0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)f->p);
 			h += sizeof(intptr);
 		}else if(f->type == FromH0){
-			*(intptr*)h = (intptr)fmem+f->p;
+			*(intptr*)h = (intptr)fmem+DICTIONARY+f->p;
+			print("	0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)fmem+DICTIONARY+f->p);
 			h += sizeof(intptr);
 		}else if(f->type == Chars){
 			strcpy((s8*)h, f->str);
@@ -123,6 +146,8 @@ loadforthdictionary(u8 *fmem)
 	}
 	*(intptr*)(fmem + HERE) = (intptr)h;
 	*(intptr*)(fmem + DTOP) = (intptr)dtop;
+	print("loadforthdictionary fmem 0x%zx h 0x%zx dtop 0x%zx (intptr*)(fmem + DTOP) 0x%zx *(intptr*)(fmem + DTOP) 0x%zx\n",
+		fmem, (intptr)h, (intptr)dtop, (intptr*)(fmem + DTOP), *(intptr*)(fmem + DTOP));
 }
 
 extern intptr forthmain(u8 *);
@@ -130,13 +155,17 @@ void
 forthentry(void *fmem)
 {
 	up->type = Forth;
-	print("forthentry pid %d forthmem 0x%zx\n", up->pid, (intptr)fmem);
+	print("forthentry pid %d forthmem 0x%zx end 0x%zx forthmem+RSTACK_END 0x%zx\n",
+		up->pid, (intptr)fmem, ((intptr*)fmem)[1], (intptr)fmem+RSTACK_END);
 	loadforthdictionary((u8*)fmem);
 
 	/* load dictionary */
 	print("fentries[0].name %s\n", fentries[0].hdr.name);
 	print("fentries[1].name %s nfentries %d\n", fentries[1].hdr.name, nelem(fentries));
-
+	if(waserror())
+		print("forthentry waserror(): %r\n");
+	forthmain((u8*)fmem);
+	free(fmem);
 	pexit("exit", 0);
 }
 
@@ -456,6 +485,7 @@ forthopen(Chan *c, u32 omode0)
 	}
 	if(QID(c->qid) == Qnew){
 		/* TODO set path */
+print("forthopen called by pid %d text %s\n", up->pid, up->text);
 		f = newforthproc();
 		if(f == nil)
 			error(Enodev);

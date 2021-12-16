@@ -17,9 +17,9 @@ BEGIN{
 
 function header(len, name, prefix, label, cfa, immediate){
 	h+=8; # for link
-	h+=len;
-	if(len%8 > 0)
-		h += 8-(len%8);
+	h+=len+1;
+	if((len+1)%8 > 0)
+		h += 8-((len+1)%8);
 	labels[nlabels++] = prefix label " = "  h;
 	h+=8; # for cfa
 	cfas[cfa] = 1

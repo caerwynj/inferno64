@@ -61,20 +61,20 @@ MVENTRY "Base" Base 0 4
 MVENTRY ">Num" toNum 0 4
 MVENTRY "State" State 0 5
 MVENTRY "Abortvec" Abortvec 0 8	; not sure if these 3 can be constants instead?
-MVENTRY "Infd" Infd 0 5
-MVENTRY "Outfd" Outfd 0 6
-MVENTRY "Errfd" Errfd 0 4
+MVENTRY "Infd" Infd 0 4
+MVENTRY "Outfd" Outfd 0 5
+MVENTRY "Errfd" Errfd 0 5
 MVENTRY "Eof" Eof 0 3
 
 MCENTRY "STDIN" STDIN 0 5		; 3 constants from here CAPITALS
 MCENTRY "STDOUT" STDOUT 1 6
 MCENTRY "STDERR" STDERR 2 6
-MCENTRY "WORDB" WORDB WORDB 5
-MCENTRY "TIB" TIB TIB 3
 
 MENTRY "S0" S0 2
 MENTRY "s@" stackptr 2		; puts PSP on stack
 MENTRY "H0" H0 2
+MENTRY "Wordb" Wordb 5
+MENTRY "Tib" Tib 3
 MENTRY "Args" Args 3
 MENTRY "(variable)" variable 10
 MENTRY "(constant)" constant 10

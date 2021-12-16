@@ -211,7 +211,6 @@
  * user table at the start unlike in Starting Forth as it will be
  * easy to get to the variables with a known offset from C
  */
-#define FORTHHEAPSIZE	(9*BY2PG)
 #define HEAPSTART	(0ull)
 #define HEAPEND		(HEAPSTART+(BY2WD*1))
 
@@ -237,5 +236,5 @@
 #define TIB			(HEAPSTART+(17*BY2PG))	/* text input buffer */
 #define RSTACK		(HEAPSTART+(18*BY2PG))
 #define RSTACK_END	(HEAPSTART+(19*BY2PG))
-#define FORTHEND 	RSTACK_END
-#define HEAPSIZE 	FORTHEND
+#define FORTHEND	RSTACK_END
+#define FORTHHEAPSIZE	FORTHEND
