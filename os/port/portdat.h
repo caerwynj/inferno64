@@ -745,6 +745,10 @@ struct Proc
 	Proc	*tlink;
 	ulong		movetime;	/* next time process should switch processors */
  	int		dbgstop;		/* don't run this kproc */
+
+	/* forth specific fields */
+	Proc	*fprev, *fnext;
+	void	*fmem;
 };
 
 enum

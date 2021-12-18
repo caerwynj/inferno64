@@ -795,7 +795,7 @@ dd M_store
 dd MV_Blk
 dd C_off
 dd M_exitcolon
-CENTRY "restore-input" c_restore_input 13
+CENTRY "restore-input" c_restore_input 13 ; ( -- f )
 dd MV_Eof
 dd C_off
 dd M_literal
@@ -822,7 +822,7 @@ dd C_true
 L134:
 dd M_exitcolon
 
-CENTRY "?restore-input" c_qrestore_input 14
+CENTRY "?restore-input" c_qrestore_input 14 ; ( -- )
 dd C_restore_input
 dd C_0eq
 dd M_cjump
@@ -972,7 +972,8 @@ dd M_fetch
 dd M_binand	; n == 0 && EOF
 dd M_cjump
 dd L152		; false condition
-dd M_drop		; n == 0 && EOF ( n -- )
+; get out instead of M_drop and then C_qrestore_input
+dd M_terminate ;	dd M_drop	; n == 0 && EOF ( n -- )
 dd C_qrestore_input
 dd M_jump
 dd L153

@@ -1259,7 +1259,7 @@ Fentry fentries[] = {
 	{.type FromH0, {.p MV_Blk}},		/* dd MV_Blk 9352 */
 	{.type FromH0, {.p C_off}},		/* dd C_off 9360 */
 	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 9368 */
-	{.type Header, {.hdr { 13, "restore-input", /* C_restore_input = 9392 */ colon }}}, /* CENTRY "restore-input" restore_input 13 h 9400 */
+	{.type Header, {.hdr { 13, "restore-input", /* C_restore_input = 9392 */ colon }}}, /* CENTRY "restore-input" restore_input 13 ; ( -- f ) h 9400 */
 	{.type FromH0, {.p MV_Eof}},		/* dd MV_Eof 9408 */
 	{.type FromH0, {.p C_off}},		/* dd C_off 9416 */
 	{.type FromH0, {.p M_literal}},		/* dd M_literal 9424 */
@@ -1283,7 +1283,7 @@ Fentry fentries[] = {
 	{.type FromH0, {.p M_store}},		/* dd M_store 9568 */
 	{.type FromH0, {.p C_true}},		/* dd C_true 9576 */
 	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 9584 */
-	{.type Header, {.hdr { 14, "?restore-input", /* C_qrestore_input = 9608 */ colon }}}, /* CENTRY "?restore-input" qrestore_input 14 h 9616 */
+	{.type Header, {.hdr { 14, "?restore-input", /* C_qrestore_input = 9608 */ colon }}}, /* CENTRY "?restore-input" qrestore_input 14 ; ( -- ) h 9616 */
 	{.type FromH0, {.p C_restore_input}},		/* dd C_restore_input 9624 */
 	{.type FromH0, {.p C_0eq}},		/* dd C_0eq 9632 */
 	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 9640 */
@@ -1418,7 +1418,7 @@ Fentry fentries[] = {
 	{.type FromH0, {.p M_binand}},		/* dd M_binand	; n == 0 && EOF 10760 */
 	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 10768 */
 	{.type FromH0, {.p L152}},		/* dd L152		; false condition 10776 */
-	{.type FromH0, {.p M_drop}},		/* dd M_drop		; n == 0 && EOF ( n -- ) 10784 */
+/* ; get out instead of M_drop and then C_qrestore_input */	{.type FromH0, {.p M_terminate}},		/* dd M_terminate ;	dd M_drop	; n == 0 && EOF ( n -- ) 10784 */
 	{.type FromH0, {.p C_qrestore_input}},		/* dd C_qrestore_input 10792 */
 	{.type FromH0, {.p M_jump}},		/* dd M_jump 10800 */
 	{.type FromH0, {.p L153}},		/* dd L153 10808 */
