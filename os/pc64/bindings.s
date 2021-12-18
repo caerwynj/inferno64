@@ -1,5 +1,9 @@
 
 /*
+This file is the forth equivalent of os/port/inferno.c
+	It contains forth bindings for the functions in os/port/sysfile.c
+ */
+/*
 plan9 assembler puts the first argument in R8 (RARG), return value in AX.
 	Caller saves registers - plan9 convention
 	not maintaining the values of the temporary registers or EFLAGS

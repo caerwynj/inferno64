@@ -290,6 +290,7 @@ dd M_xswap		; ( iobuf 1 --  1 iobuf )
 dd MV_Outfd
 dd M_fetch		; outfd
 dd M_fthwrite	; ( 1 iobuf outfd --  )
+dd M_drop		; drop the return value of write
 dd M_exitcolon
 
 CENTRY "type" c_type 4	; ( addr n -- )
@@ -297,6 +298,7 @@ dd M_xswap			; ( addr n --  n addr )
 dd M_literal
 dd 1				; stdout
 dd M_fthwrite			; ( n addr 1 --  )
+dd M_drop		; drop the return value of write
 dd M_exitcolon
 
 CENTRY "cr" c_cr 2
@@ -332,6 +334,18 @@ dd M_dup
 dd C_1minus
 dd M_cfetch
 dd M_exitcolon
+
+
+dd C_2dup ; debug show the word name to search
+dd C_type
+
+dd M_rpush ; debug show the dictionary entry
+dd M_rpush
+dd C_2dup
+dd C_type
+dd M_rpop
+dd M_rpop
+
 CENTRY "compare" c_compare 7 ; ( a1 n1 a2 n2 -- f ) a1 = dictionary entry a2 = word name to search
 dd C_rot	; ( a1 n1 a2 n2 -- a1 a2 n2 n1 )
 dd C_2dup	; ( -- a1 a2 n2 n1 n2 n1 )
@@ -354,10 +368,10 @@ dd M_minus
 dd C_signum
 dd C_qdup
 dd M_cjump
-dd L56
-dd C_2nip
-dd M_unloop
-dd M_unloop
+dd L56		; matches
+dd C_2nip	; does not match ( a1 a2 f -- f ) (R n1 n2 0 nmin -- )
+dd M_unloop	; ( f -- f ) (R n1 n2 0 nmin -- n1 n2)
+dd M_unloop	; ( f -- f ) (R n1 n2 -- )
 dd M_exitcolon
 L56:
 dd M_doloop
@@ -368,6 +382,7 @@ dd M_rpop	; ( n2 n1 -- ) (R -- )
 dd M_minus	; ( -- n1-n2 )
 dd C_signum
 dd M_exitcolon
+
 CENTRY "erase" c_erase 5
 dd M_literal
 dd 0
@@ -610,7 +625,8 @@ dd 10
 dd MV_Base
 dd M_store
 dd M_exitcolon
-CENTRY "digit" c_digit 5
+
+CENTRY "digit" c_digit 5 ; c --
 dd M_dup
 dd M_literal
 dd 65
@@ -673,45 +689,46 @@ dd M_drop
 dd C_false
 L113:
 dd M_exitcolon
-CENTRY "number" c_number 6
-dd M_xswap
-dd M_dup
-dd M_cfetch
+
+CENTRY "number" c_number 6 ; ( a n1 -- n2 -1 | a n1 0 )
+dd M_xswap	; ( a n1 -- n1 a )
+dd M_dup	; ( n1 a -- n1 a a )
+dd M_cfetch	; ( n1 a a -- n1 a c )
 dd M_literal
-dd 45
-dd M_equal
-dd M_cjump
-dd L115
-dd C_1plus
+dd 45		; ( n1 a c -- n1 a c - )
+dd M_equal	; ( n1 a c -- n1 a f )
+dd M_cjump	; ( n1 a c -- n1 a )
+dd L115		; c != -
+dd C_1plus	; c == - ( n1 a -- n1 a+1 )
 dd M_xswap
-dd C_1minus
+dd C_1minus	; c == - ( a+1 n1 -- a+1 n1-1 )
 dd M_literal
-dd -1
-dd M_rpush
+dd -1		; ( a+1 n1-1 -- a+1 n1-1 -1 )
+dd M_rpush	; ( a+1 n1-1 -- a+1 n1-1 ) (R -- -1)
 dd M_jump
 dd L116
-L115:
-dd M_xswap
+L115:		; c != -
+dd M_xswap	; ( n1 a -- a n1)
 dd M_literal
 dd 1
-dd M_rpush
-L116:
-dd M_dup
-dd M_rpush
+dd M_rpush	; ( a n1 1 -- a n1 ) (R -- 1)
+L116:		; ( a n1 ) (R nr)
+dd M_dup	; ( a n1 -- a n1 n1 ) (R nr)
+dd M_rpush	; ( a n1 n1 -- a n1 ) (R nr -- nr n1)
 dd M_literal
-dd 0
-dd M_xswap
+dd 0		; ( a n1 -- a n1 0) (R nr n1)
+dd M_xswap	; ( a n1 0 -- a 0 n1) (R nr n1)
 dd M_literal
-dd 0
-dd M_doinit
+dd 0		; ( a 0 n1 -- a 0 n1 0) (R nr n1)
+dd M_doinit	; ( a 0 n1 0 -- a 0 ) (R nr n1 -- nr n1 0 n1)
 L117:
 dd MV_Base
-dd M_fetch
-dd M_multiply
-dd M_over
-dd M_i
-dd M_plus
-dd M_cfetch
+dd M_fetch	; ( a 0 Base -- a 0 10 ) (R nr n1 -- nr n1 0 n1)
+dd M_multiply	; ( a 0 10 -- a 0 ) (R nr n1 -- nr n1 0 n1)
+dd M_over	; ( a 0 -- a 0 a) (R nr n1 -- nr n1 0 n1)
+dd M_i		; ( a 0 a -- a 0 a n1) (R nr n1 -- nr n1 0 n1)
+dd M_plus	; ( a 0 a n1 -- a 0 a+n1) (R nr n1 -- nr n1 0 n1)
+dd M_cfetch	; ( a 0 a+n1 -- a 0 c) (R nr n1 -- nr n1 0 n1)
 dd C_digit
 dd M_cjump
 dd L118
@@ -736,6 +753,7 @@ dd M_rpop
 dd M_multiply
 dd C_true
 dd M_exitcolon
+
 CENTRY "abort" c_abort 5
 dd MV_Abortvec
 dd M_fetch
@@ -803,6 +821,7 @@ dd M_store
 dd C_true
 L134:
 dd M_exitcolon
+
 CENTRY "?restore-input" c_qrestore_input 14
 dd C_restore_input
 dd C_0eq
@@ -982,38 +1001,38 @@ dd M_exitcolon
 CENTRY "findname" c_findname 8 ; ( a1 -- a2 f ) ; loop through the dictionary names
 dd MV_Findadr
 dd M_store
-dd M_Dp
-dd M_fetch	; get dictionary link
+dd M_Dtop
+dd M_fetch	; get latest dictionary link
 L158:
 dd C_qdup
 dd M_cjump
 dd L159	; seached until the first dictionary entry get out
 dd M_dup	; ( a -- a a )
-dd C_cellplus	; lenth + initial name address
-dd M_cfetch	; length + initial name
+dd C_cellplus	; ( a a -- a a+8) lenth + initial name address
+dd M_cfetch	; ( a a+8 -- a immediate|hidden|len) length + initial name
 dd M_literal
-dd 64		; max name length?
-dd M_binand	; keep only the length
+dd 64		; check the reveal'ed flag 1=hidden, 0=reveal
+dd M_binand	; if hidden, goto L161 else L160
 dd M_cjump
 dd L160
-dd M_fetch
+dd M_fetch	; smudge'd dictionary entry, get the previous entry
 dd M_jump
 dd L161
-L160:		; valid length? ( a -- )
-dd M_dup
-dd C_cellplus
+L160:		; reveal'ed dictionary entry
+dd M_dup	; ( a1 -- a1 a1)
+dd C_cellplus	; ( a1 a1 -- a1 a1+8)
 dd C_count	; ( a1 a1+8 -- a1 a1+8+1 n )
 dd M_literal
 dd 63
-dd M_binand	; ( a1 a1+8+1 n 63 -- a1 a1+8+1 n&63 )
+dd M_binand	; ( a1 a1+8+1 n 63 -- a1 a1+8+1 n&63=len )
 dd MV_Findadr
 dd M_fetch
-dd C_count	; ( a1 a1+8+1 n&63 a2 n2 -- a1 a1+8+1 n&63 a2+1 n2 )
-dd C_compare	; ( -- a1 n ) compare dictionary entry with name
+dd C_count	; ( a1 a1+8+1 len=n&63 a2 -- a1 a1+8+1 n&63 a2+1 n2 )
+dd C_compare	; ( a1 a1+8+1 len=n&63 a2+1 n2 -- a1 f ) compare dictionary entry with name
 dd C_0eq	; found a match?
 dd M_cjump
-dd L162
-dd C_cellplus
+dd L162		; no match
+dd C_cellplus	; match found
 dd C_true
 dd M_exitcolon
 L162:
@@ -1026,6 +1045,7 @@ dd MV_Findadr
 dd M_fetch
 dd C_false
 dd M_exitcolon
+
 CENTRY "find" c_find 4 ; ( a1 -- a2 f )?
 dd C_findname
 dd M_cjump
@@ -1061,6 +1081,7 @@ L164:
 dd C_false
 L167:
 dd M_exitcolon
+
 CENTRY "'" c_single_quote 1
 dd C_bl
 dd C_word
@@ -1096,23 +1117,31 @@ dd C_abort
 L172:
 dd M_exitcolon
 
+
+dd M_dup ; debug code to show the word found
+dd C_count ; ( -- a n)
+dd M_xswap ; ( -- n a)
+dd MC_STDOUT
+dd M_fthwrite
+dd M_drop		; drop the return value of write
+
 CENTRY "interpret" c_interpret 9 ; there is stuff in TIB to be interpreted >In and >Limit are set
 L175:
 dd C_bl
-dd C_word	; ( bl -- a )
+dd C_word	; ( bl -- a ) a = address of counted string
 dd M_dup
 dd M_cfetch
 dd C_0neq
 dd M_cjump
 dd L176	; count at a = 0
-dd C_find	; ( a -- ) a = address of counted string
+dd C_find	; ( a -- a1 f ) a = address of counted string
 dd M_cjump
 dd L177
-dd M_execute
+d M_execute	; found in dictionary, execute
 dd C_qstack
 dd M_jump
 dd L178
-L177:
+L177:		; not found in the dictionary, check for number?
 dd C_count
 dd C_number
 dd C_0eq
@@ -1127,7 +1156,7 @@ dd 3
 dd C_type
 dd C_cr
 dd C_abort
-L179:
+L179:		; is a number
 L178:
 dd M_jump
 dd L175
@@ -1432,7 +1461,7 @@ L217:
 dd C_2drop
 L218:
 dd M_exitcolon
-CIENTRY "abort"" ci_abort_double_quote 6
+CIENTRY "abort\"" ci_abort_double_quote 6
 dd C_sliteral
 dd M_literal
 dd C_qabort_parens
@@ -1698,6 +1727,14 @@ dd M_reset ; initialize return stack
 dd M_clear	; SP = sstack_end initialize data stack
 L253:
 dd C_query
+
+dd MV_toLimit	; show the line read, for debugging
+dd M_fetch
+dd M_Tib
+dd MC_STDOUT
+dd M_fthwrite
+dd M_drop		; drop the return value of write
+
 dd C_interpret
 dd M_jump
 dd L253
@@ -1762,8 +1799,8 @@ dd C_decimal	; decimal setting base = 0
 dd C_quit	; quit
 dd M_exitcolon
 
-CENTRY "boot" c_boot 4
-dd M_literal	; this is not working TEST
+
+dd M_literal	; test code
 dd 66
 dd M_Wordb
 dd M_store
@@ -1772,11 +1809,15 @@ dd 1
 dd M_Wordb
 dd MC_STDOUT
 dd M_fthwrite
+dd M_drop		; drop the return value of write
 dd M_literal
 dd 1
 dd M_Wordb
 dd MC_STDIN
-dd M_fthread	; this is not working TODO
+dd M_fthread
+dd M_drop		; drop the return value of read
+
+CENTRY "boot" c_boot 4
 
 dd M_reset ; initialize return stack
 dd M_clear	; SP = sstack_end initialize data stack
@@ -1808,7 +1849,7 @@ dd M_store
 
 dd MV_State
 dd C_off	; off stores 0 at state
-dd C_decimal	; decimal setting base = 0
+dd C_decimal	; decimal sets base = 10
 dd C_quit	; quit
 dd M_exitcolon
 

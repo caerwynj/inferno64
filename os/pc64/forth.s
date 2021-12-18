@@ -70,6 +70,15 @@ User dictionary	upto  pages from the start
 		heap start, heapstart, also in UP
 UP: forth variables
 low memory
+
+TODO Move variable space out of the dictionary from #forth
+11:31 < joe9> In x86 you want to keep the code in a different section than variables -- why?
+11:31 < joe9> in my port, I am keeping them together.
+11:32 < joe9> it gets messy with different sections.
+11:32 < veltas> For performance reasons, if you are writing to a cache line with code in it I think there is a performance penalty
+11:33 < veltas> Because x86 has a separate instruction and data cache in L1, but is kind enough to abstract this away. So you can write over executing code, but it causes some synchronisation that might be expensive. And I would expect this to be done on a cache-line granularity
+11:39 < veltas> So you could end up with code running slower just because it happens to be defined after space for some data that's in active use... not good
+
 */
 
 #define TOP BX /* top of stack register */
@@ -97,6 +106,7 @@ low memory
 
 /* HEAPSTART, HEAPEND, HERE, DTOP are loaded by the caller */
 TEXT	forthmain(SB), 1, $-4		/* no stack storage required */
+
 	/* Argument has the start of heap */
 	MOVQ RARG, UP		/* start of heap memory */
 	MOVQ 8(UP), UPE		/* HEAPEND populated by the caller */
@@ -188,7 +198,7 @@ TEXT	cjump(SB), 1, $-4	/* ( f -- ) */
 	NEXT
 
 /*
-callable by forth asm functions to check address
+callable by forth primitives to check address
 	( a -- -1|0|1 )
 	argument 1 in TOP = address
 	return value in TOP
@@ -215,7 +225,7 @@ aboveupe:
 	RET
 
 /*
-callable by forth asm functions to check address
+callable by forth primitives to check address
 	( n a -- -1|0|1 )
 	argument 1 in TOP = address
 	return value in TOP
@@ -289,10 +299,13 @@ TEXT	cstore(SB), 1, $-4	/* ( c a -- ) */
 	POP(TOP)
 	NEXT
 
-/* TODO fix this */
 TEXT	terminate(SB), 1, $-4	/* ( n -- ) */
-	POP(TOP)
-	NEXT
+	MOVQ TOP, AX
+	RET
+
+TEXT	fthdump(SB), 1, $-4	/* ( n -- ) */
+	CALL dumpstack(SB)
+	RET
 
 #include "bindings.s"
 
@@ -327,8 +340,11 @@ TEXT	sliteral(SB), 1, $-4	/* ( -- a n ) */
 	ANDQ $~7, IP
 	NEXT
 
-/* puts the top 2 entries of the data stack in the return stack */
-TEXT	doinit(SB), 1, $-4	/* ( hi lo -- ) */
+/*
+puts the top 2 entries of the data stack in the return stack
+	( limit index -- ) (R -- index limit )
+ */
+TEXT	doinit(SB), 1, $-4	/* ( hi lo -- ) (R -- lo hi */
 	RPUSH(TOP)
 	POP(TOP)
 	RPUSH(TOP)
@@ -336,25 +352,25 @@ TEXT	doinit(SB), 1, $-4	/* ( hi lo -- ) */
 	NEXT
 
 /*
-not sure if this works, needs testing to follow https://github.com/mark4th/x64
+needs testing to follow https://github.com/mark4th/x64
 	check the notes
 	return stack would have
 		current index
 		end index
-	(R lo hi -- )
-	increment lo
-	when hi > lo, go to the address next to doloop
+	(R index limit -- )
+	increment index
+	when limit > index, go to the address next to doloop
  */
 TEXT	doloop(SB), 1, $-4
-	INCQ -16(RSP)
+	INCQ 8(RSP)
 doloop1:
-	MOVQ -16(RSP), CX
-	CMPQ CX, -8(RSP)
+	MOVQ 8(RSP), CX
+	CMPQ CX, 0(RSP)
 	JGE .l4
 	MOVQ (IP), IP
 	NEXT
 .l4:
-	SUBQ $16, RSP
+	ADDQ $16, RSP
 	ADDQ $8, IP
 	NEXT
 
@@ -368,7 +384,7 @@ TEXT	rfetch(SB), 1, $-4	/* ( -- n ) no change in RSP */
 	MOVQ (RSP), TOP
 	NEXT
 
-TEXT	rpop(SB), 1, $-4	/* ( -- n ) */
+TEXT	rpop(SB), 1, $-4	/* ( -- n ) (R n -- )*/
 	PUSH(TOP)
 	RPOP(TOP)
 	NEXT
@@ -378,16 +394,15 @@ TEXT	rpush(SB), 1, $-4	/* ( n -- ) (R -- n ) */
 	POP(TOP)
 	NEXT
 
-/* TODO not sure about this */
-TEXT	i(SB), 1, $-4	/* ( -- n ) */
+TEXT	i(SB), 1, $-4	/* ( -- index ) (R index limit -- index limit ) */
 	PUSH(TOP)
-	MOVQ 16(RSP), TOP
+	MOVQ 8(RSP), TOP
 	NEXT
 
-/* TODO not sure about this */
-TEXT	j(SB), 1, $-4	/* ( -- n ) */
+/* in nested do loops, j is the outer loop's index */
+TEXT	j(SB), 1, $-4	/* ( -- index1 ) (R index1 limit1 index2 limit2 -- index1 limit1 index2 limit2 ) */
 	PUSH(TOP)
-	MOVQ -32(RSP), TOP
+	MOVQ 24(RSP), TOP
 	NEXT
 
 TEXT	plus(SB), 1, $-4	/* ( n1 n2 -- n ) */

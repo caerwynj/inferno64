@@ -11,6 +11,7 @@ MENTRY "open" fthopen 4
 MENTRY "close" fthclose 5
 MENTRY "mmap" mmap 4
 MENTRY "halt" terminate 4
+MENTRY "dump" fthdump 4
 MENTRY "clear" clear 5
 MENTRY "reset" reset 5
 MENTRY "exitcolon" exitcolon 4

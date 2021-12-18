@@ -51,11 +51,16 @@ $1 == "CENTRY" {
 	gsub(/^c_/,"", $3)
 	header($4, name, "C_", $3, "colon")
 }
+$1 == "CIENTRY" {
+	name = $2
+	gsub(/^ci_/,"", $3)
+	header($4, name, "CI_", $3, "colon", 1)
+}
 $1 == "dd" && $2 ~ literal {
 	h+=8
 	fentries = fentries "	{.type Absolute, {.p " $2 "}},		/* " $0 " " h " */\n"
 }
-$1 == "dd" && $2 ~ "^[M_|C_|(MC_)|(MV_)|L]" {
+$1 == "dd" && $2 ~ "^[M_|C_|CI_|(MC_)|(MV_)|L]" {
 	h+=8
 	fentries = fentries "	{.type FromH0, {.p " $2 "}},		/* " $0 " " h " */\n"
 }
@@ -67,6 +72,9 @@ $1 == "db" {
 	gsub(/^db /,"", $0)
 	h += length($0)-2+1; # -2 for the quotes, +1 for the null character
 	fentries = fentries "	{.type Chars, {.str " $0 "}},		/* " h " */\n"
+}
+$0 ~ /^;/ || $1 == ";" {
+	fentries = fentries "/* " $0 " */"
 }
 $0 ~ /^$/ {
 	fentries = fentries $0
