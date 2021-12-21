@@ -163,6 +163,9 @@ trap(Ureg* ureg)
 	else if(vno <= nelem(excname) && up->type == Interp){
 		spllo();
 		sprint(buf, "sys: trap: %s pc 0x%zx", excname[vno], ureg->pc);
+		print(buf);
+		dumpregs(ureg);
+		_dumpstack(ureg);
 		error(buf);
 	}
 	else if(vno >= VectorPIC && vno != VectorSYSCALL){
@@ -312,8 +315,9 @@ _dumpstack(Ureg *ureg)
 {
 	uintptr l, v, i, estack;
 	extern uintptr etext;
+	int onlypc = 0;
 
-	print("ktrace /kernel/path %.8zux %.8zux\n", ureg->pc, ureg->sp);
+	print("ktrace /kernel/path pc 0x%zux sp 0x%zux &l 0x%zux\n", ureg->pc, ureg->sp, &l);
 	i = 0;
 	if(up &&
 		(uintptr)&l >= (uintptr)up->kstack &&
@@ -327,14 +331,19 @@ _dumpstack(Ureg *ureg)
 
 	for(l=(uintptr)&l; l<estack; l+=sizeof(intptr)){
 		v = *(uintptr*)l;
-		if(KTZERO < v && v < (uintptr)&etext){
-			/*
-			 * we could Pick off general CALL (((uchar*)v)[-5] == 0xE8)
-			 * and CALL indirect through AX (((uchar*)v)[-2] == 0xFF && ((uchar*)v)[-2] == 0xD0),
-			 * but this is too clever and misses faulting address.
-			 */
-			print("%.8zux=%.8zux ", l, v);
-			i++;
+		if(onlypc){
+			if(KTZERO < v && v < (uintptr)&etext){
+				/*
+				 * we could Pick off general CALL (((uchar*)v)[-5] == 0xE8)
+				 * and CALL indirect through AX (((uchar*)v)[-2] == 0xFF && ((uchar*)v)[-2] == 0xD0),
+				 * but this is too clever and misses faulting address.
+				 */
+				print("%.8zux=%.8zux ", l, v);
+				i++;
+			}
+		}else{
+				print("%.8zux=%.8zux ", l, v);
+				i++;
 		}
 		if(i == 4){
 			i = 0;
@@ -393,8 +402,11 @@ faultamd64(Ureg* ureg, void*)
 		return;
 	read = !(ureg->ecode & 2);
 	spllo();
-	snprint(buf, sizeof(buf), "trap: fault %s pc=0x%zux addr=0x%zux",
+	snprint(buf, sizeof(buf), "trap: fault %s pc=0x%zux addr=0x%zux\n",
 			read ? "read" : "write", ureg->pc, addr);
+print(buf);
+	dumpregs(ureg);
+dumpstack();
 	if(up->type == Interp)
 		disfault(ureg, buf);
 	dumpregs(ureg);

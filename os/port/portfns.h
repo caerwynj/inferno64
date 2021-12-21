@@ -204,7 +204,7 @@ void	notkilled(void);
 int		nrand(int);
 uvlong		ns2fastticks(uvlong);
 int		okaddr(ulong, ulong, int);
-int		openmode(ulong);
+u32		openmode(u32);
 Block*		packblock(Block*);
 Block*		padblock(Block*, int);
 void		panic(char*, ...);

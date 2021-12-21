@@ -880,26 +880,142 @@ notkilled(void)
 }
 
 void
-pexit(char*, int)
+pexit(char *exitstr, int freemem)
 {
-	Osenv *o;
+	Proc *p;
+/*	Segment **s;*/
+	ulong utime, stime;
+/*	Waitq *wq;*/
+	Fgrp *fgrp;
+	Egrp *egrp;
+	Rgrp *rgrp;
+	Pgrp *pgrp;
+/*	Chan *dot;*/
+	void (*pt)(Proc*, int, vlong);
 
+	up->fpstate &= ~FPillegal;
 	up->alarm = 0;
+	timerdel(up);
+	pt = proctrace;
+/*	if(pt != nil)
+		pt(up, SDead, 0);*/
 
-	o = up->env;
-	if(o != nil){
-		closefgrp(o->fgrp);
-		closepgrp(o->pgrp);
-		closeegrp(o->egrp);
-		closesigs(o->sigs);
+	/* nil out all the resources under lock (free later) */
+	qlock(&up->debug);
+	fgrp = up->env->fgrp;
+	up->env->fgrp = nil;
+	egrp = up->env->egrp;
+	up->env->egrp = nil;
+	rgrp = up->env->rgrp;
+	up->env->rgrp = nil;
+	pgrp = up->env->pgrp;
+	up->env->pgrp = nil;
+/*	dot = up->dot;
+	up->dot = nil;*/
+	qunlock(&up->debug);
+
+	if(fgrp != nil)
+		closefgrp(fgrp);
+	if(egrp != nil)
+		closeegrp(egrp);
+/*	if(rgrp != nil)
+		closergrp(rgrp);
+	if(dot != nil)
+		cclose(dot);*/
+	if(pgrp != nil)
+		closepgrp(pgrp);
+
+/*	if(up->parentpid == 0){
+		if(exitstr == nil)
+			exitstr = "unknown";
+		panic("boot process died: %s", exitstr);
+	}*/
+
+/*	p = up->parent;
+	if(p != nil && p->pid == up->parentpid && p->state != Broken){
+		wq = smalloc(sizeof(Waitq));
+		wq->w.pid = up->pid;
+		utime = up->time[TUser] + up->time[TCUser];
+		stime = up->time[TSys] + up->time[TCSys];
+		wq->w.time[TUser] = tk2ms(utime);
+		wq->w.time[TSys] = tk2ms(stime);
+		wq->w.time[TReal] = tk2ms(MACHP(0)->ticks - up->time[TReal]);
+		if(exitstr != nil && exitstr[0])
+			snprint(wq->w.msg, sizeof(wq->w.msg), "%s %lud: %s", up->text, up->pid, exitstr);
+		else
+			wq->w.msg[0] = '\0';
+
+		lock(&p->exl);
+		\/*
+		 * Check that parent is still alive.
+		 *\/
+		if(p->pid == up->parentpid && p->state != Broken) {
+			p->nchild--;
+			p->time[TCUser] += utime;
+			p->time[TCSys] += stime;
+			\/*
+			 * If there would be more than 128 wait records
+			 * processes for my parent, then don't leave a wait
+			 * record behind.  This helps prevent badly written
+			 * daemon processes from accumulating lots of wait
+			 * records.
+		 	 *\/
+			if(p->nwait < 128) {
+				wq->next = p->waitq;
+				p->waitq = wq;
+				p->nwait++;
+				wq = nil;
+				wakeup(&p->waitr);
+			}
+		}
+		unlock(&p->exl);
+		if(wq != nil)
+			free(wq);
 	}
 
-/*
-	edfstop(up);
+	if(!freemem)
+		addbroken();
 */
 	qlock(&up->debug);
+
+/*	lock(&up->exl);		\/* Prevent my children from leaving waits *\/
 	pidfree(up);
+	up->parent = nil;
+	up->nchild = up->nwait = 0;
+	wakeup(&up->waitr);
+	unlock(&up->exl);
+
+	while((wq = up->waitq) != nil){
+		up->waitq = wq->next;
+		free(wq);
+	}
+*/
+	/* release debuggers */
+	if(up->pdbg != nil) {
+		wakeup(&up->pdbg->sleep);
+		up->pdbg = nil;
+	}
+/*	if(up->syscalltrace != nil) {
+		free(up->syscalltrace);
+		up->syscalltrace = nil;
+	}*/
+	if(up->watchpt != nil){
+		free(up->watchpt);
+		up->watchpt = nil;
+	}
+	up->nwatchpt = 0;
 	qunlock(&up->debug);
+
+/*	qlock(&up->seglock);
+	for(s = up->seg; s < &up->seg[NSEG]; s++) {
+		if(*s != nil) {
+			putseg(*s);
+			*s = nil;
+		}
+	}
+	qunlock(&up->seglock);*/
+
+/*	edfstop(up); */
 	up->state = Moribund;
 	sched();
 	panic("pexit");
@@ -1059,11 +1175,11 @@ error(char *err)
 		panic("error: nil parameter");
 	kstrcpy(up->env->errstr, err, ERRMAX);
 	if(emptystr(err) == 1){
-		DBG("error nil error err %s caller 0x%p\n", err, getcallerpc(&err));
+		DBG("error nil error err %s caller 0x%p up->pid %d\n", err, getcallerpc(&err), up->pid);
 		up->env->errpc = 0;
 		/* showerrlabs("error == nil"); */
 	}else{
-		DBG("error err %s caller 0x%p\n", err, getcallerpc(&err));
+		DBG("error err %s caller 0x%p up->pid %d\n", err, getcallerpc(&err), up->pid);
 		up->env->errpc = getcallerpc(&err);
 		/* proactively show issues */
 		/* print("up->nerrlab %d error %s raised by 0x%zx\n",

@@ -737,18 +737,19 @@ struct Proc
 	Osenv	*env;
 	Osenv	defenv;
 	s32		swipend;	/* software interrupt pending for Prog TODO replace with notepending? */
-	Lock		sysio;		/* note handler lock */
+	Lock	sysio;		/* note handler lock */
 
 	/* inferno specific fields that are obsolete? */
 	int		fpstate;
 	int		killed;		/* by swiproc */
 	Proc	*tlink;
-	ulong		movetime;	/* next time process should switch processors */
+	ulong	movetime;	/* next time process should switch processors */
  	int		dbgstop;		/* don't run this kproc */
 
 	/* forth specific fields */
 	Proc	*fprev, *fnext;
 	void	*fmem;
+	Queue	*frq, *fwq, *ferrq;	/* forth read, write and error queue */
 };
 
 enum

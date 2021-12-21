@@ -145,6 +145,7 @@ fdtochan(Fgrp *f, int fd, int mode, int chkmnt, int iref)
 	lock(f);
 	if(fd<0 || f->maxfd<fd || (c = f->fd[fd])==nil) {
 		unlock(f);
+		print("fdtochan Ebadfd\n");
 		error(Ebadfd);
 	}
 	if(iref)
@@ -154,6 +155,7 @@ fdtochan(Fgrp *f, int fd, int mode, int chkmnt, int iref)
 	if(chkmnt && (c->flag&CMSG)) {
 		if(iref)
 			cclose(c);
+		print("fdtochan Ebadusefd 1\n");
 		error(Ebadusefd);
 	}
 
@@ -163,12 +165,15 @@ fdtochan(Fgrp *f, int fd, int mode, int chkmnt, int iref)
 	if((mode&OTRUNC) && c->mode==OREAD) {
 		if(iref)
 			cclose(c);
+		print("fdtochan Ebadusefd 2\n");
 		error(Ebadusefd);
 	}
 
 	if((mode&~OTRUNC) != c->mode) {
 		if(iref)
 			cclose(c);
+		print("fdtochan Ebadusefd 3 mode 0x%x mode&~OTRUNC 0x%x c->mode 0x%x\n",
+			mode, mode&~OTRUNC, c->mode);
 		error(Ebadusefd);
 	}
 
@@ -197,8 +202,8 @@ kchanio(void *vc, void *buf, int n, int mode)
 	return r;
 }
 
-int
-openmode(ulong o)
+u32
+openmode(u32 o)
 {
 	if(o >= (OTRUNC|OCEXEC|ORCLOSE|OEXEC))
 		error(Ebadarg);
@@ -250,8 +255,9 @@ kchdir(char *path)
 int
 kfgrpclose(Fgrp *f, int fd)
 {
-	if(waserror())
+	if(waserror()){
 		return -1;
+	}
 
 	/*
 	 * Take no reference on the chan because we don't really need the
@@ -1000,7 +1006,8 @@ rread(int fd, void *p, s32 n, s64 *offp)
 			c->devoffset = 0;
 		}
 		mountrewind(c);
-		unionrewind(c);
+		if(c->umc != nil)
+			unionrewind(c);
 	}
 
 	if(c->qid.type & QTDIR){
@@ -1226,7 +1233,10 @@ rwrite(int fd, void *buf, s32 len, s64 *offp)
 
 	n = 0;
 	c = fdtochan(up->env->fgrp, fd, OWRITE, 1, 1);
+	if(c == nil)
+		print("rwrite fdtochan nil %r\n");
 	if(waserror()) {
+		print("rwrite waserror loop %r\n");
 		if(offp == nil){
 			lock(c);
 			c->offset -= n;

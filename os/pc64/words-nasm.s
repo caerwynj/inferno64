@@ -1,33 +1,33 @@
-CENTRY "false" c_false 5
+CENTRY "false" C_false 5
 dd M_literal
 dd 0
 dd M_exitcolon
-CENTRY "true" c_true 4
+CENTRY "true" C_true 4
 dd M_literal
 dd -1
 dd M_exitcolon
-CENTRY "bl" c_bl 2
+CENTRY "bl" C_bl 2
 dd M_literal
 dd 32
 dd M_exitcolon
-CENTRY "on" c_on 2		; ( a --  ) (G stores -1 at a )
+CENTRY "on" C_on 2		; ( a --  ) (G stores -1 at a )
 dd M_literal
 dd -1
 dd M_xswap
 dd M_store
 dd M_exitcolon
-CENTRY "off" c_off 3		; ( a --  ) (G stores 0 at a )
+CENTRY "off" C_off 3		; ( a --  ) (G stores 0 at a )
 dd M_literal
 dd 0
 dd M_xswap
 dd M_store
 dd M_exitcolon
-CENTRY ">body" c_tobody 5
+CENTRY ">body" C_tobody 5
 dd M_literal
 dd 8
 dd M_plus
 dd M_exitcolon
-CENTRY "aligned" c_aligned 7
+CENTRY "aligned" C_aligned 7
 dd M_literal
 dd 7
 dd M_plus
@@ -35,18 +35,18 @@ dd M_literal
 dd -8
 dd M_binand
 dd M_exitcolon
-CENTRY "cells" c_cells 5
+CENTRY "cells" C_cells 5
 dd M_literal
 dd 3			; (index << 2) -> (index << 3)for amd64
 dd M_lshift
 dd M_exitcolon
-CENTRY "cell+" c_cellplus 5
+CENTRY "cell+" C_cellplus 5
 dd M_literal
 dd 1
 dd C_cells
 dd M_plus
 dd M_exitcolon
-CENTRY "depth" c_depth 5
+CENTRY "depth" C_depth 5
 dd M_S0
 dd M_stackptr
 dd M_minus
@@ -57,35 +57,35 @@ dd M_literal
 dd 1
 dd M_minus
 dd M_exitcolon
-CENTRY "nip" c_nip 3
+CENTRY "nip" C_nip 3
 dd M_xswap
 dd M_drop
 dd M_exitcolon
-CENTRY "rot" c_rot 3
+CENTRY "rot" C_rot 3
 dd M_rpush
 dd M_xswap
 dd M_rpop
 dd M_xswap
 dd M_exitcolon
-CENTRY "2drop" c_2drop 5
+CENTRY "2drop" C_2drop 5
 dd M_drop
 dd M_drop
 dd M_exitcolon
-CENTRY "2dup" c_2dup 4
+CENTRY "2dup" C_2dup 4
 dd M_over
 dd M_over
 dd M_exitcolon
-CENTRY "2nip" c_2nip 4
+CENTRY "2nip" C_2nip 4
 dd C_nip
 dd C_nip
 dd M_exitcolon
-CENTRY "2swap" c_2swap 5
+CENTRY "2swap" C_2swap 5
 dd C_rot
 dd M_rpush
 dd C_rot
 dd M_rpop
 dd M_exitcolon
-CENTRY "?dup" c_qdup 4 ; if (tos != 0) dup ( n -- ) TODO correct stack notations
+CENTRY "?dup" C_qdup 4 ; if (tos != 0) dup ( n -- ) TODO correct stack notations
 dd M_dup	; ( n n -- )
 dd M_dup	; ( n n n -- )
 dd M_literal
@@ -96,7 +96,7 @@ dd L20
 dd M_drop	; tos == 0 ( n -- )
 L20:		; tos != 0 ( n n -- )
 dd M_exitcolon
-CENTRY "pick" c_pick 4
+CENTRY "pick" C_pick 4
 dd C_qdup
 dd M_cjump
 dd L22
@@ -113,17 +113,17 @@ L22:
 dd M_dup
 L23:
 dd M_exitcolon
-CENTRY "tuck" c_tuck 4
+CENTRY "tuck" C_tuck 4
 dd M_dup
 dd M_rpush
 dd M_xswap
 dd M_rpop
 dd M_exitcolon
-CENTRY "/" c_divides 1
+CENTRY "/" C_divides 1
 dd M_slashmod
 dd C_nip
 dd M_exitcolon
-CENTRY "+!" c_plusstore 2
+CENTRY "+!" C_plusstore 2
 dd M_dup
 dd M_fetch
 dd C_rot
@@ -131,66 +131,66 @@ dd M_plus
 dd M_xswap
 dd M_store
 dd M_exitcolon
-CENTRY "invert" c_invert 6
+CENTRY "invert" C_invert 6
 dd M_literal
 dd -1
 dd M_binxor
 dd M_exitcolon
-CENTRY "mod" c_mod 3
+CENTRY "mod" C_mod 3
 dd M_slashmod
 dd M_drop
 dd M_exitcolon
-CENTRY "1+" c_1plus 2
+CENTRY "1+" C_1plus 2
 dd M_literal
 dd 1
 dd M_plus
 dd M_exitcolon
-CENTRY "1-" c_1minus 2
+CENTRY "1-" C_1minus 2
 dd M_literal
 dd 1
 dd M_minus
 dd M_exitcolon
-CENTRY "negate" c_negate 6
+CENTRY "negate" C_negate 6
 dd M_literal
 dd 0
 dd M_xswap
 dd M_minus
 dd M_exitcolon
-CENTRY "2*" c_2multiplies 2
+CENTRY "2*" C_2multiplies 2
 dd M_literal
 dd 1
 dd M_lshift
 dd M_exitcolon
-CENTRY "2/" c_2divides 2
+CENTRY "2/" C_2divides 2
 dd M_literal
 dd 1
 dd M_rshifta
 dd M_exitcolon
-CENTRY "0=" c_0eq 2
+CENTRY "0=" C_0eq 2
 dd M_literal
 dd 0
 dd M_equal
 dd M_exitcolon
-CENTRY "0<" c_0lt 2
+CENTRY "0<" C_0lt 2
 dd M_literal
 dd 0
 dd M_less
 dd M_exitcolon
-CENTRY "0>" c_0gt 2
+CENTRY "0>" C_0gt 2
 dd M_literal
 dd 0
 dd M_greater
 dd M_exitcolon
-CENTRY "<>" c_neq 2
+CENTRY "<>" C_neq 2
 dd M_equal
 dd C_invert
 dd M_exitcolon
-CENTRY "0<>" c_0neq 3
+CENTRY "0<>" C_0neq 3
 dd M_literal
 dd 0
 dd C_neq
 dd M_exitcolon
-CENTRY "max" c_max 3
+CENTRY "max" C_max 3
 dd C_2dup
 dd M_greater
 dd M_cjump
@@ -202,7 +202,7 @@ L40:
 dd C_nip
 L41:
 dd M_exitcolon
-CENTRY "min" c_min 3
+CENTRY "min" C_min 3
 dd C_2dup
 dd M_less
 dd M_cjump
@@ -214,7 +214,7 @@ L43:
 dd C_nip
 L44:
 dd M_exitcolon
-CENTRY "signum" c_signum 6
+CENTRY "signum" C_signum 6
 dd M_dup
 dd C_0gt
 dd M_cjump
@@ -238,7 +238,7 @@ dd 0
 L49:
 L47:
 dd M_exitcolon
-CENTRY "within" c_within 6
+CENTRY "within" C_within 6
 dd M_rpush
 dd M_over
 dd M_greater
@@ -249,7 +249,7 @@ dd M_greater
 dd C_0eq
 dd M_binand
 dd M_exitcolon
-CENTRY "abs" c_abs 3
+CENTRY "abs" C_abs 3
 dd M_dup
 dd C_0lt
 dd M_cjump
@@ -258,7 +258,7 @@ dd C_negate
 L52:
 dd M_exitcolon
 
-CENTRY "key" c_key 3	 ; ( -- c ) (G read a single character from the input onto the stack )
+CENTRY "key" C_key 3	 ; ( -- c ) (G read a single character from the input onto the stack )
 dd M_literal
 dd 1			; ( 1 -- )
 dd MV_Iobuf		; variable iobuf to store the character read
@@ -280,7 +280,7 @@ dd M_cfetch	; ( -- c ) return the character read if not EOF
 L79:
 dd M_exitcolon
 
-CENTRY "emit" c_emit 4	; ( character -- )
+CENTRY "emit" C_emit 4	; ( character -- )
 dd MV_Iobuf		; variable iobuf address
 dd M_cstore	; variable iobuf has character
 dd MV_Iobuf		; variable iobuf address
@@ -293,7 +293,7 @@ dd M_fthwrite	; ( 1 iobuf outfd --  )
 dd M_drop		; drop the return value of write
 dd M_exitcolon
 
-CENTRY "type" c_type 4	; ( addr n -- )
+CENTRY "type" C_type 4	; ( addr n -- )
 dd M_xswap			; ( addr n --  n addr )
 dd M_literal
 dd 1				; stdout
@@ -301,16 +301,16 @@ dd M_fthwrite			; ( n addr 1 --  )
 dd M_drop		; drop the return value of write
 dd M_exitcolon
 
-CENTRY "cr" c_cr 2
+CENTRY "cr" C_cr 2
 dd M_literal
 dd 10			; ascii value of carriage return
 dd C_emit			; emit
 dd M_exitcolon
-CENTRY "space" c_space 5
+CENTRY "space" C_space 5
 dd C_bl
 dd C_emit
 dd M_exitcolon
-CENTRY "emits" c_emits 5
+CENTRY "emits" C_emits 5
 L85:
 dd C_qdup
 dd M_cjump
@@ -323,21 +323,21 @@ dd L85
 L86:
 dd M_drop
 dd M_exitcolon
-CENTRY "spaces" c_spaces 6
+CENTRY "spaces" C_spaces 6
 dd C_bl
 dd M_xswap
 dd C_emits
 dd M_exitcolon
-CENTRY "count" c_count 5 ; ( a -- a+1 n ) a = counted string
+CENTRY "count" C_count 5 ; ( a -- a+1 n ) a = counted string
 dd C_1plus
 dd M_dup
 dd C_1minus
 dd M_cfetch
 dd M_exitcolon
 
-
 dd C_2dup ; debug show the word name to search
 dd C_type
+dd C_space
 
 dd M_rpush ; debug show the dictionary entry
 dd M_rpush
@@ -345,8 +345,9 @@ dd C_2dup
 dd C_type
 dd M_rpop
 dd M_rpop
+dd C_cr
 
-CENTRY "compare" c_compare 7 ; ( a1 n1 a2 n2 -- f ) a1 = dictionary entry a2 = word name to search
+CENTRY "compare" C_compare 7 ; ( a1 n1 a2 n2 -- f ) a1 = dictionary entry a2 = word name to search
 dd C_rot	; ( a1 n1 a2 n2 -- a1 a2 n2 n1 )
 dd C_2dup	; ( -- a1 a2 n2 n1 n2 n1 )
 dd M_rpush	; ( -- a1 a2 n2 n1 n2 ) (R n1 -- )
@@ -383,7 +384,7 @@ dd M_minus	; ( -- n1-n2 )
 dd C_signum
 dd M_exitcolon
 
-CENTRY "erase" c_erase 5
+CENTRY "erase" C_erase 5
 dd M_literal
 dd 0
 dd M_doinit
@@ -397,7 +398,7 @@ dd M_doloop
 dd L58
 dd M_drop
 dd M_exitcolon
-CENTRY "fill" c_fill 4
+CENTRY "fill" C_fill 4
 dd M_xswap
 dd M_literal
 dd 0
@@ -412,11 +413,11 @@ dd M_doloop
 dd L60
 dd C_2drop
 dd M_exitcolon
-CENTRY "blank" c_blank 5
+CENTRY "blank" C_blank 5
 dd C_bl
 dd C_fill
 dd M_exitcolon
-CENTRY "search" c_search 6
+CENTRY "search" C_search 6
 dd MV_Searchlen
 dd M_store
 dd M_xswap
@@ -460,11 +461,11 @@ dd M_drop
 dd M_rpop
 dd C_false
 dd M_exitcolon
-CENTRY "here" c_here 4
+CENTRY "here" C_here 4
 dd M_H0
 dd M_fetch
 dd M_exitcolon
-CENTRY "," c_comma 1
+CENTRY "," C_comma 1
 dd C_here
 dd M_store
 dd M_literal
@@ -472,7 +473,7 @@ dd 8
 dd M_H0
 dd C_plusstore
 dd M_exitcolon
-CENTRY "c," c_c 2
+CENTRY "c," C_c 2
 dd C_here
 dd M_cstore
 dd M_literal
@@ -480,29 +481,29 @@ dd 1
 dd M_H0
 dd C_plusstore
 dd M_exitcolon
-CENTRY "allot" c_allot 5
+CENTRY "allot" C_allot 5
 dd M_H0
 dd C_plusstore
 dd M_exitcolon
-CENTRY "pad" c_pad 3
+CENTRY "pad" C_pad 3
 dd C_here
 dd M_literal
 dd 256
 dd M_plus
 dd M_exitcolon
-CENTRY "align" c_align 5
+CENTRY "align" C_align 5
 dd C_here
 dd C_aligned
 dd M_H0
 dd M_store
 dd M_exitcolon
-CENTRY "unused" c_unused 6
+CENTRY "unused" C_unused 6
 dd M_H0
 dd M_fetch
 dd C_here
 dd M_minus
 dd M_exitcolon
-CENTRY "<#" c_fromhash 2
+CENTRY "<#" C_fromhash 2
 dd C_pad
 dd M_literal
 dd 1024
@@ -510,7 +511,7 @@ dd M_plus
 dd MV_toNum
 dd M_store
 dd M_exitcolon
-CENTRY "#" c_hash 1
+CENTRY "#" C_hash 1
 dd MV_Base
 dd M_fetch
 dd M_uslashmod
@@ -542,7 +543,7 @@ dd MV_toNum
 dd M_store
 dd M_cstore
 dd M_exitcolon
-CENTRY "#s" c_hashs 2
+CENTRY "#s" C_hashs 2
 L95:
 dd C_hash
 dd M_dup
@@ -552,7 +553,7 @@ dd M_jump
 dd L95
 L96:
 dd M_exitcolon
-CENTRY "#>" c_hashfrom 2
+CENTRY "#>" C_hashfrom 2
 dd M_drop
 dd MV_toNum
 dd M_fetch
@@ -564,7 +565,7 @@ dd M_plus
 dd M_xswap
 dd M_minus
 dd M_exitcolon
-CENTRY "hold" c_hold 4
+CENTRY "hold" C_hold 4
 dd MV_toNum
 dd M_fetch
 dd C_1minus
@@ -575,7 +576,7 @@ dd M_rpop
 dd MV_toNum
 dd M_store
 dd M_exitcolon
-CENTRY "sign" c_sign 4
+CENTRY "sign" C_sign 4
 dd C_0lt
 dd M_cjump
 dd L100
@@ -584,7 +585,7 @@ dd 45
 dd C_hold
 L100:
 dd M_exitcolon
-CENTRY "." c_dot 1
+CENTRY "." C_dot 1
 dd M_dup
 dd C_abs
 dd C_fromhash
@@ -595,7 +596,7 @@ dd C_hashfrom
 dd C_type
 dd C_space
 dd M_exitcolon
-CENTRY ".r" c_dotr 2
+CENTRY ".r" C_dotr 2
 dd M_rpush
 dd M_dup
 dd C_abs
@@ -613,20 +614,20 @@ dd C_max
 dd C_spaces
 dd C_type
 dd M_exitcolon
-CENTRY "hex" c_hex 3
+CENTRY "hex" C_hex 3
 dd M_literal
 dd 16
 dd MV_Base
 dd M_store
 dd M_exitcolon
-CENTRY "decimal" c_decimal 7
+CENTRY "decimal" C_decimal 7
 dd M_literal
 dd 10
 dd MV_Base
 dd M_store
 dd M_exitcolon
 
-CENTRY "digit" c_digit 5 ; c --
+CENTRY "digit" C_digit 5 ; c --
 dd M_dup
 dd M_literal
 dd 65
@@ -690,7 +691,7 @@ dd C_false
 L113:
 dd M_exitcolon
 
-CENTRY "number" c_number 6 ; ( a n1 -- n2 -1 | a n1 0 )
+CENTRY "number" C_number 6 ; ( a n1 -- n2 -1 | a n1 0 )
 dd M_xswap	; ( a n1 -- n1 a )
 dd M_dup	; ( n1 a -- n1 a a )
 dd M_cfetch	; ( n1 a a -- n1 a c )
@@ -754,23 +755,23 @@ dd M_multiply
 dd C_true
 dd M_exitcolon
 
-CENTRY "abort" c_abort 5
+CENTRY "abort" C_abort 5
 dd MV_Abortvec
 dd M_fetch
 dd M_execute
 dd M_exitcolon
-CENTRY "source" c_source 6
+CENTRY "source" C_source 6
 dd MV_Sourcebuf
 dd M_fetch
 dd M_exitcolon
-CENTRY "current-input" c_current_input 13 ; ( -- c ) read the next character from the location in Sourcebuf
+CENTRY "current-input" C_current_input 13 ; ( -- c ) read the next character from the location in Sourcebuf
 dd MV_toIn
 dd M_fetch
 dd C_source
 dd M_plus		; Sourcebuf + >In
 dd M_cfetch
 dd M_exitcolon
-CENTRY "save-input" c_save_input 10
+CENTRY "save-input" C_save_input 10
 dd MV_Infd
 dd MV_toIn
 dd M_fetch
@@ -783,7 +784,7 @@ dd M_fetch
 dd M_literal
 dd 5
 dd M_exitcolon
-CENTRY "default-input" c_default_input 13
+CENTRY "default-input" C_default_input 13
 dd MC_STDIN
 dd MV_toIn
 dd C_off
@@ -795,7 +796,7 @@ dd M_store
 dd MV_Blk
 dd C_off
 dd M_exitcolon
-CENTRY "restore-input" c_restore_input 13 ; ( -- f )
+CENTRY "restore-input" C_restore_input 13 ; ( -- f )
 dd MV_Eof
 dd C_off
 dd M_literal
@@ -822,7 +823,7 @@ dd C_true
 L134:
 dd M_exitcolon
 
-CENTRY "?restore-input" c_qrestore_input 14 ; ( -- )
+CENTRY "?restore-input" C_qrestore_input 14 ; ( -- )
 dd C_restore_input
 dd C_0eq
 dd M_cjump
@@ -838,7 +839,7 @@ dd C_abort
 L136:
 dd M_exitcolon
 
-CENTRY "next-input" c_next_input 10 ; when >In < >Limit ( -- true c ). ( --  0 false ) otherwise
+CENTRY "next-input" C_next_input 10 ; when >In < >Limit ( -- true c ). ( --  0 false ) otherwise
 dd MV_toIn
 dd M_fetch
 dd MV_toLimit
@@ -857,7 +858,7 @@ dd C_false
 L140:
 dd M_exitcolon
 
-CENTRY "parse" c_parse 5	; ( c -- a ) Place the counted string in the address in Wordbuf and return that address. c = word delimiter.
+CENTRY "parse" C_parse 5	; ( c -- a ) Place the counted string in the address in Wordbuf and return that address. c = word delimiter.
 dd M_rpush		; ( c -- ) (R -- c )
 dd MV_Wordbuf
 dd M_fetch		; ( -- Wordb )
@@ -897,7 +898,7 @@ dd M_cstore	; store the length of the string found at Wordb[0]. Counted string a
 dd M_rpop		; ( -- Wordb) (R Wordb -- )
 dd M_exitcolon
 
-CENTRY "word" c_word 4 ; ( c -- a ) skip the c"s. Placed the counted string in a (as in Wordbuf)
+CENTRY "word" C_word 4 ; ( c -- a ) skip the c"s. Placed the counted string in a (as in Wordbuf)
 dd M_rpush	; ( -- ) (R -- c )
 L145:
 dd C_next_input ; ( -- f c2 ) (R c1 -- )
@@ -917,7 +918,7 @@ dd M_rpop		; ( -- cinitial ) Sourcebuf+>In = location of first non-matching char
 dd C_parse
 dd M_exitcolon
 
-CENTRY "accept" c_accept 6	; ( a n -- n ) get line or n chars or EOF from input and store at a
+CENTRY "accept" C_accept 6	; ( a n -- n ) get line or n chars or EOF from input and store at a
 dd M_xswap	; ( n a -- )
 dd M_dup	; ( n a a -- )
 dd M_rpush
@@ -958,7 +959,7 @@ dd M_rpop	; ( a2 a1 -- ) (R a1 -- )
 dd M_minus	; ( a2 a1 -- a2-a1 )
 dd M_exitcolon
 
-CENTRY "query" c_query 5	; read from input stream into the Text Input Buffer
+CENTRY "query" C_query 5	; read from input stream into the Text Input Buffer
 dd MV_Eof
 dd C_off		; clear EOF flag
 dd M_Tib	; constant puts address of tibuffer on the top
@@ -972,8 +973,7 @@ dd M_fetch
 dd M_binand	; n == 0 && EOF
 dd M_cjump
 dd L152		; false condition
-; get out instead of M_drop and then C_qrestore_input
-dd M_terminate ;	dd M_drop	; n == 0 && EOF ( n -- )
+dd M_drop	; n == 0 && EOF ( n -- )
 dd C_qrestore_input
 dd M_jump
 dd L153
@@ -985,7 +985,7 @@ dd C_off		; start from 0 >In = 0
 L153:
 dd M_exitcolon
 
-CENTRY "refill" c_refill 6
+CENTRY "refill" C_refill 6
 dd MV_Blk
 dd M_fetch
 dd M_cjump
@@ -999,7 +999,7 @@ dd C_true
 L156:
 dd M_exitcolon
 
-CENTRY "findname" c_findname 8 ; ( a1 -- a2 f ) ; loop through the dictionary names
+CENTRY "findname" C_findname 8 ; ( a1 -- a2 f ) ; loop through the dictionary names
 dd MV_Findadr
 dd M_store
 dd M_Dtop
@@ -1047,7 +1047,7 @@ dd M_fetch
 dd C_false
 dd M_exitcolon
 
-CENTRY "find" c_find 4 ; ( a1 -- a2 f )?
+CENTRY "find" C_find 4 ; ( a1 -- a2 f )?
 dd C_findname
 dd M_cjump
 dd L164
@@ -1083,7 +1083,7 @@ dd C_false
 L167:
 dd M_exitcolon
 
-CENTRY "'" c_single_quote 1
+CENTRY "'" C_single_quote 1
 dd C_bl
 dd C_word
 dd C_find
@@ -1102,7 +1102,7 @@ dd C_cr
 dd C_abort
 L169:
 dd M_exitcolon
-CENTRY "?stack" c_qstack 6
+CENTRY "?stack" C_qstack 6
 dd M_stackptr
 dd M_S0
 dd M_greater
@@ -1126,7 +1126,12 @@ dd MC_STDOUT
 dd M_fthwrite
 dd M_drop		; drop the return value of write
 
-CENTRY "interpret" c_interpret 9 ; there is stuff in TIB to be interpreted >In and >Limit are set
+CENTRY "interpret" C_interpret 9 ; there is stuff in TIB to be interpreted >In and >Limit are set
+
+dd M_literal
+dd 73
+dd C_emit
+
 L175:
 dd C_bl
 dd C_word	; ( bl -- a ) a = address of counted string
@@ -1138,7 +1143,12 @@ dd L176	; count at a = 0
 dd C_find	; ( a -- a1 f ) a = address of counted string
 dd M_cjump
 dd L177
-d M_execute	; found in dictionary, execute
+
+dd M_literal
+dd 69
+dd C_emit
+
+dd M_execute	; found in dictionary, execute
 dd C_qstack
 dd M_jump
 dd L178
@@ -1158,6 +1168,11 @@ dd C_type
 dd C_cr
 dd C_abort
 L179:		; is a number
+
+dd M_literal
+dd 78
+dd C_emit
+
 L178:
 dd M_jump
 dd L175
@@ -1165,7 +1180,7 @@ L176:
 dd M_drop	; count at a = 0 ( a -- )
 dd M_exitcolon
 
-CENTRY "create" c_create 6
+CENTRY "create" C_create 6
 dd C_align
 dd C_here
 dd M_rpush
@@ -1193,13 +1208,13 @@ dd M_rpop
 dd M_Dp
 dd M_store
 dd M_exitcolon
-CENTRY "variable" c_variable 8
+CENTRY "variable" C_variable 8
 dd C_create
 dd M_literal
 dd 0
 dd C_comma
 dd M_exitcolon
-CENTRY "constant" c_constant 8
+CENTRY "constant" C_constant 8
 dd C_create
 dd M_literal
 dd M_constant
@@ -1212,7 +1227,7 @@ dd M_minus
 dd M_store
 dd C_comma
 dd M_exitcolon
-CENTRY "immediate" c_immediate 9
+CENTRY "immediate" C_immediate 9
 dd M_Dp
 dd M_fetch
 dd C_cellplus
@@ -1224,7 +1239,7 @@ dd M_binor
 dd M_xswap
 dd M_cstore
 dd M_exitcolon
-CENTRY ">cfa" c_tocfa 4
+CENTRY ">cfa" C_tocfa 4
 dd C_count
 dd M_literal
 dd 63
@@ -1232,7 +1247,7 @@ dd M_binand
 dd M_plus
 dd C_aligned
 dd M_exitcolon
-CENTRY "compile" c_compile 7
+CENTRY "compile" C_compile 7
 dd C_findname
 dd M_cjump
 dd L188
@@ -1279,7 +1294,7 @@ dd C_comma
 L194:
 L191:
 dd M_exitcolon
-CENTRY "]" c_close_bracket 1
+CENTRY "]" C_close_bracket 1
 dd MV_State
 dd C_on
 L196:
@@ -1305,11 +1320,11 @@ dd M_jump
 dd L196
 L199:
 dd M_exitcolon
-CIENTRY "[" ci_open_bracket 1
+CIENTRY "[" CI_open_bracket 1
 dd MV_State
 dd C_off
 dd M_exitcolon
-CENTRY "smudge" c_smudge 6
+CENTRY "smudge" C_smudge 6
 dd M_Dp
 dd M_fetch
 dd C_cellplus
@@ -1321,7 +1336,7 @@ dd M_binor
 dd M_xswap
 dd M_cstore
 dd M_exitcolon
-CENTRY "reveal" c_reveal 6
+CENTRY "reveal" C_reveal 6
 dd M_Dp
 dd M_fetch
 dd C_cellplus
@@ -1334,7 +1349,7 @@ dd M_binand
 dd M_xswap
 dd M_cstore
 dd M_exitcolon
-CENTRY ":" c_colon 1
+CENTRY ":" C_colon 1
 dd C_create
 dd C_smudge
 dd M_literal
@@ -1348,7 +1363,7 @@ dd M_minus
 dd M_store
 dd C_close_bracket
 dd M_exitcolon
-CIENTRY ";" ci_semicolon 1
+CIENTRY ";" CI_semicolon 1
 dd M_literal
 dd M_exitcolon
 dd C_comma
@@ -1356,7 +1371,7 @@ dd MV_State
 dd C_off
 dd C_reveal
 dd M_exitcolon
-CIENTRY "recurse" ci_recurse 7
+CIENTRY "recurse" CI_recurse 7
 dd M_Dp
 dd M_fetch
 dd C_cellplus
@@ -1369,13 +1384,13 @@ dd C_word
 dd C_1plus
 dd M_cfetch
 dd M_exitcolon
-CENTRY "literal" c_literal 7
+CENTRY "literal" C_literal 7
 dd M_literal
 dd M_literal
 dd C_comma
 dd C_comma
 dd M_exitcolon
-CENTRY "sliteral" c_sliteral 8
+CENTRY "sliteral" C_sliteral 8
 dd M_literal
 dd M_sliteral
 dd C_comma
@@ -1394,7 +1409,7 @@ dd M_rpop
 dd C_allot
 dd C_align
 dd M_exitcolon
-CENTRY "string" c_string 6
+CENTRY "string" C_string 6
 dd C_word
 dd M_dup
 dd M_cfetch
@@ -1406,24 +1421,24 @@ dd M_cmove
 dd M_rpop
 dd C_allot
 dd M_exitcolon
-CIENTRY "[char]" ci_char_brackets 6
+CIENTRY "[char]" CI_char_brackets 6
 dd C_bl
 dd C_word
 dd C_1plus
 dd M_cfetch
 dd C_literal
 dd M_exitcolon
-CIENTRY "[']" ci_quote_brackets 3
+CIENTRY "[']" CI_quote_brackets 3
 dd C_single_quote
 dd C_literal
 dd M_exitcolon
-CIENTRY "(" ci_openparen 1
+CIENTRY "(" CI_openparen 1
 dd M_literal
 dd 41
 dd C_parse
 dd M_drop
 dd M_exitcolon
-CIENTRY "\\" ci_backslash 1
+CIENTRY "\\" CI_backslash 1
 dd MV_Blk
 dd M_fetch
 dd M_cjump
@@ -1448,7 +1463,7 @@ dd MV_toIn
 dd M_store
 L215:
 dd M_exitcolon
-CENTRY "(?abort)" c_qabort_parens 8
+CENTRY "(?abort)" C_qabort_parens 8
 dd MV_State
 dd M_cjump
 dd L217
@@ -1462,13 +1477,13 @@ L217:
 dd C_2drop
 L218:
 dd M_exitcolon
-CIENTRY "abort\"" ci_abort_double_quote 6
+CIENTRY "abort\"" CI_abort_double_quote 6
 dd C_sliteral
 dd M_literal
 dd C_qabort_parens
 dd C_comma
 dd M_exitcolon
-CENTRY "\"" c_double_quote 1
+CENTRY "\"" C_double_quote 1
 dd M_literal
 dd 34
 dd C_word
@@ -1482,7 +1497,7 @@ dd M_rpop
 dd M_dup
 dd C_allot
 dd M_exitcolon
-CENTRY "c\"" c_cdouble_quote 2
+CENTRY "c\"" C_cdouble_quote 2
 dd M_literal
 dd 34
 dd C_word
@@ -1497,16 +1512,16 @@ dd C_here
 dd M_rpop
 dd C_allot
 dd M_exitcolon
-CIENTRY "s\"" ci_sdouble_quote 2
+CIENTRY "s\"" CI_sdouble_quote 2
 dd C_sliteral
 dd M_exitcolon
-CIENTRY ".\"" ci_dotstr 2
+CIENTRY ".\"" CI_dotstr 2
 dd C_sliteral
 dd M_literal
 dd C_type
 dd C_comma
 dd M_exitcolon
-CIENTRY "if" ci_if 2
+CIENTRY "if" CI_if 2
 dd M_literal
 dd M_cjump
 dd C_comma
@@ -1515,7 +1530,7 @@ dd M_literal
 dd 0
 dd C_comma
 dd M_exitcolon
-CIENTRY "else" ci_else 4
+CIENTRY "else" CI_else 4
 dd M_literal
 dd M_jump
 dd C_comma
@@ -1529,27 +1544,27 @@ dd M_xswap
 dd M_store
 dd M_rpop
 dd M_exitcolon
-CIENTRY "then" ci_then 4
+CIENTRY "then" CI_then 4
 dd C_here
 dd M_xswap
 dd M_store
 dd M_exitcolon
-CIENTRY "begin" ci_begin 5
+CIENTRY "begin" CI_begin 5
 dd C_here
 dd M_exitcolon
-CIENTRY "again" ci_again 5
+CIENTRY "again" CI_again 5
 dd M_literal
 dd M_jump
 dd C_comma
 dd C_comma
 dd M_exitcolon
-CIENTRY "until" ci_until 5
+CIENTRY "until" CI_until 5
 dd M_literal
 dd M_cjump
 dd C_comma
 dd C_comma
 dd M_exitcolon
-CIENTRY "while" ci_while 5
+CIENTRY "while" CI_while 5
 dd M_literal
 dd M_cjump
 dd C_comma
@@ -1558,7 +1573,7 @@ dd M_literal
 dd 0
 dd C_comma
 dd M_exitcolon
-CIENTRY "repeat" ci_repeat 6
+CIENTRY "repeat" CI_repeat 6
 dd M_literal
 dd M_jump
 dd C_comma
@@ -1568,7 +1583,7 @@ dd C_here
 dd M_xswap
 dd M_store
 dd M_exitcolon
-CIENTRY "do" ci_do 2
+CIENTRY "do" CI_do 2
 dd M_literal
 dd M_doinit
 dd C_comma
@@ -1576,7 +1591,7 @@ dd M_literal
 dd 0
 dd C_here
 dd M_exitcolon
-CIENTRY "loop" ci_loop 4
+CIENTRY "loop" CI_loop 4
 dd M_literal
 dd M_doloop
 dd C_comma
@@ -1589,7 +1604,7 @@ dd M_xswap
 dd M_store
 L234:
 dd M_exitcolon
-CIENTRY "+loop" ci_ploop 5
+CIENTRY "+loop" CI_ploop 5
 dd M_literal
 dd M_doploop
 dd C_comma
@@ -1602,7 +1617,7 @@ dd M_xswap
 dd M_store
 L236:
 dd M_exitcolon
-CENTRY "w/o" c_wo 3
+CENTRY "w/o" C_wo 3
 dd M_literal
 dd 1
 dd M_literal
@@ -1612,15 +1627,15 @@ dd M_literal
 dd 64
 dd M_binor
 dd M_exitcolon
-CENTRY "r/o" c_ro 3
+CENTRY "r/o" C_ro 3
 dd M_literal
 dd 0
 dd M_exitcolon
-CENTRY "r/w" c_rw 3
+CENTRY "r/w" C_rw 3
 dd M_literal
 dd 2
 dd M_exitcolon
-CENTRY "open-file" c_open_file 9
+CENTRY "open-file" C_open_file 9
 dd M_rpush
 dd C_pad
 dd M_literal
@@ -1652,30 +1667,30 @@ dd M_literal
 dd -1
 dd M_greater
 dd M_exitcolon
-CENTRY "close-file" c_close_file 10
+CENTRY "close-file" C_close_file 10
 dd M_fthclose
 dd C_0eq
 dd M_exitcolon
-CENTRY "read-file" c_read_file 9
+CENTRY "read-file" C_read_file 9
 dd M_fthread
 dd M_dup
 dd M_literal
 dd -1
 dd C_neq
 dd M_exitcolon
-CENTRY "write-file" c_write_file 10
+CENTRY "write-file" C_write_file 10
 dd M_fthwrite
 dd M_literal
 dd -1
 dd C_neq
 dd M_exitcolon
-CENTRY "reposition-file" c_reposition_file 15
+CENTRY "reposition-file" C_reposition_file 15
 dd M_fthseek
 dd M_literal
 dd -1
 dd C_neq
 dd M_exitcolon
-CENTRY "?fcheck" c_qfcheck 7
+CENTRY "?fcheck" C_qfcheck 7
 dd C_0eq
 dd M_cjump
 dd L246
@@ -1689,13 +1704,13 @@ dd C_cr
 dd C_abort
 L246:
 dd M_exitcolon
-CENTRY "bye" c_bye 3
+CENTRY "bye" C_bye 3
 dd M_literal
 dd 0
 dd M_terminate
 dd M_exitcolon
 
-CENTRY "include" c_include 7
+CENTRY "include" C_include 7
 dd C_bl
 dd C_word
 dd M_rpush
@@ -1713,7 +1728,7 @@ dd MV_Infd
 dd M_store
 dd M_exitcolon
 
-CENTRY "crash" c_crash 5
+CENTRY "crash" C_crash 5
 dd M_literal
 dd L251
 dd M_literal
@@ -1723,7 +1738,7 @@ dd C_cr
 dd C_abort
 dd M_exitcolon
 
-CENTRY "quit" c_quit 4 ; interpreter loop
+CENTRY "quit" C_quit 4 ; interpreter loop
 dd M_reset ; initialize return stack
 dd M_clear	; SP = sstack_end initialize data stack
 L253:
@@ -1741,7 +1756,7 @@ dd M_jump
 dd L253
 dd M_exitcolon	; why is this needed?
 
-CENTRY "(abort)" c_parenabort 7 ; TODO correct below stack notations
+CENTRY "(abort)" C_parenabort 7 ; TODO correct below stack notations
 dd MV_State	; ( mv_State -- )
 dd C_off		; off sets variable state = 0
 dd M_Tib	; constant puts address of tibuffer on the top of stack
@@ -1761,7 +1776,7 @@ dd M_store
 dd C_quit	; quit resets stacks and is the interpreter loop
 dd M_exitcolon	; why is this needed? quit does not return unless it breaks
 
-CENTRY "oldboot" c_oldboot 7 ; TODO correct below stack notations and this is obsolete. leaving it here for reference until it all works well
+CENTRY "oldboot" C_oldboot 7 ; TODO correct below stack notations and this is obsolete. leaving it here for reference until it all works well
 dd M_reset
 dd M_clear	; SP = sstack_end
 dd M_stackptr	; (D -- FFEND)
@@ -1818,21 +1833,68 @@ dd MC_STDIN
 dd M_fthread
 dd M_drop		; drop the return value of read
 
-CENTRY "boot" c_boot 4
+CENTRY "boot" C_boot 4
+
+dd M_literal	; test code
+dd 65
+dd M_Wordb
+dd M_store
+dd M_literal
+dd 1
+dd M_Wordb
+dd MC_STDOUT
+dd M_fthwrite
+dd M_drop		; drop the return value of write
 
 dd M_reset ; initialize return stack
 dd M_clear	; SP = sstack_end initialize data stack
 			; s0 puts FFEND on the stack
 			; no args
 
+
+dd M_literal	; test code
+dd 66
+dd M_Wordb
+dd M_store
+dd M_literal
+dd 1
+dd M_Wordb
+dd MC_STDOUT
+dd M_fthwrite
+dd M_drop		; drop the return value of write
+
 dd M_literal
 dd C_parenabort ; ( (abort) -- )
 dd MV_Abortvec	; variable that puts (abort) code address on the stack
 dd M_store	; variable abortvec = (abort) code address
 
+
+dd M_literal	; test code
+dd 67
+dd M_Wordb
+dd M_store
+dd M_literal
+dd 1
+dd M_Wordb
+dd MC_STDOUT
+dd M_fthwrite
+dd M_drop		; drop the return value of write
+
 dd M_Wordb	; variable puts address of wordbuffer on the top of stack
 dd MV_Wordbuf ; variable wordbuf
 dd M_store	; variable wordbuf = address of wordbuffer
+
+
+dd M_literal	; test code
+dd 68
+dd M_Wordb
+dd M_store
+dd M_literal
+dd 1
+dd M_Wordb
+dd MC_STDOUT
+dd M_fthwrite
+dd M_drop		; drop the return value of write
 
 dd M_Tib	; constant puts address of tibuffer on the top of stack
 dd MV_Sourcebuf	; variable sourcebuf
@@ -1851,6 +1913,19 @@ dd M_store
 dd MV_State
 dd C_off	; off stores 0 at state
 dd C_decimal	; decimal sets base = 10
+
+
+dd M_literal	; test code
+dd 69
+dd M_Wordb
+dd M_store
+dd M_literal
+dd 1
+dd M_Wordb
+dd MC_STDOUT
+dd M_fthwrite
+dd M_drop		; drop the return value of write
+
 dd C_quit	; quit
 dd M_exitcolon
 

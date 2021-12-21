@@ -56,35 +56,30 @@ isdotdot(char *p)
 	return p[0]=='.' && p[1]=='.' && p[2]=='\0';
 }
 
-/*
- * sticking with inferno's definition of Ref
- * as it keeps the incref() and decref() simple
- * and also puts the proc on the fast path by the
- * scheduler's priorities (PriLock)
- */
 int
 incref(Ref *r)
 {
-	int x;
+	s32 old, new;
 
-	lock(&r->l);
-	x = ++r->ref;
-	unlock(&r->l);
-	return x;
+	do {
+		old = r->ref;
+		new = old+1;
+	} while(cmpswap(&r->ref, old, new) == 0);
+	return new;
 }
 
 int
 decref(Ref *r)
 {
-	int x;
+	long old, new;
 
-	lock(&r->l);
-	x = --r->ref;
-	unlock(&r->l);
-	if(x < 0)
-		panic("decref, pc=0x%zux", getcallerpc(&r));
-
-	return x;
+	do {
+		old = r->ref;
+		if(old <= 0)
+			panic("decref pc=%#p", getcallerpc(&r));
+		new = old-1;
+	} while(cmpswap(&r->ref, old, new) == 0);
+	return new;
 }
 
 /*
@@ -535,11 +530,11 @@ closeproc(void *)
 void
 cclose(Chan *c)
 {
-	if(c == nil)
-		return;
-	if(c->ref < 1 || c->flag&CFREE)
+	if(c == nil || c->ref < 1 || c->flag&CFREE){
+		print("cclose before panic\n");
 		panic("cclose %#p c->path %s c->ref %d c->flag 0x%ux",
 				getcallerpc(&c), chanpath(c), c->ref, c->flag);
+	}
 
 	if(decref(c))
 		return;
@@ -1150,7 +1145,7 @@ createdir(Chan *c, Mhead *m)
 		nexterror();
 	}
 	for(f = m->mount; f; f = f->next) {
-		if(f->mflag&MCREATE) {
+		if((f->mflag&MCREATE) != 0) {
 			nc = cclone(f->to);
 			runlock(&m->lock);
 			poperror();
@@ -1174,9 +1169,9 @@ growparse(Elemlist *e)
 	int *inew;
 	enum { Delta = 8 };
 
-	if(e->nelems % Delta == 0){
+	if((e->nelems % Delta) == 0){
 		new = smalloc((e->nelems+Delta) * sizeof(char*));
-		memmove(new, e->elems, e->nelems*sizeof(char*));
+		memmove(new, e->elems, (e->nelems+1)*sizeof(char*));
 		free(e->elems);
 		e->elems = new;
 		inew = smalloc((e->nelems+Delta+1) * sizeof(int));

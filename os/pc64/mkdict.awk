@@ -48,12 +48,12 @@ $1 == "MVENTRY" {
 }
 $1 == "CENTRY" {
 	name = $2
-	gsub(/^c_/,"", $3)
+	gsub(/^C_/,"", $3)
 	header($4, name, "C_", $3, "colon")
 }
 $1 == "CIENTRY" {
 	name = $2
-	gsub(/^ci_/,"", $3)
+	gsub(/^CI_/,"", $3)
 	header($4, name, "CI_", $3, "colon", 1)
 }
 $1 == "dd" && $2 ~ literal {

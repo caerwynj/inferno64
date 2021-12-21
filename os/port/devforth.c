@@ -7,7 +7,7 @@
 
 #include	"forth.h"
 
-static int debug = 1;
+static int debug = 0;
 extern Fentry fentries[];
 
 /*
@@ -15,6 +15,9 @@ extern Fentry fentries[];
  2. pipe data between the readers and writers of #f/forth/pid/(stdin stdout stderr)
 		do not do this. too much work. use the existing mechanism.
 		use the parent's Fgrp - easy, simple and it works fine
+	-- the above is wrong. It is hard to separate out the process if it is using the parent's fd's.
+		For now, use the stdin, stdout and stderr mechanism.
+		If the performance is good enough, add more syscalls and then replace dis/init with forth
  */
 enum
 {
@@ -27,6 +30,9 @@ enum
 	Qfprocdir,
 	Qctl,
 	Qvars,
+	Qstdin,
+	Qstdout,
+	Qstderr,
 	/* Qlisten, might be good to have later on for servers */
 };
 
@@ -136,7 +142,7 @@ loadforthdictionary(u8 *fmem)
 	}
 	*(intptr*)(fmem + HERE) = (intptr)h;
 	*(intptr*)(fmem + DTOP) = (intptr)dtop;
-	DBG("loadforthdictionary fmem 0x%zx h 0x%zx dtop 0x%zx"
+	print("loadforthdictionary fmem 0x%zx h 0x%zx dtop 0x%zx\n"
 		" (intptr*)(fmem + DTOP) 0x%zx *(intptr*)(fmem + DTOP) 0x%zx\n",
 		fmem, (intptr)h, (intptr)dtop, (intptr*)(fmem + DTOP), *(intptr*)(fmem + DTOP));
 }
@@ -151,11 +157,15 @@ forthentry(void *fmem)
 	loadforthdictionary((u8*)fmem);
 
 	/* load dictionary */
-	print("fentries[0].name %s\n", fentries[0].hdr.name);
-	print("fentries[1].name %s nfentries %d\n", fentries[1].hdr.name, nelem(fentries));
-	if(waserror())
-		print("forthentry waserror(): %r\n");
-	forthmain((u8*)fmem);
+	print("forthentry pid %d forthmem 0x%zx end 0x%zx forthmem+RSTACK_END 0x%zx\n",
+		up->pid, (intptr)fmem, ((intptr*)fmem)[1], (intptr)fmem+RSTACK_END);
+	DBG("fentries[0].name %s\n", fentries[0].hdr.name);
+	DBG("fentries[1].name %s nfentries %d\n", fentries[1].hdr.name, nelem(fentries));
+	if(waserror()){
+		print("forthentry error: %r\n");
+		poperror();
+	}else
+		forthmain((u8*)fmem);
 print("after forthmain\n");
 	free(fmem);
 
@@ -169,16 +179,21 @@ print("after forthmain\n");
 	}
 	nforthprocs--;
 	funlock();
+	qfree(up->frq);
+	qfree(up->fwq);
+	qfree(up->ferrq);
+	print("before pexit\n");
 	pexit("exit", 0);
 }
 
 Proc *
-newforthproc(void)
+newforthproc(Chan *cin, Chan *cout, Chan *cerr)
 {
 	Proc *p;
 	Pgrp *pg;
 	Fgrp *fg;
 	Egrp *eg;
+	s32 slot;
 
 	while((p = newproc()) == nil){
 /* TODO		freebroken(); */
@@ -194,16 +209,41 @@ newforthproc(void)
 
 	kstrdup(&p->env->user, up->env->user);
 
-	pg = up->env->pgrp;
+	pg = newpgrp();
+	pgrpcpy(pg, up->env->pgrp);
 	if(pg == nil)
 		panic("newforthproc: nil process group\n");
-	incref(pg);
 	p->env->pgrp = pg;
 
-	fg = up->env->fgrp;
-	if(fg != nil)
-		incref(fg);
+	fg = dupfgrp(up->env->fgrp);
+	if(fg == nil)
+		panic("newforthproc: nil file descriptor group\n");
 	p->env->fgrp = fg;
+	fg->fd[0]->mode = up->env->fgrp->fd[0]->mode;
+	fg->fd[1]->mode = up->env->fgrp->fd[1]->mode;
+	fg->fd[2]->mode = up->env->fgrp->fd[2]->mode;
+	cclose(fg->fd[0]);
+	cclose(fg->fd[1]);
+	cclose(fg->fd[2]);
+	cin->mode = up->env->fgrp->fd[0]->mode;
+	cout->mode = up->env->fgrp->fd[1]->mode;
+	cerr->mode = up->env->fgrp->fd[2]->mode;
+		slot = procindex(p->pid);
+		if(slot < 0)
+			panic("forthopen");
+	mkqid(&cin->qid, Qstdin|(slot+1)<<QSHIFT, p->pid, QTFILE);
+	mkqid(&cout->qid, Qstdout|(slot+1)<<QSHIFT, p->pid, QTFILE);
+	mkqid(&cerr->qid, Qstderr|(slot+1)<<QSHIFT, p->pid, QTFILE);
+
+	/* need a waserror() around these */
+	/* not bothering with kick() functions */
+	p->frq = qopen(QMAX, Qcoalesce, nil, nil);
+	p->fwq = qopen(QMAX, Qkick, nil, nil);
+	if(p->frq == nil || p->fwq == nil)
+		error(Enomem);
+	p->ferrq = qopen(1024, Qmsg, 0, 0);
+	if(p->ferrq == nil)
+		error(Enomem);
 
 	eg = up->env->egrp;
 	if(eg != nil)
@@ -228,7 +268,8 @@ newforthproc(void)
 	/* store the start address at that address too - magic check */
 	((intptr*)p->fmem)[0] = (intptr)p->fmem;	/* heap start */
 	((intptr*)p->fmem)[1] = (intptr)p->fmem+FORTHHEAPSIZE-1; /* heap end */
-	flock();
+
+	/* already under flock() */
 	if(fhead == nil){
 		fhead = ftail = p;
 	}else{
@@ -237,7 +278,6 @@ newforthproc(void)
 		ftail = p;
 	}
 	nforthprocs++;
-	funlock();
 
 /*	p->kpfun = func;
 	p->kparg = arg;
@@ -322,13 +362,13 @@ forthgen(Chan *c, char *name, Dirtab *, int, int s, Dir *dp)
 	case Qforthdir:
 		if(s == 0){
 	case Qnew:	/* this label is just a comment(?), has no purpose */
-			mkqid(&q, Qnew, 0, QTFILE);
-			devdir(c, q, "new", 0, eve, 0666, dp);
-	DBG("forthgen Qforthdir c->path %s name %s s %d mode 0x%ux c->qid.path 0x%zux "
-		"slot %d qid %d c->qid.vers %d c->qid.type %d 0x%ux\n",
-		chanpath(c), name, s, c->mode, c->qid.path, SLOT(c->qid),
-		QID(c->qid), c->qid.vers, c->qid.type, c->qid.type);
-			return 1;
+		mkqid(&q, Qnew, 0, QTFILE);
+		devdir(c, q, "new", 0, eve, 0666, dp);
+		DBG("forthgen Qforthdir c->path %s name %s s %d mode 0x%ux c->qid.path 0x%zux "
+			"slot %d qid %d c->qid.vers %d c->qid.type %d 0x%ux\n",
+			chanpath(c), name, s, c->mode, c->qid.path, SLOT(c->qid),
+			QID(c->qid), c->qid.vers, c->qid.type, c->qid.type);
+		return 1;
 		}
 
 		DBG("forthgen Qforthdir name %s s %d nforthprocs %d\n", name, s, nforthprocs);
@@ -368,10 +408,10 @@ forthgen(Chan *c, char *name, Dirtab *, int, int s, Dir *dp)
 			return -1;
 		mkqid(&q, ((slot+1)<<QSHIFT)|Qfprocdir, pid, QTDIR);
 		devdir(c, q, up->genbuf, 0, p->env->user, 0555, dp);
-	DBG("forthgen pid dir c->path %s name %s s %d mode 0x%ux c->qid.path 0x%zux "
-		"slot %d qid %d c->qid.vers %d c->qid.type %d 0x%ux\n",
-		chanpath(c), name, s, c->mode, c->qid.path, SLOT(c->qid),
-		QID(c->qid), c->qid.vers, c->qid.type, c->qid.type);
+		DBG("forthgen pid dir c->path %s name %s s %d mode 0x%ux c->qid.path 0x%zux "
+			"slot %d qid %d c->qid.vers %d c->qid.type %d 0x%ux\n",
+			chanpath(c), name, s, c->mode, c->qid.path, SLOT(c->qid),
+			QID(c->qid), c->qid.vers, c->qid.type, c->qid.type);
 		return 1;
 	}
 
@@ -388,6 +428,18 @@ forthgen(Chan *c, char *name, Dirtab *, int, int s, Dir *dp)
 	case 1:
 		mkqid(&q, path|Qvars, c->qid.vers, QTFILE);
 		devdir(c, q, "vars", 0, p->env->user, 0600, dp);
+		break;
+	case 2:
+		mkqid(&q, path|Qstdin, c->qid.vers, QTFILE);
+		devdir(c, q, "stdin", 0, p->env->user, 0600, dp);
+		break;
+	case 3:
+		mkqid(&q, path|Qstdout, c->qid.vers, QTFILE);
+		devdir(c, q, "stdout", 0, p->env->user, 0600, dp);
+		break;
+	case 4:
+		mkqid(&q, path|Qstderr, c->qid.vers, QTFILE);
+		devdir(c, q, "stderr", 0, p->env->user, 0600, dp);
 		break;
 	default:
 		return -1;
@@ -458,10 +510,10 @@ forthopen(Chan *c, u32 omode0)
 {
 	Proc *p;
 	Chan *tc;
-	u32 pid;
+	u32 pid, omode;
 	s32 slot;
-	int omode;
 	Proc *f;
+	Chan *cin, *cout, *cerr;
 
 	if(c->qid.type & QTDIR){
 	DBG("forthopen c->qid.type & QTDIR c->path %s mode 0x%ux omode0 0x%ux c->qid.path 0x%zux "
@@ -475,7 +527,7 @@ forthopen(Chan *c, u32 omode0)
 		QID(tc->qid), tc->qid.vers, tc->qid.type, tc->qid.type);
 		return tc;
 	}
-		
+
 	flock();
 	if(waserror()){
 		funlock();
@@ -483,16 +535,18 @@ forthopen(Chan *c, u32 omode0)
 	}
 	if(QID(c->qid) == Qnew){
 		/* TODO set path */
-print("forthopen called by pid %d text %s\n", up->pid, up->text);
-		f = newforthproc();
+		cin = devclone(c);
+		cout = devclone(c);
+		cerr = devclone(c);
+		f = newforthproc(cin, cout, cerr);
 		if(f == nil)
 			error(Enodev);
-print("forthopen completed by pid %d text %s\n", up->pid, up->text);
 		slot = procindex(f->pid);
 		if(slot < 0)
 			panic("forthopen");
 		mkqid(&c->qid, Qctl|(slot+1)<<QSHIFT, f->pid, QTFILE);
-		DBG("forthopen: new proc pid %d\n", f->pid);
+		DBG("forthopen: new proc pid %d slot %d SLOT(c->qid) %d\n",
+				f->pid, slot, SLOT(c->qid));
 	}
 	funlock();
 	poperror();
@@ -504,8 +558,10 @@ print("forthopen completed by pid %d text %s\n", up->pid, up->text);
 		nexterror();
 	}
 	pid = PID(c->qid);
-	if(p->pid != pid)
+	if(p->pid != pid){
+		print("forthopen Eprocdied\n");
 		error(Eprocdied);
+	}
 
 	omode = openmode(omode0);
 
@@ -518,20 +574,26 @@ print("forthopen completed by pid %d text %s\n", up->pid, up->text);
 		if(p->kp || p->privatemem)
 			error(Eperm);
 		break;
-
+	case Qstdin:
+	case Qstdout:
+	case Qstderr:
+		break;
 	default:
-		print("forthopen %#ux\n", QID(c->qid));
+		print("forthopen error Egreg %#ux\n", QID(c->qid));
 		error(Egreg);
 	}
 	nonone(p);
 
 	/* Affix pid to qid */
-	if(pid == 0)
+	if(pid == 0){
+		print("forthopen Eprocdied\n");
 		error(Eprocdied);
+	}
 	c->qid.vers = pid;
 
 	tc = devopen(c, omode, 0, 0, forthgen);
 	if(waserror()){
+		print("forthopen cclose(tc) waserror() loop\n");
 		cclose(tc);
 		nexterror();
 	}
@@ -539,14 +601,16 @@ print("forthopen completed by pid %d text %s\n", up->pid, up->text);
 
 	qunlock(&p->debug);
 	poperror(); /* eqlock */
-	DBG("forthopen returning tc->path %s omode0 0x%ux tc->qid.vers %d up->pid %d\n", chanpath(tc), omode, tc->qid.vers, up->pid);
+	DBG("forthopen returning tc->path %s omode0 0x%ux "
+		"omode 0x%ux tc->qid.vers %d up->pid %d\n",
+			chanpath(tc), omode, omode, tc->qid.vers, up->pid);
 	return tc;
 }
 
 static void
 forthclose(Chan *c)
 {
-	DBG("forthclose c->path %s up->pid %d\n", chanpath(c), up->pid);
+	DBG("forthclose c->path %s up->pid %d c->ref %d\n", chanpath(c), up->pid, c->ref);
 	/* TODO close the Chan*? */
 	return;
 }
@@ -567,14 +631,14 @@ forthread(Chan *c, void *buf, s32 n, s64 off)
 	if(p->pid != PID(c->qid)){
 		DBG("forthread prodied returning nil c->path %s up->pid %d PID(c->qid) %d\n",
 			chanpath(c), up->pid, PID(c->qid));
-		return readstr(off, buf, n, "");
+		return readstr(off, buf, n, nil);
 	}
 
-	eqlock(&p->debug);
+/*	eqlock(&p->debug);
 	if(waserror()){
 		qunlock(&p->debug);
 		nexterror();
-	}
+	}*/
 	switch(QID(c->qid)){
 	case Qctl:
 		buf = smalloc(16);
@@ -584,51 +648,70 @@ forthread(Chan *c, void *buf, s32 n, s64 off)
 		break;
 	case Qvars: /* TODO */
 		error(Ebadarg);
+	case Qstdin:
+		rv = qread(f->frq, buf, n);
+		break;
+	case Qstdout:
+		rv = qread(f->fwq, buf, n);
+		break;
+	case Qstderr:
+		rv = qread(f->ferrq, buf, n);
+		break;
 	default:
 		print("unknown qid in forthread\n");
 		error(Egreg);
 	}
 
-	qunlock(&p->debug);
-	poperror();
+/*	qunlock(&p->debug);
+	poperror();*/
 	DBG("forthread returning rv %d bytes\n", rv);
 	return rv;
 }
 
 static s32
-forthwrite(Chan *c, void *a, s32 n, s64)
+forthwrite(Chan *c, void *buf, s32 n, s64)
 {
 	Proc *p, *f;
+	s32 rv;
 
 	DBG("forthwrite c->path %s\n", chanpath(c));
 	if(c->qid.type & QTDIR)
-		return devdirread(c, a, n, nil, 0, forthgen);
+		return devdirread(c, buf, n, nil, 0, forthgen);
 
 	f = c->aux;
 	p = proctab(SLOT(c->qid));
 	if(p->pid != PID(c->qid))
 		error(Eprocdied);
 
-	eqlock(&p->debug);
+/*	eqlock(&p->debug);
 	if(waserror()){
 		qunlock(&p->debug);
 		nexterror();
-	}
+	}*/
 	switch(QID(c->qid)){
 	case Qctl:
 		print("forthwrite: writing to Qctl, ignored\n");
 		break;
 	case Qvars: /* TODO */
 		error(Ebadarg);
+	case Qstdin:
+		rv = qwrite(f->frq, buf, n);
+		break;
+	case Qstdout:
+		rv = qwrite(f->fwq, buf, n);
+		break;
+	case Qstderr:
+		rv = qwrite(f->ferrq, buf, n);
+		break;
 	default:
 		print("unknown qid in forthwriten");
 		error(Egreg);
 	}
 
-	qunlock(&p->debug);
-	poperror();
+/*	qunlock(&p->debug);
+	poperror();*/
 	DBG("forthwrite returning n %d bytes\n", n);
-	return n;
+	return rv;
 }
 
 Dev forthdevtab = {
