@@ -263,91 +263,91 @@ enum {
 	C_qstack = 11768,
 	L172 = 11872,
 	C_interpret = 11952,
-	L175 = 11984,
-	L177 = 12120,
-	L179 = 12232,
-	L178 = 12256,
-	L176 = 12272,
-	C_create = 12304,
-	C_variable = 12552,
-	C_constant = 12624,
-	C_immediate = 12752,
-	C_tocfa = 12864,
-	C_compile = 12944,
-	L189 = 13072,
-	L190 = 13088,
-	L188 = 13104,
-	L192 = 13232,
-	L194 = 13264,
-	L191 = 13264,
-	C_close_bracket = 13288,
-	L196 = 13312,
-	L197 = 13400,
-	L198 = 13424,
-	L199 = 13456,
-	CI_open_bracket = 13480,
-	C_smudge = 13528,
-	C_reveal = 13640,
-	C_colon = 13760,
-	CI_semicolon = 13888,
-	CI_recurse = 13968,
-	C_L206 = 14040,
-	C_literal = 14104,
-	C_sliteral = 14176,
-	C_string = 14344,
-	CI_char_brackets = 14456,
-	CI_quote_brackets = 14528,
-	CI_openparen = 14576,
-	CI_backslash = 14640,
-	L214 = 14784,
-	L215 = 14816,
-	C_qabort_parens = 14848,
-	L217 = 14928,
-	L218 = 14936,
-	CI_abort_double_quote = 14960,
-	C_double_quote = 15024,
-	C_cdouble_quote = 15152,
-	CI_sdouble_quote = 15288,
-	CI_dotstr = 15328,
-	CI_if = 15392,
-	CI_else = 15480,
-	CI_then = 15608,
-	CI_begin = 15664,
-	CI_again = 15704,
-	CI_until = 15768,
-	CI_while = 15832,
-	CI_repeat = 15920,
-	CI_do = 16016,
-	CI_loop = 16096,
-	L234 = 16184,
-	CI_ploop = 16208,
-	L236 = 16296,
-	C_wo = 16320,
-	C_ro = 16416,
-	C_rw = 16464,
-	C_open_file = 16520,
-	C_close_file = 16800,
-	C_read_file = 16856,
-	C_write_file = 16936,
-	C_reposition_file = 17008,
-	C_qfcheck = 17072,
-	L246 = 17168,
-	C_bye = 17192,
-	C_include = 17248,
-	C_crash = 17400,
-	C_quit = 17488,
-	L253 = 17512,
-	C_parenabort = 17616,
-	C_oldboot = 17784,
-	C_boot = 18232,
-	L137 = 18848,
-	L170 = 18872,
-	L173 = 18876,
-	L180 = 18893,
-	L193 = 18897,
-	L247 = 18901,
-	L251 = 18911,
-	L255 = 18942,
+	L175 = 11960,
+	L177 = 12072,
+	L179 = 12184,
+	L178 = 12184,
+	L176 = 12200,
+	C_create = 12232,
+	C_variable = 12480,
+	C_constant = 12552,
+	C_immediate = 12680,
+	C_tocfa = 12792,
+	C_compile = 12872,
+	L189 = 13000,
+	L190 = 13016,
+	L188 = 13032,
+	L192 = 13160,
+	L194 = 13192,
+	L191 = 13192,
+	C_close_bracket = 13216,
+	L196 = 13240,
+	L197 = 13328,
+	L198 = 13352,
+	L199 = 13384,
+	CI_open_bracket = 13408,
+	C_smudge = 13456,
+	C_reveal = 13568,
+	C_colon = 13688,
+	CI_semicolon = 13816,
+	CI_recurse = 13896,
+	C_L206 = 13968,
+	C_literal = 14032,
+	C_sliteral = 14104,
+	C_string = 14272,
+	CI_char_brackets = 14384,
+	CI_quote_brackets = 14456,
+	CI_openparen = 14504,
+	CI_backslash = 14568,
+	L214 = 14712,
+	L215 = 14744,
+	C_qabort_parens = 14776,
+	L217 = 14856,
+	L218 = 14864,
+	CI_abort_double_quote = 14888,
+	C_double_quote = 14952,
+	C_cdouble_quote = 15080,
+	CI_sdouble_quote = 15216,
+	CI_dotstr = 15256,
+	CI_if = 15320,
+	CI_else = 15408,
+	CI_then = 15536,
+	CI_begin = 15592,
+	CI_again = 15632,
+	CI_until = 15696,
+	CI_while = 15760,
+	CI_repeat = 15848,
+	CI_do = 15944,
+	CI_loop = 16024,
+	L234 = 16112,
+	CI_ploop = 16136,
+	L236 = 16224,
+	C_wo = 16248,
+	C_ro = 16344,
+	C_rw = 16392,
+	C_open_file = 16448,
+	C_close_file = 16728,
+	C_read_file = 16784,
+	C_write_file = 16864,
+	C_reposition_file = 16936,
+	C_qfcheck = 17000,
+	L246 = 17096,
+	C_bye = 17120,
+	C_include = 17176,
+	C_crash = 17328,
+	C_quit = 17416,
+	L253 = 17440,
+	C_parenabort = 17544,
+	C_oldboot = 17712,
+	C_boot = 18160,
+	L137 = 18376,
+	L170 = 18400,
+	L173 = 18404,
+	L180 = 18421,
+	L193 = 18425,
+	L247 = 18429,
+	L251 = 18439,
+	L255 = 18470,
 };
 extern void *sliteral(void);
 extern void *cjump(void);
@@ -1552,756 +1552,697 @@ Fentry fentries[] = {
 	{.type FromH0, {.p M_fthwrite}},		/* dd M_fthwrite 11920 */
 	{.type FromH0, {.p M_drop}},		/* dd M_drop		; drop the return value of write 11928 */
 	{.type Header, {.hdr { 9, "interpret", /* C_interpret = 11952 */ colon }}}, /* CENTRY "interpret" interpret 9 ; there is stuff in TIB to be interpreted >In and >Limit are set h 11960 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 11968 */
-	{.type Absolute, {.p 73}},		/* dd 73 11976 */
-	{.type FromH0, {.p C_emit}},		/* dd C_emit 11984 */
-	{.type FromH0, {.p C_bl}},		/* dd C_bl 11992 */
-	{.type FromH0, {.p C_word}},		/* dd C_word	; ( bl -- a ) a = address of counted string 12000 */
-	{.type FromH0, {.p M_dup}},		/* dd M_dup 12008 */
-	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 12016 */
-	{.type FromH0, {.p C_0neq}},		/* dd C_0neq 12024 */
+	{.type FromH0, {.p C_bl}},		/* dd C_bl 11968 */
+	{.type FromH0, {.p C_word}},		/* dd C_word	; ( bl -- a ) a = address of counted string 11976 */
+	{.type FromH0, {.p M_dup}},		/* dd M_dup 11984 */
+	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 11992 */
+	{.type FromH0, {.p C_0neq}},		/* dd C_0neq 12000 */
+	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 12008 */
+	{.type FromH0, {.p L176}},		/* dd L176	; count at a = 0 12016 */
+	{.type FromH0, {.p C_find}},		/* dd C_find	; ( a -- a1 f ) a = address of counted string 12024 */
 	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 12032 */
-	{.type FromH0, {.p L176}},		/* dd L176	; count at a = 0 12040 */
-	{.type FromH0, {.p C_find}},		/* dd C_find	; ( a -- a1 f ) a = address of counted string 12048 */
-	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 12056 */
-	{.type FromH0, {.p L177}},		/* dd L177 12064 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 12072 */
-	{.type Absolute, {.p 69}},		/* dd 69 12080 */
-	{.type FromH0, {.p C_emit}},		/* dd C_emit 12088 */
-	{.type FromH0, {.p M_execute}},		/* dd M_execute	; found in dictionary, execute 12096 */
-	{.type FromH0, {.p C_qstack}},		/* dd C_qstack 12104 */
-	{.type FromH0, {.p M_jump}},		/* dd M_jump 12112 */
-	{.type FromH0, {.p L178}},		/* dd L178 12120 */
-	{.type FromH0, {.p C_count}},		/* dd C_count 12128 */
-	{.type FromH0, {.p C_number}},		/* dd C_number 12136 */
-	{.type FromH0, {.p C_0eq}},		/* dd C_0eq 12144 */
-	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 12152 */
-	{.type FromH0, {.p L179}},		/* dd L179 12160 */
-	{.type FromH0, {.p C_space}},		/* dd C_space 12168 */
-	{.type FromH0, {.p C_type}},		/* dd C_type 12176 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 12184 */
-	{.type FromH0, {.p L180}},		/* dd L180	; error I? 12192 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 12200 */
-	{.type Absolute, {.p 3}},		/* dd 3 12208 */
-	{.type FromH0, {.p C_type}},		/* dd C_type 12216 */
-	{.type FromH0, {.p C_cr}},		/* dd C_cr 12224 */
-	{.type FromH0, {.p C_abort}},		/* dd C_abort 12232 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 12240 */
-	{.type Absolute, {.p 78}},		/* dd 78 12248 */
-	{.type FromH0, {.p C_emit}},		/* dd C_emit 12256 */
-	{.type FromH0, {.p M_jump}},		/* dd M_jump 12264 */
-	{.type FromH0, {.p L175}},		/* dd L175 12272 */
-	{.type FromH0, {.p M_drop}},		/* dd M_drop	; count at a = 0 ( a -- ) 12280 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 12288 */
-	{.type Header, {.hdr { 6, "create", /* C_create = 12304 */ colon }}}, /* CENTRY "create" create 6 h 12312 */
-	{.type FromH0, {.p C_align}},		/* dd C_align 12320 */
+	{.type FromH0, {.p L177}},		/* dd L177 12040 */
+	{.type FromH0, {.p M_execute}},		/* dd M_execute	; found in dictionary, execute 12048 */
+	{.type FromH0, {.p C_qstack}},		/* dd C_qstack 12056 */
+	{.type FromH0, {.p M_jump}},		/* dd M_jump 12064 */
+	{.type FromH0, {.p L178}},		/* dd L178 12072 */
+	{.type FromH0, {.p C_count}},		/* dd C_count 12080 */
+	{.type FromH0, {.p C_number}},		/* dd C_number 12088 */
+	{.type FromH0, {.p C_0eq}},		/* dd C_0eq 12096 */
+	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 12104 */
+	{.type FromH0, {.p L179}},		/* dd L179 12112 */
+	{.type FromH0, {.p C_space}},		/* dd C_space 12120 */
+	{.type FromH0, {.p C_type}},		/* dd C_type 12128 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 12136 */
+	{.type FromH0, {.p L180}},		/* dd L180	; error I? 12144 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 12152 */
+	{.type Absolute, {.p 3}},		/* dd 3 12160 */
+	{.type FromH0, {.p C_type}},		/* dd C_type 12168 */
+	{.type FromH0, {.p C_cr}},		/* dd C_cr 12176 */
+	{.type FromH0, {.p C_abort}},		/* dd C_abort 12184 */
+	{.type FromH0, {.p M_jump}},		/* dd M_jump 12192 */
+	{.type FromH0, {.p L175}},		/* dd L175 12200 */
+	{.type FromH0, {.p M_drop}},		/* dd M_drop	; count at a = 0 ( a -- ) 12208 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 12216 */
+	{.type Header, {.hdr { 6, "create", /* C_create = 12232 */ colon }}}, /* CENTRY "create" create 6 h 12240 */
+	{.type FromH0, {.p C_align}},		/* dd C_align 12248 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 12256 */
+	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 12264 */
+	{.type FromH0, {.p M_Dp}},		/* dd M_Dp 12272 */
+	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 12280 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 12288 */
+	{.type FromH0, {.p C_bl}},		/* dd C_bl 12296 */
+	{.type FromH0, {.p C_word}},		/* dd C_word 12304 */
+	{.type FromH0, {.p M_dup}},		/* dd M_dup 12312 */
+	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 12320 */
 	{.type FromH0, {.p C_here}},		/* dd C_here 12328 */
-	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 12336 */
-	{.type FromH0, {.p M_Dp}},		/* dd M_Dp 12344 */
-	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 12352 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 12360 */
-	{.type FromH0, {.p C_bl}},		/* dd C_bl 12368 */
-	{.type FromH0, {.p C_word}},		/* dd C_word 12376 */
-	{.type FromH0, {.p M_dup}},		/* dd M_dup 12384 */
-	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 12392 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 12400 */
-	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 12408 */
-	{.type FromH0, {.p C_1plus}},		/* dd C_1plus 12416 */
-	{.type FromH0, {.p M_dup}},		/* dd M_dup 12424 */
-	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 12432 */
-	{.type FromH0, {.p M_cmove}},		/* dd M_cmove 12440 */
-	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 12448 */
-	{.type FromH0, {.p C_allot}},		/* dd C_allot 12456 */
-	{.type FromH0, {.p C_align}},		/* dd C_align 12464 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 12472 */
-	{.type FromH0, {.p M_variable}},		/* dd M_variable 12480 */
-	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 12488 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 12496 */
-	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 12504 */
-	{.type FromH0, {.p M_Dp}},		/* dd M_Dp 12512 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 12520 */
+	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 12336 */
+	{.type FromH0, {.p C_1plus}},		/* dd C_1plus 12344 */
+	{.type FromH0, {.p M_dup}},		/* dd M_dup 12352 */
+	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 12360 */
+	{.type FromH0, {.p M_cmove}},		/* dd M_cmove 12368 */
+	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 12376 */
+	{.type FromH0, {.p C_allot}},		/* dd C_allot 12384 */
+	{.type FromH0, {.p C_align}},		/* dd C_align 12392 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 12400 */
+	{.type FromH0, {.p M_variable}},		/* dd M_variable 12408 */
+	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 12416 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 12424 */
+	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 12432 */
+	{.type FromH0, {.p M_Dp}},		/* dd M_Dp 12440 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 12448 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 12456 */
+	{.type Header, {.hdr { 8, "variable", /* C_variable = 12480 */ colon }}}, /* CENTRY "variable" variable 8 h 12488 */
+	{.type FromH0, {.p C_create}},		/* dd C_create 12496 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 12504 */
+	{.type Absolute, {.p 0}},		/* dd 0 12512 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 12520 */
 	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 12528 */
-	{.type Header, {.hdr { 8, "variable", /* C_variable = 12552 */ colon }}}, /* CENTRY "variable" variable 8 h 12560 */
+	{.type Header, {.hdr { 8, "constant", /* C_constant = 12552 */ colon }}}, /* CENTRY "constant" constant 8 h 12560 */
 	{.type FromH0, {.p C_create}},		/* dd C_create 12568 */
 	{.type FromH0, {.p M_literal}},		/* dd M_literal 12576 */
-	{.type Absolute, {.p 0}},		/* dd 0 12584 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 12592 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 12600 */
-	{.type Header, {.hdr { 8, "constant", /* C_constant = 12624 */ colon }}}, /* CENTRY "constant" constant 8 h 12632 */
-	{.type FromH0, {.p C_create}},		/* dd C_create 12640 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 12648 */
-	{.type FromH0, {.p M_constant}},		/* dd M_constant 12656 */
-	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 12664 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 12672 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 12680 */
-	{.type Absolute, {.p 1}},		/* dd 1 12688 */
-	{.type FromH0, {.p C_cells}},		/* dd C_cells 12696 */
-	{.type FromH0, {.p M_minus}},		/* dd M_minus 12704 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 12712 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 12720 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 12728 */
-	{.type Header, {.hdr { 9, "immediate", /* C_immediate = 12752 */ colon }}}, /* CENTRY "immediate" immediate 9 h 12760 */
-	{.type FromH0, {.p M_Dp}},		/* dd M_Dp 12768 */
-	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 12776 */
-	{.type FromH0, {.p C_cellplus}},		/* dd C_cellplus 12784 */
-	{.type FromH0, {.p M_dup}},		/* dd M_dup 12792 */
-	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 12800 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 12808 */
-	{.type Absolute, {.p 128}},		/* dd 128 12816 */
-	{.type FromH0, {.p M_binor}},		/* dd M_binor 12824 */
-	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 12832 */
-	{.type FromH0, {.p M_cstore}},		/* dd M_cstore 12840 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 12848 */
-	{.type Header, {.hdr { 4, ">cfa", /* C_tocfa = 12864 */ colon }}}, /* CENTRY ">cfa" tocfa 4 h 12872 */
-	{.type FromH0, {.p C_count}},		/* dd C_count 12880 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 12888 */
-	{.type Absolute, {.p 63}},		/* dd 63 12896 */
-	{.type FromH0, {.p M_binand}},		/* dd M_binand 12904 */
-	{.type FromH0, {.p M_plus}},		/* dd M_plus 12912 */
-	{.type FromH0, {.p C_aligned}},		/* dd C_aligned 12920 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 12928 */
-	{.type Header, {.hdr { 7, "compile", /* C_compile = 12944 */ colon }}}, /* CENTRY "compile" compile 7 h 12952 */
-	{.type FromH0, {.p C_findname}},		/* dd C_findname 12960 */
-	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 12968 */
-	{.type FromH0, {.p L188}},		/* dd L188 12976 */
-	{.type FromH0, {.p M_dup}},		/* dd M_dup 12984 */
-	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 12992 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 13000 */
-	{.type Absolute, {.p 128}},		/* dd 128 13008 */
-	{.type FromH0, {.p M_binand}},		/* dd M_binand 13016 */
-	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 13024 */
-	{.type FromH0, {.p L189}},		/* dd L189 13032 */
-	{.type FromH0, {.p C_tocfa}},		/* dd C_tocfa	; immediate 13040 */
-	{.type FromH0, {.p M_execute}},		/* dd M_execute 13048 */
-	{.type FromH0, {.p C_qstack}},		/* dd C_qstack 13056 */
-	{.type FromH0, {.p M_jump}},		/* dd M_jump 13064 */
-	{.type FromH0, {.p L190}},		/* dd L190 13072 */
-	{.type FromH0, {.p C_tocfa}},		/* dd C_tocfa 13080 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 13088 */
-	{.type FromH0, {.p M_jump}},		/* dd M_jump 13096 */
-	{.type FromH0, {.p L191}},		/* dd L191 13104 */
-	{.type FromH0, {.p C_count}},		/* dd C_count 13112 */
-	{.type FromH0, {.p C_number}},		/* dd C_number 13120 */
-	{.type FromH0, {.p C_0eq}},		/* dd C_0eq 13128 */
-	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 13136 */
-	{.type FromH0, {.p L192}},		/* dd L192 13144 */
-	{.type FromH0, {.p C_space}},		/* dd C_space 13152 */
-	{.type FromH0, {.p C_type}},		/* dd C_type 13160 */
+	{.type FromH0, {.p M_constant}},		/* dd M_constant 12584 */
+	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 12592 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 12600 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 12608 */
+	{.type Absolute, {.p 1}},		/* dd 1 12616 */
+	{.type FromH0, {.p C_cells}},		/* dd C_cells 12624 */
+	{.type FromH0, {.p M_minus}},		/* dd M_minus 12632 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 12640 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 12648 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 12656 */
+	{.type Header, {.hdr { 9, "immediate", /* C_immediate = 12680 */ colon }}}, /* CENTRY "immediate" immediate 9 h 12688 */
+	{.type FromH0, {.p M_Dp}},		/* dd M_Dp 12696 */
+	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 12704 */
+	{.type FromH0, {.p C_cellplus}},		/* dd C_cellplus 12712 */
+	{.type FromH0, {.p M_dup}},		/* dd M_dup 12720 */
+	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 12728 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 12736 */
+	{.type Absolute, {.p 128}},		/* dd 128 12744 */
+	{.type FromH0, {.p M_binor}},		/* dd M_binor 12752 */
+	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 12760 */
+	{.type FromH0, {.p M_cstore}},		/* dd M_cstore 12768 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 12776 */
+	{.type Header, {.hdr { 4, ">cfa", /* C_tocfa = 12792 */ colon }}}, /* CENTRY ">cfa" tocfa 4 h 12800 */
+	{.type FromH0, {.p C_count}},		/* dd C_count 12808 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 12816 */
+	{.type Absolute, {.p 63}},		/* dd 63 12824 */
+	{.type FromH0, {.p M_binand}},		/* dd M_binand 12832 */
+	{.type FromH0, {.p M_plus}},		/* dd M_plus 12840 */
+	{.type FromH0, {.p C_aligned}},		/* dd C_aligned 12848 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 12856 */
+	{.type Header, {.hdr { 7, "compile", /* C_compile = 12872 */ colon }}}, /* CENTRY "compile" compile 7 h 12880 */
+	{.type FromH0, {.p C_findname}},		/* dd C_findname 12888 */
+	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 12896 */
+	{.type FromH0, {.p L188}},		/* dd L188 12904 */
+	{.type FromH0, {.p M_dup}},		/* dd M_dup 12912 */
+	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 12920 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 12928 */
+	{.type Absolute, {.p 128}},		/* dd 128 12936 */
+	{.type FromH0, {.p M_binand}},		/* dd M_binand 12944 */
+	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 12952 */
+	{.type FromH0, {.p L189}},		/* dd L189 12960 */
+	{.type FromH0, {.p C_tocfa}},		/* dd C_tocfa	; immediate 12968 */
+	{.type FromH0, {.p M_execute}},		/* dd M_execute 12976 */
+	{.type FromH0, {.p C_qstack}},		/* dd C_qstack 12984 */
+	{.type FromH0, {.p M_jump}},		/* dd M_jump 12992 */
+	{.type FromH0, {.p L190}},		/* dd L190 13000 */
+	{.type FromH0, {.p C_tocfa}},		/* dd C_tocfa 13008 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 13016 */
+	{.type FromH0, {.p M_jump}},		/* dd M_jump 13024 */
+	{.type FromH0, {.p L191}},		/* dd L191 13032 */
+	{.type FromH0, {.p C_count}},		/* dd C_count 13040 */
+	{.type FromH0, {.p C_number}},		/* dd C_number 13048 */
+	{.type FromH0, {.p C_0eq}},		/* dd C_0eq 13056 */
+	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 13064 */
+	{.type FromH0, {.p L192}},		/* dd L192 13072 */
+	{.type FromH0, {.p C_space}},		/* dd C_space 13080 */
+	{.type FromH0, {.p C_type}},		/* dd C_type 13088 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 13096 */
+	{.type FromH0, {.p L193}},		/* dd L193 13104 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 13112 */
+	{.type Absolute, {.p 3}},		/* dd 3 13120 */
+	{.type FromH0, {.p C_type}},		/* dd C_type 13128 */
+	{.type FromH0, {.p C_cr}},		/* dd C_cr 13136 */
+	{.type FromH0, {.p C_abort}},		/* dd C_abort 13144 */
+	{.type FromH0, {.p M_jump}},		/* dd M_jump 13152 */
+	{.type FromH0, {.p L194}},		/* dd L194 13160 */
 	{.type FromH0, {.p M_literal}},		/* dd M_literal 13168 */
-	{.type FromH0, {.p L193}},		/* dd L193 13176 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 13184 */
-	{.type Absolute, {.p 3}},		/* dd 3 13192 */
-	{.type FromH0, {.p C_type}},		/* dd C_type 13200 */
-	{.type FromH0, {.p C_cr}},		/* dd C_cr 13208 */
-	{.type FromH0, {.p C_abort}},		/* dd C_abort 13216 */
-	{.type FromH0, {.p M_jump}},		/* dd M_jump 13224 */
-	{.type FromH0, {.p L194}},		/* dd L194 13232 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 13240 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 13248 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 13256 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 13264 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 13272 */
-	{.type Header, {.hdr { 1, "]", /* C_close_bracket = 13288 */ colon }}}, /* CENTRY "]" close_bracket 1 h 13296 */
-	{.type FromH0, {.p MV_State}},		/* dd MV_State 13304 */
-	{.type FromH0, {.p C_on}},		/* dd C_on 13312 */
-	{.type FromH0, {.p C_bl}},		/* dd C_bl 13320 */
-	{.type FromH0, {.p C_word}},		/* dd C_word 13328 */
-	{.type FromH0, {.p M_dup}},		/* dd M_dup 13336 */
-	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 13344 */
-	{.type FromH0, {.p C_0eq}},		/* dd C_0eq 13352 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 13176 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 13184 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 13192 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 13200 */
+	{.type Header, {.hdr { 1, "]", /* C_close_bracket = 13216 */ colon }}}, /* CENTRY "]" close_bracket 1 h 13224 */
+	{.type FromH0, {.p MV_State}},		/* dd MV_State 13232 */
+	{.type FromH0, {.p C_on}},		/* dd C_on 13240 */
+	{.type FromH0, {.p C_bl}},		/* dd C_bl 13248 */
+	{.type FromH0, {.p C_word}},		/* dd C_word 13256 */
+	{.type FromH0, {.p M_dup}},		/* dd M_dup 13264 */
+	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 13272 */
+	{.type FromH0, {.p C_0eq}},		/* dd C_0eq 13280 */
+	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 13288 */
+	{.type FromH0, {.p L197}},		/* dd L197 13296 */
+	{.type FromH0, {.p M_drop}},		/* dd M_drop 13304 */
+	{.type FromH0, {.p C_refill}},		/* dd C_refill 13312 */
+	{.type FromH0, {.p M_jump}},		/* dd M_jump 13320 */
+	{.type FromH0, {.p L198}},		/* dd L198 13328 */
+	{.type FromH0, {.p C_compile}},		/* dd C_compile 13336 */
+	{.type FromH0, {.p MV_State}},		/* dd MV_State 13344 */
+	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 13352 */
 	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 13360 */
-	{.type FromH0, {.p L197}},		/* dd L197 13368 */
-	{.type FromH0, {.p M_drop}},		/* dd M_drop 13376 */
-	{.type FromH0, {.p C_refill}},		/* dd C_refill 13384 */
-	{.type FromH0, {.p M_jump}},		/* dd M_jump 13392 */
-	{.type FromH0, {.p L198}},		/* dd L198 13400 */
-	{.type FromH0, {.p C_compile}},		/* dd C_compile 13408 */
-	{.type FromH0, {.p MV_State}},		/* dd MV_State 13416 */
-	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 13424 */
-	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 13432 */
-	{.type FromH0, {.p L199}},		/* dd L199 13440 */
-	{.type FromH0, {.p M_jump}},		/* dd M_jump 13448 */
-	{.type FromH0, {.p L196}},		/* dd L196 13456 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 13464 */
-	{.type IHeader, {.hdr { 1, "[", /* CI_open_bracket = 13480 */ colon }}}, /* CIENTRY "[" open_bracket 1 h 13488 */
-	{.type FromH0, {.p MV_State}},		/* dd MV_State 13496 */
-	{.type FromH0, {.p C_off}},		/* dd C_off 13504 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 13512 */
-	{.type Header, {.hdr { 6, "smudge", /* C_smudge = 13528 */ colon }}}, /* CENTRY "smudge" smudge 6 h 13536 */
-	{.type FromH0, {.p M_Dp}},		/* dd M_Dp 13544 */
-	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 13552 */
-	{.type FromH0, {.p C_cellplus}},		/* dd C_cellplus 13560 */
-	{.type FromH0, {.p M_dup}},		/* dd M_dup 13568 */
-	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 13576 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 13584 */
-	{.type Absolute, {.p 64}},		/* dd 64 13592 */
-	{.type FromH0, {.p M_binor}},		/* dd M_binor 13600 */
-	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 13608 */
-	{.type FromH0, {.p M_cstore}},		/* dd M_cstore 13616 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 13624 */
-	{.type Header, {.hdr { 6, "reveal", /* C_reveal = 13640 */ colon }}}, /* CENTRY "reveal" reveal 6 h 13648 */
-	{.type FromH0, {.p M_Dp}},		/* dd M_Dp 13656 */
-	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 13664 */
-	{.type FromH0, {.p C_cellplus}},		/* dd C_cellplus 13672 */
-	{.type FromH0, {.p M_dup}},		/* dd M_dup 13680 */
-	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 13688 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 13696 */
-	{.type Absolute, {.p 64}},		/* dd 64 13704 */
-	{.type FromH0, {.p C_invert}},		/* dd C_invert 13712 */
-	{.type FromH0, {.p M_binand}},		/* dd M_binand 13720 */
-	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 13728 */
-	{.type FromH0, {.p M_cstore}},		/* dd M_cstore 13736 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 13744 */
-	{.type Header, {.hdr { 1, ":", /* C_colon = 13760 */ colon }}}, /* CENTRY ":" colon 1 h 13768 */
-	{.type FromH0, {.p C_create}},		/* dd C_create 13776 */
-	{.type FromH0, {.p C_smudge}},		/* dd C_smudge 13784 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 13792 */
-	{.type FromH0, {.p M_colon}},		/* dd M_colon 13800 */
-	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 13808 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 13816 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 13824 */
-	{.type Absolute, {.p 1}},		/* dd 1 13832 */
-	{.type FromH0, {.p C_cells}},		/* dd C_cells 13840 */
-	{.type FromH0, {.p M_minus}},		/* dd M_minus 13848 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 13856 */
-	{.type FromH0, {.p C_close_bracket}},		/* dd C_close_bracket 13864 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 13872 */
-	{.type IHeader, {.hdr { 1, ";", /* CI_semicolon = 13888 */ colon }}}, /* CIENTRY ";" semicolon 1 h 13896 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 13904 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 13912 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 13920 */
-	{.type FromH0, {.p MV_State}},		/* dd MV_State 13928 */
-	{.type FromH0, {.p C_off}},		/* dd C_off 13936 */
-	{.type FromH0, {.p C_reveal}},		/* dd C_reveal 13944 */
+	{.type FromH0, {.p L199}},		/* dd L199 13368 */
+	{.type FromH0, {.p M_jump}},		/* dd M_jump 13376 */
+	{.type FromH0, {.p L196}},		/* dd L196 13384 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 13392 */
+	{.type IHeader, {.hdr { 1, "[", /* CI_open_bracket = 13408 */ colon }}}, /* CIENTRY "[" open_bracket 1 h 13416 */
+	{.type FromH0, {.p MV_State}},		/* dd MV_State 13424 */
+	{.type FromH0, {.p C_off}},		/* dd C_off 13432 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 13440 */
+	{.type Header, {.hdr { 6, "smudge", /* C_smudge = 13456 */ colon }}}, /* CENTRY "smudge" smudge 6 h 13464 */
+	{.type FromH0, {.p M_Dp}},		/* dd M_Dp 13472 */
+	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 13480 */
+	{.type FromH0, {.p C_cellplus}},		/* dd C_cellplus 13488 */
+	{.type FromH0, {.p M_dup}},		/* dd M_dup 13496 */
+	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 13504 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 13512 */
+	{.type Absolute, {.p 64}},		/* dd 64 13520 */
+	{.type FromH0, {.p M_binor}},		/* dd M_binor 13528 */
+	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 13536 */
+	{.type FromH0, {.p M_cstore}},		/* dd M_cstore 13544 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 13552 */
+	{.type Header, {.hdr { 6, "reveal", /* C_reveal = 13568 */ colon }}}, /* CENTRY "reveal" reveal 6 h 13576 */
+	{.type FromH0, {.p M_Dp}},		/* dd M_Dp 13584 */
+	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 13592 */
+	{.type FromH0, {.p C_cellplus}},		/* dd C_cellplus 13600 */
+	{.type FromH0, {.p M_dup}},		/* dd M_dup 13608 */
+	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 13616 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 13624 */
+	{.type Absolute, {.p 64}},		/* dd 64 13632 */
+	{.type FromH0, {.p C_invert}},		/* dd C_invert 13640 */
+	{.type FromH0, {.p M_binand}},		/* dd M_binand 13648 */
+	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 13656 */
+	{.type FromH0, {.p M_cstore}},		/* dd M_cstore 13664 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 13672 */
+	{.type Header, {.hdr { 1, ":", /* C_colon = 13688 */ colon }}}, /* CENTRY ":" colon 1 h 13696 */
+	{.type FromH0, {.p C_create}},		/* dd C_create 13704 */
+	{.type FromH0, {.p C_smudge}},		/* dd C_smudge 13712 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 13720 */
+	{.type FromH0, {.p M_colon}},		/* dd M_colon 13728 */
+	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 13736 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 13744 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 13752 */
+	{.type Absolute, {.p 1}},		/* dd 1 13760 */
+	{.type FromH0, {.p C_cells}},		/* dd C_cells 13768 */
+	{.type FromH0, {.p M_minus}},		/* dd M_minus 13776 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 13784 */
+	{.type FromH0, {.p C_close_bracket}},		/* dd C_close_bracket 13792 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 13800 */
+	{.type IHeader, {.hdr { 1, ";", /* CI_semicolon = 13816 */ colon }}}, /* CIENTRY ";" semicolon 1 h 13824 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 13832 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 13840 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 13848 */
+	{.type FromH0, {.p MV_State}},		/* dd MV_State 13856 */
+	{.type FromH0, {.p C_off}},		/* dd C_off 13864 */
+	{.type FromH0, {.p C_reveal}},		/* dd C_reveal 13872 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 13880 */
+	{.type IHeader, {.hdr { 7, "recurse", /* CI_recurse = 13896 */ colon }}}, /* CIENTRY "recurse" recurse 7 h 13904 */
+	{.type FromH0, {.p M_Dp}},		/* dd M_Dp 13912 */
+	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 13920 */
+	{.type FromH0, {.p C_cellplus}},		/* dd C_cellplus 13928 */
+	{.type FromH0, {.p C_tocfa}},		/* dd C_tocfa 13936 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 13944 */
 	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 13952 */
-	{.type IHeader, {.hdr { 7, "recurse", /* CI_recurse = 13968 */ colon }}}, /* CIENTRY "recurse" recurse 7 h 13976 */
-	{.type FromH0, {.p M_Dp}},		/* dd M_Dp 13984 */
-	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 13992 */
-	{.type FromH0, {.p C_cellplus}},		/* dd C_cellplus 14000 */
-	{.type FromH0, {.p C_tocfa}},		/* dd C_tocfa 14008 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 14016 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14024 */
-	{.type Header, {.hdr { 4, "char", /* C_L206 = 14040 */ colon }}}, /* CENTRY "char" L206 4 h 14048 */
-	{.type FromH0, {.p C_bl}},		/* dd C_bl 14056 */
-	{.type FromH0, {.p C_word}},		/* dd C_word 14064 */
-	{.type FromH0, {.p C_1plus}},		/* dd C_1plus 14072 */
-	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 14080 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14088 */
-	{.type Header, {.hdr { 7, "literal", /* C_literal = 14104 */ colon }}}, /* CENTRY "literal" literal 7 h 14112 */
+	{.type Header, {.hdr { 4, "char", /* C_L206 = 13968 */ colon }}}, /* CENTRY "char" L206 4 h 13976 */
+	{.type FromH0, {.p C_bl}},		/* dd C_bl 13984 */
+	{.type FromH0, {.p C_word}},		/* dd C_word 13992 */
+	{.type FromH0, {.p C_1plus}},		/* dd C_1plus 14000 */
+	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 14008 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14016 */
+	{.type Header, {.hdr { 7, "literal", /* C_literal = 14032 */ colon }}}, /* CENTRY "literal" literal 7 h 14040 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 14048 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 14056 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 14064 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 14072 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14080 */
+	{.type Header, {.hdr { 8, "sliteral", /* C_sliteral = 14104 */ colon }}}, /* CENTRY "sliteral" sliteral 8 h 14112 */
 	{.type FromH0, {.p M_literal}},		/* dd M_literal 14120 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 14128 */
+	{.type FromH0, {.p M_sliteral}},		/* dd M_sliteral 14128 */
 	{.type FromH0, {.p C_comma}},		/* dd C_comma 14136 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 14144 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14152 */
-	{.type Header, {.hdr { 8, "sliteral", /* C_sliteral = 14176 */ colon }}}, /* CENTRY "sliteral" sliteral 8 h 14184 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 14192 */
-	{.type FromH0, {.p M_sliteral}},		/* dd M_sliteral 14200 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 14208 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 14216 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 14224 */
-	{.type Absolute, {.p 34}},		/* dd 34 14232 */
-	{.type FromH0, {.p C_parse}},		/* dd C_parse 14240 */
-	{.type FromH0, {.p M_dup}},		/* dd M_dup 14248 */
-	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 14256 */
-	{.type FromH0, {.p C_1plus}},		/* dd C_1plus 14264 */
-	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 14272 */
-	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 14280 */
-	{.type FromH0, {.p M_rfetch}},		/* dd M_rfetch 14288 */
-	{.type FromH0, {.p M_cmove}},		/* dd M_cmove 14296 */
-	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 14304 */
-	{.type FromH0, {.p C_allot}},		/* dd C_allot 14312 */
-	{.type FromH0, {.p C_align}},		/* dd C_align 14320 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14328 */
-	{.type Header, {.hdr { 6, "string", /* C_string = 14344 */ colon }}}, /* CENTRY "string" string 6 h 14352 */
-	{.type FromH0, {.p C_word}},		/* dd C_word 14360 */
-	{.type FromH0, {.p M_dup}},		/* dd M_dup 14368 */
-	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 14376 */
-	{.type FromH0, {.p C_1plus}},		/* dd C_1plus 14384 */
-	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 14392 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 14400 */
-	{.type FromH0, {.p M_rfetch}},		/* dd M_rfetch 14408 */
-	{.type FromH0, {.p M_cmove}},		/* dd M_cmove 14416 */
-	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 14424 */
-	{.type FromH0, {.p C_allot}},		/* dd C_allot 14432 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 14144 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 14152 */
+	{.type Absolute, {.p 34}},		/* dd 34 14160 */
+	{.type FromH0, {.p C_parse}},		/* dd C_parse 14168 */
+	{.type FromH0, {.p M_dup}},		/* dd M_dup 14176 */
+	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 14184 */
+	{.type FromH0, {.p C_1plus}},		/* dd C_1plus 14192 */
+	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 14200 */
+	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 14208 */
+	{.type FromH0, {.p M_rfetch}},		/* dd M_rfetch 14216 */
+	{.type FromH0, {.p M_cmove}},		/* dd M_cmove 14224 */
+	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 14232 */
+	{.type FromH0, {.p C_allot}},		/* dd C_allot 14240 */
+	{.type FromH0, {.p C_align}},		/* dd C_align 14248 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14256 */
+	{.type Header, {.hdr { 6, "string", /* C_string = 14272 */ colon }}}, /* CENTRY "string" string 6 h 14280 */
+	{.type FromH0, {.p C_word}},		/* dd C_word 14288 */
+	{.type FromH0, {.p M_dup}},		/* dd M_dup 14296 */
+	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 14304 */
+	{.type FromH0, {.p C_1plus}},		/* dd C_1plus 14312 */
+	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 14320 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 14328 */
+	{.type FromH0, {.p M_rfetch}},		/* dd M_rfetch 14336 */
+	{.type FromH0, {.p M_cmove}},		/* dd M_cmove 14344 */
+	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 14352 */
+	{.type FromH0, {.p C_allot}},		/* dd C_allot 14360 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14368 */
+	{.type IHeader, {.hdr { 6, "[char]", /* CI_char_brackets = 14384 */ colon }}}, /* CIENTRY "[char]" char_brackets 6 h 14392 */
+	{.type FromH0, {.p C_bl}},		/* dd C_bl 14400 */
+	{.type FromH0, {.p C_word}},		/* dd C_word 14408 */
+	{.type FromH0, {.p C_1plus}},		/* dd C_1plus 14416 */
+	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 14424 */
+	{.type FromH0, {.p C_literal}},		/* dd C_literal 14432 */
 	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14440 */
-	{.type IHeader, {.hdr { 6, "[char]", /* CI_char_brackets = 14456 */ colon }}}, /* CIENTRY "[char]" char_brackets 6 h 14464 */
-	{.type FromH0, {.p C_bl}},		/* dd C_bl 14472 */
-	{.type FromH0, {.p C_word}},		/* dd C_word 14480 */
-	{.type FromH0, {.p C_1plus}},		/* dd C_1plus 14488 */
-	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 14496 */
-	{.type FromH0, {.p C_literal}},		/* dd C_literal 14504 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14512 */
-	{.type IHeader, {.hdr { 3, "[']", /* CI_quote_brackets = 14528 */ colon }}}, /* CIENTRY "[']" quote_brackets 3 h 14536 */
-	{.type FromH0, {.p C_single_quote}},		/* dd C_single_quote 14544 */
-	{.type FromH0, {.p C_literal}},		/* dd C_literal 14552 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14560 */
-	{.type IHeader, {.hdr { 1, "(", /* CI_openparen = 14576 */ colon }}}, /* CIENTRY "(" openparen 1 h 14584 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 14592 */
-	{.type Absolute, {.p 41}},		/* dd 41 14600 */
-	{.type FromH0, {.p C_parse}},		/* dd C_parse 14608 */
-	{.type FromH0, {.p M_drop}},		/* dd M_drop 14616 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14624 */
-	{.type IHeader, {.hdr { 1, "\\", /* CI_backslash = 14640 */ colon }}}, /* CIENTRY "\\" backslash 1 h 14648 */
-	{.type FromH0, {.p MV_Blk}},		/* dd MV_Blk 14656 */
-	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 14664 */
-	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 14672 */
-	{.type FromH0, {.p L214}},		/* dd L214 14680 */
+	{.type IHeader, {.hdr { 3, "[']", /* CI_quote_brackets = 14456 */ colon }}}, /* CIENTRY "[']" quote_brackets 3 h 14464 */
+	{.type FromH0, {.p C_single_quote}},		/* dd C_single_quote 14472 */
+	{.type FromH0, {.p C_literal}},		/* dd C_literal 14480 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14488 */
+	{.type IHeader, {.hdr { 1, "(", /* CI_openparen = 14504 */ colon }}}, /* CIENTRY "(" openparen 1 h 14512 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 14520 */
+	{.type Absolute, {.p 41}},		/* dd 41 14528 */
+	{.type FromH0, {.p C_parse}},		/* dd C_parse 14536 */
+	{.type FromH0, {.p M_drop}},		/* dd M_drop 14544 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14552 */
+	{.type IHeader, {.hdr { 1, "\\", /* CI_backslash = 14568 */ colon }}}, /* CIENTRY "\\" backslash 1 h 14576 */
+	{.type FromH0, {.p MV_Blk}},		/* dd MV_Blk 14584 */
+	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 14592 */
+	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 14600 */
+	{.type FromH0, {.p L214}},		/* dd L214 14608 */
+	{.type FromH0, {.p MV_toIn}},		/* dd MV_toIn 14616 */
+	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 14624 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 14632 */
+	{.type Absolute, {.p 63}},		/* dd 63 14640 */
+	{.type FromH0, {.p M_plus}},		/* dd M_plus 14648 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 14656 */
+	{.type Absolute, {.p 63}},		/* dd 63 14664 */
+	{.type FromH0, {.p C_invert}},		/* dd C_invert 14672 */
+	{.type FromH0, {.p M_binand}},		/* dd M_binand 14680 */
 	{.type FromH0, {.p MV_toIn}},		/* dd MV_toIn 14688 */
-	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 14696 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 14704 */
-	{.type Absolute, {.p 63}},		/* dd 63 14712 */
-	{.type FromH0, {.p M_plus}},		/* dd M_plus 14720 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 14728 */
-	{.type Absolute, {.p 63}},		/* dd 63 14736 */
-	{.type FromH0, {.p C_invert}},		/* dd C_invert 14744 */
-	{.type FromH0, {.p M_binand}},		/* dd M_binand 14752 */
-	{.type FromH0, {.p MV_toIn}},		/* dd MV_toIn 14760 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 14768 */
-	{.type FromH0, {.p M_jump}},		/* dd M_jump 14776 */
-	{.type FromH0, {.p L215}},		/* dd L215 14784 */
-	{.type FromH0, {.p MV_toLimit}},		/* dd MV_toLimit 14792 */
-	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 14800 */
-	{.type FromH0, {.p MV_toIn}},		/* dd MV_toIn 14808 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 14816 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14824 */
-	{.type Header, {.hdr { 8, "(?abort)", /* C_qabort_parens = 14848 */ colon }}}, /* CENTRY "(?abort)" qabort_parens 8 h 14856 */
-	{.type FromH0, {.p MV_State}},		/* dd MV_State 14864 */
-	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 14872 */
-	{.type FromH0, {.p L217}},		/* dd L217 14880 */
-	{.type FromH0, {.p C_space}},		/* dd C_space 14888 */
-	{.type FromH0, {.p C_type}},		/* dd C_type 14896 */
-	{.type FromH0, {.p C_cr}},		/* dd C_cr 14904 */
-	{.type FromH0, {.p C_abort}},		/* dd C_abort 14912 */
-	{.type FromH0, {.p M_jump}},		/* dd M_jump 14920 */
-	{.type FromH0, {.p L218}},		/* dd L218 14928 */
-	{.type FromH0, {.p C_2drop}},		/* dd C_2drop 14936 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14944 */
-	{.type IHeader, {.hdr { 6, "abort\"", /* CI_abort_double_quote = 14960 */ colon }}}, /* CIENTRY "abort\"" abort_double_quote 6 h 14968 */
-	{.type FromH0, {.p C_sliteral}},		/* dd C_sliteral 14976 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 14984 */
-	{.type FromH0, {.p C_qabort_parens}},		/* dd C_qabort_parens 14992 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 15000 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15008 */
-	{.type Header, {.hdr { 1, "\"", /* C_double_quote = 15024 */ colon }}}, /* CENTRY "\"" double_quote 1 h 15032 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 15040 */
-	{.type Absolute, {.p 34}},		/* dd 34 15048 */
-	{.type FromH0, {.p C_word}},		/* dd C_word 15056 */
-	{.type FromH0, {.p C_count}},		/* dd C_count 15064 */
-	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 15072 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 15080 */
-	{.type FromH0, {.p M_rfetch}},		/* dd M_rfetch 15088 */
-	{.type FromH0, {.p M_cmove}},		/* dd M_cmove 15096 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 15104 */
-	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 15112 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 14696 */
+	{.type FromH0, {.p M_jump}},		/* dd M_jump 14704 */
+	{.type FromH0, {.p L215}},		/* dd L215 14712 */
+	{.type FromH0, {.p MV_toLimit}},		/* dd MV_toLimit 14720 */
+	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 14728 */
+	{.type FromH0, {.p MV_toIn}},		/* dd MV_toIn 14736 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 14744 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14752 */
+	{.type Header, {.hdr { 8, "(?abort)", /* C_qabort_parens = 14776 */ colon }}}, /* CENTRY "(?abort)" qabort_parens 8 h 14784 */
+	{.type FromH0, {.p MV_State}},		/* dd MV_State 14792 */
+	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 14800 */
+	{.type FromH0, {.p L217}},		/* dd L217 14808 */
+	{.type FromH0, {.p C_space}},		/* dd C_space 14816 */
+	{.type FromH0, {.p C_type}},		/* dd C_type 14824 */
+	{.type FromH0, {.p C_cr}},		/* dd C_cr 14832 */
+	{.type FromH0, {.p C_abort}},		/* dd C_abort 14840 */
+	{.type FromH0, {.p M_jump}},		/* dd M_jump 14848 */
+	{.type FromH0, {.p L218}},		/* dd L218 14856 */
+	{.type FromH0, {.p C_2drop}},		/* dd C_2drop 14864 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14872 */
+	{.type IHeader, {.hdr { 6, "abort\"", /* CI_abort_double_quote = 14888 */ colon }}}, /* CIENTRY "abort\"" abort_double_quote 6 h 14896 */
+	{.type FromH0, {.p C_sliteral}},		/* dd C_sliteral 14904 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 14912 */
+	{.type FromH0, {.p C_qabort_parens}},		/* dd C_qabort_parens 14920 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 14928 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 14936 */
+	{.type Header, {.hdr { 1, "\"", /* C_double_quote = 14952 */ colon }}}, /* CENTRY "\"" double_quote 1 h 14960 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 14968 */
+	{.type Absolute, {.p 34}},		/* dd 34 14976 */
+	{.type FromH0, {.p C_word}},		/* dd C_word 14984 */
+	{.type FromH0, {.p C_count}},		/* dd C_count 14992 */
+	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 15000 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 15008 */
+	{.type FromH0, {.p M_rfetch}},		/* dd M_rfetch 15016 */
+	{.type FromH0, {.p M_cmove}},		/* dd M_cmove 15024 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 15032 */
+	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 15040 */
+	{.type FromH0, {.p M_dup}},		/* dd M_dup 15048 */
+	{.type FromH0, {.p C_allot}},		/* dd C_allot 15056 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15064 */
+	{.type Header, {.hdr { 2, "c\"", /* C_cdouble_quote = 15080 */ colon }}}, /* CENTRY "c\"" cdouble_quote 2 h 15088 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 15096 */
+	{.type Absolute, {.p 34}},		/* dd 34 15104 */
+	{.type FromH0, {.p C_word}},		/* dd C_word 15112 */
 	{.type FromH0, {.p M_dup}},		/* dd M_dup 15120 */
-	{.type FromH0, {.p C_allot}},		/* dd C_allot 15128 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15136 */
-	{.type Header, {.hdr { 2, "c\"", /* C_cdouble_quote = 15152 */ colon }}}, /* CENTRY "c\"" cdouble_quote 2 h 15160 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 15168 */
-	{.type Absolute, {.p 34}},		/* dd 34 15176 */
-	{.type FromH0, {.p C_word}},		/* dd C_word 15184 */
-	{.type FromH0, {.p M_dup}},		/* dd M_dup 15192 */
-	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 15200 */
-	{.type FromH0, {.p C_1plus}},		/* dd C_1plus 15208 */
-	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 15216 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 15224 */
-	{.type FromH0, {.p M_rfetch}},		/* dd M_rfetch 15232 */
-	{.type FromH0, {.p M_cmove}},		/* dd M_cmove 15240 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 15248 */
-	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 15256 */
-	{.type FromH0, {.p C_allot}},		/* dd C_allot 15264 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15272 */
-	{.type IHeader, {.hdr { 2, "s\"", /* CI_sdouble_quote = 15288 */ colon }}}, /* CIENTRY "s\"" sdouble_quote 2 h 15296 */
-	{.type FromH0, {.p C_sliteral}},		/* dd C_sliteral 15304 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15312 */
-	{.type IHeader, {.hdr { 2, ".\"", /* CI_dotstr = 15328 */ colon }}}, /* CIENTRY ".\"" dotstr 2 h 15336 */
-	{.type FromH0, {.p C_sliteral}},		/* dd C_sliteral 15344 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 15352 */
-	{.type FromH0, {.p C_type}},		/* dd C_type 15360 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 15368 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15376 */
-	{.type IHeader, {.hdr { 2, "if", /* CI_if = 15392 */ colon }}}, /* CIENTRY "if" if 2 h 15400 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 15408 */
-	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 15416 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 15424 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 15432 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 15440 */
-	{.type Absolute, {.p 0}},		/* dd 0 15448 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 15456 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15464 */
-	{.type IHeader, {.hdr { 4, "else", /* CI_else = 15480 */ colon }}}, /* CIENTRY "else" else 4 h 15488 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 15496 */
-	{.type FromH0, {.p M_jump}},		/* dd M_jump 15504 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 15512 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 15520 */
-	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 15528 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 15536 */
-	{.type Absolute, {.p 0}},		/* dd 0 15544 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 15552 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 15560 */
-	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 15568 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 15576 */
-	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 15584 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15592 */
-	{.type IHeader, {.hdr { 4, "then", /* CI_then = 15608 */ colon }}}, /* CIENTRY "then" then 4 h 15616 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 15624 */
-	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 15632 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 15640 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15648 */
-	{.type IHeader, {.hdr { 5, "begin", /* CI_begin = 15664 */ colon }}}, /* CIENTRY "begin" begin 5 h 15672 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 15680 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15688 */
-	{.type IHeader, {.hdr { 5, "again", /* CI_again = 15704 */ colon }}}, /* CIENTRY "again" again 5 h 15712 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 15720 */
-	{.type FromH0, {.p M_jump}},		/* dd M_jump 15728 */
+	{.type FromH0, {.p M_cfetch}},		/* dd M_cfetch 15128 */
+	{.type FromH0, {.p C_1plus}},		/* dd C_1plus 15136 */
+	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 15144 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 15152 */
+	{.type FromH0, {.p M_rfetch}},		/* dd M_rfetch 15160 */
+	{.type FromH0, {.p M_cmove}},		/* dd M_cmove 15168 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 15176 */
+	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 15184 */
+	{.type FromH0, {.p C_allot}},		/* dd C_allot 15192 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15200 */
+	{.type IHeader, {.hdr { 2, "s\"", /* CI_sdouble_quote = 15216 */ colon }}}, /* CIENTRY "s\"" sdouble_quote 2 h 15224 */
+	{.type FromH0, {.p C_sliteral}},		/* dd C_sliteral 15232 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15240 */
+	{.type IHeader, {.hdr { 2, ".\"", /* CI_dotstr = 15256 */ colon }}}, /* CIENTRY ".\"" dotstr 2 h 15264 */
+	{.type FromH0, {.p C_sliteral}},		/* dd C_sliteral 15272 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 15280 */
+	{.type FromH0, {.p C_type}},		/* dd C_type 15288 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 15296 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15304 */
+	{.type IHeader, {.hdr { 2, "if", /* CI_if = 15320 */ colon }}}, /* CIENTRY "if" if 2 h 15328 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 15336 */
+	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 15344 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 15352 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 15360 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 15368 */
+	{.type Absolute, {.p 0}},		/* dd 0 15376 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 15384 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15392 */
+	{.type IHeader, {.hdr { 4, "else", /* CI_else = 15408 */ colon }}}, /* CIENTRY "else" else 4 h 15416 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 15424 */
+	{.type FromH0, {.p M_jump}},		/* dd M_jump 15432 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 15440 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 15448 */
+	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 15456 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 15464 */
+	{.type Absolute, {.p 0}},		/* dd 0 15472 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 15480 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 15488 */
+	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 15496 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 15504 */
+	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 15512 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15520 */
+	{.type IHeader, {.hdr { 4, "then", /* CI_then = 15536 */ colon }}}, /* CIENTRY "then" then 4 h 15544 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 15552 */
+	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 15560 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 15568 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15576 */
+	{.type IHeader, {.hdr { 5, "begin", /* CI_begin = 15592 */ colon }}}, /* CIENTRY "begin" begin 5 h 15600 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 15608 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15616 */
+	{.type IHeader, {.hdr { 5, "again", /* CI_again = 15632 */ colon }}}, /* CIENTRY "again" again 5 h 15640 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 15648 */
+	{.type FromH0, {.p M_jump}},		/* dd M_jump 15656 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 15664 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 15672 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15680 */
+	{.type IHeader, {.hdr { 5, "until", /* CI_until = 15696 */ colon }}}, /* CIENTRY "until" until 5 h 15704 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 15712 */
+	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 15720 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 15728 */
 	{.type FromH0, {.p C_comma}},		/* dd C_comma 15736 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 15744 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15752 */
-	{.type IHeader, {.hdr { 5, "until", /* CI_until = 15768 */ colon }}}, /* CIENTRY "until" until 5 h 15776 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 15784 */
-	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 15792 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 15800 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 15808 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15816 */
-	{.type IHeader, {.hdr { 5, "while", /* CI_while = 15832 */ colon }}}, /* CIENTRY "while" while 5 h 15840 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 15848 */
-	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 15856 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 15864 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 15872 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 15880 */
-	{.type Absolute, {.p 0}},		/* dd 0 15888 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15744 */
+	{.type IHeader, {.hdr { 5, "while", /* CI_while = 15760 */ colon }}}, /* CIENTRY "while" while 5 h 15768 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 15776 */
+	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 15784 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 15792 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 15800 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 15808 */
+	{.type Absolute, {.p 0}},		/* dd 0 15816 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 15824 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15832 */
+	{.type IHeader, {.hdr { 6, "repeat", /* CI_repeat = 15848 */ colon }}}, /* CIENTRY "repeat" repeat 6 h 15856 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 15864 */
+	{.type FromH0, {.p M_jump}},		/* dd M_jump 15872 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 15880 */
+	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 15888 */
 	{.type FromH0, {.p C_comma}},		/* dd C_comma 15896 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15904 */
-	{.type IHeader, {.hdr { 6, "repeat", /* CI_repeat = 15920 */ colon }}}, /* CIENTRY "repeat" repeat 6 h 15928 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 15936 */
-	{.type FromH0, {.p M_jump}},		/* dd M_jump 15944 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 15952 */
-	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 15960 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 15968 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 15976 */
-	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 15984 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 15992 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16000 */
-	{.type IHeader, {.hdr { 2, "do", /* CI_do = 16016 */ colon }}}, /* CIENTRY "do" do 2 h 16024 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 16032 */
-	{.type FromH0, {.p M_doinit}},		/* dd M_doinit 16040 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 16048 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 16056 */
-	{.type Absolute, {.p 0}},		/* dd 0 16064 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 16072 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16080 */
-	{.type IHeader, {.hdr { 4, "loop", /* CI_loop = 16096 */ colon }}}, /* CIENTRY "loop" loop 4 h 16104 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 16112 */
-	{.type FromH0, {.p M_doloop}},		/* dd M_doloop 16120 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 16128 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 16136 */
-	{.type FromH0, {.p C_qdup}},		/* dd C_qdup 16144 */
-	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 16152 */
-	{.type FromH0, {.p L234}},		/* dd L234 16160 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 16168 */
-	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 16176 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 16184 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16192 */
-	{.type IHeader, {.hdr { 5, "+loop", /* CI_ploop = 16208 */ colon }}}, /* CIENTRY "+loop" ploop 5 h 16216 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 16224 */
-	{.type FromH0, {.p M_doploop}},		/* dd M_doploop 16232 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 16240 */
-	{.type FromH0, {.p C_comma}},		/* dd C_comma 16248 */
-	{.type FromH0, {.p C_qdup}},		/* dd C_qdup 16256 */
-	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 16264 */
-	{.type FromH0, {.p L236}},		/* dd L236 16272 */
-	{.type FromH0, {.p C_here}},		/* dd C_here 16280 */
-	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 16288 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 16296 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16304 */
-	{.type Header, {.hdr { 3, "w/o", /* C_wo = 16320 */ colon }}}, /* CENTRY "w/o" wo 3 h 16328 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 16336 */
-	{.type Absolute, {.p 1}},		/* dd 1 16344 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 16352 */
-	{.type Absolute, {.p 512}},		/* dd 512 16360 */
-	{.type FromH0, {.p M_binor}},		/* dd M_binor 16368 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 16376 */
-	{.type Absolute, {.p 64}},		/* dd 64 16384 */
-	{.type FromH0, {.p M_binor}},		/* dd M_binor 16392 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16400 */
-	{.type Header, {.hdr { 3, "r/o", /* C_ro = 16416 */ colon }}}, /* CENTRY "r/o" ro 3 h 16424 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 16432 */
-	{.type Absolute, {.p 0}},		/* dd 0 16440 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16448 */
-	{.type Header, {.hdr { 3, "r/w", /* C_rw = 16464 */ colon }}}, /* CENTRY "r/w" rw 3 h 16472 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 15904 */
+	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 15912 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 15920 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 15928 */
+	{.type IHeader, {.hdr { 2, "do", /* CI_do = 15944 */ colon }}}, /* CIENTRY "do" do 2 h 15952 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 15960 */
+	{.type FromH0, {.p M_doinit}},		/* dd M_doinit 15968 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 15976 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 15984 */
+	{.type Absolute, {.p 0}},		/* dd 0 15992 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 16000 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16008 */
+	{.type IHeader, {.hdr { 4, "loop", /* CI_loop = 16024 */ colon }}}, /* CIENTRY "loop" loop 4 h 16032 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 16040 */
+	{.type FromH0, {.p M_doloop}},		/* dd M_doloop 16048 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 16056 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 16064 */
+	{.type FromH0, {.p C_qdup}},		/* dd C_qdup 16072 */
+	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 16080 */
+	{.type FromH0, {.p L234}},		/* dd L234 16088 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 16096 */
+	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 16104 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 16112 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16120 */
+	{.type IHeader, {.hdr { 5, "+loop", /* CI_ploop = 16136 */ colon }}}, /* CIENTRY "+loop" ploop 5 h 16144 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 16152 */
+	{.type FromH0, {.p M_doploop}},		/* dd M_doploop 16160 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 16168 */
+	{.type FromH0, {.p C_comma}},		/* dd C_comma 16176 */
+	{.type FromH0, {.p C_qdup}},		/* dd C_qdup 16184 */
+	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 16192 */
+	{.type FromH0, {.p L236}},		/* dd L236 16200 */
+	{.type FromH0, {.p C_here}},		/* dd C_here 16208 */
+	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 16216 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 16224 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16232 */
+	{.type Header, {.hdr { 3, "w/o", /* C_wo = 16248 */ colon }}}, /* CENTRY "w/o" wo 3 h 16256 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 16264 */
+	{.type Absolute, {.p 1}},		/* dd 1 16272 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 16280 */
+	{.type Absolute, {.p 512}},		/* dd 512 16288 */
+	{.type FromH0, {.p M_binor}},		/* dd M_binor 16296 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 16304 */
+	{.type Absolute, {.p 64}},		/* dd 64 16312 */
+	{.type FromH0, {.p M_binor}},		/* dd M_binor 16320 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16328 */
+	{.type Header, {.hdr { 3, "r/o", /* C_ro = 16344 */ colon }}}, /* CENTRY "r/o" ro 3 h 16352 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 16360 */
+	{.type Absolute, {.p 0}},		/* dd 0 16368 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16376 */
+	{.type Header, {.hdr { 3, "r/w", /* C_rw = 16392 */ colon }}}, /* CENTRY "r/w" rw 3 h 16400 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 16408 */
+	{.type Absolute, {.p 2}},		/* dd 2 16416 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16424 */
+	{.type Header, {.hdr { 9, "open-file", /* C_open_file = 16448 */ colon }}}, /* CENTRY "open-file" open_file 9 h 16456 */
+	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 16464 */
+	{.type FromH0, {.p C_pad}},		/* dd C_pad 16472 */
 	{.type FromH0, {.p M_literal}},		/* dd M_literal 16480 */
-	{.type Absolute, {.p 2}},		/* dd 2 16488 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16496 */
-	{.type Header, {.hdr { 9, "open-file", /* C_open_file = 16520 */ colon }}}, /* CENTRY "open-file" open_file 9 h 16528 */
-	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 16536 */
-	{.type FromH0, {.p C_pad}},		/* dd C_pad 16544 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 16552 */
-	{.type Absolute, {.p 1024}},		/* dd 1024 16560 */
+	{.type Absolute, {.p 1024}},		/* dd 1024 16488 */
+	{.type FromH0, {.p M_plus}},		/* dd M_plus 16496 */
+	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 16504 */
+	{.type FromH0, {.p M_dup}},		/* dd M_dup 16512 */
+	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 16520 */
+	{.type FromH0, {.p M_cmove}},		/* dd M_cmove 16528 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 16536 */
+	{.type Absolute, {.p 0}},		/* dd 0 16544 */
+	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 16552 */
+	{.type FromH0, {.p C_pad}},		/* dd C_pad 16560 */
 	{.type FromH0, {.p M_plus}},		/* dd M_plus 16568 */
-	{.type FromH0, {.p M_xswap}},		/* dd M_xswap 16576 */
-	{.type FromH0, {.p M_dup}},		/* dd M_dup 16584 */
-	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 16592 */
-	{.type FromH0, {.p M_cmove}},		/* dd M_cmove 16600 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 16608 */
-	{.type Absolute, {.p 0}},		/* dd 0 16616 */
-	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 16624 */
-	{.type FromH0, {.p C_pad}},		/* dd C_pad 16632 */
-	{.type FromH0, {.p M_plus}},		/* dd M_plus 16640 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 16576 */
+	{.type Absolute, {.p 1024}},		/* dd 1024 16584 */
+	{.type FromH0, {.p M_plus}},		/* dd M_plus 16592 */
+	{.type FromH0, {.p M_cstore}},		/* dd M_cstore 16600 */
+	{.type FromH0, {.p C_pad}},		/* dd C_pad 16608 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 16616 */
+	{.type Absolute, {.p 1024}},		/* dd 1024 16624 */
+	{.type FromH0, {.p M_plus}},		/* dd M_plus 16632 */
+	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 16640 */
 	{.type FromH0, {.p M_literal}},		/* dd M_literal 16648 */
-	{.type Absolute, {.p 1024}},		/* dd 1024 16656 */
-	{.type FromH0, {.p M_plus}},		/* dd M_plus 16664 */
-	{.type FromH0, {.p M_cstore}},		/* dd M_cstore 16672 */
-	{.type FromH0, {.p C_pad}},		/* dd C_pad 16680 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 16688 */
-	{.type Absolute, {.p 1024}},		/* dd 1024 16696 */
-	{.type FromH0, {.p M_plus}},		/* dd M_plus 16704 */
-	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 16712 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 16720 */
-	{.type Absolute, {.p 420}},		/* dd 420 16728 */
-	{.type FromH0, {.p M_fthopen}},		/* dd M_fthopen 16736 */
-	{.type FromH0, {.p M_dup}},		/* dd M_dup 16744 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 16752 */
-	{.type Absolute, {.p -1}},		/* dd -1 16760 */
-	{.type FromH0, {.p M_greater}},		/* dd M_greater 16768 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16776 */
-	{.type Header, {.hdr { 10, "close-file", /* C_close_file = 16800 */ colon }}}, /* CENTRY "close-file" close_file 10 h 16808 */
-	{.type FromH0, {.p M_fthclose}},		/* dd M_fthclose 16816 */
-	{.type FromH0, {.p C_0eq}},		/* dd C_0eq 16824 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16832 */
-	{.type Header, {.hdr { 9, "read-file", /* C_read_file = 16856 */ colon }}}, /* CENTRY "read-file" read_file 9 h 16864 */
-	{.type FromH0, {.p M_fthread}},		/* dd M_fthread 16872 */
-	{.type FromH0, {.p M_dup}},		/* dd M_dup 16880 */
+	{.type Absolute, {.p 420}},		/* dd 420 16656 */
+	{.type FromH0, {.p M_fthopen}},		/* dd M_fthopen 16664 */
+	{.type FromH0, {.p M_dup}},		/* dd M_dup 16672 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 16680 */
+	{.type Absolute, {.p -1}},		/* dd -1 16688 */
+	{.type FromH0, {.p M_greater}},		/* dd M_greater 16696 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16704 */
+	{.type Header, {.hdr { 10, "close-file", /* C_close_file = 16728 */ colon }}}, /* CENTRY "close-file" close_file 10 h 16736 */
+	{.type FromH0, {.p M_fthclose}},		/* dd M_fthclose 16744 */
+	{.type FromH0, {.p C_0eq}},		/* dd C_0eq 16752 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16760 */
+	{.type Header, {.hdr { 9, "read-file", /* C_read_file = 16784 */ colon }}}, /* CENTRY "read-file" read_file 9 h 16792 */
+	{.type FromH0, {.p M_fthread}},		/* dd M_fthread 16800 */
+	{.type FromH0, {.p M_dup}},		/* dd M_dup 16808 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 16816 */
+	{.type Absolute, {.p -1}},		/* dd -1 16824 */
+	{.type FromH0, {.p C_neq}},		/* dd C_neq 16832 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16840 */
+	{.type Header, {.hdr { 10, "write-file", /* C_write_file = 16864 */ colon }}}, /* CENTRY "write-file" write_file 10 h 16872 */
+	{.type FromH0, {.p M_fthwrite}},		/* dd M_fthwrite 16880 */
 	{.type FromH0, {.p M_literal}},		/* dd M_literal 16888 */
 	{.type Absolute, {.p -1}},		/* dd -1 16896 */
 	{.type FromH0, {.p C_neq}},		/* dd C_neq 16904 */
 	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16912 */
-	{.type Header, {.hdr { 10, "write-file", /* C_write_file = 16936 */ colon }}}, /* CENTRY "write-file" write_file 10 h 16944 */
-	{.type FromH0, {.p M_fthwrite}},		/* dd M_fthwrite 16952 */
+	{.type Header, {.hdr { 15, "reposition-file", /* C_reposition_file = 16936 */ colon }}}, /* CENTRY "reposition-file" reposition_file 15 h 16944 */
+	{.type FromH0, {.p M_fthseek}},		/* dd M_fthseek 16952 */
 	{.type FromH0, {.p M_literal}},		/* dd M_literal 16960 */
 	{.type Absolute, {.p -1}},		/* dd -1 16968 */
 	{.type FromH0, {.p C_neq}},		/* dd C_neq 16976 */
 	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 16984 */
-	{.type Header, {.hdr { 15, "reposition-file", /* C_reposition_file = 17008 */ colon }}}, /* CENTRY "reposition-file" reposition_file 15 h 17016 */
-	{.type FromH0, {.p M_fthseek}},		/* dd M_fthseek 17024 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 17032 */
-	{.type Absolute, {.p -1}},		/* dd -1 17040 */
-	{.type FromH0, {.p C_neq}},		/* dd C_neq 17048 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 17056 */
-	{.type Header, {.hdr { 7, "?fcheck", /* C_qfcheck = 17072 */ colon }}}, /* CENTRY "?fcheck" qfcheck 7 h 17080 */
-	{.type FromH0, {.p C_0eq}},		/* dd C_0eq 17088 */
-	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 17096 */
-	{.type FromH0, {.p L246}},		/* dd L246 17104 */
-	{.type FromH0, {.p C_space}},		/* dd C_space 17112 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 17120 */
-	{.type FromH0, {.p L247}},		/* dd L247 17128 */
+	{.type Header, {.hdr { 7, "?fcheck", /* C_qfcheck = 17000 */ colon }}}, /* CENTRY "?fcheck" qfcheck 7 h 17008 */
+	{.type FromH0, {.p C_0eq}},		/* dd C_0eq 17016 */
+	{.type FromH0, {.p M_cjump}},		/* dd M_cjump 17024 */
+	{.type FromH0, {.p L246}},		/* dd L246 17032 */
+	{.type FromH0, {.p C_space}},		/* dd C_space 17040 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 17048 */
+	{.type FromH0, {.p L247}},		/* dd L247 17056 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 17064 */
+	{.type Absolute, {.p 9}},		/* dd 9 17072 */
+	{.type FromH0, {.p C_type}},		/* dd C_type 17080 */
+	{.type FromH0, {.p C_cr}},		/* dd C_cr 17088 */
+	{.type FromH0, {.p C_abort}},		/* dd C_abort 17096 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 17104 */
+	{.type Header, {.hdr { 3, "bye", /* C_bye = 17120 */ colon }}}, /* CENTRY "bye" bye 3 h 17128 */
 	{.type FromH0, {.p M_literal}},		/* dd M_literal 17136 */
-	{.type Absolute, {.p 9}},		/* dd 9 17144 */
-	{.type FromH0, {.p C_type}},		/* dd C_type 17152 */
-	{.type FromH0, {.p C_cr}},		/* dd C_cr 17160 */
-	{.type FromH0, {.p C_abort}},		/* dd C_abort 17168 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 17176 */
-	{.type Header, {.hdr { 3, "bye", /* C_bye = 17192 */ colon }}}, /* CENTRY "bye" bye 3 h 17200 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 17208 */
-	{.type Absolute, {.p 0}},		/* dd 0 17216 */
-	{.type FromH0, {.p M_terminate}},		/* dd M_terminate 17224 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 17232 */
-	{.type Header, {.hdr { 7, "include", /* C_include = 17248 */ colon }}}, /* CENTRY "include" include 7 h 17256 */
-	{.type FromH0, {.p C_bl}},		/* dd C_bl 17264 */
-	{.type FromH0, {.p C_word}},		/* dd C_word 17272 */
-	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 17280 */
-	{.type FromH0, {.p MV_toLimit}},		/* dd MV_toLimit 17288 */
-	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 17296 */
-	{.type FromH0, {.p MV_toIn}},		/* dd MV_toIn 17304 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 17312 */
-	{.type FromH0, {.p C_save_input}},		/* dd C_save_input 17320 */
-	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 17328 */
-	{.type FromH0, {.p C_count}},		/* dd C_count 17336 */
-	{.type FromH0, {.p C_ro}},		/* dd C_ro 17344 */
-	{.type FromH0, {.p C_open_file}},		/* dd C_open_file 17352 */
-	{.type FromH0, {.p C_qfcheck}},		/* dd C_qfcheck 17360 */
-	{.type FromH0, {.p MV_Infd}},		/* dd MV_Infd 17368 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 17376 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 17384 */
-	{.type Header, {.hdr { 5, "crash", /* C_crash = 17400 */ colon }}}, /* CENTRY "crash" crash 5 h 17408 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 17416 */
-	{.type FromH0, {.p L251}},		/* dd L251 17424 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 17432 */
-	{.type Absolute, {.p 30}},		/* dd 30 17440 */
-	{.type FromH0, {.p C_type}},		/* dd C_type 17448 */
-	{.type FromH0, {.p C_cr}},		/* dd C_cr 17456 */
-	{.type FromH0, {.p C_abort}},		/* dd C_abort 17464 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 17472 */
-	{.type Header, {.hdr { 4, "quit", /* C_quit = 17488 */ colon }}}, /* CENTRY "quit" quit 4 ; interpreter loop h 17496 */
-	{.type FromH0, {.p M_reset}},		/* dd M_reset ; initialize return stack 17504 */
-	{.type FromH0, {.p M_clear}},		/* dd M_clear	; SP = sstack_end initialize data stack 17512 */
-	{.type FromH0, {.p C_query}},		/* dd C_query 17520 */
-	{.type FromH0, {.p MV_toLimit}},		/* dd MV_toLimit	; show the line read, for debugging 17528 */
-	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 17536 */
-	{.type FromH0, {.p M_Tib}},		/* dd M_Tib 17544 */
-	{.type FromH0, {.p MC_STDOUT}},		/* dd MC_STDOUT 17552 */
-	{.type FromH0, {.p M_fthwrite}},		/* dd M_fthwrite 17560 */
-	{.type FromH0, {.p M_drop}},		/* dd M_drop		; drop the return value of write 17568 */
-	{.type FromH0, {.p C_interpret}},		/* dd C_interpret 17576 */
-	{.type FromH0, {.p M_jump}},		/* dd M_jump 17584 */
-	{.type FromH0, {.p L253}},		/* dd L253 17592 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon	; why is this needed? 17600 */
-	{.type Header, {.hdr { 7, "(abort)", /* C_parenabort = 17616 */ colon }}}, /* CENTRY "(abort)" parenabort 7 ; TODO correct below stack notations h 17624 */
-	{.type FromH0, {.p MV_State}},		/* dd MV_State	; ( mv_State -- ) 17632 */
-	{.type FromH0, {.p C_off}},		/* dd C_off		; off sets variable state = 0 17640 */
-	{.type FromH0, {.p M_Tib}},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 17648 */
-	{.type FromH0, {.p MV_Sourcebuf}},		/* dd MV_Sourcebuf	; variable sourcebuf 17656 */
-	{.type FromH0, {.p M_store}},		/* dd M_store	; variable sourcebuf = address of tibuffer 17664 */
-	{.type FromH0, {.p MV_Blk}},		/* dd MV_Blk	; variable blk 17672 */
-	{.type FromH0, {.p C_off}},		/* dd C_off	; off variable blk = 0 17680 */
-	{.type FromH0, {.p MC_STDIN}},		/* dd MC_STDIN 17688 */
-	{.type FromH0, {.p MV_Infd}},		/* dd MV_Infd 17696 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 17704 */
-	{.type FromH0, {.p MC_STDOUT}},		/* dd MC_STDOUT 17712 */
-	{.type FromH0, {.p MV_Outfd}},		/* dd MV_Outfd 17720 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 17728 */
-	{.type FromH0, {.p MC_STDERR}},		/* dd MC_STDERR 17736 */
-	{.type FromH0, {.p MV_Errfd}},		/* dd MV_Errfd 17744 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 17752 */
-	{.type FromH0, {.p C_quit}},		/* dd C_quit	; quit resets stacks and is the interpreter loop 17760 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon	; why is this needed? quit does not return unless it breaks 17768 */
-	{.type Header, {.hdr { 7, "oldboot", /* C_oldboot = 17784 */ colon }}}, /* CENTRY "oldboot" oldboot 7 ; TODO correct below stack notations and this is obsolete. leaving it here for reference until it all works well h 17792 */
-	{.type FromH0, {.p M_reset}},		/* dd M_reset 17800 */
-	{.type FromH0, {.p M_clear}},		/* dd M_clear	; SP = sstack_end 17808 */
-	{.type FromH0, {.p M_stackptr}},		/* dd M_stackptr	; (D -- FFEND) 17816 */
-	{.type FromH0, {.p M_S0}},		/* dd M_S0 17824 */
-	{.type FromH0, {.p M_store}},		/* dd M_store	; s0 = FFEND 17832 */
-	{.type FromH0, {.p M_H0}},		/* dd M_H0	; heaptop = heapend 17840 */
-	{.type FromH0, {.p M_fetch}},		/* dd M_fetch	; ( heapend -- ) 17848 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 17856 */
-	{.type Absolute, {.p 1}},		/* dd 1		; ( heapend 1 -- ) 17864 */
-	{.type FromH0, {.p C_cells}},		/* dd C_cells	; cells ( heapend 8 -- ) 17872 */
-	{.type FromH0, {.p M_minus}},		/* dd M_minus	; ( heapend-8 -- ) 17880 */
-	{.type FromH0, {.p M_fetch}},		/* dd M_fetch	; ( contents_from_heapend-8 -- ) 17888 */
-	{.type FromH0, {.p M_Args}},		/* dd M_Args	; variable args 17896 */
-	{.type FromH0, {.p M_store}},		/* dd M_store	; args = contents_from_heapend-8 17904 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 17912 */
-	{.type FromH0, {.p C_parenabort}},		/* dd C_parenabort ; ( (abort) -- ) 17920 */
-	{.type FromH0, {.p MV_Abortvec}},		/* dd MV_Abortvec	; variable abortvec 17928 */
-	{.type FromH0, {.p M_store}},		/* dd M_store	; variable abortvec = (abort) code address 17936 */
-	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb	; constant puts address of wordbuffer on the top of stack 17944 */
-	{.type FromH0, {.p MV_Wordbuf}},		/* dd MV_Wordbuf	; variable wordbuf 17952 */
-	{.type FromH0, {.p M_store}},		/* dd M_store	; variable wordbuf = address of wordbuffer 17960 */
-	{.type FromH0, {.p M_Tib}},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 17968 */
-	{.type FromH0, {.p MV_Sourcebuf}},		/* dd MV_Sourcebuf	; variable sourcebuf 17976 */
-	{.type FromH0, {.p M_store}},		/* dd M_store	; variable sourcebuf = address of tibuffer 17984 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 17992 */
-	{.type Absolute, {.p 0}},		/* dd 0 18000 */
-	{.type FromH0, {.p MV_Infd}},		/* dd MV_Infd 18008 */
-	{.type FromH0, {.p M_store}},		/* dd M_store	; stdin = 0 18016 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 18024 */
-	{.type Absolute, {.p 1}},		/* dd 1 18032 */
-	{.type FromH0, {.p MV_Outfd}},		/* dd MV_Outfd 18040 */
-	{.type FromH0, {.p M_store}},		/* dd M_store	; stdout = 1 18048 */
-	{.type FromH0, {.p MV_State}},		/* dd MV_State 18056 */
-	{.type FromH0, {.p C_off}},		/* dd C_off	; off stores 0 at state 18064 */
-	{.type FromH0, {.p C_decimal}},		/* dd C_decimal	; decimal setting base = 0 18072 */
-	{.type FromH0, {.p C_quit}},		/* dd C_quit	; quit 18080 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 18088 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal	; test code 18096 */
-	{.type Absolute, {.p 66}},		/* dd 66 18104 */
-	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb 18112 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 18120 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 18128 */
-	{.type Absolute, {.p 1}},		/* dd 1 18136 */
-	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb 18144 */
-	{.type FromH0, {.p MC_STDOUT}},		/* dd MC_STDOUT 18152 */
-	{.type FromH0, {.p M_fthwrite}},		/* dd M_fthwrite 18160 */
-	{.type FromH0, {.p M_drop}},		/* dd M_drop		; drop the return value of write 18168 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 18176 */
-	{.type Absolute, {.p 1}},		/* dd 1 18184 */
-	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb 18192 */
-	{.type FromH0, {.p MC_STDIN}},		/* dd MC_STDIN 18200 */
-	{.type FromH0, {.p M_fthread}},		/* dd M_fthread 18208 */
-	{.type FromH0, {.p M_drop}},		/* dd M_drop		; drop the return value of read 18216 */
-	{.type Header, {.hdr { 4, "boot", /* C_boot = 18232 */ colon }}}, /* CENTRY "boot" boot 4 h 18240 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal	; test code 18248 */
-	{.type Absolute, {.p 65}},		/* dd 65 18256 */
-	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb 18264 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 18272 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 18280 */
-	{.type Absolute, {.p 1}},		/* dd 1 18288 */
-	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb 18296 */
-	{.type FromH0, {.p MC_STDOUT}},		/* dd MC_STDOUT 18304 */
-	{.type FromH0, {.p M_fthwrite}},		/* dd M_fthwrite 18312 */
-	{.type FromH0, {.p M_drop}},		/* dd M_drop		; drop the return value of write 18320 */
-	{.type FromH0, {.p M_reset}},		/* dd M_reset ; initialize return stack 18328 */
-	{.type FromH0, {.p M_clear}},		/* dd M_clear	; SP = sstack_end initialize data stack 18336 */
-/* 			; s0 puts FFEND on the stack *//* 			; no args */	{.type FromH0, {.p M_literal}},		/* dd M_literal	; test code 18344 */
-	{.type Absolute, {.p 66}},		/* dd 66 18352 */
-	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb 18360 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 18368 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 18376 */
-	{.type Absolute, {.p 1}},		/* dd 1 18384 */
-	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb 18392 */
-	{.type FromH0, {.p MC_STDOUT}},		/* dd MC_STDOUT 18400 */
-	{.type FromH0, {.p M_fthwrite}},		/* dd M_fthwrite 18408 */
-	{.type FromH0, {.p M_drop}},		/* dd M_drop		; drop the return value of write 18416 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 18424 */
-	{.type FromH0, {.p C_parenabort}},		/* dd C_parenabort ; ( (abort) -- ) 18432 */
-	{.type FromH0, {.p MV_Abortvec}},		/* dd MV_Abortvec	; variable that puts (abort) code address on the stack 18440 */
-	{.type FromH0, {.p M_store}},		/* dd M_store	; variable abortvec = (abort) code address 18448 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal	; test code 18456 */
-	{.type Absolute, {.p 67}},		/* dd 67 18464 */
-	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb 18472 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 18480 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 18488 */
-	{.type Absolute, {.p 1}},		/* dd 1 18496 */
-	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb 18504 */
-	{.type FromH0, {.p MC_STDOUT}},		/* dd MC_STDOUT 18512 */
-	{.type FromH0, {.p M_fthwrite}},		/* dd M_fthwrite 18520 */
-	{.type FromH0, {.p M_drop}},		/* dd M_drop		; drop the return value of write 18528 */
-	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb	; variable puts address of wordbuffer on the top of stack 18536 */
-	{.type FromH0, {.p MV_Wordbuf}},		/* dd MV_Wordbuf ; variable wordbuf 18544 */
-	{.type FromH0, {.p M_store}},		/* dd M_store	; variable wordbuf = address of wordbuffer 18552 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal	; test code 18560 */
-	{.type Absolute, {.p 68}},		/* dd 68 18568 */
-	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb 18576 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 18584 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 18592 */
-	{.type Absolute, {.p 1}},		/* dd 1 18600 */
-	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb 18608 */
-	{.type FromH0, {.p MC_STDOUT}},		/* dd MC_STDOUT 18616 */
-	{.type FromH0, {.p M_fthwrite}},		/* dd M_fthwrite 18624 */
-	{.type FromH0, {.p M_drop}},		/* dd M_drop		; drop the return value of write 18632 */
-	{.type FromH0, {.p M_Tib}},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 18640 */
-	{.type FromH0, {.p MV_Sourcebuf}},		/* dd MV_Sourcebuf	; variable sourcebuf 18648 */
-	{.type FromH0, {.p M_store}},		/* dd M_store	; variable sourcebuf = address of tibuffer 18656 */
-	{.type FromH0, {.p MC_STDIN}},		/* dd MC_STDIN 18664 */
-	{.type FromH0, {.p MV_Infd}},		/* dd MV_Infd 18672 */
-	{.type FromH0, {.p M_store}},		/* dd M_store	; stdin = 0 18680 */
-	{.type FromH0, {.p MC_STDOUT}},		/* dd MC_STDOUT 18688 */
-	{.type FromH0, {.p MV_Outfd}},		/* dd MV_Outfd 18696 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 18704 */
-	{.type FromH0, {.p MC_STDERR}},		/* dd MC_STDERR 18712 */
-	{.type FromH0, {.p MV_Errfd}},		/* dd MV_Errfd 18720 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 18728 */
-	{.type FromH0, {.p MV_State}},		/* dd MV_State 18736 */
-	{.type FromH0, {.p C_off}},		/* dd C_off	; off stores 0 at state 18744 */
-	{.type FromH0, {.p C_decimal}},		/* dd C_decimal	; decimal sets base = 10 18752 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal	; test code 18760 */
-	{.type Absolute, {.p 69}},		/* dd 69 18768 */
-	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb 18776 */
-	{.type FromH0, {.p M_store}},		/* dd M_store 18784 */
-	{.type FromH0, {.p M_literal}},		/* dd M_literal 18792 */
-	{.type Absolute, {.p 1}},		/* dd 1 18800 */
-	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb 18808 */
-	{.type FromH0, {.p MC_STDOUT}},		/* dd MC_STDOUT 18816 */
-	{.type FromH0, {.p M_fthwrite}},		/* dd M_fthwrite 18824 */
-	{.type FromH0, {.p M_drop}},		/* dd M_drop		; drop the return value of write 18832 */
-	{.type FromH0, {.p C_quit}},		/* dd C_quit	; quit 18840 */
-	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 18848 */
-	{.type Chars, {.str "unable to restore input"}},		/* 18872 */
-	{.type Chars, {.str " Q?"}},		/* 18876 */
-	{.type Chars, {.str " stack underflow"}},		/* 18893 */
-	{.type Chars, {.str " I?"}},		/* 18897 */
-	{.type Chars, {.str " C?"}},		/* 18901 */
-	{.type Chars, {.str "I/O error"}},		/* 18911 */
-	{.type Chars, {.str "uninitialized execution vector"}},		/* 18942 */
-	{.type Chars, {.str " ok"}},		/* 18946 */
+	{.type Absolute, {.p 0}},		/* dd 0 17144 */
+	{.type FromH0, {.p M_terminate}},		/* dd M_terminate 17152 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 17160 */
+	{.type Header, {.hdr { 7, "include", /* C_include = 17176 */ colon }}}, /* CENTRY "include" include 7 h 17184 */
+	{.type FromH0, {.p C_bl}},		/* dd C_bl 17192 */
+	{.type FromH0, {.p C_word}},		/* dd C_word 17200 */
+	{.type FromH0, {.p M_rpush}},		/* dd M_rpush 17208 */
+	{.type FromH0, {.p MV_toLimit}},		/* dd MV_toLimit 17216 */
+	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 17224 */
+	{.type FromH0, {.p MV_toIn}},		/* dd MV_toIn 17232 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 17240 */
+	{.type FromH0, {.p C_save_input}},		/* dd C_save_input 17248 */
+	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 17256 */
+	{.type FromH0, {.p C_count}},		/* dd C_count 17264 */
+	{.type FromH0, {.p C_ro}},		/* dd C_ro 17272 */
+	{.type FromH0, {.p C_open_file}},		/* dd C_open_file 17280 */
+	{.type FromH0, {.p C_qfcheck}},		/* dd C_qfcheck 17288 */
+	{.type FromH0, {.p MV_Infd}},		/* dd MV_Infd 17296 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 17304 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 17312 */
+	{.type Header, {.hdr { 5, "crash", /* C_crash = 17328 */ colon }}}, /* CENTRY "crash" crash 5 h 17336 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 17344 */
+	{.type FromH0, {.p L251}},		/* dd L251 17352 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 17360 */
+	{.type Absolute, {.p 30}},		/* dd 30 17368 */
+	{.type FromH0, {.p C_type}},		/* dd C_type 17376 */
+	{.type FromH0, {.p C_cr}},		/* dd C_cr 17384 */
+	{.type FromH0, {.p C_abort}},		/* dd C_abort 17392 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 17400 */
+	{.type Header, {.hdr { 4, "quit", /* C_quit = 17416 */ colon }}}, /* CENTRY "quit" quit 4 ; interpreter loop h 17424 */
+	{.type FromH0, {.p M_reset}},		/* dd M_reset ; initialize return stack 17432 */
+	{.type FromH0, {.p M_clear}},		/* dd M_clear	; SP = sstack_end initialize data stack 17440 */
+	{.type FromH0, {.p C_query}},		/* dd C_query 17448 */
+	{.type FromH0, {.p MV_toLimit}},		/* dd MV_toLimit	; show the line read, for debugging 17456 */
+	{.type FromH0, {.p M_fetch}},		/* dd M_fetch 17464 */
+	{.type FromH0, {.p M_Tib}},		/* dd M_Tib 17472 */
+	{.type FromH0, {.p MC_STDOUT}},		/* dd MC_STDOUT 17480 */
+	{.type FromH0, {.p M_fthwrite}},		/* dd M_fthwrite 17488 */
+	{.type FromH0, {.p M_drop}},		/* dd M_drop		; drop the return value of write 17496 */
+	{.type FromH0, {.p C_interpret}},		/* dd C_interpret 17504 */
+	{.type FromH0, {.p M_jump}},		/* dd M_jump 17512 */
+	{.type FromH0, {.p L253}},		/* dd L253 17520 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon	; why is this needed? 17528 */
+	{.type Header, {.hdr { 7, "(abort)", /* C_parenabort = 17544 */ colon }}}, /* CENTRY "(abort)" parenabort 7 ; TODO correct below stack notations h 17552 */
+	{.type FromH0, {.p MV_State}},		/* dd MV_State	; ( mv_State -- ) 17560 */
+	{.type FromH0, {.p C_off}},		/* dd C_off		; off sets variable state = 0 17568 */
+	{.type FromH0, {.p M_Tib}},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 17576 */
+	{.type FromH0, {.p MV_Sourcebuf}},		/* dd MV_Sourcebuf	; variable sourcebuf 17584 */
+	{.type FromH0, {.p M_store}},		/* dd M_store	; variable sourcebuf = address of tibuffer 17592 */
+	{.type FromH0, {.p MV_Blk}},		/* dd MV_Blk	; variable blk 17600 */
+	{.type FromH0, {.p C_off}},		/* dd C_off	; off variable blk = 0 17608 */
+	{.type FromH0, {.p MC_STDIN}},		/* dd MC_STDIN 17616 */
+	{.type FromH0, {.p MV_Infd}},		/* dd MV_Infd 17624 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 17632 */
+	{.type FromH0, {.p MC_STDOUT}},		/* dd MC_STDOUT 17640 */
+	{.type FromH0, {.p MV_Outfd}},		/* dd MV_Outfd 17648 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 17656 */
+	{.type FromH0, {.p MC_STDERR}},		/* dd MC_STDERR 17664 */
+	{.type FromH0, {.p MV_Errfd}},		/* dd MV_Errfd 17672 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 17680 */
+	{.type FromH0, {.p C_quit}},		/* dd C_quit	; quit resets stacks and is the interpreter loop 17688 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon	; why is this needed? quit does not return unless it breaks 17696 */
+	{.type Header, {.hdr { 7, "oldboot", /* C_oldboot = 17712 */ colon }}}, /* CENTRY "oldboot" oldboot 7 ; TODO correct below stack notations and this is obsolete. leaving it here for reference until it all works well h 17720 */
+	{.type FromH0, {.p M_reset}},		/* dd M_reset 17728 */
+	{.type FromH0, {.p M_clear}},		/* dd M_clear	; SP = sstack_end 17736 */
+	{.type FromH0, {.p M_stackptr}},		/* dd M_stackptr	; (D -- FFEND) 17744 */
+	{.type FromH0, {.p M_S0}},		/* dd M_S0 17752 */
+	{.type FromH0, {.p M_store}},		/* dd M_store	; s0 = FFEND 17760 */
+	{.type FromH0, {.p M_H0}},		/* dd M_H0	; heaptop = heapend 17768 */
+	{.type FromH0, {.p M_fetch}},		/* dd M_fetch	; ( heapend -- ) 17776 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 17784 */
+	{.type Absolute, {.p 1}},		/* dd 1		; ( heapend 1 -- ) 17792 */
+	{.type FromH0, {.p C_cells}},		/* dd C_cells	; cells ( heapend 8 -- ) 17800 */
+	{.type FromH0, {.p M_minus}},		/* dd M_minus	; ( heapend-8 -- ) 17808 */
+	{.type FromH0, {.p M_fetch}},		/* dd M_fetch	; ( contents_from_heapend-8 -- ) 17816 */
+	{.type FromH0, {.p M_Args}},		/* dd M_Args	; variable args 17824 */
+	{.type FromH0, {.p M_store}},		/* dd M_store	; args = contents_from_heapend-8 17832 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 17840 */
+	{.type FromH0, {.p C_parenabort}},		/* dd C_parenabort ; ( (abort) -- ) 17848 */
+	{.type FromH0, {.p MV_Abortvec}},		/* dd MV_Abortvec	; variable abortvec 17856 */
+	{.type FromH0, {.p M_store}},		/* dd M_store	; variable abortvec = (abort) code address 17864 */
+	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb	; constant puts address of wordbuffer on the top of stack 17872 */
+	{.type FromH0, {.p MV_Wordbuf}},		/* dd MV_Wordbuf	; variable wordbuf 17880 */
+	{.type FromH0, {.p M_store}},		/* dd M_store	; variable wordbuf = address of wordbuffer 17888 */
+	{.type FromH0, {.p M_Tib}},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 17896 */
+	{.type FromH0, {.p MV_Sourcebuf}},		/* dd MV_Sourcebuf	; variable sourcebuf 17904 */
+	{.type FromH0, {.p M_store}},		/* dd M_store	; variable sourcebuf = address of tibuffer 17912 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 17920 */
+	{.type Absolute, {.p 0}},		/* dd 0 17928 */
+	{.type FromH0, {.p MV_Infd}},		/* dd MV_Infd 17936 */
+	{.type FromH0, {.p M_store}},		/* dd M_store	; stdin = 0 17944 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 17952 */
+	{.type Absolute, {.p 1}},		/* dd 1 17960 */
+	{.type FromH0, {.p MV_Outfd}},		/* dd MV_Outfd 17968 */
+	{.type FromH0, {.p M_store}},		/* dd M_store	; stdout = 1 17976 */
+	{.type FromH0, {.p MV_State}},		/* dd MV_State 17984 */
+	{.type FromH0, {.p C_off}},		/* dd C_off	; off stores 0 at state 17992 */
+	{.type FromH0, {.p C_decimal}},		/* dd C_decimal	; decimal setting base = 0 18000 */
+	{.type FromH0, {.p C_quit}},		/* dd C_quit	; quit 18008 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 18016 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal	; test code 18024 */
+	{.type Absolute, {.p 66}},		/* dd 66 18032 */
+	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb 18040 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 18048 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 18056 */
+	{.type Absolute, {.p 1}},		/* dd 1 18064 */
+	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb 18072 */
+	{.type FromH0, {.p MC_STDOUT}},		/* dd MC_STDOUT 18080 */
+	{.type FromH0, {.p M_fthwrite}},		/* dd M_fthwrite 18088 */
+	{.type FromH0, {.p M_drop}},		/* dd M_drop		; drop the return value of write 18096 */
+	{.type FromH0, {.p M_literal}},		/* dd M_literal 18104 */
+	{.type Absolute, {.p 1}},		/* dd 1 18112 */
+	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb 18120 */
+	{.type FromH0, {.p MC_STDIN}},		/* dd MC_STDIN 18128 */
+	{.type FromH0, {.p M_fthread}},		/* dd M_fthread 18136 */
+	{.type FromH0, {.p M_drop}},		/* dd M_drop		; drop the return value of read 18144 */
+	{.type Header, {.hdr { 4, "boot", /* C_boot = 18160 */ colon }}}, /* CENTRY "boot" boot 4 h 18168 */
+	{.type FromH0, {.p M_reset}},		/* dd M_reset ; initialize return stack 18176 */
+	{.type FromH0, {.p M_clear}},		/* dd M_clear	; SP = sstack_end initialize data stack 18184 */
+/* 			; s0 puts FFEND on the stack *//* 			; no args */	{.type FromH0, {.p M_literal}},		/* dd M_literal 18192 */
+	{.type FromH0, {.p C_parenabort}},		/* dd C_parenabort ; ( (abort) -- ) 18200 */
+	{.type FromH0, {.p MV_Abortvec}},		/* dd MV_Abortvec	; variable that puts (abort) code address on the stack 18208 */
+	{.type FromH0, {.p M_store}},		/* dd M_store	; variable abortvec = (abort) code address 18216 */
+	{.type FromH0, {.p M_Wordb}},		/* dd M_Wordb	; variable puts address of wordbuffer on the top of stack 18224 */
+	{.type FromH0, {.p MV_Wordbuf}},		/* dd MV_Wordbuf ; variable wordbuf 18232 */
+	{.type FromH0, {.p M_store}},		/* dd M_store	; variable wordbuf = address of wordbuffer 18240 */
+	{.type FromH0, {.p M_Tib}},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 18248 */
+	{.type FromH0, {.p MV_Sourcebuf}},		/* dd MV_Sourcebuf	; variable sourcebuf 18256 */
+	{.type FromH0, {.p M_store}},		/* dd M_store	; variable sourcebuf = address of tibuffer 18264 */
+	{.type FromH0, {.p MC_STDIN}},		/* dd MC_STDIN 18272 */
+	{.type FromH0, {.p MV_Infd}},		/* dd MV_Infd 18280 */
+	{.type FromH0, {.p M_store}},		/* dd M_store     ; stdin = 0 18288 */
+	{.type FromH0, {.p MC_STDOUT}},		/* dd MC_STDOUT 18296 */
+	{.type FromH0, {.p MV_Outfd}},		/* dd MV_Outfd 18304 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 18312 */
+	{.type FromH0, {.p MC_STDERR}},		/* dd MC_STDERR 18320 */
+	{.type FromH0, {.p MV_Errfd}},		/* dd MV_Errfd 18328 */
+	{.type FromH0, {.p M_store}},		/* dd M_store 18336 */
+	{.type FromH0, {.p MV_State}},		/* dd MV_State 18344 */
+	{.type FromH0, {.p C_off}},		/* dd C_off	; off stores 0 at state 18352 */
+	{.type FromH0, {.p C_decimal}},		/* dd C_decimal	; decimal sets base = 10 18360 */
+	{.type FromH0, {.p C_quit}},		/* dd C_quit	; quit 18368 */
+	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 18376 */
+	{.type Chars, {.str "unable to restore input"}},		/* 18400 */
+	{.type Chars, {.str " Q?"}},		/* 18404 */
+	{.type Chars, {.str " stack underflow"}},		/* 18421 */
+	{.type Chars, {.str " I?"}},		/* 18425 */
+	{.type Chars, {.str " C?"}},		/* 18429 */
+	{.type Chars, {.str "I/O error"}},		/* 18439 */
+	{.type Chars, {.str "uninitialized execution vector"}},		/* 18470 */
+	{.type Chars, {.str " ok"}},		/* 18474 */
 };
 

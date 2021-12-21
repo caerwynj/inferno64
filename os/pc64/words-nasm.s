@@ -1128,10 +1128,6 @@ dd M_drop		; drop the return value of write
 
 CENTRY "interpret" C_interpret 9 ; there is stuff in TIB to be interpreted >In and >Limit are set
 
-dd M_literal
-dd 73
-dd C_emit
-
 L175:
 dd C_bl
 dd C_word	; ( bl -- a ) a = address of counted string
@@ -1143,10 +1139,6 @@ dd L176	; count at a = 0
 dd C_find	; ( a -- a1 f ) a = address of counted string
 dd M_cjump
 dd L177
-
-dd M_literal
-dd 69
-dd C_emit
 
 dd M_execute	; found in dictionary, execute
 dd C_qstack
@@ -1168,11 +1160,6 @@ dd C_type
 dd C_cr
 dd C_abort
 L179:		; is a number
-
-dd M_literal
-dd 78
-dd C_emit
-
 L178:
 dd M_jump
 dd L175
@@ -1835,66 +1822,19 @@ dd M_drop		; drop the return value of read
 
 CENTRY "boot" C_boot 4
 
-dd M_literal	; test code
-dd 65
-dd M_Wordb
-dd M_store
-dd M_literal
-dd 1
-dd M_Wordb
-dd MC_STDOUT
-dd M_fthwrite
-dd M_drop		; drop the return value of write
-
 dd M_reset ; initialize return stack
 dd M_clear	; SP = sstack_end initialize data stack
 			; s0 puts FFEND on the stack
 			; no args
-
-
-dd M_literal	; test code
-dd 66
-dd M_Wordb
-dd M_store
-dd M_literal
-dd 1
-dd M_Wordb
-dd MC_STDOUT
-dd M_fthwrite
-dd M_drop		; drop the return value of write
 
 dd M_literal
 dd C_parenabort ; ( (abort) -- )
 dd MV_Abortvec	; variable that puts (abort) code address on the stack
 dd M_store	; variable abortvec = (abort) code address
 
-
-dd M_literal	; test code
-dd 67
-dd M_Wordb
-dd M_store
-dd M_literal
-dd 1
-dd M_Wordb
-dd MC_STDOUT
-dd M_fthwrite
-dd M_drop		; drop the return value of write
-
 dd M_Wordb	; variable puts address of wordbuffer on the top of stack
 dd MV_Wordbuf ; variable wordbuf
 dd M_store	; variable wordbuf = address of wordbuffer
-
-
-dd M_literal	; test code
-dd 68
-dd M_Wordb
-dd M_store
-dd M_literal
-dd 1
-dd M_Wordb
-dd MC_STDOUT
-dd M_fthwrite
-dd M_drop		; drop the return value of write
 
 dd M_Tib	; constant puts address of tibuffer on the top of stack
 dd MV_Sourcebuf	; variable sourcebuf
@@ -1902,7 +1842,7 @@ dd M_store	; variable sourcebuf = address of tibuffer
 
 dd MC_STDIN
 dd MV_Infd
-dd M_store	; stdin = 0
+dd M_store     ; stdin = 0
 dd MC_STDOUT
 dd MV_Outfd
 dd M_store
@@ -1913,18 +1853,6 @@ dd M_store
 dd MV_State
 dd C_off	; off stores 0 at state
 dd C_decimal	; decimal sets base = 10
-
-
-dd M_literal	; test code
-dd 69
-dd M_Wordb
-dd M_store
-dd M_literal
-dd 1
-dd M_Wordb
-dd MC_STDOUT
-dd M_fthwrite
-dd M_drop		; drop the return value of write
 
 dd C_quit	; quit
 dd M_exitcolon
