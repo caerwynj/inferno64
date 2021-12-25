@@ -764,6 +764,7 @@ CENTRY "source" C_source 6
 dd MV_Sourcebuf
 dd M_fetch
 dd M_exitcolon
+
 CENTRY "current-input" C_current_input 13 ; ( -- c ) read the next character from the location in Sourcebuf
 dd MV_toIn
 dd M_fetch
@@ -771,6 +772,7 @@ dd C_source
 dd M_plus		; Sourcebuf + >In
 dd M_cfetch
 dd M_exitcolon
+
 CENTRY "save-input" C_save_input 10
 dd MV_Infd
 dd MV_toIn
@@ -783,7 +785,10 @@ dd MV_Blk
 dd M_fetch
 dd M_literal
 dd 5
+dd MV_Ninputs
+dd C_plusstore	; Ninputs++
 dd M_exitcolon
+
 CENTRY "default-input" C_default_input 13
 dd MC_STDIN
 dd MV_toIn
@@ -796,7 +801,26 @@ dd M_store
 dd MV_Blk
 dd C_off
 dd M_exitcolon
-CENTRY "restore-input" C_restore_input 13 ; ( -- f )
+
+CENTRY "restore-input" C_restore_input 13 ; ( <input>|empty -- f )
+
+dd MV_Ninputs	; if Ninputs == 0, leave 0 on the stack. Or, Ninputs--
+dd M_fetch
+dd C_0neq
+dd M_cjump
+dd L300
+dd MV_Ninputs	; there are <input>'s pending on the stack
+dd M_fetch
+dd C_1minus
+dd MV_Ninputs
+dd M_store
+dd M_jump
+dd L301		; ( <input> -- <input>)
+L300:	; no more <input>'s on the stack, put 0 on the stack for the 5 <> below to work
+dd M_literal
+dd 0
+
+L301:
 dd MV_Eof
 dd C_off
 dd M_literal
@@ -823,7 +847,7 @@ dd C_true
 L134:
 dd M_exitcolon
 
-CENTRY "?restore-input" C_qrestore_input 14 ; ( -- )
+CENTRY "?restore-input" C_qrestore_input 14 ; ( <input> -- f )
 dd C_restore_input
 dd C_0eq
 dd M_cjump
@@ -834,6 +858,9 @@ dd L137
 dd M_literal
 dd 23
 dd C_type
+dd C_space
+dd C_depth
+dd C_dot
 dd C_cr
 dd C_abort
 L136:
@@ -1737,8 +1764,13 @@ dd M_Tib
 dd MC_STDOUT
 dd M_fthwrite
 dd M_drop		; drop the return value of write
+dd C_cr
+dd C_space
 
 dd C_interpret
+
+dd C_cr
+
 dd M_jump
 dd L253
 dd M_exitcolon	; why is this needed?

@@ -66,6 +66,7 @@ MVENTRY "Infd" Infd 0 4
 MVENTRY "Outfd" Outfd 0 5
 MVENTRY "Errfd" Errfd 0 5
 MVENTRY "Eof" Eof 0 3
+MVENTRY "Ninputs" Ninputs 0 7
 
 MCENTRY "STDIN" STDIN 0 5		; 3 constants from here CAPITALS
 MCENTRY "STDOUT" STDOUT 1 6
