@@ -606,15 +606,15 @@ Fentry fentries[] = {
 	{.type FromH0, {.p C_rot}},		/* dd C_rot 3152 */
 	{.type FromH0, {.p M_rpop}},		/* dd M_rpop 3160 */
 	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 3168 */
-	{.type Header, {.hdr { 4, "?dup", /* C_qdup = 3184 */ colon }}}, /* CENTRY "?dup" qdup 4 ; if (tos != 0) dup ( n -- ) TODO correct stack notations h 3192 */
-	{.type FromH0, {.p M_dup}},		/* dd M_dup	; ( n n -- ) 3200 */
-	{.type FromH0, {.p M_dup}},		/* dd M_dup	; ( n n n -- ) 3208 */
+	{.type Header, {.hdr { 4, "?dup", /* C_qdup = 3184 */ colon }}}, /* CENTRY "?dup" qdup 4 ; if (n != 0) ( n -- n n) else ( n -- n ) h 3192 */
+	{.type FromH0, {.p M_dup}},		/* dd M_dup	; ( n -- n n ) 3200 */
+	{.type FromH0, {.p M_dup}},		/* dd M_dup	; ( n n -- n n n ) 3208 */
 	{.type FromH0, {.p M_literal}},		/* dd M_literal 3216 */
-	{.type Absolute, {.p 0}},		/* dd 0		; ( n n n 0 -- ) 3224 */
-	{.type FromH0, {.p M_equal}},		/* dd M_equal	; ( n n f -- ) 3232 */
-	{.type FromH0, {.p M_cjump}},		/* dd M_cjump	; ( n n -- ) 3240 */
-	{.type FromH0, {.p L20}},		/* dd L20 3248 */
-	{.type FromH0, {.p M_drop}},		/* dd M_drop	; tos == 0 ( n -- ) 3256 */
+	{.type Absolute, {.p 0}},		/* dd 0		; ( n n n -- n n n 0 ) 3224 */
+	{.type FromH0, {.p M_equal}},		/* dd M_equal	; ( n n n 0 -- n n f ) 3232 */
+	{.type FromH0, {.p M_cjump}},		/* dd M_cjump	; ( n n f -- n n ) 3240 */
+	{.type FromH0, {.p L20}},		/* dd L20		; when n != 0, go to L20 3248 */
+	{.type FromH0, {.p M_drop}},		/* dd M_drop	; when n == 0 ( n n -- n) 3256 */
 	{.type FromH0, {.p M_exitcolon}},		/* dd M_exitcolon 3264 */
 	{.type Header, {.hdr { 4, "pick", /* C_pick = 3280 */ colon }}}, /* CENTRY "pick" pick 4 h 3288 */
 	{.type FromH0, {.p C_qdup}},		/* dd C_qdup 3296 */

@@ -85,16 +85,16 @@ dd M_rpush
 dd C_rot
 dd M_rpop
 dd M_exitcolon
-CENTRY "?dup" C_qdup 4 ; if (tos != 0) dup ( n -- ) TODO correct stack notations
-dd M_dup	; ( n n -- )
-dd M_dup	; ( n n n -- )
+CENTRY "?dup" C_qdup 4 ; if (n != 0) ( n -- n n) else ( n -- n )
+dd M_dup	; ( n -- n n )
+dd M_dup	; ( n n -- n n n )
 dd M_literal
-dd 0		; ( n n n 0 -- )
-dd M_equal	; ( n n f -- )
-dd M_cjump	; ( n n -- )
-dd L20
-dd M_drop	; tos == 0 ( n -- )
-L20:		; tos != 0 ( n n -- )
+dd 0		; ( n n n -- n n n 0 )
+dd M_equal	; ( n n n 0 -- n n f )
+dd M_cjump	; ( n n f -- n n )
+dd L20		; when n != 0, go to L20
+dd M_drop	; when n == 0 ( n n -- n)
+L20:		; when n != 0 ( n n )
 dd M_exitcolon
 CENTRY "pick" C_pick 4
 dd C_qdup
