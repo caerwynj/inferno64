@@ -9,6 +9,7 @@ BEGIN{
 	nlines=0
 	addr=""
 	h=0 # here = dictionary pointer
+	vh=0 # vhere = variable space pointer
 	nlabels=0
 	literal = "^[+-]?[0-9]+$"
 	branchlabel = "^L[0-9]+:$"
@@ -43,8 +44,9 @@ $1 == "MCENTRY" {
 $1 == "MVENTRY" {
 	name = $2
 	header($5, name, "MV_", $3, "variable")
-	h+=8;
-	fentries = fentries "	{.type Absolute, {.p " $4 "}},		/* " h " */\n"
+	h+=8; # for pfa
+	fentries = fentries "	{.type FromV0, {.p " vh " }},	/* " h " " vh " */\n"
+	vh+=8;
 }
 $1 == "CENTRY" {
 	name = $2
@@ -62,7 +64,7 @@ $1 == "dd" && $2 ~ literal {
 }
 $1 == "dd" && $2 ~ "^[M_|C_|CI_|(MC_)|(MV_)|L]" {
 	h+=8
-	fentries = fentries "	{.type FromH0, {.p " $2 "}},		/* " $0 " " h " */\n"
+	fentries = fentries "	{.type FromH0, {.p " $2 "}, .src = \"" $0 "\"},		/* " $0 " " h " */\n"
 }
 $1 ~ branchlabel {
 	gsub(/:/,"", $1)

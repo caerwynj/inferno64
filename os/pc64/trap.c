@@ -123,6 +123,42 @@ intrtime(Mach*, int vno)
 	USED(vno);
 }
 
+void
+dumprstack(intptr h, intptr rsp)
+{
+	intptr i;
+	int l=0;
+
+	print("Forth return stack RSTACK 0x%zx\n", h+RSTACK);
+	for(i = h + RSTACK-8; i >= rsp; i-=8){
+		print("	0x%zx: 0x%zx", i, *(intptr*)i);
+		l++;
+		if(l == 3){
+			l = 0;
+			print("\n");
+		}
+	}
+	print("\n");
+}
+
+void
+dumppstack(intptr h, intptr psp)
+{
+	intptr i;
+	int l=0;
+
+	print("Forth parameter stack PSTACK 0x%zx\n", h+PSTACK);
+	for(i = h + PSTACK-8; i >= psp; i-=8){
+		print("	0x%zx: 0x%zx", i, *(intptr*)i);
+		l++;
+		if(l == 3){
+			l = 0;
+			print("\n");
+		}
+	}
+	print("\n");
+}
+
 /*
  *  All traps come here.  It is slower to have all traps call trap()
  *  rather than directly vectoring the handler.  However, this avoids a
@@ -223,8 +259,11 @@ trap(Ureg* ureg)
 			}
 		}
 		dumpregs(ureg);
-		if(vno < nelem(excname))
+		if(vno < nelem(excname)){
+			dumprstack(ureg->r11, ureg->r8);
+			dumppstack(ureg->r11, ureg->dx);
 			panic("%s", excname[vno]);
+		}
 		panic("unknown trap/intr: %d\n", vno);
 	}
 
@@ -249,15 +288,17 @@ dumpregs2(Ureg* ureg)
 	print("FLAGS=%zux TRAP=%zux ECODE=%zux PC=%zux",
 		ureg->flags, ureg->trap, ureg->ecode, ureg->pc);
 	print(" SS=%4.4zuX USP=%zux\n", ureg->ss & 0xFFFF, ureg->usp);
-	print("  AX %8.8zuX  BX %8.8zuX  CX %8.8zuX  DX %8.8zuX\n",
+	print("  AX %8.8zuX  BX TOP %8.8zuX  CX %8.8zuX  DX PSP %8.8zuX\n",
 		ureg->ax, ureg->bx, ureg->cx, ureg->dx);
 	print("  SI %8.8zuX  DI %8.8zuX  BP %8.8zuX\n",
 		ureg->si, ureg->di, ureg->bp);
 	print("  CS %4.4zux  DS %4.4ux  ES %4.4ux  FS %4.4ux  GS %4.4ux\n",
 		ureg->cs & 0xFFFF, ureg->ds & 0xFFFF, ureg->es & 0xFFFF,
 		ureg->fs & 0xFFFF, ureg->gs & 0xFFFF);
-	print("  R8 %8.8zux  R9 %8.8zzux  R10 %8.8zux  R11 %8.8zux  R12 %8.8zux\n",
-		ureg->r8, ureg->r9, ureg->r10, ureg->r11, ureg->r12);
+	print("  R8 RSP %8.8zux  R9 IP %8.8zzux  R10 W %8.8zux\n"
+			"  R11 UP %8.8zux  R12 UPE %8.8zux  R13 %8.8zux\n",
+		ureg->r8, ureg->r9, ureg->r10,
+		ureg->r11, ureg->r12, ureg->r13);
 }
 
 void
@@ -406,6 +447,8 @@ faultamd64(Ureg* ureg, void*)
 			read ? "read" : "write", ureg->pc, addr);
 print(buf);
 	dumpregs(ureg);
+	dumprstack(ureg->r11, ureg->r8);
+	dumppstack(ureg->r11, ureg->dx);
 dumpstack();
 	if(up->type == Interp)
 		disfault(ureg, buf);

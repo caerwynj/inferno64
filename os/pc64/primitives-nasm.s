@@ -1,5 +1,3 @@
-MENTRY "Dp" Dp 2		; cannot use H as it is nil in inferno, next available cell for the dictionary
-MENTRY "Dtop" Dtop 4	; last defined header
 MENTRY "@" fetch 1
 MENTRY "!" store 1
 MENTRY "c@" cfetch 2
@@ -49,8 +47,18 @@ MENTRY "execute" execute 7
 MENTRY "unloop" unloop 6
 MENTRY "cmove" cmove 5
 MENTRY "cmove>" cmoveb 6
+MENTRY "(variable)" variable 10
+MENTRY "(constant)" constant 10
+MENTRY "(:)" colon 3
+MENTRY "(does)" dodoes 6
+MENTRY "cas" cas 3
+MENTRY "(deferred)" deferred 10
 
-MVENTRY "Iobuf" Iobuf 0 5
+MCENTRY "STDIN" STDIN 0 5		; 3 constants from here CAPITALS
+MCENTRY "STDOUT" STDOUT 1 6
+MCENTRY "STDERR" STDERR 2 6
+
+MVENTRY "Iobuf" Iobuf 0 5			; the values are not being used from the definition. All are initialized to 0.
 MVENTRY "Sourcebuf" Sourcebuf 0 9	; is there a need for this?
 MVENTRY "Wordbuf" Wordbuf 0 7		; is there a need for this?
 MVENTRY ">In" toIn 0 3
@@ -67,20 +75,14 @@ MVENTRY "Outfd" Outfd 0 5
 MVENTRY "Errfd" Errfd 0 5
 MVENTRY "Eof" Eof 0 3
 MVENTRY "Ninputs" Ninputs 0 7
+MVENTRY "H0" H0 0 2		; here at startup
 
-MCENTRY "STDIN" STDIN 0 5		; 3 constants from here CAPITALS
-MCENTRY "STDOUT" STDOUT 1 6
-MCENTRY "STDERR" STDERR 2 6
-
+; cannot use H as it is nil in inferno, address where here (next available dictionary cell location) is stored
+; here = Dp @
+MENTRY "Dp" Dp 2
+MENTRY "Dtop" Dtop 4	; last defined header
 MENTRY "S0" S0 2
-MENTRY "s@" stackptr 2		; puts PSP on stack
-MENTRY "H0" H0 2
+MENTRY "s@" stackptr 2	; puts PSP on stack
 MENTRY "Wordb" Wordb 5
 MENTRY "Tib" Tib 3
 MENTRY "Args" Args 3
-MENTRY "(variable)" variable 10
-MENTRY "(constant)" constant 10
-MENTRY "(:)" colon 3
-MENTRY "(does)" dodoes 6
-MENTRY "cas" cas 3
-MENTRY "(deferred)" deferred 10

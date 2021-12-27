@@ -89,11 +89,21 @@ loadforthdictionary(u8 *fmem)
 {
 	intptr i;
 	Fentry *f;
-	u8 *h, *dtop;
+	u8 *h, *dtop, *vh;
 	int n;
 
+debug = 0;
 	h = fmem+DICTIONARY;
 	dtop = nil;
+	vh = fmem+WORDBEND+8;
+	print("loadforthdictionary fmem 0x%zx h 0x%zx dtop 0x%zx vh 0x%zx\n"
+			"	(intptr*)(fmem + DTOP) 0x%zx *(intptr*)(fmem + DTOP) 0x%zx\n"
+			"	RSTACK 0x%zx (intptr*)(fmem + RSTACK) 0x%zx\n"
+			"	PSTACK 0x%zx (intptr*)(fmem + PSTACK) 0x%zx\n",
+			fmem, (intptr)h, (intptr)dtop, (intptr)vh,
+			(intptr*)(fmem + DTOP), *(intptr*)(fmem + DTOP),
+			RSTACK, (intptr*)(fmem + RSTACK),
+			PSTACK, (intptr*)(fmem + PSTACK));
 	for(i=0; i < nelem(fentries); i++){
 		f = &fentries[i];
 		if(f->type == Header){
@@ -142,8 +152,15 @@ loadforthdictionary(u8 *fmem)
 			h += sizeof(intptr);
 		}else if(f->type == FromH0){
 			*(intptr*)h = (intptr)fmem+DICTIONARY+f->p;
-			DBG("	0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)fmem+DICTIONARY+f->p);
+			DBG("	0x%zx: 0x%zx 0x%zx src %s\n", h, *(intptr*)h, (intptr)fmem+DICTIONARY+f->p, f->src);
 			h += sizeof(intptr);
+		}else if(f->type == FromV0){
+			*(intptr*)h = (intptr)fmem+WORDBEND+8+f->p; /* pfa with the address where the value is */
+			*(intptr*)vh = 0; /* actual value */
+			DBG("	0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)fmem+WORDBEND+8+f->p);
+			DBG("	0x%zx: 0x%zx 0x%zx\n", vh, *(intptr*)vh, 0);
+			h += sizeof(intptr);	/* space for pfa with the variable address */
+			vh += sizeof(intptr);	/* space for the actual value */
 		}else if(f->type == Chars){
 			strcpy((s8*)h, f->str);
 			h += strlen(f->str);
@@ -154,9 +171,8 @@ loadforthdictionary(u8 *fmem)
 	}
 	*(intptr*)(fmem + HERE) = (intptr)h;
 	*(intptr*)(fmem + DTOP) = (intptr)dtop;
-	print("loadforthdictionary fmem 0x%zx h 0x%zx dtop 0x%zx\n"
-		" (intptr*)(fmem + DTOP) 0x%zx *(intptr*)(fmem + DTOP) 0x%zx\n",
-		fmem, (intptr)h, (intptr)dtop, (intptr*)(fmem + DTOP), *(intptr*)(fmem + DTOP));
+	*(intptr*)(fmem + VHERE) = (intptr)vh;
+debug = 0;
 }
 
 extern intptr forthmain(u8 *);
@@ -164,13 +180,11 @@ void
 forthentry(void *fmem)
 {
 	up->type = Forth;
-	print("forthentry pid %d forthmem 0x%zx end 0x%zx forthmem+RSTACK_END 0x%zx\n",
-		up->pid, (intptr)fmem, ((intptr*)fmem)[1], (intptr)fmem+RSTACK_END);
 	loadforthdictionary((u8*)fmem);
 
 	/* load dictionary */
-	print("forthentry pid %d forthmem 0x%zx end 0x%zx forthmem+RSTACK_END 0x%zx\n",
-		up->pid, (intptr)fmem, ((intptr*)fmem)[1], (intptr)fmem+RSTACK_END);
+	print("forthentry pid %d forthmem 0x%zx end 0x%zx forthmem+RSTACK 0x%zx\n",
+		up->pid, (intptr)fmem, ((intptr*)fmem)[1], (intptr)fmem+RSTACK);
 	DBG("fentries[0].name %s\n", fentries[0].hdr.name);
 	DBG("fentries[1].name %s nfentries %d\n", fentries[1].hdr.name, nelem(fentries));
 	if(waserror()){
@@ -281,6 +295,7 @@ newforthproc(Chan *cin, Chan *cout, Chan *cerr)
 	p->hang = 0;
 	p->kp = 0;
 
+	/* TODO align fmem to a page boundary */
 	p->fmem = malloc(FORTHHEAPSIZE);
 	if(p->fmem == nil)
 		panic("newforthproc p->fmem == nil\n");

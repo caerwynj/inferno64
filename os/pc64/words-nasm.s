@@ -297,7 +297,7 @@ CENTRY "type" C_type 4	; ( addr n -- )
 dd M_xswap			; ( addr n --  n addr )
 dd M_literal
 dd 1				; stdout
-dd M_fthwrite			; ( n addr 1 --  )
+dd M_fthwrite		; ( n addr 1 --  )
 dd M_drop		; drop the return value of write
 dd M_exitcolon
 
@@ -306,10 +306,12 @@ dd M_literal
 dd 10			; ascii value of carriage return
 dd C_emit			; emit
 dd M_exitcolon
+
 CENTRY "space" C_space 5
 dd C_bl
 dd C_emit
 dd M_exitcolon
+
 CENTRY "emits" C_emits 5
 L85:
 dd C_qdup
@@ -462,7 +464,7 @@ dd M_rpop
 dd C_false
 dd M_exitcolon
 CENTRY "here" C_here 4
-dd M_H0
+dd M_Dp
 dd M_fetch
 dd M_exitcolon
 CENTRY "," C_comma 1
@@ -470,7 +472,7 @@ dd C_here
 dd M_store
 dd M_literal
 dd 8
-dd M_H0
+dd M_Dp
 dd C_plusstore
 dd M_exitcolon
 CENTRY "c," C_c 2
@@ -478,11 +480,11 @@ dd C_here
 dd M_cstore
 dd M_literal
 dd 1
-dd M_H0
+dd M_Dp
 dd C_plusstore
 dd M_exitcolon
 CENTRY "allot" C_allot 5
-dd M_H0
+dd M_Dp
 dd C_plusstore
 dd M_exitcolon
 CENTRY "pad" C_pad 3
@@ -494,11 +496,11 @@ dd M_exitcolon
 CENTRY "align" C_align 5
 dd C_here
 dd C_aligned
-dd M_H0
+dd M_Dp
 dd M_store
 dd M_exitcolon
 CENTRY "unused" C_unused 6
-dd M_H0
+dd M_Dp
 dd M_fetch
 dd C_here
 dd M_minus
@@ -585,15 +587,16 @@ dd 45
 dd C_hold
 L100:
 dd M_exitcolon
-CENTRY "." C_dot 1
-dd M_dup
-dd C_abs
-dd C_fromhash
-dd C_hashs
-dd M_xswap
-dd C_sign
-dd C_hashfrom
-dd C_type
+
+CENTRY "." C_dot 1	; print the top of stack ( n -- )
+dd M_dup		; ( n -- n n )
+dd C_abs		; ( n n -- n u )
+dd C_fromhash	; pad = h+256; >num = pad+1024
+dd C_hashs		; ( n u1 -- n n2 )
+dd M_xswap		; ( n n2 -- n2 n )
+dd C_sign		; ( n2 n -- n2 ) 
+dd C_hashfrom	; ( u1 -- a n )
+dd C_type		; ( a n -- )
 dd C_space
 dd M_exitcolon
 CENTRY ".r" C_dotr 2
@@ -1801,7 +1804,7 @@ dd M_clear	; SP = sstack_end
 dd M_stackptr	; (D -- FFEND)
 dd M_S0
 dd M_store	; s0 = FFEND
-dd M_H0	; heaptop = heapend
+dd M_Dp	; heaptop = heapend
 dd M_fetch	; ( heapend -- )
 dd M_literal
 dd 1		; ( heapend 1 -- )
@@ -1871,6 +1874,10 @@ dd M_store	; variable wordbuf = address of wordbuffer
 dd M_Tib	; constant puts address of tibuffer on the top of stack
 dd MV_Sourcebuf	; variable sourcebuf
 dd M_store	; variable sourcebuf = address of tibuffer
+
+dd M_Dp
+dd MV_H0	; H0 = here at startup
+dd M_store
 
 dd MC_STDIN
 dd MV_Infd

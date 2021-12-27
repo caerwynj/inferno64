@@ -214,27 +214,29 @@
 #define HEAPSTART	(0ull)
 #define HEAPEND		(HEAPSTART+(BY2WD*1))
 
-/* storage for Forth registers when calling C */
-#define FORTHTOP	(HEAPSTART+(BY2WD*2))
-#define FORTHPSP	(HEAPSTART+(BY2WD*3))
-#define FORTHRSP	(HEAPSTART+(BY2WD*4))
-#define FORTHIP		(HEAPSTART+(BY2WD*5))
-#define FORTHW		(HEAPSTART+(BY2WD*6))
-#define FORTHUP		(HEAPSTART+(BY2WD*7))
-#define FORTHUPE	(HEAPSTART+(BY2WD*8))
-
-#define HERE		(HEAPSTART+(BY2WD*9))
-#define DTOP		(HEAPSTART+(BY2WD*10))
-#define ARGS		(HEAPSTART+(BY2WD*11))
-#define ERRSTR		(HEAPSTART+(BY2WD*16))
-#define WORDB		(HEAPSTART+(BY2WD*144))	/* word buffer */
-
-#define DICTIONARY	(HEAPSTART+(BY2WD*256))	/* dictionary */
-#define DICTIONARY_END	(HEAPSTART+(16*BY2PG))
-#define PSTACK		(HEAPSTART+(16*BY2PG))
-#define PSTACK_END	(HEAPSTART+(17*BY2PG))
+#define DICTIONARY	(HEAPSTART+(BY2WD*2))	/* dictionary ends at (HEAPSTART+(16*BY2PG)) */
+#define PSTACK		(HEAPSTART+(17*BY2PG))	/* upto (HEAPSTART+(16*BY2PG)) */
 #define TIB			(HEAPSTART+(17*BY2PG))	/* text input buffer */
-#define RSTACK		(HEAPSTART+(18*BY2PG))
-#define RSTACK_END	(HEAPSTART+(19*BY2PG))
-#define FORTHEND	RSTACK_END
+#define RSTACK		(HEAPSTART+(19*BY2PG))	/* upto (HEAPSTART+(18*BY2PG)) */
+
+#define FORTHVARS	RSTACK					/* magic word? */
+#define VHERE		(FORTHVARS+(BY2WD*1))	/* store WORDB+256 here at boot */
+
+/* storage for Forth registers when calling C */
+#define FORTHTOP	(FORTHVARS+(BY2WD*2))
+#define FORTHPSP	(FORTHVARS+(BY2WD*3))
+#define FORTHRSP	(FORTHVARS+(BY2WD*4))
+#define FORTHIP		(FORTHVARS+(BY2WD*5))
+#define FORTHW		(FORTHVARS+(BY2WD*6))
+#define FORTHUP		(FORTHVARS+(BY2WD*7))
+#define FORTHUPE	(FORTHVARS+(BY2WD*8))
+
+#define HERE		(FORTHVARS+(BY2WD*9))
+#define DTOP		(FORTHVARS+(BY2WD*10))
+#define ARGS		(FORTHVARS+(BY2WD*11))
+#define ERRSTR		(FORTHVARS+(BY2WD*16))
+#define WORDB		(FORTHVARS+(BY2WD*144))	/* word buffer */
+#define WORDBEND	(FORTHVARS+(BY2WD*176))	/* word buffer = 32*8 = 256 */
+
+#define FORTHEND	(HEAPSTART+(22*BY2PG))
 #define FORTHHEAPSIZE	FORTHEND

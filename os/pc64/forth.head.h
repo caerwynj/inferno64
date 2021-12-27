@@ -6,6 +6,7 @@ enum {
 	IHeader,	/* Immediate dictionary definition */
 	Absolute,
 	FromH0,
+	FromV0,
 	Chars,
 };
 
@@ -24,4 +25,5 @@ struct Fentry
 		intptr p;
 		char str[128];
 	};
+	char src[128];
 };

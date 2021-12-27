@@ -3,9 +3,6 @@
 /*
 
 The bigger goal is to replace the dis vm with forth
-forth outputs to stdout.
-But, the input needs to be fixed.
-make this into a devforth like device that reads commands and outputs the result.
 replace variable with value (as in open firmware), to avoid exposing addresses
 
  forth kernel, amd64 9front variant
@@ -20,10 +17,10 @@ replace variable with value (as in open firmware), to avoid exposing addresses
  W:   DI work register (holds CFA)
  	BX, CX, DX, R8-R15 temporary registers
 
-plan9 assembler puts the first argument in BP (RARG), return value in AX.
+plan9 amd64 assembler puts the first argument in BP (RARG), return value in AX.
 
 	Changed to
- Leaving AX, SP, BP (RARG), R14, R15 alone to not mess with the C environment
+ Leaving AX, SP, BP (RARG), R14 (up Proc), R15 (m Mach) alone to not mess with the C environment
 
  TOP: BX top of stack register
  PSP: DX parameter stack pointer, grows towards lower memory (downwards)
@@ -40,8 +37,27 @@ coding standard
 	f1 f2  ( interim stack picture) \ programmers explanatory comment
 		.. fn ;
 
-Heap memory map: uses 8 pages at the start, will increase by *2 when filled up
+Heap memory map: uses n+ pages at the start
+		not bothering with increase by *2 when filled up, for now
+	check mem.h for the memory map
+	Keeps static code/data at the start and variable data to the end
+		For performance reasons, if you are writing to a cache line with code in it,
+		I think there is a performance penalty. Because x86 has a separate instruction
+		and data cache in L1, but is kind enough to abstract this away. So you can write
+		over executing code, but it causes some synchronisation that might be expensive.
+		And I would expect this to be done on a cache-line granularity. So you could
+		end up with code running slower just because it happens to be defined after
+		space for some data that's in active use... not good - veltas on #forth
+
 high memory
+	word buffer 512 bytes
+	error string buffer 128 bytes
+		latest dictionary entry, Dtop
+			need this as the system definitions and
+			user definitions are not continuous
+		dictionary pointer, Dp, Dtop, Args
+		forth stack pointer, forthpsp
+forth variables
 Return stack 1 page (4096 bytes, BY2PG, 512 entries) at FFSTART
 	|
 	|
@@ -58,26 +74,16 @@ Pad
 	^ (grows upwards)
 	|
 	|
-User dictionary	upto  pages from the start
-	word buffer 512 bytes
-	error string buffer 128 bytes
-		latest dictionary entry, Dtop
-			need this as the system definitions and
-			user definitions are not continuous
-		dictionary pointer, Dp
-		forth stack pointer, forthpsp
-		heap size, heapsize
-		heap start, heapstart, also in UP
-UP: forth variables
+User dictionary	upto n pages from the start
+UPE: heap end
+UP: heap start
+	forth constants
 low memory
 
 TODO Move variable space out of the dictionary from #forth
 11:31 < joe9> In x86 you want to keep the code in a different section than variables -- why?
 11:31 < joe9> in my port, I am keeping them together.
 11:32 < joe9> it gets messy with different sections.
-11:32 < veltas> For performance reasons, if you are writing to a cache line with code in it I think there is a performance penalty
-11:33 < veltas> Because x86 has a separate instruction and data cache in L1, but is kind enough to abstract this away. So you can write over executing code, but it causes some synchronisation that might be expensive. And I would expect this to be done on a cache-line granularity
-11:39 < veltas> So you could end up with code running slower just because it happens to be defined after space for some data that's in active use... not good
 
 */
 
@@ -104,7 +110,7 @@ TODO Move variable space out of the dictionary from #forth
 	words - lower case
  */
 
-/* HEAPSTART, HEAPEND, HERE, DTOP are loaded by the caller */
+/* HEAPSTART, HEAPEND, HERE, DTOP, VHERE are loaded by the caller */
 TEXT	forthmain(SB), 1, $-4		/* no stack storage required */
 
 	/* Argument has the start of heap */
@@ -112,11 +118,10 @@ TEXT	forthmain(SB), 1, $-4		/* no stack storage required */
 	MOVQ 8(UP), UPE		/* HEAPEND populated by the caller */
 
 	MOVQ UP, RSP
-	ADDQ $RSTACK_END, RSP	/* return stack pointer, reset */
+	ADDQ $RSTACK, RSP	/* return stack pointer, reset */
 
 	MOVQ UP, PSP
-	ADDQ $PSTACK_END, PSP	/* parameter stack pointer - stack setup, clear */
-	MOVQ PSP, 24(UP)		/* parameter stack pointer store, for forth to c */
+	ADDQ $PSTACK, PSP	/* parameter stack pointer - stack setup, clear */
 
 	/* execute boot */
 	MOVQ UP, CX
@@ -154,12 +159,12 @@ Assume IP = 8
 
 TEXT	reset(SB), 1, $-4
 	MOVQ UP, RSP
-	ADDQ $RSTACK_END, RSP
+	ADDQ $RSTACK, RSP
 	NEXT
 
 TEXT	clear(SB), 1, $-4
 	MOVQ UP, PSP
-	ADDQ $PSTACK_END, PSP
+	ADDQ $PSTACK, PSP
 	NEXT
 
 TEXT	colon(SB), 1, $-4
@@ -181,6 +186,19 @@ TEXT	dodoes(SB), 1, $-4	/* ( -- a ) */
 TEXT	jump(SB), 1, $-4	/* ( -- ) */
 	MOVQ (IP),IP
 	NEXT
+
+TEXT	execute(SB), 1, $-4	/* ( ... a -- ... ) */
+	PUSH(TOP)
+	CALL validateaddress(SB)	/* a a -- a */
+	MOVQ TOP, W
+	POP(TOP)
+	MOVQ (W), CX
+	JMP* CX
+
+TEXT	deferred(SB), 1, $-4
+	MOVQ 8(W), W
+	MOVQ (W), CX
+	JMP* CX
 
 /*
 	( f -- ) cjump address
@@ -304,6 +322,7 @@ TEXT	terminate(SB), 1, $-4	/* ( n -- ) */
 	RET
 
 TEXT	fthdump(SB), 1, $-4	/* ( n -- ) */
+	INT $0
 	CALL dumpstack(SB)
 	RET
 
@@ -312,9 +331,21 @@ TEXT	fthdump(SB), 1, $-4	/* ( n -- ) */
 TEXT	mmap(SB), 1, $-4	/* ( a1 -- a2 ) */
 	MOVQ $-1, TOP	/* unimplemented */
 
+/*
+ * Traditionally, the pfa of variable has the value.
+ * But, to keep the populated dictionary read-only, we
+ * moved the variables to the variables area.
+ * Now, pfa holds the address where the value is stored
+ * instead of the actual value.
+ * With this change, there is no difference in how the
+ * costant cfa and variable cfa work. They both load the
+ * value in the pfa to the top of the stack. The only
+ * difference is that the value in the pfa is an address
+ * for the variable and the actual value for the constant.
+ */
 TEXT	variable(SB), 1, $-4	/* ( -- a ) */
 	PUSH(TOP)
-	LEAQ 8(W), TOP
+	MOVQ 8(W), TOP	/*	LEAQ 8(W), TOP */
 	NEXT
 
 TEXT	constant(SB), 1, $-4	/* ( -- n ) */
@@ -349,6 +380,10 @@ TEXT	doinit(SB), 1, $-4	/* ( hi lo -- ) (R -- lo hi */
 	POP(TOP)
 	RPUSH(TOP)
 	POP(TOP)
+	NEXT
+
+TEXT	unloop(SB), 1, $-4
+	ADDQ $16, RSP
 	NEXT
 
 /*
@@ -545,23 +580,6 @@ TEXT	rshifta(SB), 1, $-4	/* ( n1 n2 -- n ) */
 	SARQ CL, TOP
 	NEXT
 
-TEXT	execute(SB), 1, $-4	/* ( ... a -- ... ) */
-	PUSH(TOP)
-	CALL validateaddress(SB)	/* a a -- a */
-	MOVQ TOP, W
-	POP(TOP)
-	MOVQ (W), CX
-	JMP CX
-
-TEXT	deferred(SB), 1, $-4
-	MOVQ 8(W), W
-	MOVQ (W), CX
-	JMP CX
-
-TEXT	unloop(SB), 1, $-4
-	ADDQ $16, RSP
-	NEXT
-
 /* TODO validateaddress on both addresses */
 TEXT	cmove(SB), 1, $-4	/* ( a1 a2 n -- ) */
 	MOVQ TOP, CX
@@ -599,15 +617,11 @@ TEXT	cas(SB), 1, $-4	/* ( a old new -- f ) */
 	/* pause -- no equivalent in 6a ? */
 	NEXT
 
+/* static locations */
 TEXT	S0(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
 	PUSH(TOP)
 	MOVQ UP, TOP
-	ADDQ $PSTACK_END, TOP
-	NEXT
-
-TEXT	H0(SB), 1, $-4	/* user pointer, start of heap */
-	PUSH(TOP)
-	MOVQ UP, TOP
+	ADDQ $PSTACK, TOP
 	NEXT
 
 TEXT	Wordb(SB), 1, $-4	/* WORDB location */
