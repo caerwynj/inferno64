@@ -594,7 +594,7 @@ dd C_abs		; ( n n -- n u )
 dd C_fromhash	; pad = h+256; >num = pad+1024
 dd C_hashs		; ( n u1 -- n n2 )
 dd M_xswap		; ( n n2 -- n2 n )
-dd C_sign		; ( n2 n -- n2 ) 
+dd C_sign		; ( n2 n -- n2 )
 dd C_hashfrom	; ( u1 -- a n )
 dd C_type		; ( a n -- )
 dd C_space
@@ -630,7 +630,7 @@ dd MV_Base
 dd M_store
 dd M_exitcolon
 
-CENTRY "digit" C_digit 5 ; c --
+CENTRY "digit" C_digit 5 ; ( c -- )
 dd M_dup
 dd M_literal
 dd 65
@@ -1761,18 +1761,16 @@ dd M_clear	; SP = sstack_end initialize data stack
 L253:
 dd C_query
 
-dd MV_toLimit	; show the line read, for debugging
-dd M_fetch
-dd M_Tib
-dd MC_STDOUT
-dd M_fthwrite
-dd M_drop		; drop the return value of write
-dd C_cr
-dd C_space
+; dd MV_toLimit	; show the line read, for debugging
+; dd M_fetch
+; dd M_Tib
+; dd MC_STDOUT
+; dd M_fthwrite
+; dd M_drop		; drop the return value of write
+; dd C_cr
+; dd C_space
 
 dd C_interpret
-
-dd C_cr
 
 dd M_jump
 dd L253

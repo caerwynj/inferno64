@@ -2,8 +2,7 @@
 
 /*
 
-The bigger goal is to replace the dis vm with forth
-replace variable with value (as in open firmware), to avoid exposing addresses
+Goal is to replace the dis vm with forth
 
  forth kernel, amd64 9front variant
 
@@ -70,7 +69,7 @@ Parameter stack 1 page (BY2PG, 512 entries) at FFEND-4096
 	|
 	|
 	v (grows downwards)
-Pad
+Pad is 256 bytes from here
 	^ (grows upwards)
 	|
 	|

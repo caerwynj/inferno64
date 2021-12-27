@@ -214,6 +214,7 @@
 #define HEAPSTART	(0ull)
 #define HEAPEND		(HEAPSTART+(BY2WD*1))
 
+/* TODO check stacks for over flow */
 #define DICTIONARY	(HEAPSTART+(BY2WD*2))	/* dictionary ends at (HEAPSTART+(16*BY2PG)) */
 #define PSTACK		(HEAPSTART+(17*BY2PG))	/* upto (HEAPSTART+(16*BY2PG)) */
 #define TIB			(HEAPSTART+(17*BY2PG))	/* text input buffer */
