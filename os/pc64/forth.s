@@ -214,78 +214,6 @@ TEXT	cjump(SB), 1, $-4	/* ( f -- ) */
 	POP(TOP)
 	NEXT
 
-/*
-callable by forth primitives to check address
-	( a -- -1|0|1 )
-	argument 1 in TOP = address
-	return value in TOP
-	-1			0			1
-	if UP < address < UPE
-		return 0	within range
-	else if address < UP
-		return -1	below UP
-	else if UPE < address
-		return 1	above UP
- */
-TEXT	inup(SB), 1, $-4
-	CMPQ TOP, UPE
-	JGT aboveupe	/* a > UPE */
-	CMPQ TOP, UP
-	JLT belowup		/* a < UP */
-	MOVQ $0, TOP	/* could use XORQ TOP, TOP to zero too */
-	RET
-belowup:
-	MOVQ $-1, TOP
-	RET
-aboveupe:
-	MOVQ $1, TOP
-	RET
-
-/*
-callable by forth primitives to check address
-	( n a -- -1|0|1 )
-	argument 1 in TOP = address
-	return value in TOP
-	-1			0			1
-	if UP < address && address+n < UPE
-		return 0	within range
-	else if address < UP
-		return -1	below UP
-	else if UPE < address+n
-		return 1	above UP
- */
-TEXT	bufinup(SB), 1, $-4
-	POP(CX)
-	CMPQ CX, $0 	/* negative n? */
-	JLT belowup		/* TODO have an appropriate error message */
-	ADDQ TOP, CX
-	CMPQ CX, UPE	/* a+n, UPE */
-	JGT aboveupe	/* a+n > UPE */
-	CMPQ TOP, UP
-	JLT belowup		/* a < UP */
-	MOVQ $0, TOP
-	RET
-
-invalidaddress:
-	/* TODO need error reporting here */
-	RET
-
-TEXT validateaddress(SB), 1, $0 /* a -- */
-	CALL inup(SB)
-	MOVQ TOP, CX
-	POP(TOP)
-	CMPQ CX, $0
-	JNE	invalidaddress
-	RET
-
-TEXT validatebuffer(SB), 1, $0 /* n a -- */
-	CALL bufinup(SB)
-	MOVQ TOP, CX
-	POP(TOP)
-	CMPQ CX, $0
-	JNE	invalidaddress
-	RET
-
 TEXT	fetch(SB), 1, $-4	/* ( a -- n) */
 	PUSH(TOP)
 	CALL validateaddress(SB)	/* a a -- a */
@@ -533,7 +461,7 @@ TEXT	true(SB), 1, $-4
 .true:
 	MOVQ $-1, TOP
 	NEXT
-	
+
 TEXT	greater(SB), 1, $-4	/* ( x y -- f ) */
 	POP(CX)
 	CMPQ CX, TOP
@@ -556,6 +484,11 @@ TEXT	less(SB), 1, $-4	/* ( x y -- f ) */
 	XORQ TOP, TOP
 	NEXT
 
+/*
+	Return  the address of the top of the stack, just before sp@ was executed.
+	1 2 S0 s@ - hex cr . . . cr gives 18 2 1, so S@ would have been pointing at S0
+	18 in hex translates to 3 64-bit cells
+ */
 TEXT	stackptr(SB), 1, $-4	/* ( -- a ) does not include TOP! */
 	MOVQ PSP, CX
 	PUSH(TOP)
@@ -663,6 +596,83 @@ TEXT	Args(SB), 1, $-4
 	NEXT;
 VARIABLE(Tib, $TIB)
  */
+
+/*
+ * routines called by forth asm macros or bindings
+ */
+
+/*
+callable by forth primitives to check address
+	( a -- -1|0|1 )
+	argument 1 in TOP = address
+	return value in TOP
+	-1			0			1
+	if UP < address < UPE
+		return 0	within range
+	else if address < UP
+		return -1	below UP
+	else if UPE < address
+		return 1	above UP
+ */
+TEXT	inup(SB), 1, $-4
+	CMPQ TOP, UPE
+	JGT aboveupe	/* a > UPE */
+	CMPQ TOP, UP
+	JLT belowup		/* a < UP */
+	MOVQ $0, TOP	/* could use XORQ TOP, TOP to zero too */
+	RET
+belowup:
+	MOVQ $-1, TOP
+	RET
+aboveupe:
+	MOVQ $1, TOP
+	RET
+
+/*
+callable by forth primitives to check address
+	( n a -- -1|0|1 )
+	argument 1 in TOP = address
+	return value in TOP
+	-1			0			1
+	if UP < address && address+n < UPE
+		return 0	within range
+	else if address < UP
+		return -1	below UP
+	else if UPE < address+n
+		return 1	above UP
+ */
+TEXT	bufinup(SB), 1, $-4
+	POP(CX)
+	CMPQ CX, $0 	/* negative n? */
+	JLT belowup		/* TODO have an appropriate error message */
+	ADDQ TOP, CX
+	CMPQ CX, UPE	/* a+n, UPE */
+	JGT aboveupe	/* a+n > UPE */
+	CMPQ TOP, UP
+	JLT belowup		/* a < UP */
+	MOVQ $0, TOP
+	RET
+
+invalidaddress:
+	/* TODO need error reporting here */
+	INT $0x0D	/* general protection error */
+	RET
+
+TEXT validateaddress(SB), 1, $0 /* a -- */
+	CALL inup(SB)
+	MOVQ TOP, CX
+	POP(TOP)
+	CMPQ CX, $0
+	JNE	invalidaddress
+	RET
+
+TEXT validatebuffer(SB), 1, $0 /* n a -- */
+	CALL bufinup(SB)
+	MOVQ TOP, CX
+	POP(TOP)
+	CMPQ CX, $0
+	JNE	invalidaddress
+	RET
 
 TEXT	forthend(SB), 1, $-4
 

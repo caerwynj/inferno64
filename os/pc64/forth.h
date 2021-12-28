@@ -517,7 +517,7 @@ Fentry fentries[] = {
 /* ; cannot use H as it is nil in inferno, address where here (next available dictionary cell location) is stored *//* ; here = Dp @ */	{.type Header, {.hdr { 2, "Dp", /* M_Dp = 2072 */ Dp }}}, /* MENTRY "Dp" Dp 2 h 2080 */
 	{.type Header, {.hdr { 4, "Dtop", /* M_Dtop = 2096 */ Dtop }}}, /* MENTRY "Dtop" Dtop 4	; last defined header h 2104 */
 	{.type Header, {.hdr { 2, "S0", /* M_S0 = 2120 */ S0 }}}, /* MENTRY "S0" S0 2 h 2128 */
-	{.type Header, {.hdr { 2, "s@", /* M_stackptr = 2144 */ stackptr }}}, /* MENTRY "s@" stackptr 2	; puts PSP on stack h 2152 */
+	{.type Header, {.hdr { 2, "s@", /* M_stackptr = 2144 */ stackptr }}}, /* MENTRY "s@" stackptr 2	; puts PSP on stack. Not a variable hence lower case h 2152 */
 	{.type Header, {.hdr { 5, "Wordb", /* M_Wordb = 2168 */ Wordb }}}, /* MENTRY "Wordb" Wordb 5 h 2176 */
 	{.type Header, {.hdr { 3, "Tib", /* M_Tib = 2192 */ Tib }}}, /* MENTRY "Tib" Tib 3 h 2200 */
 	{.type Header, {.hdr { 4, "Args", /* M_Args = 2216 */ Args }}}, /* MENTRY "Args" Args 4 h 2224 */

@@ -82,7 +82,7 @@ MVENTRY "H0" H0 0 2		; here at startup
 MENTRY "Dp" Dp 2
 MENTRY "Dtop" Dtop 4	; last defined header
 MENTRY "S0" S0 2
-MENTRY "s@" stackptr 2	; puts PSP on stack
+MENTRY "s@" stackptr 2	; puts PSP on stack. Not a variable hence lower case.
 MENTRY "Wordb" Wordb 5
 MENTRY "Tib" Tib 3
 MENTRY "Args" Args 4
