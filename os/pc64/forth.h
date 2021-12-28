@@ -520,7 +520,7 @@ Fentry fentries[] = {
 	{.type Header, {.hdr { 2, "s@", /* M_stackptr = 2144 */ stackptr }}}, /* MENTRY "s@" stackptr 2	; puts PSP on stack h 2152 */
 	{.type Header, {.hdr { 5, "Wordb", /* M_Wordb = 2168 */ Wordb }}}, /* MENTRY "Wordb" Wordb 5 h 2176 */
 	{.type Header, {.hdr { 3, "Tib", /* M_Tib = 2192 */ Tib }}}, /* MENTRY "Tib" Tib 3 h 2200 */
-	{.type Header, {.hdr { 3, "Args", /* M_Args = 2216 */ Args }}}, /* MENTRY "Args" Args 3 h 2224 */
+	{.type Header, {.hdr { 4, "Args", /* M_Args = 2216 */ Args }}}, /* MENTRY "Args" Args 4 h 2224 */
 	{.type Header, {.hdr { 5, "false", /* C_false = 2240 */ colon }}}, /* CENTRY "false" false 5 h 2248 */
 	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 2256 */
 	{.type Absolute, {.p 0}},		/* dd 0 2264 */

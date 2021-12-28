@@ -85,4 +85,4 @@ MENTRY "S0" S0 2
 MENTRY "s@" stackptr 2	; puts PSP on stack
 MENTRY "Wordb" Wordb 5
 MENTRY "Tib" Tib 3
-MENTRY "Args" Args 3
+MENTRY "Args" Args 4

@@ -557,8 +557,9 @@ TEXT	less(SB), 1, $-4	/* ( x y -- f ) */
 	NEXT
 
 TEXT	stackptr(SB), 1, $-4	/* ( -- a ) does not include TOP! */
+	MOVQ PSP, CX
 	PUSH(TOP)
-	MOVQ PSP, TOP
+	MOVQ CX, TOP
 	NEXT
 
 TEXT	lshift(SB), 1, $-4	/* ( n1 n2 -- n1<<n2 ) */
