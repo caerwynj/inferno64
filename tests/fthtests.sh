@@ -62,7 +62,6 @@ fn t {
 		echo stack depth changed: start $d end $dnew
 	}
 }
-
 	# and tests
 	# F.6.1.0720 AND
 	t ' 0 0 and '  0
@@ -235,7 +234,7 @@ t '    1 0 rshift ' 1
 t '    1 1 rshift ' 0
 t '    2 1 rshift ' 1
 t '    4 2 rshift ' 1
-t ' hex 8000 f rshift ' 1 	               # biggest
+t ' hex 8000 f rshift decimal' 1 	               # biggest
 
 t ' 1 2 swap ' 1 2	# 1 2 swap = 2 1. outputting the stack with . writes out 1 2
 
@@ -351,7 +350,7 @@ t '   1 0 lshift '    1
 t '   1 1 lshift '    2
 t '   1 2 lshift '    4
 t '   1 hex f lshift ' 8000       # biggest guaranteed shift
-t '  1 1 lshift 1 xor ' 3
+t ' decimal 1 1 lshift 1 xor ' 3
 
 t '       0       1 max '       1
 t '       1       2 max '       2
