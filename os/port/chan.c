@@ -530,11 +530,8 @@ closeproc(void *)
 void
 cclose(Chan *c)
 {
-	if(c == nil || c->ref < 1 || c->flag&CFREE){
-		print("cclose before panic\n");
-		panic("cclose %#p c->path %s c->ref %d c->flag 0x%ux",
-				getcallerpc(&c), chanpath(c), c->ref, c->flag);
-	}
+	if(c == nil || c->ref < 1 || c->flag&CFREE)
+		panic("cclose %#p", getcallerpc(&c));
 
 	if(decref(c))
 		return;

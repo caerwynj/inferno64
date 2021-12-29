@@ -14,7 +14,7 @@ enum
 struct
 {
 	Lock;
-	u32	bytes;
+	uintptr	bytes;
 } ialloc;
 
 /*
@@ -50,6 +50,17 @@ _allocb(s32 size)
 	return b;
 }
 
+/* TODO Add Bhdr attributes here */
+void
+showblockheader(Block *b, intptr pc, char *str)
+{
+	iprint("%s called by 0x%8.8luX, pid %d base 0x%8.8luX lim 0x%8.8luX\n"
+			"	next 0x%8.8luX rp 0x%8.8luX wp 0x%8.8luX malloctag 0x%8.8luX\n",
+			str, pc, up->pid,
+			b->base, b->lim, b->next,
+			b->rp, b->wp, getmalloctag(b));
+}
+
 Block*
 allocb(int size)
 {
@@ -61,6 +72,7 @@ allocb(int size)
 	if(b == 0)
 		exhausted("Blocks");
 	setmalloctag(b, getcallerpc(&size));
+	/* showblockheader(b, getcallerpc(&size), "allocb()"); */
 	return b;
 }
 
@@ -92,6 +104,7 @@ iallocb(int size)
 	return b;
 }
 
+void checkbl(Block *b, char *msg, intptr pc);
 void
 freeb(Block *b)
 {
@@ -105,6 +118,8 @@ freeb(Block *b)
 	 * pool of uncached buffers and provide their own free routine.
 	 */
 	if(b->free) {
+		/* checkbl(b, "checking block before free'ing\n", getcallerpc(&b));
+		print("freeb b 0x%zx b->free 0x%zx\n", b, (intptr)b->free); */
 		b->free(b);
 		return;
 	}
@@ -124,6 +139,36 @@ freeb(Block *b)
 	free(b);
 }
 
+/* same as checkb but with more details for debugging */
+void
+checkbl(Block *b, char *msg, intptr pc)
+{
+	void *dead = (void*)Bdead;
+
+	if(b == dead)
+		panic("checkb b %s %lux", msg, b);
+	if(b->base == dead || b->lim == dead || b->next == dead
+	  || b->rp == dead || b->wp == dead){
+		showblockheader(b, pc, "freeb() dead");
+		panic("checkb dead: %s\n", msg);
+	}
+
+	if(b->base > b->lim){
+		showblockheader(b, pc, "freeb() 0");
+		panic("checkb 0 %s %lux %lux", msg, b->base, b->lim);
+	}
+	if(b->rp < b->base){
+		showblockheader(b, pc, "freeb() 1");
+		panic("checkb 1 %s %lux %lux", msg, b->base, b->rp);
+	}
+	if(b->wp < b->base)
+		panic("checkb 2 %s %lux %lux", msg, b->base, b->wp);
+	if(b->rp > b->lim)
+		panic("checkb 3 %s %lux %lux", msg, b->rp, b->lim);
+	if(b->wp > b->lim)
+		panic("checkb 4 %s %lux %lux", msg, b->wp, b->lim);
+
+}
 void
 checkb(Block *b, char *msg)
 {

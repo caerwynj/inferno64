@@ -97,6 +97,7 @@ TEXT	fthopen(SB), 1, $24	/* ( mode cstr -- fd ) */
 	CALL kopen(SB)
 	MOVQ 16(SP), UP
 	C_TO_F_1
+	ADDQ $24, SP
 	NEXT
 
 TEXT	fthclose(SB), 1, $16	/* ( fd -- n ) */
@@ -105,6 +106,7 @@ TEXT	fthclose(SB), 1, $16	/* ( fd -- n ) */
 	CALL kclose(SB)
 	MOVQ 24(SP), UP
 	C_TO_F_1
+	ADDQ $16, SP
 	NEXT
 
 TEXT	fthread(SB), 1, $32	/* ( n a fd -- n2 ) */
@@ -121,6 +123,7 @@ TEXT	fthread(SB), 1, $32	/* ( n a fd -- n2 ) */
 	CALL kread(SB)
 	MOVQ 24(SP), UP
 	C_TO_F_1
+	ADDQ $32, SP
 	NEXT
 
 /* no link register in amd64
@@ -142,6 +145,7 @@ TEXT	fthwrite(SB), 1, $32	/* ( n a fd -- n2|-1 ) */
 	CALL kwrite(SB)
 	MOVQ 24(SP), UP
 	C_TO_F_1
+	ADDQ $32, SP
 	NEXT
 
 TEXT	fthseek(SB), 1, $32	/* ( type pos fd -- n ) */
@@ -150,4 +154,5 @@ TEXT	fthseek(SB), 1, $32	/* ( type pos fd -- n ) */
 	CALL kseek(SB)
 	MOVQ 24(SP), UP
 	C_TO_F_1
+	ADDQ $32, SP
 	NEXT

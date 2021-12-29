@@ -91,19 +91,21 @@ loadforthdictionary(u8 *fmem)
 	Fentry *f;
 	u8 *h, *dtop, *vh;
 	int n;
+	Bhdr *b;
 
-debug = 0;
 	h = fmem+DICTIONARY;
 	dtop = nil;
 	vh = fmem+WORDBEND+8;
 	print("loadforthdictionary fmem 0x%zx h 0x%zx dtop 0x%zx vh 0x%zx\n"
 			"	(intptr*)(fmem + DTOP) 0x%zx *(intptr*)(fmem + DTOP) 0x%zx\n"
 			"	RSTACK 0x%zx (intptr*)(fmem + RSTACK) 0x%zx\n"
-			"	PSTACK 0x%zx (intptr*)(fmem + PSTACK) 0x%zx\n",
+			"	PSTACK 0x%zx (intptr*)(fmem + PSTACK) 0x%zx\n"
+			"	FORTHEND 0x%zx (intptr*)(fmem + FORTHEND) 0x%zx\n",
 			fmem, (intptr)h, (intptr)dtop, (intptr)vh,
 			(intptr*)(fmem + DTOP), *(intptr*)(fmem + DTOP),
 			RSTACK, (intptr*)(fmem + RSTACK),
-			PSTACK, (intptr*)(fmem + PSTACK));
+			PSTACK, (intptr*)(fmem + PSTACK),
+			FORTHEND, (intptr*)(fmem + FORTHEND));
 	for(i=0; i < nelem(fentries); i++){
 		f = &fentries[i];
 		if(f->type == Header){
@@ -172,7 +174,19 @@ debug = 0;
 	*(intptr*)(fmem + HERE) = (intptr)h;
 	*(intptr*)(fmem + DTOP) = (intptr)dtop;
 	*(intptr*)(fmem + VHERE) = (intptr)vh;
-debug = 0;
+	print("loadforthdictionary fmem 0x%zx h 0x%zx dtop 0x%zx vh 0x%zx\n"
+			"	(intptr*)(fmem + DTOP) 0x%zx *(intptr*)(fmem + DTOP) 0x%zx\n"
+			"	RSTACK 0x%zx (intptr*)(fmem + RSTACK) 0x%zx\n"
+			"	PSTACK 0x%zx (intptr*)(fmem + PSTACK) 0x%zx\n"
+			"	FORTHEND 0x%zx (intptr*)(fmem + FORTHEND) 0x%zx\n",
+			fmem, (intptr)h, (intptr)dtop, (intptr)vh,
+			(intptr*)(fmem + DTOP), *(intptr*)(fmem + DTOP),
+			RSTACK, (intptr*)(fmem + RSTACK),
+			PSTACK, (intptr*)(fmem + PSTACK),
+			FORTHEND, (intptr*)(fmem + FORTHEND));
+	b = D2B(b,fmem);
+	print("Bhdr b 0x%p b->magic 0x%x b->size %zd b->allocpc 0x%zx\n",
+			b, b->magic, b->size, b->allocpc);
 }
 
 extern intptr forthmain(u8 *);
@@ -296,7 +310,7 @@ newforthproc(Chan *cin, Chan *cout, Chan *cerr)
 	p->kp = 0;
 
 	/* TODO align fmem to a page boundary */
-	p->fmem = malloc(FORTHHEAPSIZE);
+	p->fmem = mallocalign(FORTHHEAPSIZE, BY2PG, 0, 0);
 	if(p->fmem == nil)
 		panic("newforthproc p->fmem == nil\n");
 

@@ -124,12 +124,15 @@ intrtime(Mach*, int vno)
 }
 
 void
-dumprstack(intptr h, intptr rsp)
+dumprstack(intptr h, intptr rsp, intptr he)
 {
 	intptr i;
 	int l=0;
 
-	print("Forth return stack RSTACK 0x%zx\n", h+RSTACK);
+	print("Forth return stack h 0x%zx rsp 0x%zx RSTACK 0x%zx he 0x%zx\n",
+			h, rsp, h+RSTACK, he);
+	if(he == 0 || h == 0 || rsp < h || rsp >= he || h+RSTACK < h || h+RSTACK >= he)
+		return;
 	for(i = h + RSTACK-8; i >= rsp; i-=8){
 		print("	0x%zx: 0x%zx", i, *(intptr*)i);
 		l++;
@@ -142,12 +145,15 @@ dumprstack(intptr h, intptr rsp)
 }
 
 void
-dumppstack(intptr h, intptr psp)
+dumppstack(intptr h, intptr psp, intptr he)
 {
 	intptr i;
 	int l=0;
 
-	print("Forth parameter stack PSTACK 0x%zx\n", h+PSTACK);
+	print("Forth parameter stack h 0x%zx psp 0x%zx PSTACK 0x%zx he 0x%zx\n",
+			h, psp, h+PSTACK, he);
+	if(he == 0 || h == 0 || psp < h || psp >= he || h+PSTACK < h || h+PSTACK >= he)
+		return;
 	for(i = h + PSTACK-8; i >= psp; i-=8){
 		print("	0x%zx: 0x%zx", i, *(intptr*)i);
 		l++;
@@ -260,8 +266,9 @@ trap(Ureg* ureg)
 		}
 		dumpregs(ureg);
 		if(vno < nelem(excname)){
-			dumprstack(ureg->r11, ureg->r8);
-			dumppstack(ureg->r11, ureg->dx);
+			dumprstack(ureg->r11, ureg->r8, ureg->r12);
+			dumppstack(ureg->r11, ureg->dx, ureg->r12);
+			_dumpstack(ureg);
 			panic("%s", excname[vno]);
 		}
 		panic("unknown trap/intr: %d\n", vno);
@@ -299,6 +306,8 @@ dumpregs2(Ureg* ureg)
 			"  R11 UP %8.8zux  R12 UPE %8.8zux  R13 %8.8zux\n",
 		ureg->r8, ureg->r9, ureg->r10,
 		ureg->r11, ureg->r12, ureg->r13);
+	print("  R14 up %8.8zux  R15 m %8.8zux\n",
+		ureg->r14, ureg->r15);
 }
 
 void
@@ -362,13 +371,20 @@ _dumpstack(Ureg *ureg)
 	i = 0;
 	if(up &&
 		(uintptr)&l >= (uintptr)up->kstack &&
-		(uintptr)&l <= (uintptr)up->kstack+KSTACK)
+		(uintptr)&l <= (uintptr)up->kstack+KSTACK){
 		estack = (uintptr)up->kstack+KSTACK;
-	else if((uintptr)&l >= (uintptr)m->stack &&
-		(uintptr)&l <= (uintptr)m+BY2PG)
+		print("up->kstack 0x%zux estack 0x%zux\n",(uintptr)up->kstack, estack);
+	}else if((uintptr)&l >= (uintptr)m->stack &&
+		(uintptr)&l <= (uintptr)m+BY2PG){
 		estack = (uintptr)m+MACHSIZE;
-	else
+		print("m->stack 0x%zux estack 0x%zux\n",(uintptr)m->stack, estack);
+	}else{
+		if(up)
+			print("up->kstack 0x%zux\n", (uintptr)up->kstack);
+		else
+			print("m->stack 0x%zux\n", (uintptr)m->stack);
 		return;
+	}
 
 	for(l=(uintptr)&l; l<estack; l+=sizeof(intptr)){
 		v = *(uintptr*)l;
@@ -447,8 +463,8 @@ faultamd64(Ureg* ureg, void*)
 			read ? "read" : "write", ureg->pc, addr);
 print(buf);
 	dumpregs(ureg);
-	dumprstack(ureg->r11, ureg->r8);
-	dumppstack(ureg->r11, ureg->dx);
+	dumprstack(ureg->r11, ureg->r8, ureg->r12);
+	dumppstack(ureg->r11, ureg->dx, ureg->r12);
 dumpstack();
 	if(up->type == Interp)
 		disfault(ureg, buf);

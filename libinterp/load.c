@@ -4,7 +4,7 @@
 #include "raise.h"
 #include <kernel.h>
 
-#define DP if(1){}else print
+#define DP if(0){}else print
 #define DNP if(1){}else print
 #define	A(r)	*((Array**)(r))
 
@@ -136,22 +136,22 @@ asmstring(intptr offset, uchar* absoluteoffset, String* stored, int len, uchar *
 	int c;
 
 	USED(offset);
-	DP("\tstring\t@mp+%zd=0x%p,len %d at 0x%p:\"", offset, absoluteoffset, len, stored);
+	DNP("\tstring\t@mp+%zd=0x%p,len %d at 0x%p:\"", offset, absoluteoffset, len, stored);
 	se = s + len;
 	for(; s < se; s++){
 		c = *s;
 		if(c == '\n')
-			DP("\\n");
+			DNP("\\n");
 		else if(c == '\0')
-			DP("\\z");
+			DNP("\\z");
 		else if(c == '"')
-			DP("\\\"");
+			DNP("\\\"");
 		else if(c == '\\')
-			DP("\\\\");
+			DNP("\\\\");
 		else
-			DP("%c", c);
+			DNP("%c", c);
 	}
-	DP("\"\n");
+	DNP("\"\n");
 }
 
 Module*
@@ -171,7 +171,7 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 	Link *l;
 	intptr i, n, v, pc, entry, entryt;
 
-	DP("\tsource\t\"%s\"\n", path);
+	DNP("\tsource\t\"%s\"\n", path);
 	istream = code;
 	isp = &istream;
 
@@ -225,7 +225,7 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 		goto bad;
 	}
 
-	DP("parsemod before instructions isize %d dsize %d hsize %d"
+	DNP("parsemod before instructions isize %d dsize %d hsize %d"
 		" lsize %d entry 0x%zx entryt 0x%zx sizeof(Inst) %d\n",
 		isize, dsize, hsize, lsize, entry, entryt, sizeof(Inst));
 	m->nprog = isize;
@@ -281,12 +281,12 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 			break;
 		}
 		if(i % 10 == 0)
-			DP("#%p\n", ip);
-		DP("	%d %zd %D\n", i, (intptr)ip, ip);
+			DNP("#%p\n", ip);
+		DNP("	%d %zd %D\n", i, (intptr)ip, ip);
 		ip++;		
 	}
 
-	DP("\tentry\t0,%d\n",hsize);
+	DNP("\tentry\t0,%d\n",hsize);
 	m->ntype = hsize;
 	m->type = malloc(hsize*sizeof(Type*));
 	if(m->type == nil) {
@@ -310,11 +310,11 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 			kwerrstr(exNomem);
 			goto bad;
 		}
-		DP("\tdesc\t$%d 0x%p has 0x%p of size %d nptrs %d:\"",
+		DNP("\tdesc\t$%d 0x%p has 0x%p of size %d nptrs %d:\"",
 			id, m->type+id, pt, tsz, tnp);
 		for(e = istream; e < istream+tnp; e++)
-			DP("%.2x", *e);
-		DP("\"\n");
+			DNP("%.2x", *e);
+		DNP("\"\n");
 		istream += tnp;
 		m->type[id] = pt;
 	}
@@ -327,12 +327,12 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 		}
 		h = heapz(pt);
 		m->origmp = H2D(uchar*, h);
-		DP("\tm->origmp 0x%p belongs to heap at 0x%p, uses type at 0x%p\n",
+		DNP("\tm->origmp 0x%p belongs to heap at 0x%p, uses type at 0x%p\n",
 			m->origmp, h, pt);
 	}
 	addr = m->origmp;
 	dasp = 0;
-	DP("\tvar\t@mp, size %d\n", dsize);
+	DNP("\tvar\t@mp, size %d\n", dsize);
 	for(;;) {
 		sm = *istream++;
 		if(sm == 0)
@@ -353,62 +353,62 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 			*(String**)si = s;
 			break;
 		case DEFB:
-			DP("\tbyte\t@mp+%d", v);
+			DNP("\tbyte\t@mp+%d", v);
 			for(i = 0; i < n; i++){
-				DP(",%d", *istream & 0xff);
+				DNP(",%d", *istream & 0xff);
 				*si++ = *istream++;
 			}
-			DP(" n=%d\n", n);
+			DNP(" n=%d\n", n);
 			break;
 		case DEFW:
-			DP("\tword\t@mp+%d len %d:", v, n);
+			DNP("\tword\t@mp+%d len %d:", v, n);
 			for(i = 0; i < n; i++) {
 				*(WORD*)si = disw(isp);
-				DP(" 0x%zx", *(WORD*)si);
+				DNP(" 0x%zx", *(WORD*)si);
 				si += sizeof(WORD);
 			}
-			DP("\n");
+			DNP("\n");
 			break;
 		case DEFL:
-			DP("\tlong\t@mp+%d", v);
+			DNP("\tlong\t@mp+%d", v);
 			for(i = 0; i < n; i++) {
 				hi = disw(isp);
 				lo = disw(isp);
 				*(LONG*)si = (LONG)hi << 32 | (LONG)(u32)lo;
-				DP(",%lld 0x%zx", *(LONG*)si, *(LONG*)si);
+				DNP(",%lld 0x%zx", *(LONG*)si, *(LONG*)si);
 				si += sizeof(LONG);
 			}
-			DP("\n");
+			DNP("\n");
 			break;
 		case DEFF:
-			DP("\treal\t@mp+%d", v);
+			DNP("\treal\t@mp+%d", v);
 			for(i = 0; i < n; i++) {
-				DP(" raw: ");
+				DNP(" raw: ");
 				for(int j = 0; j<8; j++){
-					DP(" 0x%x", ((u8*)isp)[j]);
+					DNP(" 0x%x", ((u8*)isp)[j]);
 				}
 				ul[0] = disw(isp);
 				ul[1] = disw(isp);
 				/*print("canontod ul[0] 0x%x ul[1] 0x%x ", ul[0], ul[1]);*/
 				*(REAL*)si = canontod(ul);
-				/*DP("__");
-				DP(",%g", *(REAL*)si);
-				DP("--");*/
+				/*DNP("__");
+				DNP(",%g", *(REAL*)si);
+				DNP("--");*/
 				si += sizeof(REAL);
 			}
-			DP("\n");
+			DNP("\n");
 			break;
 		case DEFA:			/* Array */
-			DP("\tarray\t@mp+%d", v);
+			DNP("\tarray\t@mp+%d", v);
 			v = disw(isp);
 			if(v < 0 || v > m->ntype) {
 				kwerrstr("bad array type");
 				goto bad;
 			}
-			DP(",$%d", v);
+			DNP(",$%d", v);
 			pt = m->type[v];
 			v = disw(isp);
-			DP(",%d", v);
+			DNP(",%d", v);
 			h = nheap(sizeof(Array)+(pt->size*v));
 			h->t = &Tarray;
 			h->t->ref++;
@@ -421,9 +421,9 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 			for(i=(intptr)ary->data;
 				i < v;
 				i++){
-				DP(",%d",*(uchar*)(i+ary));
+				DNP(",%d",*(uchar*)(i+ary));
 			}
-			DP("\n");
+			DNP("\n");
 			initarray(pt, ary);
 			A(si) = ary;
 			break;			
@@ -433,7 +433,7 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 				kwerrstr("ind not array");
 				goto bad;
 			}
-			DP("\tindir\t@mp+%d", v);
+			DNP("\tindir\t@mp+%d", v);
 			v = disw(isp);
 			if(v > ary->len || v < 0 || dasp >= DADEPTH) {
 				kwerrstr("array init range");
@@ -441,7 +441,7 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 			}
 			dastack[dasp++] = addr;
 			addr = ary->data+v*ary->t->size;
-			DP(",%d,%zd 0x%zx\n",
+			DNP(",%d,%zd 0x%zx\n",
 				v, (intptr)ary->data+v*ary->t->size,
 				(intptr)ary->data+v*ary->t->size);
 			break;
@@ -450,14 +450,14 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 				kwerrstr("pop range");
 				goto bad;
 			}
-			DP("\tapop\n");
+			DNP("\tapop\n");
 			addr = dastack[--dasp];
 			break;
 		}
 	}
-	/*DP("		Initialized origmp\n");
+	/*DNP("		Initialized origmp\n");
 	for(int i = 0; i < m->type[0]->size/(sizeof(intptr)); i++){
-		DP("\t\t0x%p\t%zx\n", (intptr*)m->origmp+i, *((intptr*) m->origmp+i));
+		DNP("\t\t0x%p\t%zx\n", (intptr*)m->origmp+i, *((intptr*) m->origmp+i));
 	}*/
 	mod = istream;
 	if(memchr(mod, 0, 128) == 0) {
@@ -469,7 +469,7 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 		kwerrstr(exNomem);
 		goto bad;
 	}
-	DP("\tmodule\t%s\n", m->name);
+	DNP("\tmodule\t%s\n", m->name);
 	while(*istream++)
 		;
 
@@ -487,18 +487,18 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 			pt = m->type[de];
 		mlink(m, l, istream, v, pc, pt);
 		if(de != -1){
-			DP("\tlink\tidx %d, type %d size %d np %d ",
+			DNP("\tlink\tidx %d, type %d size %d np %d ",
 				i, de, pt->size, pt->np);
 			if(pt->np > 0){
-				DP("map");
+				DNP("map");
 				for(b = pt->map; b < pt->map+pt->np; b++)
-					DP(" %.2x", *b);
-				DP(" ");
+					DNP(" %.2x", *b);
+				DNP(" ");
 			}
-			DP(", pc %zd, sig 0x%ux,\"%s\"\n",
+			DNP(", pc %zd, sig 0x%ux,\"%s\"\n",
 				pc, v, (char*)istream);
 		}else
-			DP("\tlink\tidx %d type %d, pc %zd, sig 0x%ux,\"%s\"\n",
+			DNP("\tlink\tidx %d type %d, pc %zd, sig 0x%ux,\"%s\"\n",
 				i, de, pc, v, (char*)istream);
 		while(*istream++)
 			;
@@ -520,10 +520,10 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 			kwerrstr(exNomem);
 			goto bad;
 		}
-		DP("\tldts\t@ldt,%d\n", nl);
+		DNP("\tldts\t@ldt,%d\n", nl);
 		for(i = 0; i < nl; i++, i2++){
 			n = operand(isp);
-			DP("\text\t@ldts+%d,%d,%zd\n",
+			DNP("\text\t@ldts+%d,%d,%zd\n",
 				i, n, (intptr)i2-(intptr)m->ldt);
 			i1 = *i2 = (Import*)malloc((n+1)*sizeof(Import));
 			if(i1 == nil){
@@ -537,7 +537,7 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 					kwerrstr(exNomem);
 					goto bad;
 				}
-				DP("\text\t@ldt+%zd,idx %d, sig 0x%ux,\"%s\"\n",
+				DNP("\text\t@ldt+%zd,idx %d, sig 0x%ux,\"%s\"\n",
 					(intptr)i1-(intptr)m->ldt,
 					j, i1->sig, (char*)istream);
 				while(*istream++)
@@ -558,7 +558,7 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 			kwerrstr(exNomem);
 			goto bad;
 		}
-		DP("\texceptions\t%d\n", nh);
+		DNP("\texceptions\t%d\n", nh);
 		h = m->htab;
 		for(i = 0; i < nh; i++, h++){
 			h->eoff = operand(isp);
@@ -576,7 +576,7 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 				goto bad;
 			}
 			e = h->etab;
-			DP("\texception\t%d: offset %zd pc1 %zd pc2 %zd"
+			DNP("\texception\t%d: offset %zd pc1 %zd pc2 %zd"
 				" desc %d nlab %d ne %zd\n",
 				i, h->eoff, h->pc1, h->pc2,
 				descid, n, h->ne);
@@ -589,11 +589,11 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 				while(*istream++)
 					;
 				e->pc = operand(isp);
-				DP("\texctab\t\"%s\", %zd\n", e->s, e->pc);
+				DNP("\texctab\t\"%s\", %zd\n", e->s, e->pc);
 			}
 			e->s = nil;
 			e->pc = operand(isp);
-			DP("\texctab\t*, %zd\n", e->pc);
+			DNP("\texctab\t*, %zd\n", e->pc);
 		}
 		istream++;
 	}
@@ -622,7 +622,7 @@ parsemod(char *path, uchar *code, u32 length, Dir *dir)
 		kwerrstr(exNomem);
 		goto bad;
 	}
-	DP("\tsource\t\"%s\"\n", m->path);
+	DNP("\tsource\t\"%s\"\n", m->path);
 	m->link = modules;
 	modules = m;
 
