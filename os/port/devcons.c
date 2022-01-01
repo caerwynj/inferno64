@@ -437,6 +437,7 @@ seconds(void)
 	return boottime + TK2SEC(MACHP(0)->ticks);
 }
 
+/* TODO correct these. We are returning microseconds now */
 vlong
 mseconds(void)
 {

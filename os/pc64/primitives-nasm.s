@@ -79,8 +79,9 @@ MVENTRY "H0" H0 0 2		; here at startup
 
 ; cannot use H as it is nil in inferno, address where here (next available dictionary cell location) is stored
 ; here = Dp @
-MENTRY "Dp" Dp 2
+MENTRY "Dp" Dp 2		; here
 MENTRY "Dtop" Dtop 4	; last defined header
+MENTRY "Vp" Vp 2		; here of the variables space
 MENTRY "S0" S0 2
 MENTRY "s@" stackptr 2	; puts PSP on stack. Not a variable hence lower case.
 MENTRY "Wordb" Wordb 5

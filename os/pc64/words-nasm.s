@@ -27,7 +27,7 @@ dd M_literal
 dd 8
 dd M_plus
 dd M_exitcolon
-CENTRY "aligned" C_aligned 7
+CENTRY "aligned" C_aligned 7	; align a number to a multiple of 8
 dd M_literal
 dd 7
 dd M_plus
@@ -467,6 +467,10 @@ CENTRY "here" C_here 4
 dd M_Dp
 dd M_fetch
 dd M_exitcolon
+CENTRY "vhere" C_vhere 4
+dd M_Vp
+dd M_fetch
+dd M_exitcolon
 CENTRY "," C_comma 1
 dd C_here
 dd M_store
@@ -483,8 +487,12 @@ dd 1
 dd M_Dp
 dd C_plusstore
 dd M_exitcolon
-CENTRY "allot" C_allot 5
+CENTRY "allot" C_allot 5 ; ( n -- ) here = here+n
 dd M_Dp
+dd C_plusstore
+dd M_exitcolon
+CENTRY "vallot" C_vallot 5	; allot on the variable space ( n -- ) vhere = vhere+n
+dd M_Vp
 dd C_plusstore
 dd M_exitcolon
 CENTRY "pad" C_pad 3
@@ -495,8 +503,8 @@ dd M_plus
 dd M_exitcolon
 CENTRY "align" C_align 5
 dd C_here
-dd C_aligned
-dd M_Dp
+dd C_aligned	; here is aligned to a multiple of 8
+dd M_Dp			; store the aligned here at Dp
 dd M_store
 dd M_exitcolon
 CENTRY "unused" C_unused 6
@@ -1197,53 +1205,60 @@ L176:
 dd M_drop	; count at a = 0 ( a -- )
 dd M_exitcolon
 
-CENTRY "create" C_create 6
-dd C_align
-dd C_here
-dd M_rpush
-dd M_Dp
-dd M_fetch
-dd C_comma
+CENTRY "create" C_create 6	; compiles dictionary header until the pfa (link, len, name, cfa)
+dd C_align	; sets Dp = aligned here
+dd C_here	; ( -- here )
+dd M_rpush	; ( -- ) (R -- linkaddr )
+dd M_Dtop	; ( -- Dtop ) (R -- linkaddr )
+dd M_fetch	; ( Dtop -- dtop ) (R -- linkaddr )
+dd C_comma	; ( dtop -- ) (R -- linkaddr )
 dd C_bl
-dd C_word
-dd M_dup
-dd M_cfetch
-dd C_here
-dd M_xswap
-dd C_1plus
-dd M_dup
-dd M_rpush
-dd M_cmove
-dd M_rpop
-dd C_allot
-dd C_align
+dd C_word	; get the word from the input stream ( c -- a ) skip any c. Placed the counted string in a (as in Wordbuf)
+dd M_dup	; ( a -- a a ) (R -- linkaddr )
+dd M_cfetch	; ( a a -- a len ) (R -- linkaddr )
+dd C_here	; ( a len -- a len here ) (R -- linkaddr )
+dd M_xswap	; ( a len here -- a here len ) (R -- linkaddr )
+dd C_1plus	; ( a here len -- a here len+1 ) (R -- linkaddr ) using len+1 to copy even the length byte
+dd M_dup	; ( a here len+1 -- a here len+1 len+1 ) (R -- linkaddr )
+dd M_rpush	; ( a here len+1 len+1 -- a here len+1 ) (R -- linkaddr len+1 )
+dd M_cmove	; ( a here len+1 -- ) (R -- linkaddr len+1 )
+dd M_rpop	; ( -- len+1 ) (R -- linkaddr )
+dd C_allot	; ( -- ) (R -- linkaddr ) here = here+len+1
+dd C_align	; sets Dp = aligned here
 dd M_literal
 dd M_variable
-dd M_fetch
-dd C_comma
-dd M_rpop
-dd M_Dp
-dd M_store
+dd M_fetch	; ( -- variablecfa) (R -- linkaddr )
+dd C_comma	; ( -- ) put the variablecfa into the cfa
+dd M_rpop	; ( -- linkaddr) (R -- )
+dd M_Dtop
+dd M_store	; Dtop = just created link address
 dd M_exitcolon
+
 CENTRY "variable" C_variable 8
 dd C_create
-dd M_literal
-dd 0
-dd C_comma
-dd M_exitcolon
-CENTRY "constant" C_constant 8
-dd C_create
-dd M_literal
-dd M_constant
-dd M_fetch
-dd C_here
+dd C_vhere
+dd C_comma	; put the next available variable location in pfa
+
 dd M_literal
 dd 1
 dd C_cells
-dd M_minus
-dd M_store
-dd C_comma
+dd C_vallot	; vhere = vhere+8, stored at Vp
 dd M_exitcolon
+
+CENTRY "constant" C_constant 8 ; ( n -- ) do the same as variable but change the cfa to (constant)
+dd C_create	; create dictionary header upto the cfa
+dd M_literal
+dd M_constant
+dd M_fetch	; ( Contstantcfa -- (constant) )
+dd C_here	; ( (constant) -- (constant) here )
+dd M_literal
+dd 1
+dd C_cells	; ( (constant) here -- (constant) here 8 )
+dd M_minus	; ( (constant) here 8 -- (constant) here-8 )
+dd M_store	; ( (constant) here-8 -- ) changed cfa from (variable) to (constant) 
+dd C_comma	; store n into the dictionary
+dd M_exitcolon
+
 CENTRY "immediate" C_immediate 9
 dd M_Dp
 dd M_fetch
@@ -1366,20 +1381,22 @@ dd M_binand
 dd M_xswap
 dd M_cstore
 dd M_exitcolon
+
 CENTRY ":" C_colon 1
-dd C_create
+dd C_create	; create a dictionary header with (variable) at cfa
 dd C_smudge
 dd M_literal
 dd M_colon
-dd M_fetch
-dd C_here
+dd M_fetch	; ( Coloncfa -- (colon) ) fetches the cfa of M_colon
+dd C_here	; ( (colon) -- (colon) here )
 dd M_literal
 dd 1
 dd C_cells
-dd M_minus
-dd M_store
+dd M_minus	; ( (colon) here -- (colon) here-8 )
+dd M_store	; ( (colon) here-8 -- ) change the cfa from (variable) to colon
 dd C_close_bracket
 dd M_exitcolon
+
 CIENTRY ";" CI_semicolon 1
 dd M_literal
 dd M_exitcolon
@@ -1602,17 +1619,17 @@ dd M_store
 dd M_exitcolon
 CIENTRY "do" CI_do 2
 dd M_literal
-dd M_doinit
-dd C_comma
+dd M_doinit		; compile this into the definition. Puts limit and index on the run stack at run time
+dd C_comma		; puts (do) into the dictionary
 dd M_literal
-dd 0
-dd C_here
+dd 0			; ( -- 0 )
+dd C_here		; ( 0 -- 0 here1 )
 dd M_exitcolon
-CIENTRY "loop" CI_loop 4
+CIENTRY "loop" CI_loop 4	; ( 0 here1 -- )
 dd M_literal
-dd M_doloop
-dd C_comma
-dd C_comma
+dd M_doloop		; ( 0 here1 -- 0 here1 (loop) )
+dd C_comma		; dictionary has (do) ... (loop) ( 0 here1 (loop) -- 0 here1 )
+dd C_comma		; dictionary has (do) ... (loop) here1 ( 0 here1 -- 0 )
 dd C_qdup
 dd M_cjump
 dd L234

@@ -391,3 +391,12 @@ t '       1      -1 min '      -1
 #t '       7      -3 mod '       7      -3 tmod
 #t '      -7       3 mod '      -7       3 tmod
 #t '      -7      -3 mod '      -7      -3 tmod
+
+ decimal 1000 1000 * 1000 *  1000000000
+ 0     aligned  0
+ 3      aligned  8
+ 8     aligned  8
+ 10     aligned  16
+ 16     aligned  16
+: just1 1 ; just1  1
+: dostuff do 1+ loop ; 0 2 0 dostuff  2

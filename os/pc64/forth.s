@@ -383,6 +383,20 @@ TEXT	multiply(SB), 1, $-4	/* ( n1 n2 -- n1*n2 ) */
 	IMULQ CX,TOP
 	NEXT
 
+/* TODO
+	*\/	for the quotient ( *\/ nip )
+	*\/MOD for the remainder and quotient
+ */
+TEXT	multiplyslashmod(SB), 1, $-4	/* ( n1 n2 n3 -- remainder((n1*n2)/n3) quotient((n1*n2)/n3) */
+	POP(CX)
+	IMULQ CX,TOP
+	NEXT
+
+/*
+	/	for only the quotient
+	/mod for the remainder and quotient
+	mod for the remainder
+ */
 TEXT	slashmod(SB), 1, $-4	/* ( n1 n2 -- remainder quotient ) n1/n2 */
 	MOVQ (PSP), CX /* CX = n1 */
 	PUSHQ DX /* DX == PSP, store DX and AX as they are used by CDQ and IDIV */
@@ -513,31 +527,47 @@ TEXT	rshifta(SB), 1, $-4	/* ( n1 n2 -- n ) */
 	SARQ CL, TOP
 	NEXT
 
-/* TODO validateaddress on both addresses */
+/* moves n bytes from a1 to a2 */
 TEXT	cmove(SB), 1, $-4	/* ( a1 a2 n -- ) */
+	PUSH(TOP)
+	MOVQ 8(PSP), CX		/* a2 */
+	MOVQ CX, TOP
+	CALL validateaddress(SB)	/* a1 a2 n a2 -- a1 a2 n */
+
+	PUSH(TOP)
+	MOVQ 16(PSP), CX	/* a1 */
+	MOVQ CX, TOP
+	CALL validateaddress(SB)	/* a1 a2 n a1 -- a1 a2 n */
+
+	POP(DI)
+	POP(SI)
 	MOVQ TOP, CX
-	POP(W)
-	MOVQ IP, CX
-	POP(IP)
+	POP(TOP)			/* SI = a1, DI = a2, CX = n */
 	REP; MOVSB
-	MOVQ CX, IP
-	POP(TOP)
 	NEXT
 
-/* TODO validateaddress on both addresses */
+/* moves n bytes from a1+n-1 to a2+n-1 until n = 0 */
 TEXT	cmoveb(SB), 1, $-4	/* ( a1 a2 n -- ) */
+	PUSH(TOP)
+	MOVQ 8(PSP), CX		/* a2 */
+	MOVQ CX, TOP
+	CALL validateaddress(SB)	/* a1 a2 n a2 -- a1 a2 n */
+
+	PUSH(TOP)
+	MOVQ 16(PSP), CX	/* a1 */
+	MOVQ CX, TOP
+	CALL validateaddress(SB)	/* a1 a2 n a1 -- a1 a2 n */
+
 	MOVQ TOP, CX
-	POP(W)
-	DECQ TOP
-	ADDQ TOP, W
-	MOVQ IP, CX
-	POP(IP)
-	ADDQ TOP, IP
+	DECQ TOP		/* TOP = n-1, CX = n */
+	POP(DI)
+	ADDQ TOP, DI
+	POP(SI)
+	ADDQ TOP, SI
+	POP(TOP)		/* CX = n, SI = a1+n-1, DI = a2+n-1 */
 	STD
 	REP; MOVSB
 	CLD
-	MOVQ CX, IP
-	POP(TOP)
 	NEXT
 
 TEXT	cas(SB), 1, $-4	/* ( a old new -- f ) */
@@ -579,6 +609,13 @@ TEXT	Dtop(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
 	PUSH(TOP)
 	MOVQ UP, TOP
 	ADDQ $DTOP, TOP
+	NEXT
+
+/* Dp for the variable space */
+TEXT	Vp(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
+	PUSH(TOP)
+	MOVQ UP, TOP
+	ADDQ $VHERE, TOP
 	NEXT
 
 TEXT	Args(SB), 1, $-4
