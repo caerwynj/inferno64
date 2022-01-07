@@ -49,6 +49,7 @@ typedef struct Timer	Timer;
 typedef struct Timers	Timers;
 typedef struct PhysUart PhysUart;
 typedef struct Uart Uart;
+typedef struct Waitq	Waitq;
 typedef struct Walkqid	Walkqid;
 typedef struct Watchpt	Watchpt;
 typedef struct Watchdog	Watchdog;
@@ -495,6 +496,12 @@ struct Skeyset
 	Signerkey	*keys[MAXKEY];
 };
 
+struct Waitq
+{
+	Waitmsg	w;
+	Waitq	*next;
+};
+
 /*
  * fasttick timer interrupts
  */
@@ -581,23 +588,19 @@ struct Schedq
 };
 
 /* inferno uses Osenv for environment information. It is cheaper to create
- * new processes with a default environment
+ * new processes with a default environment (spawn, not fork)
  */
 struct Proc
 {
 	Label	sched;		/* known to l.s */
 	char	*kstack;	/* known to l.s */
 	Mach	*mach;		/* machine running this proc */
-	char	text[KNAMELEN];
-	/*	char	*user; 9front only */
+	char	*text;
+	char	*user;
 
-	/*
-	 * below 3 args fields are not used by 9ferno
-	 * leaving them alone to stay compatible with 9front
-	 */
-/*	char	*args;*/
-/*	int	nargs;		*//* number of bytes of args */
-/*	int	setargs;	*//* process changed its args */
+	char	*args;
+	int	nargs;		/* number of bytes of args */
+	int	setargs;	/* process changed its args */
 
 	Proc	*rnext;		/* next process in run queue */
 	Proc	*qnext;		/* next process on queue for a QLock */
@@ -611,15 +614,15 @@ struct Proc
 
 	u32	pid;
 	u32	noteid;		/* Equivalent of note group */
-/*	u32	parentpid; *//* no single parent in inferno, send it to the process group */
+	u32	parentpid;
 
-/*	Proc	*parent;	*//* Process to send wait record on exit */
-/*	Lock	exl;		*//* Lock count and waitq */
-/*	Waitq	*waitq;		*//* Exited processes wait children */
-/*	int	nchild;		*//* Number of living children */
-/*	int	nwait;		*//* Number of uncollected wait records */
-/*	QLock	qwaitr;*/
-/*	Rendez	waitr;		*//* Place to hang out in wait */
+	Proc	*parent;	/* Process to send wait record on exit */
+	Lock	exl;		/* Lock count and waitq */
+	Waitq	*waitq;		/* Exited processes wait children */
+	int	nchild;		/* Number of living children */
+	int	nwait;		/* Number of uncollected wait records */
+	QLock	qwaitr;
+	Rendez	waitr;		/* Place to hang out in wait */
 
 /*	QLock	seglock;	*//* locked whenever seg[] changes */
 /*	Segment	*seg[NSEG]; */
@@ -627,14 +630,14 @@ struct Proc
 /*	Pgrp	*pgrp;	*/	/* Process group for namespace */
 /*	Egrp 	*egrp;	*/	/* Environment group */
 /*	Fgrp	*fgrp;	*/	/* File descriptor group */
-/*	Rgrp	*rgrp;	*/	/* Rendez group */
+	Rgrp	*rgrp;		/* Rendez group */
 
 /*	Fgrp	*closingfgrp;*/	/* used during teardown */
 
 /*	int	insyscall;*/
 	u32	time[6];	/* User, Sys, Real; child U, S, R */
 
-/*	uvlong	kentry;	*/	/* Kernel entry time stamp (for profiling) */
+	uvlong	kentry;		/* Kernel entry time stamp (for profiling) */
 	/*
 	 * pcycles: cycles spent in this process (updated on procswitch)
 	 * when this is the current proc and we're in the kernel
@@ -705,12 +708,12 @@ struct Proc
 	int	nlocks;		/* number of locks held by proc */
 	u32	delaysched;
 	u32	priority;	/* priority level */
-/*	ulong	basepri;	*//* base priority level */
-/*	uchar	fixedpri;	*//* priority level deson't change */
-/*	ulong	cpu;		*//* cpu average */
-/*	ulong	lastupdate;*/
+	u32	basepri;	/* base priority level */
+	uchar	fixedpri;	/* priority level deson't change */
+	u32	cpu;		/* cpu average */
+	u32	lastupdate;
 	uchar	yield;		/* non-zero if the process just did a sleep(0) */
-	ulong	readytime;	/* time process came ready */
+	u32	readytime;	/* time process came ready */
 	int	preempted;	/* true if this process hasn't finished the interrupt
 				 *  that last preempted it
 				 */
@@ -725,7 +728,7 @@ struct Proc
 	PFPU;			/* machine specific fpu state */
 	PMMU;			/* machine specific mmu state, obsolete on 9ferno amd64? */
 
-/*	char	*syscalltrace;	*//* syscall trace */
+	char	*syscalltrace;	/* syscall trace */
 	
 	Watchpt	*watchpt;	/* watchpoints */
 	int	nwatchpt;
@@ -750,6 +753,8 @@ struct Proc
 	Proc	*fprev, *fnext;
 	void	*fmem;
 	Queue	*frq, *fwq, *ferrq;	/* forth read, write and error queue */
+	void	*shm;		/* for devshm */
+	void	*readyfds;	/* for devready.c */
 };
 
 enum

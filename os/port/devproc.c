@@ -170,12 +170,12 @@ procgen(Chan *c, char *name, Dirtab *tab, int, int s, Dir *dp)
 	Qid qid;
 	Proc *p;
 	char *ename;
-/*	Segment *q;*/
+/*	Segment *q; */
 	ulong pid, path, perm, len;
 
 	if(s == DEVDOTDOT){
 		mkqid(&qid, Qdir, 0, QTDIR);
-		devdir(c, qid, "#p", 0, eve, 0555, dp);
+		devdir(c, qid, "#o", 0, eve, 0555, dp);
 		return 1;
 	}
 
@@ -195,9 +195,9 @@ procgen(Chan *c, char *name, Dirtab *tab, int, int s, Dir *dp)
 			s = procindex(pid);
 			if(s < 0)
 				return -1;
-		}
-		else if(--s >= conf.nproc)
+		}else if(--s >= conf.nproc){
 			return -1;
+		}
 
 		p = proctab(s);
 		pid = p->pid;
@@ -229,29 +229,29 @@ procgen(Chan *c, char *name, Dirtab *tab, int, int s, Dir *dp)
 
 	/* p->procmode determines default mode for files in /proc */
 	p = proctab(SLOT(c->qid));
-/*	perm = tab->perm;
+	perm = tab->perm;
 	if(perm == 0)
 		perm = p->procmode;
-	else*/	/* just copy read bits */
-/*		perm |= p->procmode & 0444;*/
+	else	/* just copy read bits */
+		perm |= p->procmode & 0444;
 	perm = tab->perm;
 
 	len = tab->length;
-/*	switch(QID(c->qid)) {
+	switch(QID(c->qid)) {
 	case Qwait:
-		len = p->nwait;	*//* incorrect size, but >0 means there's something to read *//*
+		len = p->nwait;	/* incorrect size, but >0 means there's something to read */
 		break;
 	case Qprofile:
-		q = p->seg[TSEG];
+	/*	q = p->seg[TSEG];
 		if(q != nil && q->profile != nil) {
 			len = (q->top-q->base)>>LRESPROF;
 			len *= sizeof(*q->profile);
-		}
+		} */
 		break;
 	case Qwatchpt:
 		len = lenwatchpt(p);
 		break;
-	}*/
+	}
 
 	mkqid(&qid, path|tab->qid.path, c->qid.vers, QTFILE);
 	devdir(c, qid, tab->name, len, p->env->user, perm, dp);
@@ -287,7 +287,7 @@ dprocinit(void)
 static Chan*
 procattach(char *spec)
 {
-	return devattach('p', spec);
+	return devattach('o', spec);
 }
 
 static Walkqid*
@@ -646,7 +646,7 @@ int2flag(int flag, char *s)
 static int
 readns1(Chan *c, Proc *p, char *buf, int nbuf)
 {
-/*	Pgrp *pg;
+	Pgrp *pg;
 	Mount *t, *cm;
 	Mhead *f, *mh;
 	ulong minid, bestmid;
@@ -654,7 +654,7 @@ readns1(Chan *c, Proc *p, char *buf, int nbuf)
 	int i;
 
 	pg = p->env->pgrp;
-	if(pg == nil || p->dot == nil || p->pid != PID(c->qid))
+	if(pg == nil || pg->dot == nil || p->pid != PID(c->qid))
 		error(Eprocdied);
 
 	bestmid = ~0;
@@ -682,17 +682,21 @@ readns1(Chan *c, Proc *p, char *buf, int nbuf)
 
 	if(bestmid == ~0) {
 		c->nrock = bestmid;
-		i = snprint(buf, nbuf, "cd %q\n", p->dot->path->s);
+		i = snprint(buf, nbuf, "cd %q\n", pg->dot->path->s);
 	} else {
 		c->nrock = bestmid+1;
 
 		int2flag(cm->mflag, flag);
 		if(strcmp(cm->to->path->s, "#M") == 0){
+/*			9front uses this instead of chanpath
 			srv = srvname(cm->to->mchan);
 			i = snprint(buf, nbuf, (cm->spec && *cm->spec)?
 				"mount %s %q %q %q\n": "mount %s %q %q\n", flag,
 				srv? srv: cm->to->mchan->path->s, mh->from->path->s, cm->spec);
-			free(srv);
+			free(srv);*/
+			i = snprint(buf, nbuf, (cm->spec && *cm->spec)?
+				"mount %s %q %q %q\n": "mount %s %q %q\n", flag,
+				chanpath(cm->to->mchan), mh->from->path->s, cm->spec);
 		}else{
 			i = snprint(buf, nbuf, "bind %s %q %q\n", flag,
 				cm->to->path->s, mh->from->path->s);
@@ -702,8 +706,6 @@ readns1(Chan *c, Proc *p, char *buf, int nbuf)
 	runlock(&pg->ns);
 
 	return i;
-*/
-	return 0;
 }
 
 int
@@ -758,7 +760,7 @@ readfd1(Chan *c, Proc *p, char *buf, int nbuf)
  * If and only if they are valid, it sets up all watchpoints (clearing any preexisting ones).
  * This is to make sure that failed writes to watchpt don't touch the existing watchpoints.
  */
-/*
+
 static void
 clearwatchpt(Proc *p)
 {
@@ -771,7 +773,7 @@ clearwatchpt(Proc *p)
 static int
 lenwatchpt(Proc *pr)
 {
-	\/* careful, not holding debug lock *\/
+	/* careful, not holding debug lock */
 	return pr->nwatchpt * (10 + 4 * sizeof(uintptr));
 }
 
@@ -783,7 +785,7 @@ readwatchpt(Proc *pr, char *buf, int nbuf)
 	
 	p = buf;
 	e = buf + nbuf;
-	\/* careful, length has to match lenwatchpt() *\/
+	/* careful, length has to match lenwatchpt() */
 	for(w = pr->watchpt; w < pr->watchpt + pr->nwatchpt; w++)
 		p = seprint(p, e, sizeof(uintptr) == 8 ? "%c%c%c %#.16p %#.16p\n" : "%c%c%c %#.8p %#.8p\n",
 			(w->type & WATCHRD) != 0 ? 'r' : '-',
@@ -848,7 +850,7 @@ writewatchpt(Proc *pr, char *buf, int nbuf, uvlong offset)
 		x = strtoull(f[2], &q, 0);
 		if(f[2] == q || *q != 0 || x > (uintptr)-wq->addr) error("invalid length");
 		wq->len = x;
-		if(wq->addr + wq->len > USTKTOP) error("bad address");
+		/*if(wq->addr + wq->len > USTKTOP) error("bad address");*/
 		wq++;
 	}
 	nwp = wq - (wp + nwp0);
@@ -864,7 +866,7 @@ writewatchpt(Proc *pr, char *buf, int nbuf, uvlong offset)
 	pr->nwatchpt = nwp0 + nwp;
 	return p - buf;
 }
-*/
+
 /*
  * userspace can't pass negative file offset for a
  * 64 bit kernel address, so we use 63 bit and sign
@@ -1100,7 +1102,7 @@ procread(Chan *c, void *va, s32 n, s64 off)
 	switch(QID(c->qid)){
 	case Qns:
 	case Qfd:
-/*		if(offset == 0 || offset != c->mrock)
+		if(offset == 0 || offset != c->mrock)
 			c->nrock = c->mrock = 0;
 		do {
 			if(QID(c->qid) == Qns)
@@ -1119,7 +1121,7 @@ procread(Chan *c, void *va, s32 n, s64 off)
 		if(i < n)
 			n = i;
 		offset = j - i;
-		goto statbufread;*/
+		goto statbufread;
 		qunlock(&p->debug);
 		poperror();
 		return 0;

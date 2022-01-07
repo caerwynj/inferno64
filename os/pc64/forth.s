@@ -286,16 +286,16 @@ TEXT	literal(SB), 1, $-4	/* ( -- n ) */
 	ADDQ $8, IP
 	NEXT
 
-/* TODO not sure about this */
+/* ( -- a n) and set IP = aligned(IP+count) */
 TEXT	sliteral(SB), 1, $-4	/* ( -- a n ) */
 	PUSH(TOP)
 	XORQ TOP,TOP
-	MOVB (IP), BL
+	MOVB (IP), BL	/* move the count from (IP) to BL (lower byte of TOP) */
 	INCQ IP
-	PUSH(IP)
+	PUSH(IP)		/* push IP onto the stack */
 	ADDQ TOP, IP
 	ADDQ $7, IP
-	ANDQ $~7, IP
+	ANDQ $~7, IP	/* set IP += count, then align the IP to the next cell */
 	NEXT
 
 /*

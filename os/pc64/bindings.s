@@ -91,7 +91,7 @@ cannot get this to work and I cannot decipher it with all the psuedo register no
 	POP(TOP);\
 	STOREFORTH;
 
-TEXT	fthopen(SB), 1, $24	/* ( mode cstr -- fd ) */
+TEXT	fsopen(SB), 1, $24	/* ( mode cstr -- fd ) */
 	MOVQ UP, 16(SP)
 	F_TO_C_2
 	CALL kopen(SB)
@@ -100,7 +100,7 @@ TEXT	fthopen(SB), 1, $24	/* ( mode cstr -- fd ) */
 	ADDQ $24, SP
 	NEXT
 
-TEXT	fthclose(SB), 1, $16	/* ( fd -- n ) */
+TEXT	fsclose(SB), 1, $16	/* ( fd -- n ) */
 	MOVQ UP, 8(SP)
 	F_TO_C_1
 	CALL kclose(SB)
@@ -109,7 +109,7 @@ TEXT	fthclose(SB), 1, $16	/* ( fd -- n ) */
 	ADDQ $16, SP
 	NEXT
 
-TEXT	fthread(SB), 1, $32	/* ( n a fd -- n2 ) */
+TEXT	fsread(SB), 1, $32	/* ( n a fd -- n2 ) */
 	PUSH(TOP)
 	MOVQ 16(PSP), TOP
 	MOVQ 8(PSP), CX
@@ -131,7 +131,7 @@ TEXT	fthread(SB), 1, $32	/* ( n a fd -- n2 ) */
  * 1 local for storing UP = 8 bytes
  * Hence, need 32 bytes on the stack
  */
-TEXT	fthwrite(SB), 1, $32	/* ( n a fd -- n2|-1 ) */
+TEXT	fswrite(SB), 1, $32	/* ( n a fd -- n2|-1 ) */
 	PUSH(TOP)			/* ( -- n a fd fd ) */
 	MOVQ 16(PSP), TOP	/* TOP = n */
 	MOVQ 8(PSP), CX		/* CX = a */
@@ -148,7 +148,7 @@ TEXT	fthwrite(SB), 1, $32	/* ( n a fd -- n2|-1 ) */
 	ADDQ $32, SP
 	NEXT
 
-TEXT	fthseek(SB), 1, $32	/* ( type pos fd -- n ) */
+TEXT	fsseek(SB), 1, $32	/* ( type pos fd -- n ) */
 	MOVQ UP, 24(SP)
 	F_TO_C_3
 	CALL kseek(SB)

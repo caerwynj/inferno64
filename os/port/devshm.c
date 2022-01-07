@@ -9,15 +9,22 @@ static int debug = 0;
 
 /*
  1. Provides #h/shm for shared user memory
-How is this different from devshm?
+How is this different from devenv?
 	O(1) for read and write
-	Behaves like a pipe after the current version and len are read.
-	Any further reads block until new data is written
 	using array index as the path to keep lookups to O(1)
 	Keep c->aux = Svalue*
 		So, can read/write directly
+	If the length is greater than 1 read/write IO unit, then
+		this mechanism fails. Need an shmbig that puts rlock/wlock
+		at open() for that to work.
+
 TODO
 	needs some mechanism in devforth.c to create up->shm
+
+not doing
+	Behaves like a pipe after the current version and len are read.
+	Any further reads block until new data is written
+		not doing this. If a pipe is needed, use a pipe
 
 up->shm = Shmgrp*
 c->aux (for QTFile) = Svalue*
@@ -59,6 +66,11 @@ newforthproc() when it uses an Sgrp, incref's
 when closing, decref's and closes Sgrp when ref == 0
 		remove() all values
 			if successful, then free Sgrp
+
+For shmbig:
+open(WRITE)	wlock()
+open(READ)	rlock()
+open(RDWR)	wlock()
  */
 
 /*

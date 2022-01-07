@@ -37,7 +37,8 @@ fn readline {
 fn t {
 	args=$*
 	(sendargs expected)=$*
-	echo $args
+	#echo $args
+	echo $sendargs ' => ' $expected
 
 	# get stack depth
 	send 'depth . '
@@ -392,11 +393,49 @@ t '       1      -1 min '      -1
 #t '      -7       3 mod '      -7       3 tmod
 #t '      -7      -3 mod '      -7      -3 tmod
 
- decimal 1000 1000 * 1000 *  1000000000
- 0     aligned  0
- 3      aligned  8
- 8     aligned  8
- 10     aligned  16
- 16     aligned  16
-: just1 1 ; just1  1
-: dostuff do 1+ loop ; 0 2 0 dostuff  2
+t ' decimal 1000 1000 * 1000 * ' 1000000000
+
+t ' 0     aligned '      0
+t ' 3      aligned '      8
+t ' 8     aligned '      8
+t ' 10     aligned '      16
+t ' 16     aligned '      16
+
+t ' char testing ' 116	# ascii value of t = 116
+t ': just1 char ; char esting ' 101 # ascii value of e = 101
+
+t ': just1 1 ; just1 ' 1
+t ': dostuff do 1+ loop ; 0 2 0 dostuff ' 2
+
+t ' : showstuff ." testingstring" ; 10 showstuff ' 'testingstring10'
+t ' : showstuff ." testingstring " space ; 10 showstuff ' 'testingstring  10'
+t ' : showstuff s" /tmp/test" ; 10 showstuff type ' '/tmp/test10'
+t '10 " string  to type " type' 'string  to type 10'
+
+t ' 10 : testif 0 0 = if ." 0 0 = true" else ." 0 0 = false" then ; testif ' '0 0 = true10'
+t ' 10 : testif 0 1 = if ." 0 0 = true" else ." 0 1 = false" then ; testif ' '0 1 = false10'
+t '10 constant  MYCONSTANT MYCONSTANT ' 10
+t '10 variable myfd 9 myfd ! myfd @ ' 9 10
+
+t ' 10 " /dis/init" r/o open-file ' -1 6 10
+
+t ' 9 Tib 10 " /dis/init" r/o open-file drop read-file Tib 10 type ' '#!/dis/sh -1' 10 9
+
+t ' 9 Tib 10 " /dis/init" r/o open-file drop dup variable myfd myfd ! read-file Tib 10 type myfd @ close-file  ' '#!/dis/sh -1' -1 10 9
+
+# first -1 is the true flag of close-file
+# second -1 is the true flag of read-file
+# 10 is the number of characters read by read-file
+#	the true flag of open-file is drop'ped
+# 9 is the top of stack at the start
+t ' 9 Tib 10 " /dis/init" r/o open-file drop dup variable myfd myfd ! read-file Tib 10 type myfd @ close-file  ' '#!/dis/sh -1' -1 10 9
+
+# first -1 is the true flag of close-file
+# second -1 is the true flag of read-file
+# 10 is the number of characters read by read-file
+# third -1 is the true flag of reposition-file
+#	the true flag of open-file is drop'ped
+# fourth -1 is the true flag of read-file
+# 10 is the number of characters read by read-file
+# 9 is the top of stack at the start
+t ' 9 Tib 10 " /dis/init" r/o open-file drop dup variable myfd myfd ! read-file Tib 10 type 0 0 myfd @ reposition-file Tib 10 erase Tib 10 myfd @ read-file Tib 10 type myfd @ close-file  ' '#!/dis/sh #!/dis/sh -1' -1 10 -1 -1 10 9

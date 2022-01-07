@@ -2,11 +2,11 @@ MENTRY "@" fetch 1
 MENTRY "!" store 1
 MENTRY "c@" cfetch 2
 MENTRY "c!" cstore 2
-MENTRY "read" fthread 4
-MENTRY "write" fthwrite 5
-MENTRY "seek" fthseek 4
-MENTRY "open" fthopen 4
-MENTRY "close" fthclose 5
+MENTRY "read" fsread 4
+MENTRY "write" fswrite 5
+MENTRY "seek" fsseek 4
+MENTRY "open" fsopen 4
+MENTRY "close" fsclose 5
 MENTRY "mmap" mmap 4
 MENTRY "halt" terminate 4
 MENTRY "dump" fthdump 4

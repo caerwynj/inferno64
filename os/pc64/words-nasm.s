@@ -37,7 +37,7 @@ dd M_binand
 dd M_exitcolon
 CENTRY "cells" C_cells 5
 dd M_literal
-dd 3			; (index << 2) -> (index << 3)for amd64
+dd 3			; (index << 2) -> (index << 3) for amd64
 dd M_lshift
 dd M_exitcolon
 CENTRY "cell+" C_cellplus 5
@@ -264,7 +264,7 @@ dd 1			; ( 1 -- )
 dd MV_Iobuf		; variable iobuf to store the character read
 dd MV_Infd
 dd M_fetch		; ( 1 Iobuf -- 1 Iobuf infd )
-dd M_fthread	; ( 1 Iobuf infd -- n )
+dd M_fsread	; ( 1 Iobuf infd -- n )
 dd C_0eq
 dd M_cjump		; if 0 characters read
 dd L78			; if qread n != 0 jump to L78. If n == 0 jump over
@@ -289,7 +289,7 @@ dd 1
 dd M_xswap		; ( iobuf 1 --  1 iobuf )
 dd MV_Outfd
 dd M_fetch		; outfd
-dd M_fthwrite	; ( 1 iobuf outfd --  )
+dd M_fswrite	; ( 1 iobuf outfd --  )
 dd M_drop		; drop the return value of write
 dd M_exitcolon
 
@@ -297,7 +297,7 @@ CENTRY "type" C_type 4	; ( addr n -- )
 dd M_xswap			; ( addr n --  n addr )
 dd M_literal
 dd 1				; stdout
-dd M_fthwrite		; ( n addr 1 --  )
+dd M_fswrite		; ( n addr 1 --  )
 dd M_drop		; drop the return value of write
 dd M_exitcolon
 
@@ -330,7 +330,7 @@ dd C_bl
 dd M_xswap
 dd C_emits
 dd M_exitcolon
-CENTRY "count" C_count 5 ; ( a -- a+1 n ) a = counted string
+CENTRY "count" C_count 5 ; ( a -- a+1 n ) a = address of counted string ( a - a+1 a[0])
 dd C_1plus
 dd M_dup
 dd C_1minus
@@ -501,11 +501,11 @@ dd M_literal
 dd 256
 dd M_plus
 dd M_exitcolon
-CENTRY "align" C_align 5
-dd C_here
+CENTRY "align" C_align 5	; ( -- ) align here to a cell boundary
+dd C_here		; Dp @
 dd C_aligned	; here is aligned to a multiple of 8
 dd M_Dp			; store the aligned here at Dp
-dd M_store
+dd M_store		; Dp contains aligned_here
 dd M_exitcolon
 CENTRY "unused" C_unused 6
 dd M_Dp
@@ -1161,7 +1161,7 @@ dd M_dup ; debug code to show the word found
 dd C_count ; ( -- a n)
 dd M_xswap ; ( -- n a)
 dd MC_STDOUT
-dd M_fthwrite
+dd M_fswrite
 dd M_drop		; drop the return value of write
 
 CENTRY "interpret" C_interpret 9 ; there is stuff in TIB to be interpreted >In and >Limit are set
@@ -1234,7 +1234,7 @@ dd M_Dtop
 dd M_store	; Dtop = just created link address
 dd M_exitcolon
 
-CENTRY "variable" C_variable 8
+CENTRY "variable" C_variable 8	; compile to put the vhere then on the stack
 dd C_create
 dd C_vhere
 dd C_comma	; put the next available variable location in pfa
@@ -1412,38 +1412,38 @@ dd C_cellplus
 dd C_tocfa
 dd C_comma
 dd M_exitcolon
-CENTRY "char" L206 4
+CENTRY "char" C_char 4	; ( -- c ) fetch the first character of the next word from input
 dd C_bl
-dd C_word
-dd C_1plus
-dd M_cfetch
+dd C_word	; ( c -- a ) puts the address of the counted string from the input on the stack
+dd C_1plus	; skip the count
+dd M_cfetch	; fetch the first character
 dd M_exitcolon
-CENTRY "literal" C_literal 7
+CENTRY "literal" C_literal 7	; ( n -- ) adds (literal) n to the dictionary
 dd M_literal
 dd M_literal
 dd C_comma
 dd C_comma
 dd M_exitcolon
-CENTRY "sliteral" C_sliteral 8
+CENTRY "sliteral" C_sliteral 8	; ( -- ) adds (sliteral) a n to the dictionary
 dd M_literal
 dd M_sliteral
-dd C_comma
-dd C_here
+dd C_comma	; adds (sliteral) to the dictionary
+dd C_here	; ( -- here)
 dd M_literal
-dd 34
-dd C_parse
-dd M_dup
-dd M_cfetch
-dd C_1plus
-dd M_rpush
-dd M_xswap
-dd M_rfetch
-dd M_cmove
-dd M_rpop
-dd C_allot
-dd C_align
+dd 34		; ascii value of "
+dd C_parse	; ( here \" -- here a ) \" = word delimiter. a = address of counted string (in Wordbuf).
+dd M_dup	; ( here a -- here a a )
+dd M_cfetch	; ( here a a -- here a n )
+dd C_1plus	; ( here a n -- here a n+1 ) n+1 as 1 for the count and n for the length of the string
+dd M_rpush	; ( here a n+1 -- here a ) (R -- n+1)
+dd M_xswap	; ( here a -- a here ) (R -- n+1)
+dd M_rfetch	; ( a here -- a here n+1 ) (R -- n+1 )
+dd M_cmove	; ( a here n+1 -- ) moves n+1 from a to here
+dd M_rpop	; ( -- n+1 ) (R -- )
+dd C_allot	; ( n+1 -- ) here = here+n+1
+dd C_align	; align here
 dd M_exitcolon
-CENTRY "string" C_string 6
+CENTRY "string" C_string 6 ; ( c -- ) 
 dd C_word
 dd M_dup
 dd M_cfetch
@@ -1455,18 +1455,18 @@ dd M_cmove
 dd M_rpop
 dd C_allot
 dd M_exitcolon
-CIENTRY "[char]" CI_char_brackets 6
+CIENTRY "[char]" CI_char_brackets 6	; take the next character from the input stream during compilation
 dd C_bl
 dd C_word
 dd C_1plus
 dd M_cfetch
 dd C_literal
 dd M_exitcolon
-CIENTRY "[']" CI_quote_brackets 3
+CIENTRY "[']" CI_quote_brackets 3	; take the address of next token from the input stream during compilation
 dd C_single_quote
 dd C_literal
 dd M_exitcolon
-CIENTRY "(" CI_openparen 1
+CIENTRY "(" CI_openparen 1	; ignore until ) from the input stream during compilation
 dd M_literal
 dd 41
 dd C_parse
@@ -1517,7 +1517,7 @@ dd M_literal
 dd C_qabort_parens
 dd C_comma
 dd M_exitcolon
-CENTRY "\"" C_double_quote 1
+CENTRY "\"" C_double_quote 1	; stores counted string in the dictionary and also leaves the address count of the string on the stack - used to use strings at the interpreter prompt
 dd M_literal
 dd 34
 dd C_word
@@ -1531,25 +1531,25 @@ dd M_rpop
 dd M_dup
 dd C_allot
 dd M_exitcolon
-CENTRY "c\"" C_cdouble_quote 2
+CENTRY "c\"" C_cdouble_quote 2	; stores counted string in the dictionary and also leaves the address of the counted string on the stack
 dd M_literal
-dd 34
-dd C_word
-dd M_dup
-dd M_cfetch
-dd C_1plus
-dd M_rpush
-dd C_here
-dd M_rfetch
-dd M_cmove
-dd C_here
-dd M_rpop
-dd C_allot
+dd 34		; ( -- \" )
+dd C_word	; ( \" -- a ) a = counted string address. a will be in Wordbuf
+dd M_dup	; ( a -- a a)
+dd M_cfetch	; ( a a -- a n )
+dd C_1plus	; ( a n -- a n+1 )
+dd M_rpush	; ( a n -- a ) (R -- n+1)
+dd C_here	; ( a -- a here ) (R -- n+1)
+dd M_rfetch	; ( a here -- a here n+1) (R -- n+1)
+dd M_cmove	; move counted string from a to here
+dd C_here	; ( -- here )
+dd M_rpop	; ( here -- here n+1 )(R -- )
+dd C_allot	; ( here n+1 -- here) here += n+1
 dd M_exitcolon
-CIENTRY "s\"" CI_sdouble_quote 2
+CIENTRY "s\"" CI_sdouble_quote 2	; add the string from the input stream to the dictionary as (sliteral) count string - at run-time puts the ( -- addr n) of the counted string on the stack.
 dd C_sliteral
 dd M_exitcolon
-CIENTRY ".\"" CI_dotstr 2
+CIENTRY ".\"" CI_dotstr 2	; do what s" does and then add a type to the dictionary to print that string
 dd C_sliteral
 dd M_literal
 dd C_type
@@ -1669,57 +1669,59 @@ CENTRY "r/w" C_rw 3
 dd M_literal
 dd 2
 dd M_exitcolon
-CENTRY "open-file" C_open_file 9
-dd M_rpush
+CENTRY "open-file" C_open_file 9 ; ( a n mode -- fd ioresult )
+dd M_rpush	; ( a n mode -- a n ) (R -- mode)
+dd C_pad	; ( a n -- a n padaddr)
+dd M_literal
+dd 1024		; ( a n padaddr --  a n padaddr 1024 )
+dd M_plus	; ( a n padaddr+1024 --  a n padaddr+1024 )
+dd M_xswap	; ( a n padaddr+1024 --  a padaddr+1024 n )
+dd M_dup	; ( a padaddr+1024 n --  a padaddr+1024 n n )
+dd M_rpush	; ( a padaddr+1024 n n --  a padaddr+1024 n ) (R mode -- mode n )
+dd M_cmove	; moves the filename from a to paddaddr+1024
+dd M_literal
+dd 0		; ( -- 0 )
+dd M_rpop	; ( 0 -- 0 n ) (R mode n -- mode)
+dd C_pad	; ( 0 n -- 0 n padaddr)
+dd M_plus	; ( 0 n padaddr -- 0 padaddr+n )
+dd M_literal
+dd 1024		; ( 0 padaddr+n --  0 padaddr+n 1024 )
+dd M_plus	; ( 0 padaddr+n 1024 --  0 padaddr+n+1024 )
+dd M_cstore	; ( 0 padaddr+n 1024 --   ) makes the filename to a null terminated string
 dd C_pad
 dd M_literal
-dd 1024
-dd M_plus
-dd M_xswap
-dd M_dup
-dd M_rpush
-dd M_cmove
-dd M_literal
-dd 0
-dd M_rpop
-dd C_pad
-dd M_plus
-dd M_literal
-dd 1024
-dd M_plus
-dd M_cstore
-dd C_pad
-dd M_literal
-dd 1024
-dd M_plus
-dd M_rpop
-dd M_literal
-dd 420
-dd M_fthopen
+dd 1024		; ( -- padaddr 1024 )
+dd M_plus	; ( padaddr 1024 -- padaddr+1024 )
+dd M_rpop	; ( padaddr+1024 -- padaddr+1024 mode) (R mode -- )
+dd M_xswap	; M_literal dd 420		; ( padaddr+1024 mode 420 )
+dd M_fsopen
 dd M_dup
 dd M_literal
 dd -1
 dd M_greater
 dd M_exitcolon
-CENTRY "close-file" C_close_file 10
-dd M_fthclose
+CENTRY "close-file" C_close_file 10	; ( fd -- ioresult )
+dd M_fsclose
 dd C_0eq
 dd M_exitcolon
-CENTRY "read-file" C_read_file 9
-dd M_fthread
+CENTRY "read-file" C_read_file 9	; ( a n fd -- n2 ioresult )
+dd M_rpush
+dd M_xswap
+dd M_rpop	; ( n a fd )
+dd M_fsread
 dd M_dup
 dd M_literal
 dd -1
 dd C_neq
 dd M_exitcolon
-CENTRY "write-file" C_write_file 10
-dd M_fthwrite
+CENTRY "write-file" C_write_file 10	; ( a n fd -- ioresult )
+dd M_fswrite
 dd M_literal
 dd -1
 dd C_neq
 dd M_exitcolon
-CENTRY "reposition-file" C_reposition_file 15
-dd M_fthseek
+CENTRY "reposition-file" C_reposition_file 15	;	( type n fd -- ioresult )
+dd M_fsseek
 dd M_literal
 dd -1
 dd C_neq
@@ -1782,7 +1784,7 @@ dd C_query
 ; dd M_fetch
 ; dd M_Tib
 ; dd MC_STDOUT
-; dd M_fthwrite
+; dd M_fswrite
 ; dd M_drop		; drop the return value of write
 ; dd C_cr
 ; dd C_space
@@ -1861,13 +1863,13 @@ dd M_literal
 dd 1
 dd M_Wordb
 dd MC_STDOUT
-dd M_fthwrite
+dd M_fswrite
 dd M_drop		; drop the return value of write
 dd M_literal
 dd 1
 dd M_Wordb
 dd MC_STDIN
-dd M_fthread
+dd M_fsread
 dd M_drop		; drop the return value of read
 
 CENTRY "boot" C_boot 4
