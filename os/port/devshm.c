@@ -20,6 +20,7 @@ How is this different from devenv?
 
 TODO
 	needs some mechanism in devforth.c to create up->shm
+	error if iounit(0 fd) > len
 
 not doing
 	Behaves like a pipe after the current version and len are read.

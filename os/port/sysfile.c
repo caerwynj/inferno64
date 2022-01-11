@@ -145,7 +145,7 @@ fdtochan(Fgrp *f, int fd, int mode, int chkmnt, int iref)
 	lock(f);
 	if(fd<0 || f->maxfd<fd || (c = f->fd[fd])==nil) {
 		unlock(f);
-		print("fdtochan Ebadfd\n");
+		print("fdtochan Ebadfd fd %d\n", fd);
 		error(Ebadfd);
 	}
 	if(iref)
@@ -163,17 +163,17 @@ fdtochan(Fgrp *f, int fd, int mode, int chkmnt, int iref)
 		return c;
 
 	if((mode&OTRUNC) && c->mode==OREAD) {
+		print("fdtochan Ebadusefd 2\n");
 		if(iref)
 			cclose(c);
-		print("fdtochan Ebadusefd 2\n");
 		error(Ebadusefd);
 	}
 
 	if((mode&~OTRUNC) != c->mode) {
-		if(iref)
-			cclose(c);
 		print("fdtochan Ebadusefd 3 mode 0x%x mode&~OTRUNC 0x%x c->mode 0x%x\n",
 			mode, mode&~OTRUNC, c->mode);
+		if(iref)
+			cclose(c);
 		error(Ebadusefd);
 	}
 
@@ -888,15 +888,16 @@ kopen(char *path, int mode)
 	int fd;
 	Chan *c;
 
+/* if(up->pid == 23) print("kopen path %s mode 0x%ux\n", path, mode); */
 	if(waserror()){
-		DBG("kopen: namec failed on path %s\n", path);
+		print("kopen: namec failed on path %s\n", path);
 		return -1;
 	}
 
 	openmode(mode);                         /* error check only */
 	c = namec(path, Aopen, mode, 0);
 	if(waserror()){
-		DBG("kopen: newfd failed on path %s\n", path);
+		print("kopen: newfd failed on path %s\n", path);
 		cclose(c);
 		nexterror();
 	}
@@ -977,9 +978,15 @@ rread(int fd, void *p, s32 n, s64 *offp)
 	Chan *c;
 	s64 off;
 
+	if(waserror()){
+		print("rread fd %d p 0x%p n %d offp %lld fdtochan failed: %r\n", fd, p, n, offp);
+		return -1;
+	}
+
 	c = fdtochan(up->env->fgrp, fd, OREAD, 1, 1);
 
 	if(waserror()){
+		print("rread fd %d p 0x%p n %d offp %lld fdtochan failed: %r\n", fd, p, n, offp);
 		cclose(c);
 		nexterror();
 	}
@@ -1021,8 +1028,9 @@ rread(int fd, void *p, s32 n, s64 *offp)
 			nn = devtab[c->type]->read(c, p, n, c->devoffset);
 		}
 		nnn = mountfix(c, p, nn, n);
-	}else
+	}else{
 		nnn = nn = devtab[c->type]->read(c, p, n, off);
+	}
 
 	if(offp == nil || (c->qid.type & QTDIR)){
 		lock(c);
@@ -1033,6 +1041,7 @@ rread(int fd, void *p, s32 n, s64 *offp)
 
 	poperror();
 	cclose(c);
+	poperror();	/* before fdtochan */
 	return nnn;
 }
 

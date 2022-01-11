@@ -26,15 +26,12 @@ enum
 	NForthproc	= 256,
 	QMAX		= 192*1024-1,
 
-	Qtopdir		= 0,
-	Qforthdir,
-	Qnew,
-	Qfprocdir,
+	Qtopdir		= 0,	/* #f */
+	Qforthdir,	/* #f/forth */
+	Qnew,		/* #f/forth/new */
+	Qfprocdir,	/* per forth proc */
 	Qctl,
 	Qvars,
-	Qstdin,
-	Qstdout,
-	Qstderr,
 	/* Qlisten, might be good to have later on for servers */
 };
 
@@ -62,6 +59,16 @@ also, keeping Chan.aux = Proc* of the corresponding forthproc
 #define	PID(q)		((q).vers)
 #define	NOTEID(q)	((q).vers)
 
+/* TODO implement NEWPGRP */
+typedef struct Params Params;
+struct Params
+{
+	u8 newenv, newfd, newns, shmem, nodevs, redirfds;
+	s32 stdinfd, stdoutfd, stderrfd;
+	s32 *keepfds, *closefds;
+	s32 nkeepfds, nclosefds;
+};
+
 int nforthprocs = 0;
 Proc *fhead, *ftail;
 static QLock forthlock;
@@ -84,6 +91,134 @@ funlock(void)
 	qunlock(&forthlock);
 }
 
+static Params
+parseparams(char *params)
+{
+	struct Params p = {0};
+	s8 *s, *e, *end;
+	s32 i;
+
+	p.newenv = p.newfd = p.newns = 1;
+	p.shmem = p.nodevs = p.redirfds = 0;
+	p.stdinfd = 0;
+	p.stdoutfd = 1;
+	p.stderrfd = 2;
+	p.nkeepfds = p.nclosefds = 0;
+	p.keepfds = p.closefds = nil;
+	if(params == nil)
+		return p;
+	s = params;
+	end = s+strlen(params)+1;
+	while (s != nil && s < end){
+		if(cistrncmp("NEWENV", s, 6) == 0){
+			p.newenv = 1;
+			s+=6;
+		}else if(cistrncmp("FORKENV", s, 7) == 0){
+			p.newenv = 0;
+			s+=7;
+		}else if(cistrncmp("NEWFD", s, 5) == 0){
+			p.newfd = 1;
+			s+=5;
+		}else if(cistrncmp("FORKFD", s, 6) == 0){
+			p.newfd = 0;
+			s+=6;
+		}else if(cistrncmp("NEWNS", s, 5) == 0){
+			p.newns = 1;
+			s+=5;
+		}else if(cistrncmp("FORKNS", s, 6) == 0){
+			p.newns = 0;
+			s+=6;
+		}else if(cistrncmp("NEWSHMEM", s, 8) == 0){
+			p.shmem = 2;
+			s+=8;
+		}else if(cistrncmp("SHMEM", s, 5) == 0){
+			p.shmem = 1;
+			s+=5;
+		}else if(cistrncmp("NOSHMEM", s, 7) == 0){
+			p.shmem = 0;
+			s+=7;
+		}else if(cistrncmp("DEVS", s, 4) == 0){
+			p.nodevs = 0;
+			s+=4;
+		}else if(cistrncmp("NODEVS", s, 6) == 0){
+			p.nodevs = 1;
+			s+=6;
+		}else if(cistrncmp("REDIRFDS", s, 8) == 0){
+			p.redirfds = 1;
+			s += 8;
+			for(i=0; i<3; i++){
+				if(i == 0)
+					p.stdinfd = strtol(s,&e,0);
+				else if(i == 1)
+					p.stdoutfd = strtol(s,&e,0);
+				else if(i == 2)
+					p.stderrfd = strtol(s,&e,0);
+				if(s == e)
+					break;
+				s = e+1;
+			}
+		}else if(cistrncmp("KEEPFDS", s, 7) == 0){
+			s += 7;
+			p.keepfds = smalloc(up->env->fgrp->nfd*sizeof(s32));
+			for(i=0; ;i++,p.nkeepfds++){
+				if(i>=up->env->fgrp->nfd){
+					print("should not happen\n");
+					error(Etoobig);
+				}
+				p.keepfds[i] = strtol(s, &e, 0);
+				if(s == e)
+					break;
+				s = e+1;
+			}
+		}else if(cistrncmp("CLOSEFDS", s, 8) == 0){
+			s += 8;
+			p.closefds = smalloc(up->env->fgrp->nfd*sizeof(s32));
+			for(i=0; ;i++,p.nclosefds++){
+				if(i>=up->env->fgrp->nfd){
+					print("should not happen\n");
+					error(Etoobig);
+				}
+				p.closefds[i] = strtol(s, &e, 0);
+				if(s == e)
+					break;
+				s = e+1;
+			}
+		}else if(*s == ' ' || *s == '	' || *s == '\r' || *s == '\n'){
+			/* would be nice to use isspace(*s) here */
+			s++;
+		}else if(*s == '\0' || *s < 'A' || *s > 'z'){
+			/* would be nice to use isalpha(*s) here */
+			break;
+		}else{
+			print("parseparams: unknown parameter -%s- -%s- cistrncmp(\"NEWENV\", s, 6) %d %d %d\n",
+					params, s, cistrncmp("NEWENV", s, 6), cistrncmp("newenv", s, 6),
+					cistrncmp("newenv", "NEWENV", 6));
+			error(Ebadctl);
+		}
+	}
+	if(1 == 1){
+		print("parseparams newenv %d newfd %d newns %d shmem %d nodevs %d\n"
+				"	redirfds %d %d %d\n",
+				p.newenv, p.newfd, p.newns, p.shmem, p.nodevs,
+				p.stdinfd, p.stdoutfd, p.stderrfd);
+		if(p.nclosefds > 0){
+			print("	closefds ");
+			for(i = 0; i < p.nclosefds; i++){
+				print(" %d", p.closefds[i]);
+			}
+			print("\n");
+		}
+		if(p.nkeepfds > 0){
+			print("	keepfds ");
+			for(i = 0; i < p.nkeepfds; i++){
+				print(" %d", p.keepfds[i]);
+			}
+			print("\n");
+		}
+	}
+	return p;
+}
+
 void
 loadforthdictionary(u8 *fmem)
 {
@@ -96,15 +231,15 @@ loadforthdictionary(u8 *fmem)
 	h = fmem+DICTIONARY;
 	dtop = nil;
 	vh = fmem+WORDBEND+8;
-	print("loadforthdictionary fmem 0x%zx h 0x%zx dtop 0x%zx vh 0x%zx\n"
-			"	(intptr*)(fmem + DTOP) 0x%zx *(intptr*)(fmem + DTOP) 0x%zx\n"
-			"	RSTACK 0x%zx (intptr*)(fmem + RSTACK) 0x%zx\n"
-			"	PSTACK 0x%zx (intptr*)(fmem + PSTACK) 0x%zx\n"
-			"	FORTHEND 0x%zx (intptr*)(fmem + FORTHEND) 0x%zx\n",
-			fmem, (intptr)h, (intptr)dtop, (intptr)vh,
+	DBG("loadforthdictionary fmem 0x%p h 0x%p dtop 0x%p vh 0x%p\n"
+			"	(intptr*)(fmem + DTOP) 0x%p *(intptr*)(fmem + DTOP) 0x%zx\n"
+			"	PSTACK 0x%p (intptr*)(fmem + PSTACK) 0x%p\n"
+			"	RSTACK 0x%p (intptr*)(fmem + RSTACK) 0x%p\n"
+			"	FORTHEND 0x%p (intptr*)(fmem + FORTHEND) 0x%p\n",
+			fmem, h, dtop, vh,
 			(intptr*)(fmem + DTOP), *(intptr*)(fmem + DTOP),
-			RSTACK, (intptr*)(fmem + RSTACK),
 			PSTACK, (intptr*)(fmem + PSTACK),
+			RSTACK, (intptr*)(fmem + RSTACK),
 			FORTHEND, (intptr*)(fmem + FORTHEND));
 	for(i=0; i < nelem(fentries); i++){
 		f = &fentries[i];
@@ -114,10 +249,10 @@ loadforthdictionary(u8 *fmem)
 			dtop = h;
 			h += sizeof(intptr);
 			*h = f->hdr.len;
-			DBG("len 0x%zx: 0x%d ", h, *h);
+			DBG("len 0x%p: 0x%d ", h, *h);
 			h++;
 			strncpy((s8*)h, f->hdr.name, f->hdr.len);
-			DBG("name 0x%zx: ", h);
+			DBG("name 0x%p: ", h);
 			for(n = 0; n < f->hdr.len; n++){
 				DBG("%c", *(h+n));
 			}
@@ -126,18 +261,18 @@ loadforthdictionary(u8 *fmem)
 				h += 8-((f->hdr.len+1)%8);
 			}
 			*(intptr*)h = (intptr)f->hdr.cfa;
-			DBG(" cfa 0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)f->hdr.cfa);
+			DBG(" cfa 0x%p: 0x%zx 0x%p\n", h, *(intptr*)h, f->hdr.cfa);
 			h += sizeof(intptr);
 		}else if(f->type == IHeader){
 			*(intptr*)h = (intptr)dtop;
-			DBG("IHeader 0x%zx: 0x%zx 0x%zx ", h, *(intptr*)h, dtop);
+			DBG("IHeader 0x%p: 0x%zx 0x%p ", h, *(intptr*)h, dtop);
 			dtop = h;
 			h += sizeof(intptr);
 			*h = f->hdr.len | (1<<7);
-			DBG("len 0x%zx: 0x%d ", h, *h);
+			DBG("len 0x%p: 0x%d ", h, *h);
 			h++;
 			strncpy((s8*)h, f->hdr.name, f->hdr.len);
-			DBG("name 0x%zx: ", h);
+			DBG("name 0x%p: ", h);
 			for(n = 0; n < f->hdr.len; n++){
 				DBG("%c", *(h+n));
 			}
@@ -146,21 +281,21 @@ loadforthdictionary(u8 *fmem)
 				h += 8-((f->hdr.len+1)%8);
 			}
 			*(intptr*)h = (intptr)f->hdr.cfa;
-			DBG(" cfa 0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)f->hdr.cfa);
+			DBG(" cfa 0x%p: 0x%zx 0x%p\n", h, *(intptr*)h, f->hdr.cfa);
 			h += sizeof(intptr);
 		}else if(f->type == Absolute){
 			*(intptr*)h = f->p;
-			DBG("	0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)f->p);
+			DBG("	0x%p: 0x%zx 0x%zx\n", h, *(intptr*)h, f->p);
 			h += sizeof(intptr);
 		}else if(f->type == FromH0){
 			*(intptr*)h = (intptr)fmem+DICTIONARY+f->p;
-			DBG("	0x%zx: 0x%zx 0x%zx src %s\n", h, *(intptr*)h, (intptr)fmem+DICTIONARY+f->p, f->src);
+			DBG("	0x%p: 0x%zx 0x%p src %s\n", h, *(intptr*)h, fmem+DICTIONARY+f->p, f->src);
 			h += sizeof(intptr);
 		}else if(f->type == FromV0){
 			*(intptr*)h = (intptr)fmem+WORDBEND+8+f->p; /* pfa with the address where the value is */
 			*(intptr*)vh = 0; /* actual value */
-			DBG("	0x%zx: 0x%zx 0x%zx\n", h, *(intptr*)h, (intptr)fmem+WORDBEND+8+f->p);
-			DBG("	0x%zx: 0x%zx 0x%zx\n", vh, *(intptr*)vh, 0);
+			DBG("	0x%p: 0x%zx 0x%p\n", h, *(intptr*)h, fmem+WORDBEND+8+f->p);
+			DBG("	0x%p: 0x%zx 0\n", vh, *(intptr*)vh);
 			h += sizeof(intptr);	/* space for pfa with the variable address */
 			vh += sizeof(intptr);	/* space for the actual value */
 		}else if(f->type == Chars){
@@ -174,17 +309,17 @@ loadforthdictionary(u8 *fmem)
 	*(intptr*)(fmem + HERE) = (intptr)h;
 	*(intptr*)(fmem + DTOP) = (intptr)dtop;
 	*(intptr*)(fmem + VHERE) = (intptr)vh;
-	print("loadforthdictionary fmem 0x%zx h 0x%zx dtop 0x%zx vh 0x%zx\n"
-			"	(intptr*)(fmem + DTOP) 0x%zx *(intptr*)(fmem + DTOP) 0x%zx\n"
-			"	RSTACK 0x%zx (intptr*)(fmem + RSTACK) 0x%zx\n"
-			"	PSTACK 0x%zx (intptr*)(fmem + PSTACK) 0x%zx\n"
-			"	FORTHEND 0x%zx (intptr*)(fmem + FORTHEND) 0x%zx\n",
-			fmem, (intptr)h, (intptr)dtop, (intptr)vh,
+	print("loadforthdictionary fmem 0x%p h 0x%p dtop 0x%p vh 0x%p\n"
+			"	(intptr*)(fmem + DTOP) 0x%p *(intptr*)(fmem + DTOP) 0x%zx\n"
+			"	PSTACK 0x%p (intptr*)(fmem + PSTACK) 0x%p\n"
+			"	RSTACK 0x%p (intptr*)(fmem + RSTACK) 0x%p\n"
+			"	FORTHEND 0x%p (intptr*)(fmem + FORTHEND) 0x%p\n",
+			fmem, h, dtop, vh,
 			(intptr*)(fmem + DTOP), *(intptr*)(fmem + DTOP),
-			RSTACK, (intptr*)(fmem + RSTACK),
 			PSTACK, (intptr*)(fmem + PSTACK),
+			RSTACK, (intptr*)(fmem + RSTACK),
 			FORTHEND, (intptr*)(fmem + FORTHEND));
-	b = D2B(b,fmem);
+	D2B(b, fmem);
 	print("Bhdr b 0x%p b->magic 0x%x b->size %zd b->allocpc 0x%zx\n",
 			b, b->magic, b->size, b->allocpc);
 }
@@ -206,7 +341,11 @@ forthentry(void *fmem)
 		poperror();
 	}else
 		forthmain((u8*)fmem);
-print("after forthmain\n");
+	print("after forthmain\n");
+/*for(;;){
+up->state = Moribund;
+sched();
+}*/
 	free(fmem);
 
 	flock();
@@ -219,27 +358,18 @@ print("after forthmain\n");
 	}
 	nforthprocs--;
 	funlock();
-	qfree(up->frq);
-	qfree(up->fwq);
-	qfree(up->ferrq);
 	print("before pexit\n");
 	pexit("exit", 0);
 }
 
-Proc *
-newforthproc(Chan *cin, Chan *cout, Chan *cerr)
+void
+startforthproc(Proc *p, Params *params)
 {
-	Proc *p;
 	Pgrp *pg;
 	Fgrp *fg;
 	Egrp *eg;
-	s32 slot;
-	char path[64];
-
-	while((p = newproc()) == nil){
-/* TODO		freebroken(); */
-		resrcwait("no procs for kproc");
-	}
+	s32 i, j;
+	Chan *c;
 
 	qlock(&p->debug);
 	p->psstate = 0;
@@ -250,53 +380,100 @@ newforthproc(Chan *cin, Chan *cout, Chan *cerr)
 
 	kstrdup(&p->env->user, up->env->user);
 
+	if(params->newenv == 1)
+		eg = newegrp();
+	else{
+		eg = up->env->egrp;
+		if(eg != nil)
+			incref(eg);
+	}
+	p->env->egrp = eg;
+
 	pg = newpgrp();
-	pgrpcpy(pg, up->env->pgrp);
+	if(params->newns == 0)
+		pgrpcpy(pg, up->env->pgrp);
 	if(pg == nil)
 		panic("newforthproc: nil process group\n");
+	pg->nodevs = params->nodevs;
 	p->env->pgrp = pg;
+
+	/*
+		shmem = 0, NOSHMEM no shared memory
+		shmem = 1, SHMEM share memory
+TODO		shmem = 2, NEWSHMEM new shared memory
+	 */
+	if(params->shmem == 0){
+		p->shm = nil;
+	}else if(params->shmem == 1){
+		p->shm = up->shm;
+		incref(up->shm);
+	}
 
 	fg = dupfgrp(up->env->fgrp);
 	if(fg == nil)
 		panic("newforthproc: nil file descriptor group\n");
 	p->env->fgrp = fg;
-	fg->fd[0]->mode = up->env->fgrp->fd[0]->mode;
-	fg->fd[1]->mode = up->env->fgrp->fd[1]->mode;
-	fg->fd[2]->mode = up->env->fgrp->fd[2]->mode;
-	cclose(fg->fd[0]);
-	cclose(fg->fd[1]);
-	cclose(fg->fd[2]);
-	cin->mode = up->env->fgrp->fd[0]->mode;
-	cout->mode = up->env->fgrp->fd[1]->mode;
-	cerr->mode = up->env->fgrp->fd[2]->mode;
-		slot = procindex(p->pid);
-		if(slot < 0)
-			panic("forthopen");
-	mkqid(&cin->qid, Qstdin|((slot+1)<<QSHIFT), p->pid, QTFILE);
-	mkqid(&cout->qid, Qstdout|((slot+1)<<QSHIFT), p->pid, QTFILE);
-	mkqid(&cerr->qid, Qstderr|((slot+1)<<QSHIFT), p->pid, QTFILE);
-	snprint(path, 64, "#f/forth/%ud/stdin", p->pid);
-	cin->path = newpath(path);
-	fg->fd[0] = cin;
-	snprint(path, 64, "#f/forth/%ud/stdout", p->pid);
-	cout->path = newpath(path);
-	fg->fd[1] = cout;
-	snprint(path, 64, "#f/forth/%ud/stderr", p->pid);
-	cerr->path = newpath(path);
-	fg->fd[2] = cerr;
 
-	/* need a waserror() around these */
-	/* not bothering with kick() functions */
-	p->frq = qopen(QMAX, Qcoalesce, nil, nil);
-	p->fwq = qopen(QMAX, Qcoalesce, nil, nil);
-	p->ferrq = qopen(QMAX, Qcoalesce, nil, nil);
-	if(p->frq == nil || p->fwq == nil || p->ferrq == nil)
-		error(Enomem);
+	if(params->redirfds == 1){
+		/* similar to kdup() */
+		if(params->stdinfd != 0){
+			fdclose(fg, 0, 0);
+			c = fg->fd[params->stdinfd];
+			if(c == nil)
+				error(Ebadfd);
+			incref(c);
+			fg->fd[0] = c;
+			fg->flag[0] = fg->flag[params->stdinfd];
+print("stdinfd devtab[c->type]->dc %c c 0x%p chanpath(c) %s c->aux 0x%p\n", devtab[c->type]->dc, c, chanpath(c), c->aux);
+		}
+		if(params->stdoutfd != 1){
+			fdclose(fg, 1, 0);
+			c = fg->fd[params->stdoutfd];
+			if(c == nil)
+				error(Ebadfd);
+			incref(c);
+			fg->fd[1] = c;
+			fg->flag[1] = fg->flag[params->stdoutfd];
+		}
+		if(params->stderrfd != 2){
+			fdclose(fg, 2, 0);
+			c = fg->fd[params->stderrfd];
+			if(c == nil)
+				error(Ebadfd);
+			incref(c);
+			fg->fd[2] = c;
+			fg->flag[2] = fg->flag[params->stderrfd];
+		}
+	}
+	if(params->nkeepfds > 0){
+		/* close all except those in keepfds */
+		for(i=0; i<fg->nfd; i++){
+			if(fg->fd[i] == nil)
+				continue;
+			for(j=0; j<params->nkeepfds; j++)
+				if(params->keepfds[j]==i)
+					continue;
+			fdclose(fg, i, 0);
+		}
+	}
+	if(params->nclosefds > 0){
+		/* close those in closefds */
+		for(i=0; i<fg->nfd; i++){
+			if(fg->fd[i] == nil)
+				continue;
+			for(j=0; j<params->nclosefds; j++)
+				if(params->closefds[j]==i)
+					fdclose(fg, i, 0);
+		}
+	}
 
-	eg = up->env->egrp;
-	if(eg != nil)
-		incref(eg);
-	p->env->egrp = eg;
+	if(1 == 1){
+		for(i=0; i<fg->nfd; i++){
+			if(fg->fd[i] == nil)
+				continue;
+			print("fd %d chanpath(c) %s\n", i, chanpath(fg->fd[i]));
+		}
+	}
 
 	p->nnote = 0;
 	p->notify = nil;
@@ -309,7 +486,6 @@ newforthproc(Chan *cin, Chan *cout, Chan *cerr)
 	p->hang = 0;
 	p->kp = 0;
 
-	/* TODO align fmem to a page boundary */
 	p->fmem = mallocalign(FORTHHEAPSIZE, BY2PG, 0, 0);
 	if(p->fmem == nil)
 		panic("newforthproc p->fmem == nil\n");
@@ -317,16 +493,6 @@ newforthproc(Chan *cin, Chan *cout, Chan *cerr)
 	/* store the start address at that address too - magic check */
 	((intptr*)p->fmem)[0] = (intptr)p->fmem;	/* heap start */
 	((intptr*)p->fmem)[1] = (intptr)p->fmem+FORTHHEAPSIZE-1; /* heap end */
-
-	/* already under flock() */
-	if(fhead == nil){
-		fhead = ftail = p;
-	}else{
-		ftail->fnext = p;
-		p->fprev = ftail;
-		ftail = p;
-	}
-	nforthprocs++;
 
 /*	p->kpfun = func;
 	p->kparg = arg;
@@ -341,11 +507,12 @@ newforthproc(Chan *cin, Chan *cout, Chan *cerr)
 /*	cycles(&p->kentry);
 	p->pcycles = -p->kentry;*/
 
+	p->fstarted = 1;
 	qunlock(&p->debug);
 	p->psstate = nil;
 
+	print("startforthproc: ready p->pid %d\n", p->pid);
 	ready(p);
-	return p;
 }
 
 /*
@@ -371,7 +538,7 @@ forthgen(Chan *c, char *name, Dirtab *, int, int s, Dir *dp)
 
 	DBG("forthgen c->path %s name %s s %d mode 0x%ux c->qid.path 0x%zux\n"
 			"	slot %d qid %d c->qid.vers %d c->qid.type %d 0x%ux\n"
-			"	c->aux 0x%zx c->type 0x%x\n",
+			"	c->aux 0x%p c->type 0x%x\n",
 			chanpath(c), name, s, c->mode, c->qid.path, SLOT(c->qid),
 			QID(c->qid), c->qid.vers, c->qid.type, c->qid.type,
 			c->aux, c->type);
@@ -487,18 +654,6 @@ forthgen(Chan *c, char *name, Dirtab *, int, int s, Dir *dp)
 		mkqid(&q, path|Qvars, c->qid.vers, QTFILE);
 		devdir(c, q, "vars", 0, p->env->user, 0600, dp);
 		break;
-	case 2:
-		mkqid(&q, path|Qstdin, c->qid.vers, QTFILE);
-		devdir(c, q, "stdin", 0, p->env->user, 0600, dp);
-		break;
-	case 3:
-		mkqid(&q, path|Qstdout, c->qid.vers, QTFILE);
-		devdir(c, q, "stdout", 0, p->env->user, 0600, dp);
-		break;
-	case 4:
-		mkqid(&q, path|Qstderr, c->qid.vers, QTFILE);
-		devdir(c, q, "stderr", 0, p->env->user, 0600, dp);
-		break;
 	default:
 		return -1;
 	}
@@ -513,6 +668,12 @@ forthattach(char *spec)
 	DBG("forthattach spec %s\n", spec);
 	c = devattach('f', spec);
 	mkqid(&c->qid, Qtopdir, 0, QTDIR);
+	DBG("forthattach c->path %s mode 0x%ux\n"
+		"	c->qid.path 0x%zux slot %d qid %d c->qid.vers %d c->qid.type %d 0x%ux\n"
+		"	c->aux 0x%p c->type 0x%ux devtab[c->type]->dc %c\n",
+		chanpath(c), c->mode, c->qid.path, SLOT(c->qid),
+		QID(c->qid), c->qid.vers, c->qid.type, c->qid.type,
+		c->aux, c->type, devtab[c->type]->dc);
 	return c;
 }
 
@@ -524,34 +685,33 @@ forthwalk(Chan *c, Chan *nc, char **name, s32 nname)
 	s32 slot;
 
 	DBG("forthwalk c->path %s mode 0x%ux\n"
-		"	c->qid.path 0x%zux slot %d qid %d c->qid.vers %d c->qid.type %d 0x%ux\n"
-		"	c->aux 0x%zx c->type 0x%ux\n",
+		"		c->qid.path 0x%zux slot %d qid %d c->qid.vers %d c->qid.type %d 0x%ux\n"
+		"		c->aux 0x%p c->type 0x%ux\n",
 		chanpath(c), c->mode, c->qid.path, SLOT(c->qid),
 		QID(c->qid), c->qid.vers, c->qid.type, c->qid.type,
 		c->aux, c->type);
+	DBG("	nname %d\n", nname);
 	if(debug == 1)
-		for(int i = 0; i < nname; i++){
+		for(int i = 0; i < nname; i++)
 			print("	i %d name %s\n", i, name[i]);
-		}
-	if(QID(c->qid) >= Qfprocdir){
-		slot = procindex(c->qid.vers);
-		if(slot < 0){
-			print("forthopen c->qid.type & QTDIR slot < 0 -- should not be happening\n");
-			error(Eprocdied);
-		}
-		c->aux = proctab(slot);
-	}else{
-		c->aux = nil;
-	}
-	DBG("forthwalk c->path %s mode 0x%ux\n"
-		"	c->qid.path 0x%zux slot %d qid %d c->qid.vers %d c->qid.type %d 0x%ux\n"
-		"	c->aux 0x%zx\n",
-		chanpath(c), c->mode, c->qid.path, SLOT(c->qid),
-		QID(c->qid), c->qid.vers, c->qid.type, c->qid.type,
-		c->aux);
+
+	if(QID(c->qid) >= Qfprocdir && c->aux == nil)
+		print("c->aux is nil - should not be happening\n");
+
 	wq = devwalk(c, nc, name, nname, nil, 0, forthgen);
+
+	/* devwalk() clones c to nc and wq->clone->aux.
+		It sets the wq->clone->qid to the qid that matches a forthgen() entry.
+		forthgen() sets up the Dir (which does not include c->aux)
+		Hence,
+			when walking from #f/forth/pid to #f/forth/pid/file, wq->clone->aux is taken from c
+			when walking from #f or #f/forth to #f/forth/pid or below, wq->clone->aux = nil
+		setting wq->clone->aux to the corresponding forth Proc* when the walk is to #f/forth/pid and below
+	 */
 	if(wq != nil && wq->clone != nil && wq->clone != c){
 		if(QID(wq->clone->qid) >= Qfprocdir){
+			if(wq->clone->aux != nil)
+				return wq;
 			slot = procindex(wq->clone->qid.vers);
 			if(slot < 0){
 				print("forthopen wq->clone->qid.type & QTDIR slot < 0 -- should not be happening\n");
@@ -564,7 +724,7 @@ forthwalk(Chan *c, Chan *nc, char **name, s32 nname)
 		DBG("forthwalk wq->clone->path %s mode 0x%ux\n"
 			"	wq->clone->qid.path 0x%zux slot %d qid %d wq->clone->qid.vers %d\n"
 			"	wq->clone->qid.type %d 0x%ux\n"
-			"	wq->clone->aux 0x%zx\n",
+			"	wq->clone->aux 0x%p\n",
 			chanpath(nc), wq->clone->mode,
 			wq->clone->qid.path, SLOT(wq->clone->qid), QID(wq->clone->qid), wq->clone->qid.vers,
 			wq->clone->qid.type, wq->clone->qid.type,
@@ -615,18 +775,16 @@ forthopen(Chan *c, u32 omode0)
 	Chan *tc;
 	u32 pid, omode;
 	s32 slot;
-	Proc *f;
-	Chan *cin, *cout, *cerr;
 
 	DBG("forthopen c->path %s mode 0x%ux omode0 0x%ux\n"
 		"	c->qid.path 0x%zux slot %d qid %d c->qid.vers %d c->qid.type %d 0x%ux\n"
-		"	c->aux 0x%zx\n",
+		"	c->aux 0x%p\n",
 		chanpath(c), c->mode, omode0, c->qid.path, SLOT(c->qid),
 		QID(c->qid), c->qid.vers, c->qid.type, c->qid.type,
 		c->aux);
 	if(c->qid.type & QTDIR){
 		DBG("forthopen c->qid.type & QTDIR c->path %s mode 0x%ux omode0 0x%ux\n"
-			"	c->qid.path 0x%zux slot %d qid %d c->qid.vers %d c->qid.type %d 0x%ux c->aux 0x%zx\n",
+			"	c->qid.path 0x%zux slot %d qid %d c->qid.vers %d c->qid.type %d 0x%ux c->aux 0x%p\n",
 			chanpath(c), c->mode, omode0, c->qid.path, SLOT(c->qid),
 			QID(c->qid), c->qid.vers, c->qid.type, c->qid.type, c->aux);
 		tc = devopen(c, omode0, nil, 0, forthgen);
@@ -639,7 +797,7 @@ forthopen(Chan *c, u32 omode0)
 		}
 		DBG("forthopen tc->qid.type & QTDIR tc->path %s mode 0x%ux omode0 0x%ux\n"
 			"	tc->qid.path 0x%zux slot %d qid %d tc->qid.vers %d tc->qid.type %d 0x%ux\n"
-			"	tc->qid.type %d 0x%ux tc->aux 0x%zx\n",
+			"	tc->qid.type %d 0x%ux tc->aux 0x%p\n",
 			chanpath(tc), tc->mode, omode0, tc->qid.path, SLOT(tc->qid),
 			QID(tc->qid), tc->qid.vers, tc->qid.type, tc->qid.type,
 			tc->qid.type & QTDIR, tc->qid.type & QTDIR, tc->aux);
@@ -652,26 +810,33 @@ forthopen(Chan *c, u32 omode0)
 		nexterror();
 	}
 	if(QID(c->qid) == Qnew){
-		/* TODO set path */
-		cin = devclone(c);
-		cout = devclone(c);
-		cerr = devclone(c);
-		DBG("forthopen QID(c->qid) == Qnew c->path %s cin->path %s\n",
-				chanpath(c), chanpath(cin));
-		f = newforthproc(cin, cout, cerr);
-		c->aux = cin->aux = cout->aux = cerr->aux = f;
-		if(f == nil)
-			error(Enodev);
-		slot = procindex(f->pid);
+		while((p = newproc()) == nil){
+			/* TODO freebroken(); */
+			resrcwait("no procs for kproc");
+		}
+		p->fstarted = 0; /* until the pctl message comes through */
+		c->aux = p;
+		kstrdup(&p->env->user, up->env->user);
+
+		if(fhead == nil){
+			fhead = ftail = p;
+		}else{
+			ftail->fnext = p;
+			p->fprev = ftail;
+			ftail = p;
+		}
+		nforthprocs++;
+
+		slot = procindex(p->pid);
 		if(slot < 0)
 			panic("forthopen");
-		mkqid(&c->qid, Qctl|(slot+1)<<QSHIFT, f->pid, QTFILE);
+		mkqid(&c->qid, Qctl|(slot+1)<<QSHIFT, p->pid, QTFILE);
 		char path[64];
-		snprint(path, 64, "#f/forth/%ud/ctl", f->pid);
+		snprint(path, 64, "#f/forth/%ud/ctl", p->pid);
 		free(c->path);
 		c->path = newpath(path);
-		DBG("forthopen: new proc pid %d slot %d SLOT(c->qid) %d chanpath(c) %s\n",
-				f->pid, slot, SLOT(c->qid), chanpath(c));
+		print("forthopen: new proc pid %d slot %d SLOT(c->qid) %d chanpath(c) %s c->aux 0x%p\n",
+				p->pid, slot, SLOT(c->qid), chanpath(c), c->aux);
 	}
 	funlock();
 	poperror();
@@ -679,6 +844,7 @@ forthopen(Chan *c, u32 omode0)
 	p = proctab(SLOT(c->qid));
 	eqlock(&p->debug);
 	if(waserror()){
+		print("forthopen: waserror() loop\n");
 		qunlock(&p->debug);
 		nexterror();
 	}
@@ -699,10 +865,6 @@ forthopen(Chan *c, u32 omode0)
 		if(p->kp || p->privatemem)
 			error(Eperm);
 		break;
-	case Qstdin:
-	case Qstdout:
-	case Qstderr:
-		break;
 	default:
 		print("forthopen error Egreg %#ux\n", QID(c->qid));
 		error(Egreg);
@@ -717,18 +879,12 @@ forthopen(Chan *c, u32 omode0)
 	c->qid.vers = pid;
 
 	tc = devopen(c, omode, 0, 0, forthgen);
-	if(waserror()){
-		print("forthopen cclose(tc) waserror() loop\n");
-		cclose(tc);
-		nexterror();
-	}
-	poperror();
 
 	qunlock(&p->debug);
 	poperror(); /* eqlock */
 	DBG("forthopen returning tc->path %s mode 0x%ux omode0 0x%ux\n"
 			"	tc->qid.path 0x%zux slot %d qid %d tc->qid.vers %d tc->qid.type %d 0x%ux\n"
-			"	tc->aux 0x%zx\n",
+			"	tc->aux 0x%p\n",
 			chanpath(c), tc->mode, omode0, tc->qid.path, SLOT(tc->qid),
 			QID(tc->qid), tc->qid.vers, tc->qid.type, tc->qid.type,
 			tc->aux);
@@ -744,6 +900,25 @@ forthclose(Chan *c)
 	return;
 }
 
+/*
+	DBG("forthread c->path %s up->pid %d\n", chanpath(c), up->pid);
+	DBG("forthread c->path %s mode 0x%ux\n"
+			"	c->qid.path 0x%zux slot %d qid %d c->qid.vers %d c->qid.type %d 0x%ux\n"
+			"	c->aux 0x%p\n",
+			chanpath(c), c->mode, c->qid.path, SLOT(c->qid),
+			QID(c->qid), c->qid.vers, c->qid.type, c->qid.type,
+			c->aux);
+	DBG("forthread c->path %s f->pid %d p->pid %d\n", chanpath(c), f->pid, p->pid);
+		str[rv]='\0';
+		rv = readstr(0, buf, rv, str);
+		DBG("forthread c->path %s up->pid %d f 0x%zx f->frq 0x%zx rv %d buf %s\n",
+				chanpath(c), up->pid, f, f->frq, rv, buf);
+		str[rv]='\0';
+		rv = readstr(off, buf, rv, str);
+		DBG("forthread c->path %s up->pid %d f 0x%zx rv %d buf %s\n",
+			chanpath(c), up->pid, f, rv, buf);
+	DBG("forthread c->path %s returning rv %d bytes f->pid %d\n", chanpath(c), rv, f->pid);
+ */
 s32
 forthread(Chan *c, void *buf, s32 n, s64 off)
 {
@@ -751,19 +926,11 @@ forthread(Chan *c, void *buf, s32 n, s64 off)
 	char str[16] = "";
 	s32 rv = 0;
 	
-	DBG("forthread c->path %s up->pid %d\n", chanpath(c), up->pid);
-	DBG("forthread c->path %s mode 0x%ux\n"
-			"	c->qid.path 0x%zux slot %d qid %d c->qid.vers %d c->qid.type %d 0x%ux\n"
-			"	c->aux 0x%zx\n",
-			chanpath(c), c->mode, c->qid.path, SLOT(c->qid),
-			QID(c->qid), c->qid.vers, c->qid.type, c->qid.type,
-			c->aux);
 	if(c->qid.type & QTDIR)
 		return devdirread(c, buf, n, nil, 0, forthgen);
 
 	f = c->aux;
 	p = proctab(SLOT(c->qid));
-	DBG("forthread c->path %s f->pid %d p->pid %d\n", chanpath(c), f->pid, p->pid);
 	if(p->pid != PID(c->qid)){
 		print("forthread returning nil p->pid != PID(c->qid) c->path %s"
 				"	up->pid %d p->pid %d PID(c->qid) %d\n",
@@ -776,59 +943,45 @@ forthread(Chan *c, void *buf, s32 n, s64 off)
 		return readstr(off, buf, n, nil);
 	}
 
-/*	eqlock(&p->debug);
-	if(waserror()){
-		qunlock(&p->debug);
-		nexterror();
-	}*/
+	DBG("forthread c->path %s f->pid %d\n", chanpath(c), f->pid);
 	switch(QID(c->qid)){
 	case Qctl:
 		snprint(str, 16, "%d", p->pid);
 		rv = readstr(off, buf, n, str);
+		str[rv]='\0';
+		DBG("forthread rv %d buf %s\n", rv, buf);
 		break;
 	case Qvars: /* TODO */
 		error(Ebadarg);
-	case Qstdin:
-		rv = qread(f->frq, buf, n);
-/*		str[rv]='\0';
-		rv = readstr(0, buf, rv, str);
-		DBG("forthread c->path %s up->pid %d f 0x%zx f->frq 0x%zx rv %d buf %s\n",
-				chanpath(c), up->pid, f, f->frq, rv, buf); */
-		break;
-	case Qstdout:
-		rv = qread(f->fwq, buf, n);
-/*		str[rv]='\0';
-		rv = readstr(off, buf, rv, str);
-		DBG("forthread c->path %s up->pid %d f 0x%zx rv %d buf %s\n",
-			chanpath(c), up->pid, f, rv, buf); */
-		break;
-	case Qstderr:
-		rv = qread(f->ferrq, buf, n);
-		break;
 	default:
 		print("unknown qid in forthread\n");
 		error(Egreg);
 	}
 
-/*	qunlock(&p->debug);
-	poperror();*/
-	DBG("forthread c->path %s returning rv %d bytes f->pid %d\n", chanpath(c), rv, f->pid);
 	return rv;
 }
 
+/*
+	DBG("forthwrite c->path %s up->pid %d\n", chanpath(c), up->pid);
+	DBG("forthwrite c->path %s mode 0x%ux\n"
+			"	c->qid.path 0x%zux slot %d qid %d c->qid.vers %d c->qid.type %d 0x%ux\n"
+			"	c->aux 0x%p\n",
+			chanpath(c), c->mode, c->qid.path, SLOT(c->qid),
+			QID(c->qid), c->qid.vers, c->qid.type, c->qid.type,
+			c->aux);
+		DBG("forthwrite c->path %s up->pid %d f 0x%p f->frq 0x%p n %d buf %s\n",
+				chanpath(c), up->pid, f, f->frq, n, buf);
+		((char*)buf)[n] = '\0';
+		DBG("forthwrite c->path %s up->pid %d n %d buf %s\n",
+				chanpath(c), up->pid, n, buf);
+ */
 static s32
 forthwrite(Chan *c, void *buf, s32 n, s64)
 {
 	Proc *p, *f;
 	s32 rv = 0;
+	Params params;
 
-	DBG("forthwrite c->path %s up->pid %d\n", chanpath(c), up->pid);
-	DBG("forthwrite c->path %s mode 0x%ux\n"
-			"	c->qid.path 0x%zux slot %d qid %d c->qid.vers %d c->qid.type %d 0x%ux\n"
-			"	c->aux 0x%zx\n",
-			chanpath(c), c->mode, c->qid.path, SLOT(c->qid),
-			QID(c->qid), c->qid.vers, c->qid.type, c->qid.type,
-			c->aux);
 	if(c->qid.type & QTDIR)
 		return devdirread(c, buf, n, nil, 0, forthgen);
 
@@ -847,38 +1000,24 @@ forthwrite(Chan *c, void *buf, s32 n, s64)
 		error(Eprocdied);
 	}
 
-/*	eqlock(&p->debug);
-	if(waserror()){
-		qunlock(&p->debug);
-		nexterror();
-	}*/
+	DBG("forthwrite c->path %s f->pid %d\n", chanpath(c), f->pid);
 	switch(QID(c->qid)){
 	case Qctl:
-		print("forthwrite: writing to Qctl, ignored\n");
+		if(f->fstarted == 0){
+			/* pctl message */
+			((char*)buf)[n] = '\0';
+			DBG("forthwrite n %d buf %s\n", n, buf);
+			params = parseparams(buf);
+			startforthproc(f, &params);
+		}else
+			error(Ebadctl);
 		break;
 	case Qvars: /* TODO */
 		error(Ebadarg);
-	case Qstdin:
-		((char*)buf)[n] = '\0';
-		DBG("forthwrite c->path %s up->pid %d f 0x%zx f->frq 0x%zx n %d buf %s\n",
-				chanpath(c), up->pid, f, f->frq, n, buf);
-		rv = qwrite(f->frq, buf, n);
-		DBG("forthwrite after qwrite\n");
-		break;
-	case Qstdout:
-		rv = qwrite(f->fwq, buf, n);
-		break;
-	case Qstderr:
-		rv = qwrite(f->ferrq, buf, n);
-		break;
 	default:
 		print("unknown qid in forthwriten");
 		error(Egreg);
 	}
-
-/*	qunlock(&p->debug);
-	poperror();*/
-	DBG("forthwrite written rv %d out of %d bytes\n", rv, n);
 	return rv;
 }
 

@@ -596,7 +596,7 @@ struct Proc
 	char	*kstack;	/* known to l.s */
 	Mach	*mach;		/* machine running this proc */
 	char	*text;
-	char	*user;
+	char	*user;		/* inferno uses Osenv.user */
 
 	char	*args;
 	int	nargs;		/* number of bytes of args */
@@ -750,11 +750,11 @@ struct Proc
  	int		dbgstop;		/* don't run this kproc */
 
 	/* forth specific fields */
-	Proc	*fprev, *fnext;
-	void	*fmem;
-	Queue	*frq, *fwq, *ferrq;	/* forth read, write and error queue */
+	Proc	*fprev, *fnext;	/* forth processes linked list */
+	void	*fmem;			/* forth process memory - sandboxed except for macro primitives */
 	void	*shm;		/* for devshm */
 	void	*readyfds;	/* for devready.c */
+	u8		fstarted;	/* 0 while waiting for the pctl message */
 };
 
 enum

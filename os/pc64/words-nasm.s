@@ -1549,7 +1549,7 @@ dd M_exitcolon
 CIENTRY "s\"" CI_sdouble_quote 2	; add the string from the input stream to the dictionary as (sliteral) count string - at run-time puts the ( -- addr n) of the counted string on the stack.
 dd C_sliteral
 dd M_exitcolon
-CIENTRY ".\"" CI_dotstr 2	; do what s" does and then add a type to the dictionary to print that string
+CIENTRY ".\"" CI_dotstr 2	; do what s" does and then add a type word to the dictionary to print that string
 dd C_sliteral
 dd M_literal
 dd C_type

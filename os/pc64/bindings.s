@@ -109,24 +109,43 @@ TEXT	fsclose(SB), 1, $16	/* ( fd -- n ) */
 	ADDQ $16, SP
 	NEXT
 
-TEXT	fsread(SB), 1, $32	/* ( n a fd -- n2 ) */
+/*
+ * no link register in amd64
+ * 3 arguments for kwrite = 24 bytes
+ * 1 local for storing UP = 8 bytes
+ * 1 local for storing fd
+ * Hence, need 40 bytes on the stack
+ * if fd == 0 and read return value == 0 == End of file, terminate
+ */
+TEXT	fsread(SB), 1, $40	/* ( n a fd -- n2 ) */
 	PUSH(TOP)
 	MOVQ 16(PSP), TOP
 	MOVQ 8(PSP), CX
 	PUSH(TOP)
 	MOVQ CX, TOP	/* ( n a fd -- n a fd n a ) */
 
-	CALL validatebuffer(SB)
+	CALL validatebuffer(SB)	/* ( n a fd ) */
 
+	MOVQ TOP, 32(SP)	/* storing the fd to double check later */
 	MOVQ UP, 24(SP)
 	F_TO_C_3
 	CALL kread(SB)
 	MOVQ 24(SP), UP
 	C_TO_F_1
-	ADDQ $32, SP
+
+	TESTQ TOP, TOP		/* check read return value */
+	JNZ fsread_continue
+	MOVQ 32(SP), CX		/* read return value == 0 */
+	TESTQ CX, CX
+	JNZ fsread_continue
+	JMP terminate(SB)	/* and fd == 0, terminate */
+
+fsread_continue:
+	ADDQ $40, SP
 	NEXT
 
-/* no link register in amd64
+/*
+ * no link register in amd64
  * 3 arguments for kwrite = 24 bytes
  * 1 local for storing UP = 8 bytes
  * Hence, need 32 bytes on the stack
