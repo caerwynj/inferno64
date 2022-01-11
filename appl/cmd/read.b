@@ -9,7 +9,7 @@ Read: module {
 
 usage()
 {
-	sys->fprint(sys->fildes(2), "usage: read [-[ero] offset] count\n");
+	sys->fprint(sys->fildes(2), "usage: read [-[ero] offset] count [file]\n");
 	raise "fail:usage";
 }
 
@@ -20,6 +20,7 @@ init(nil: ref Draw->Context, argv: list of string)
 	count := Sys->ATOMICIO;
 	offset := big 0;
 	seeking := -1;
+	fd := sys->fildes(0);
 	if (argv != nil)
 		argv = tl argv;
 	if (argv != nil && hd argv != nil && (hd argv)[0] == '-') {
@@ -39,11 +40,16 @@ init(nil: ref Draw->Context, argv: list of string)
 		argv = tl tl argv;
 	}
 	if (argv != nil) {
-		if (tl argv != nil)
-			usage();
 		count = int hd argv;
+		if (tl argv != nil){
+			file := hd tl argv; # usage();
+			fd = sys->open(file, Sys->OREAD);
+			if(fd == nil){
+				sys->fprint(sys->fildes(2), "read: cannot open %s: %r\n", file);
+				raise "fail:bad open";
+			}
+		}
 	}
-	fd := sys->fildes(0);
 	if (seeking != -1)
 		sys->seek(fd, offset, seeking);
 	if (count == 0)
