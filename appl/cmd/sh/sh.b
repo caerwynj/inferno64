@@ -782,7 +782,7 @@ pathexpand(ctxt: ref Context, progname: string): string
 runexternal(ctxt: ref Context, args: list of ref Listnode, last: int): string
 {
 	progname := (hd args).word;
-	if (DEBUG) debug(sys->sprint("runexternal progname %s\n", progname));
+	if (DEBUG) debug(sys->sprint("runexternal progname %s", progname));
 	disfile := 0;
 	if (len progname >= 4 && progname[len progname-4:] == ".dis")
 		disfile = 1;
@@ -802,24 +802,24 @@ runexternal(ctxt: ref Context, args: list of ref Listnode, last: int): string
 		else
 			path = progname;
 
-		if (DEBUG) debug(sys->sprint("runexternal path %s\n", path));
+		if (DEBUG) debug(sys->sprint("runexternal path %s", path));
 		npath := path;
 		if (!disfile)
 			npath += ".dis";
-		if (DEBUG) debug(sys->sprint("runexternal npath %s\n", npath));
+		if (DEBUG) debug(sys->sprint("runexternal npath %s", npath));
 		mod := load Command npath;
 		if (mod != nil) {
 			if (DEBUG) debug(sys->sprint("runexternal npath %s mod != nil\n", npath));
 			argv := list2stringlist(args);
 			export(ctxt.env.localenv);
 
-			if (DEBUG) debug(sys->sprint("runexternal mod != nil\n"));
+			if (DEBUG) debug(sys->sprint("runexternal mod != nil"));
 			if (last) {
 				{
 					sys->pctl(Sys->NEWFD, ctxt.keepfds);
-					if (DEBUG) debug(sys->sprint("runexternal before mod->init\n"));
+					if (DEBUG) debug(sys->sprint("runexternal before mod->init"));
 					mod->init(ctxt.drawcontext, argv);
-					if (DEBUG) debug(sys->sprint("runexternal after mod->init\n"));
+					if (DEBUG) debug(sys->sprint("runexternal after mod->init"));
 					exit;
 				} exception e {
 				EPIPE =>
@@ -834,7 +834,7 @@ runexternal(ctxt: ref Context, args: list of ref Listnode, last: int): string
 			if (DEBUG) debug("started external externalexec; pid is "+string pid);
 			return waitfor(ctxt, pid :: nil);
 		}
-		if (DEBUG) debug(sys->sprint("runexternal npath %s mod == nil\n", npath));
+		if (DEBUG) debug(sys->sprint("runexternal npath %s mod == nil", npath));
 		err = sys->sprint("%r");
 		if (nonexistent(err)) {
 			# try and run it as a shell script
