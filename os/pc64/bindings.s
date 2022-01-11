@@ -133,9 +133,12 @@ TEXT	fsread(SB), 1, $40	/* ( n a fd -- n2 ) */
 	MOVQ 24(SP), UP
 	C_TO_F_1
 
-	TESTQ TOP, TOP		/* check read return value */
+	CMPQ TOP, $-1		/* return value == -1? */
+	JEQ fsread_checkfd	/* return value = -1 */
+	TESTQ TOP, TOP		/* check if read return value == 0 */
 	JNZ fsread_continue
-	MOVQ 32(SP), CX		/* read return value == 0 */
+fsread_checkfd:
+	MOVQ 32(SP), CX		/* read return value == 0, check if fd is stdin */
 	TESTQ CX, CX
 	JNZ fsread_continue
 	JMP terminate(SB)	/* and fd == 0, terminate */
