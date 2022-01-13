@@ -1693,7 +1693,7 @@ dd M_literal
 dd 1024		; ( -- padaddr 1024 )
 dd M_plus	; ( padaddr 1024 -- padaddr+1024 )
 dd M_rpop	; ( padaddr+1024 -- padaddr+1024 mode) (R mode -- )
-dd M_xswap	; M_literal dd 420		; ( padaddr+1024 mode 420 )
+dd M_xswap	; M_literal dd 420		; ( padaddr+1024 mode 420 ) 420 for hardcoded mode?
 dd M_fsopen
 dd M_dup
 dd M_literal
@@ -1739,6 +1739,40 @@ dd C_type
 dd C_cr
 dd C_abort
 L246:
+dd M_exitcolon
+CENTRY "create-file" C_create_file 9 ; ( a n mode perm -- fd ioresult ) not part of the original ff. could move this to a forth file.
+dd M_rpush	; ( a n mode ) (R perm)
+dd M_rpush	; ( a n ) (R perm mode)
+dd C_pad	; ( a n padaddr)
+dd M_literal
+dd 1024		; ( a n padaddr 1024 )
+dd M_plus	; ( a n padaddr+1024 )
+dd M_xswap	; ( a padaddr+1024 n )
+dd M_dup	; ( a padaddr+1024 n n )
+dd M_rpush	; ( a padaddr+1024 n ) (R perm mode n )
+dd M_cmove	; moves the filename from a to paddaddr+1024
+dd M_literal
+dd 0		; ( 0 )
+dd M_rpop	; ( 0 n ) (R perm mode)
+dd C_pad	; ( 0 n padaddr)
+dd M_plus	; ( 0 padaddr+n )
+dd M_literal
+dd 1024		; ( 0 padaddr+n 1024 )
+dd M_plus	; ( 0 padaddr+n+1024 )
+dd M_cstore	; ( ) makes the filename to a null terminated string
+dd C_pad
+dd M_literal
+dd 1024		; ( padaddr 1024 )
+dd M_plus	; ( padaddr+1024 )
+dd M_rpop	; ( padaddr+1024 mode) (R perm )
+dd M_rpop	; ( padaddr+1024 mode perm ) (R )
+dd M_xswap	; ( padaddr+1024 perm mode )
+dd C_rot	; ( perm mode padaddr+1024 )
+dd M_fscreate
+dd M_dup
+dd M_literal
+dd -1
+dd M_greater
 dd M_exitcolon
 CENTRY "bye" C_bye 3
 dd M_literal

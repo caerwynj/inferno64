@@ -178,3 +178,12 @@ TEXT	fsseek(SB), 1, $32	/* ( type pos fd -- n ) */
 	C_TO_F_1
 	ADDQ $32, SP
 	NEXT
+
+TEXT	fscreate(SB), 1, $32	/* ( perm mode cstr -- fd ) */
+	MOVQ UP, 24(SP)
+	F_TO_C_3
+	CALL kcreate(SB)
+	MOVQ 24(SP), UP
+	C_TO_F_1
+	ADDQ $32, SP
+	NEXT

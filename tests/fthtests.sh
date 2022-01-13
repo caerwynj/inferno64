@@ -470,4 +470,34 @@ bind '#|' /n/ff
 	# 9 is the top of stack at the start
 	t ' 9 Tib 10 " /dis/init" r/o open-file drop dup variable myfd myfd ! read-file Tib 10 type 0 0 myfd @ reposition-file Tib 10 erase Tib 10 myfd @ read-file Tib 10 type myfd @ close-file . . . . . . . ' '#!/dis/sh ' '#!/dis/sh ' -1 $space -1 $space 10 $space -1 $space -1 $space 10 $space 9 $space
 
+	load expr
+	echo '		looping with forth '
+	start=`{cat /dev/time}
+	echo start microseconds $start
+	send ': donothing do loop ; 0 1000 1000 * 1000 * dup 0 donothing . '
+	echo n "{readline}
+	end=`{cat /dev/time}
+	echo end microseconds $end
+	echo microseconds taken: ${expr $end $start - }
+	echo
+
+	start=`{cat /dev/time}
+	echo start microseconds $start
+	send ': dodupdrop do dup drop loop ; 9 1000 1000 * 1000 * dup 0 dodupdrop . '
+	echo n "{readline}
+	end=`{cat /dev/time}
+	echo end microseconds $end
+	echo microseconds taken: ${expr $end $start - }
+	echo
+
+	echo '		doing the same with limbo '
+	start=`{cat /dev/time}
+	echo start microseconds $start
+	#time /tests/progtest.dis
+	/tests/progtest.dis
+	end=`{cat /dev/time}
+	echo end microseconds $end
+	echo microseconds taken: ${expr $end $start - }
+	echo
+
 }

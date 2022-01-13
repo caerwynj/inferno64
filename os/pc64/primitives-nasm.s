@@ -7,6 +7,7 @@ MENTRY "write" fswrite 5
 MENTRY "seek" fsseek 4
 MENTRY "open" fsopen 4
 MENTRY "close" fsclose 5
+MENTRY "create" fscreate 6
 MENTRY "mmap" mmap 4
 MENTRY "halt" terminate 4
 MENTRY "dump" fthdump 4
