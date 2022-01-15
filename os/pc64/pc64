@@ -11,9 +11,10 @@ dev
 	prog
 	rtc
 	srv
-	dup
 	ssl
+	dup
 	cap
+	shm
 
 	ether		netif
 	bridge		netif log

@@ -1740,7 +1740,7 @@ dd C_cr
 dd C_abort
 L246:
 dd M_exitcolon
-CENTRY "create-file" C_create_file 9 ; ( a n mode perm -- fd ioresult ) not part of the original ff. could move this to a forth file.
+CENTRY "create-file" C_create_file 11 ; ( a n mode perm -- fd ioresult ) not part of the original ff. could move this to a forth file.
 dd M_rpush	; ( a n mode ) (R perm)
 dd M_rpush	; ( a n ) (R perm mode)
 dd C_pad	; ( a n padaddr)

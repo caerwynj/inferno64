@@ -9,17 +9,26 @@ static int debug = 0;
 
 /*
  1. Provides #h/shm for shared user memory
+ 2. similar to env(3)
+
 How is this different from devenv?
 	O(1) for read and write
 	using array index as the path to keep lookups to O(1)
 	Keep c->aux = Svalue*
 		So, can read/write directly
+	attach() incref's Sgrp
+	open() incref's Svalue
+	close() decref's Svalue
 	If the length is greater than 1 read/write IO unit, then
 		this mechanism fails. Need an shmbig that puts rlock/wlock
 		at open() for that to work.
 
 TODO
-	needs some mechanism in devforth.c to create up->shm
+	needs some mechanism in devforth.c to create up->shm - attach() and up->shm == nil
+	kcreate() binding
+	forth: test
+		create write close
+		open read close
 	error if iounit(0 fd) > len
 
 not doing
@@ -34,6 +43,7 @@ c->qid.path = array index of Svalue* in Sgrp.ent[] +1
 enum
 {
 	DELTAENV = 32,
+	Maxshmsize = 1024,
 };
 
 /*
@@ -86,6 +96,7 @@ struct Svalue
 	char	*value;
 	s32	len;
 	s32 vers;
+	u8 dead;	/* set by remove() */
 };
 
 typedef struct Sgrp Sgrp;
@@ -94,26 +105,29 @@ struct Sgrp
 	Ref;
 	RWlock;
 	union{		/* array of Svalue pointers */
-		Svalue	*entries;
-		Svalue	*ent;
+		Svalue	**entries;
+		Svalue	**ent;
 	};
 	int	nent;	/* number of entries used */
 	int	ment;	/* maximum number of entries */
 	u32	vers;	/* of Sgrp */
 };
 
+Sgrp* newshmgrp(void);
+static int shmwriteable(Chan *c);
+
 static Svalue*
 shmlookupname(Sgrp *g, char *name)
 {
-	Svalue *v, *ev;
+	Svalue **ent, **eent;
 
 	if(name == nil)
 		return nil;
 
-	v = g->ent;
-	for(ev = v + g->nent; v < ev; v++){
-		if(name[0] == v->name[0] && strcmp(v->name, name) == 0))
-			return v;
+	ent = g->ent;
+	for(eent = ent + g->nent; ent < eent; ent++){
+		if(name[0] == (*ent)->name[0] && strcmp((*ent)->name, name) == 0)
+			return *ent;
 	}
 	return nil;
 }
@@ -121,8 +135,6 @@ shmlookupname(Sgrp *g, char *name)
 static Svalue*
 shmlookuppath(Sgrp *g, s64 qidpath)
 {
-	Svalue *v, *ev;
-
 	if(qidpath == -1)
 		return nil;
 	if(qidpath > g->nent)
@@ -132,14 +144,14 @@ shmlookuppath(Sgrp *g, s64 qidpath)
 }
 
 /* same as envlookup */
-static Evalue*
+static Svalue*
 shmlookup(Sgrp *g, char *name, s64 qidpath)
 {
 	if(qidpath != -1)
-		return shmlookuppath(sg, qidpath);
+		return shmlookuppath(g, qidpath);
 
 	if(name != nil)
-		return shmlookupname(sg, name);
+		return shmlookupname(g, name);
 
 	return nil;
 }
@@ -147,14 +159,14 @@ shmlookup(Sgrp *g, char *name, s64 qidpath)
 static s32
 shmlookupidx(Sgrp *g, char *name)
 {
-	Svalue *v, *ev;
+	Svalue **ent;
 	s32 i;
 
 	if(name == nil)
 		return -1;
 
-	for(i = 0, v = g->ent; i < g->nent; i++, v++){
-		if(name[0] == v->name[0] && strcmp(v->name, name) == 0))
+	for(i = 0, ent = g->ent; i < g->nent; i++, ent++){
+		if(name[0] == (*ent)->name[0] && strcmp((*ent)->name, name) == 0)
 			return i;
 	}
 	return -1;
@@ -170,7 +182,7 @@ shmgen(Chan *c, char *name, Dirtab*, int, int s, Dir *dp)
 	s32 i;
 
 	if(s == DEVDOTDOT){
-		devdir(c, c->qid, "#s", 0, eve, 0775, dp);
+		devdir(c, c->qid, "#h", 0, eve, 0775, dp);
 		return 1;
 	}
 
@@ -178,15 +190,19 @@ shmgen(Chan *c, char *name, Dirtab*, int, int s, Dir *dp)
 		return -1;
 
 	i = -1;
+	rlock(g);
 	if(name != nil)
 		i = shmlookupidx(g, name);
 	if((name == nil || i == -1) && s <= g->nent)
 		i = s;
-	if(i == -1)
+	if(i == -1){
+		runlock(g);
 		return -1;
+	}
 
 	v = g->ent[i];
 	if(v == nil || name != nil && (strlen(v->name) >= sizeof(up->genbuf))) {
+		runlock(g);
 		return -1;
 	}
 
@@ -201,11 +217,11 @@ static Chan*
 shmattach(char *spec)
 {
 	Chan *c;
-	Sgrp *g;
 
 	if(up->shm == nil)
-		error(Enonexist);
+		up->shm = newshmgrp();
 
+print("devshm: attach up->shm 0x%p\n", up->shm);
 	c = devattach('h', spec);
 	mkqid(&c->qid, 0, 0, QTDIR);
 	c->aux = up->shm;
@@ -218,20 +234,8 @@ shmwalk(Chan *c, Chan *nc, char **name, int nname)
 {
 	Walkqid *wq;
 
-	rlock(up->shm);
+print("shmwalk nname %d name %s\n", nname, name);
 	wq = devwalk(c, nc, name, nname, 0, 0, shmgen);
-	if(wq != nil && wq->clone != nil && wq->clone != c){
-		wq->clone->aux = up->shm->ent[wq->clone->qid.path-1];
-		DBG("shmwalk wq->clone->path %s mode 0x%ux\n"
-			"	wq->clone->qid.path 0x%zux wq->clone->qid.vers %d\n"
-			"	wq->clone->qid.type %d 0x%ux\n"
-			"	wq->clone->aux 0x%zx\n",
-			chanpath(nc), wq->clone->mode,
-			wq->clone->qid.path, wq->clone->qid.vers,
-			wq->clone->qid.type, wq->clone->qid.type,
-			wq->clone->aux);
-	}
-	runlock(up->shm);
 	return wq;
 }
 
@@ -266,35 +270,39 @@ shmopen(Chan *c, u32 omode)
 	if(c->qid.type & QTDIR) {
 		if(omode != OREAD)
 			error(Eperm);
+		c->mode = openmode(omode);
+		c->offset = 0;
+		c->flag |= COPEN;
+		return c;
 	}
-	else {
-		trunc = omode & OTRUNC;
-		if(omode != OREAD && shmwriteable(c) == 0)
-			error(Eperm);
-		if(trunc)
-			wlock(g);
-		else
-			rlock(g);
 
-		v = c->aux;
-		if(v == nil) {
-			if(trunc)
-				wunlock(g);
-			else
-				runlock(g);
-			error(Enonexist);
-		}
-		if(trunc && v->value != nil) {
-			v->vers++;
-			free(v->value);
-			v->value = nil;
-			v->len = 0;
-		}
+	trunc = omode & OTRUNC;
+	if(omode != OREAD && shmwriteable(c) == 0)
+		error(Eperm);
+	if(trunc)
+		wlock(g);
+	else
+		rlock(g);
+
+	v = c->aux;
+	if(v == nil) {
 		if(trunc)
 			wunlock(g);
 		else
 			runlock(g);
+		error(Enonexist);
 	}
+	if(trunc && v->value != nil) {
+		v->vers++;
+		free(v->value);
+		v->value = nil;
+		v->len = 0;
+	}
+	if(trunc)
+		wunlock(g);
+	else
+		runlock(g);
+
 	c->mode = openmode(omode);
 	incref(v);
 	c->offset = 0;
@@ -303,12 +311,13 @@ shmopen(Chan *c, u32 omode)
 }
 
 static void
-shmcreate(Chan *c, char *name, u32 omode, u32)
+shmcreate(Chan *c, char *name, u32 omode, u32 perm)
 {
 	Sgrp *g;
-	Svalue *v, *ev;
+	Svalue *v;
 	s32 i;
 
+print("devshm: create name %s mode 0x%ux perm 0x%ux\n", name, omode, perm);
 	if(c->qid.type != QTDIR || shmwriteable(c) == 0)
 		error(Eperm);
 
@@ -330,7 +339,7 @@ shmcreate(Chan *c, char *name, u32 omode, u32)
 		error(Eexist);
 
 	if(g->nent == g->ment){
-		Evalue *tmp;
+		Svalue **tmp;
 
 		g->ment += DELTAENV;
 		if((tmp = realloc(g->ent, sizeof(intptr)*g->ment)) == nil){
@@ -342,7 +351,7 @@ shmcreate(Chan *c, char *name, u32 omode, u32)
 	g->vers++;
 	/* find any remove'd entries to reuse */
 	for(i = 0; i < g->nent; i++){
-		if(g->ent[i] == nil)
+		if(((Svalue*)g->ent[i]) == nil)
 			goto found;
 	}
 	i = g->nent;
@@ -363,6 +372,7 @@ found:
 	c->offset = 0;
 	c->mode = omode;
 	c->flag |= COPEN;
+print("devshm: created chanpath(c) %s\n", chanpath(c));
 	return;
 }
 
@@ -373,15 +383,14 @@ if offset == 0 and c->qid.vers == Tag.vers,
  */
 shmread(Chan *c, void *a, s32 n, s64 off)
 {
-	Sgrp *g;
 	Svalue *v;
 	u64 offset = off;
 
+	if(up->shm == nil)
+		error(Enonexist);
+
 	if(c->qid.type & QTDIR)
 		return devdirread(c, a, n, 0, 0, shmgen);
-
-	if((g = up->shm) == nil)
-		error(Enonexist);
 
 	if((v = c->aux) == nil || v->dead == 1)
 		error(Enonexist);
@@ -395,7 +404,7 @@ shmread(Chan *c, void *a, s32 n, s64 off)
 		n = 0;
 	else
 		memmove(a, v->value+offset, n);
-	c->qid.vers = v->qid.vers;
+	c->qid.vers = v->vers;
 	runlock(v);
 
 	return n;
@@ -406,8 +415,7 @@ shmwrite(Chan *c, void *a, s32 n, s64 off)
 {
 	char *s;
 	ulong len;
-	Sgrp *eg;
-	Svalue *e;
+	Svalue *v;
 	u64 offset = off;
 
 	if(n <= 0)
@@ -415,7 +423,7 @@ shmwrite(Chan *c, void *a, s32 n, s64 off)
 	if(offset > Maxshmsize || n > (Maxshmsize - offset))
 		error(Etoobig);
 
-	if((g = up->shm) == nil)
+	if(up->shm == nil)
 		error(Enonexist);
 
 	if((v = c->aux) == nil || v->dead == 1)
@@ -423,13 +431,12 @@ shmwrite(Chan *c, void *a, s32 n, s64 off)
 
 	wlock(v);
 	len = offset+n;
-	if(len > e->len) {
-		s = realloc(e->value, len);
+	if(len > v->len) {
+		s = realloc(v->value, len);
 		if(s == nil){
 			wunlock(v);
 			error(Enomem);
 		}
-		memset(s+offset, 0, n);
 		v->value = s;
 		v->len = len;
 	}
@@ -442,16 +449,48 @@ shmwrite(Chan *c, void *a, s32 n, s64 off)
 }
 
 static void
-shmclose(Chan *c)
+shmremove(Chan *c)
 {
 	Sgrp *g;
+	Svalue *v;
+
+	if(c->qid.type & QTDIR)
+		return;
+
+	if((g = up->shm) == nil)
+		error(Enonexist);
+
+	if((v = c->aux) == nil)
+		error(Enonexist);
+
+	wlock(v);
+	v->dead = 1;
+	if(v->ref > 0){
+		wunlock(v);
+		return;
+	}
+	if(v->name != nil)
+		free(v->name);
+	if(v->value != nil)
+		free(v->value);
+	wunlock(v);
+
+	wlock(g);
+	g->ent[c->qid.path-1] = nil;
+	free(v);
+	wunlock(g);
+}
+
+static void
+shmclose(Chan *c)
+{
 	Svalue *v;
 	s32 d;
 
 	if(c->qid.type & QTDIR)
 		return;
 
-	if((g = up->shm) == nil)
+	if(up->shm == nil)
 		error(Enonexist);
 
 	if((v = c->aux) == nil)
@@ -473,39 +512,6 @@ shmclose(Chan *c)
 			poperror();
 		}
 	}
-}
-
-static void
-shmremove(Chan *c)
-{
-	Sgrp *eg;
-	Svalue *e;
-
-	if(c->qid.type & QTDIR)
-		return;
-
-	if((g = up->shm) == nil)
-		error(Enonexist);
-
-	if((v = c->aux) == nil)
-		error(Enonexist);
-
-	wlock(v);
-	v->dead = 1;
-	if(v->r.ref > 0){
-		wunlock(v);
-		return;
-	}
-	if(v->name != nil)
-		free(v->name);
-	if(v->value != nil)
-		free(v->value);
-	wunlock(v);
-
-	wlock(g);
-	g->ent[c->qid.path-1] = nil;
-	free(v);
-	wunlock(g);
 }
 
 Dev shmdevtab = {
@@ -545,18 +551,19 @@ newshmgrp(void)
 void
 closesgrp(Sgrp *g)
 {
-	Svalue *v, *ev;
+	Svalue **v, **ev;
+	s32 i;
 
 	if(g == nil)
 		return;
-	if(decref(eg) == 0){
+	if(decref(g) <= 0){
 		v = g->ent;
 		for(i = 0, ev = v + g->nent; v < ev; v++, i++){
 			if(v == nil)
 				continue;
-			wlock(v);
-			free(v->name);
-			free(v->value);
+			wlock(*v);
+			free((*v)->name);
+			free((*v)->value);
 			g->ent[i] = nil;
 			/* wunlock(v); */
 			free(v);
@@ -572,11 +579,11 @@ shmwriteable(Chan *c)
 	return c->aux == nil || c->aux == up->shm;
 }
 
-/* same as shmcpy() of 9front */
-void
+/* same as shmcpy() of 9front, a simpler fork()(?) */
+/* TODO void
 sgrpcpy(Sgrp *to, Sgrp *from)
 {
-	Svalue *e, *ee, *ne;
+	Svalue **e, **ee, **ne, *v, *nv;
 
 	rlock(from);
 	to->ment = ROUND(from->nent, DELTAENV);
@@ -584,16 +591,19 @@ sgrpcpy(Sgrp *to, Sgrp *from)
 	ne = to->ent;
 	e = from->ent;
 	for(ee = e + from->nent; e < ee; e++, ne++){
-		ne->name = smalloc(strlen(e->name)+1);
-		strcpy(ne->name, e->name);
-		if(e->value != nil){
-			ne->value = smalloc(e->len);
-			memmove(ne->value, e->value, e->len);
-			ne->len = e->len;
+		v = *e;
+		nv = smalloc(sizeof(Svalue));
+		(*ne) = nv;
+		nv->name = smalloc(strlen(v->name)+1);
+		strcpy(nv->name, v->name);
+		if((v->len > 0){
+			nv->value = smalloc(v->len);
+			memmove(nv->value, v->value, v->len);
+			nv->len = v->len;
 		}
 		mkqid(&ne->qid, ++to->path, 0, QTFILE);
 	}
 	to->nent = from->nent;
 	runlock(from);
 }
-
+*/

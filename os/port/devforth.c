@@ -19,7 +19,7 @@ extern Fentry fentries[];
 		For now, use the stdin, stdout and stderr mechanism.
 		If the performance is good enough, add more syscalls and then replace dis/init with forth
 TODO
-	add ref's to frq, fwq and ferrq
+	add initial memsize to Qnew
  */
 enum
 {
@@ -400,9 +400,9 @@ startforthproc(Proc *p, Params *params)
 	/*
 		shmem = 0, NOSHMEM no shared memory
 		shmem = 1, SHMEM share memory
-TODO		shmem = 2, NEWSHMEM new shared memory
+		shmem = 2, NEWSHMEM new shared memory, leave it as nil, attach() will create it
 	 */
-	if(params->shmem == 0){
+	if(params->shmem == 0 || params->shmem == 2){
 		p->shm = nil;
 	}else if(params->shmem == 1){
 		p->shm = up->shm;
