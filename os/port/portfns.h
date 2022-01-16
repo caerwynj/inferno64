@@ -249,6 +249,7 @@ void		qfree(Queue*);
 int		qfull(Queue*);
 Block*		qget(Queue*);
 void		qhangup(Queue*, char*);
+s32		qhasdata(Queue*);
 int		qisclosed(Queue*);
 int		qiwrite(Queue*, void*, int);
 int		qlen(Queue*);

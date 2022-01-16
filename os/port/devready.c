@@ -16,6 +16,8 @@ static int debug = 0;
 		It belongs there..
 		instead of 2 files (watch and ready). Use 1 file (canread).
 
+	#r/canread
+
 up->shm = Ready*
 c->aux = 
  */
@@ -23,7 +25,7 @@ enum
 {
 	NFD = 16,
 
-	Qwatch		= 0,
+	Qcanread = 0,
 	Qready
 };
 
@@ -45,6 +47,8 @@ struct Readyfd
 	s32 fd;
 	Queue *q;
 	s32 ready;
+	u8 stop;
+	Proc *kproc;
 };
 
 typedef struct Ready;
@@ -53,6 +57,7 @@ struct Ready
 	Qlock;
 	Readyfd *rfd[[NFD];
 	s32 nrfd;
+	Queue *commq;	/* queue for the different watcher kproc's to communicate */
 };
 
 static int
@@ -68,13 +73,9 @@ rgen(Chan *c, char *name, Dirtab*, int, int s, Dir *dp)
 		return 1;
 	}
 
-	if(c->qid == Qwatch){
-		mkqid(&q, Qwatch, 0, QTFILE);
-		devdir(c, q, "watch", 0, eve, 0664, dp);
-		return 1;
-	}else if(c->qid == Qready){
-		mkqid(&q, Qready, 0, QTFILE);
-		devdir(c, q, "ready", 0, eve, 0664, dp);
+	if(c->qid == Qcanread){
+		mkqid(&q, Qcanread, 0, QTFILE);
+		devdir(c, q, "canread", 0, eve, 0664, dp);
 		return 1;
 	}
 	return -1;
@@ -142,11 +143,11 @@ ropen(Chan *c, u32 omode)
 			error(Eperm);
 
 		qlock(r);
+		r->commq = qopen(1024, 0, 0, 0);
 		if(trunc) { /* shoud be Qwatch */
 			for(i = 0; i < r->nrfd; i++){
-				TODO shutdown kproc's
-				if(r->rfd[i] != nil)
-					free(r->rfd[i]);
+				r->rfd[i].stop = 1;
+				/* TODO shutdown kproc's send a note to any running kprocs */
 			}
 			r->nrfd = 0;
 		}
@@ -183,25 +184,10 @@ rread(Chan *c, void *a, s32 n, s64 off)
 	if((r = up->readyfds) == nil)
 		error(Enonexist);
 
-	return qread(r->q, a, n);
-
-	qlock(r);
-	should this be qbread?
-	for(i = 0; i<r->nrfd; i++){
-		if(r->rfd.ready > 0){
-			rv = snprint(a, n, "%d\n", r->rfd.fd);
-			r->rfd.ready = 0;
-			qunlock(r);
-			return rv;
-		}
-	}
-	if none of the fd's are ready, let the kproc's run and loop here until there is a ready fd
-		let the dogs go and wait for them to bring back the kill
-	this should be interruptible too. So, there can be an alarm() before.
-
-	return 0;
+	return qread(r->commq, a, n);
 }
 
+/* TODO close kproc by sending a note */
 static void
 stopwatchers(void)
 {
@@ -210,28 +196,29 @@ stopwatchers(void)
 	if((r = up->readyfds) == nil)
 		error(Enonexist);
 
-	if(r->q != nil)
-		qhangup(r->q, nil);
+	if(r->commq != nil)
+		qhangup(r->commq, nil);
 	for(i = 0; i < r->rnfd; i++){
-		TODO close kproc by sending a note
-		r->rfd[i].ready = 0;
+		r->rfd[i].stop = 1;
 		r->rfd[i].fd = -1;
 	}
 }
 
+/*
+	wrap this in an alarm() so it does not block forever?
+	should be using qread() instead? qcanread does not block(?)
+	TODO double check wv values
+ */
 static void
-startwatcher(Queue *q, Readyfd *rfd)
+startwatcher(Readyfd *rfd)
 {
 	char s[16];
 
 	rfd->kproc = up;
-	while(){
-		qread(rfd->readq);
-wrap this in an alarm() so it does not block forever?
-should be using qread() instead? qcanread does not block(?)
-		qcanread(rfd->q);
+	while(rfd->stop == 0 && wv != 0 && wv != -1){
+		qhasdata(rfd->q);
 		n = snprint(s, 16, "%d\n", rfd->fd);
-		qwrite(q, s, n);
+		wv = qwrite(rfd->commq, s, n);
 	}
 }
 
@@ -267,8 +254,9 @@ rwrite(Chan *c, void *a, s32 n, s64)
 		i = r->nrfd;
 		r->rfd[i].fd = fd;
 		r->rfd[i].ready = 0;
+		r->rfd[i].commq = r->commq;
 		snprint(name, KNAMELEN, "watch %d for %d", fd, up->pid);
-		kproc(name, startwatcher, r->q, &r->rfd[i]);
+		kproc(name, startwatcher, &r->rfd[i], 0);
 		r->nrfd++;
 	}
 	qunlock(r);

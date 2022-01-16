@@ -979,6 +979,20 @@ qbread(Queue *q, int len)
 }
 
 /*
+ *  same as qcanread() but blocks if there is no data, used by devready
+ */
+s32
+qhasdata(Queue *q)
+{
+	s32 rv;
+
+	ilock(q);
+	rv = qwait(q);
+	iunlock(q);
+	return rv;
+}
+
+/*
  *  read a queue.  if no data is queued, post a Block
  *  and wait on its Rendez.
  */
