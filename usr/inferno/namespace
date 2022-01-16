@@ -2,5 +2,5 @@
 # /chan/foo is more natural than '#s'/foo
 bind -b '#s' /chan
 
-bind -ib /usr/inferno/dis /dis
-bind -ib /usr/inferno/module /module
+bind -b /usr/inferno/dis /dis
+bind -b /usr/inferno/module /module
