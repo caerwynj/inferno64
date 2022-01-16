@@ -1715,6 +1715,9 @@ dd -1
 dd C_neq
 dd M_exitcolon
 CENTRY "write-file" C_write_file 10	; ( a n fd -- ioresult )
+dd M_rpush
+dd M_xswap
+dd M_rpop	; ( n a fd )
 dd M_fswrite
 dd M_literal
 dd -1

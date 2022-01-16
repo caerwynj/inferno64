@@ -205,11 +205,15 @@ kchanio(void *vc, void *buf, int n, int mode)
 u32
 openmode(u32 o)
 {
-	if(o >= (OTRUNC|OCEXEC|ORCLOSE|OEXEC))
+	if(o >= (OTRUNC|OCEXEC|ORCLOSE|OEXEC)){
+		print("openmode o >= (OTRUNC|OCEXEC|ORCLOSE|OEXEC)\n");
 		error(Ebadarg);
+	}
 	o &= ~(OTRUNC|OCEXEC|ORCLOSE);
-	if(o > OEXEC)
+	if(o > OEXEC){
+		print("openmode o > OEXEC)\n");
 		error(Ebadarg);
+	}
 	if(o == OEXEC)
 		return OREAD;
 	return o;

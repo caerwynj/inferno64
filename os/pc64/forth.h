@@ -338,26 +338,26 @@ enum {
 	C_close_file = 17080,
 	C_read_file = 17136,
 	C_write_file = 17240,
-	C_reposition_file = 17312,
-	C_qfcheck = 17376,
-	L246 = 17472,
-	C_create_file = 17504,
-	C_bye = 17792,
-	C_include = 17848,
-	C_crash = 18000,
-	C_quit = 18088,
-	L253 = 18112,
-	C_parenabort = 18168,
-	C_oldboot = 18336,
-	C_boot = 18784,
-	L137 = 19024,
-	L170 = 19048,
-	L173 = 19052,
-	L180 = 19069,
-	L193 = 19073,
-	L247 = 19077,
-	L251 = 19087,
-	L255 = 19118,
+	C_reposition_file = 17336,
+	C_qfcheck = 17400,
+	L246 = 17496,
+	C_create_file = 17528,
+	C_bye = 17816,
+	C_include = 17872,
+	C_crash = 18024,
+	C_quit = 18112,
+	L253 = 18136,
+	C_parenabort = 18192,
+	C_oldboot = 18360,
+	C_boot = 18808,
+	L137 = 19048,
+	L170 = 19072,
+	L173 = 19076,
+	L180 = 19093,
+	L193 = 19097,
+	L247 = 19101,
+	L251 = 19111,
+	L255 = 19142,
 };
 extern void *sliteral(void);
 extern void *cjump(void);
@@ -2115,213 +2115,216 @@ Fentry fentries[] = {
 	{.type FromH0, {.p C_neq}, .src = "dd C_neq"},		/* dd C_neq 17208 */
 	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17216 */
 	{.type Header, {.hdr { 10, "write-file", /* C_write_file = 17240 */ colon }}}, /* CENTRY "write-file" write_file 10 ; ( a n fd -- ioresult ) h 17248 */
-	{.type FromH0, {.p M_fswrite}, .src = "dd M_fswrite"},		/* dd M_fswrite 17256 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17264 */
-	{.type Absolute, {.p -1}},		/* dd -1 17272 */
-	{.type FromH0, {.p C_neq}, .src = "dd C_neq"},		/* dd C_neq 17280 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17288 */
-	{.type Header, {.hdr { 15, "reposition-file", /* C_reposition_file = 17312 */ colon }}}, /* CENTRY "reposition-file" reposition_file 15 ; ( type n fd -- ioresult ) h 17320 */
-	{.type FromH0, {.p M_fsseek}, .src = "dd M_fsseek"},		/* dd M_fsseek 17328 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17336 */
-	{.type Absolute, {.p -1}},		/* dd -1 17344 */
-	{.type FromH0, {.p C_neq}, .src = "dd C_neq"},		/* dd C_neq 17352 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17360 */
-	{.type Header, {.hdr { 7, "?fcheck", /* C_qfcheck = 17376 */ colon }}}, /* CENTRY "?fcheck" qfcheck 7 h 17384 */
-	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq"},		/* dd C_0eq 17392 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 17400 */
-	{.type FromH0, {.p L246}, .src = "dd L246"},		/* dd L246 17408 */
-	{.type FromH0, {.p C_space}, .src = "dd C_space"},		/* dd C_space 17416 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17424 */
-	{.type FromH0, {.p L247}, .src = "dd L247"},		/* dd L247 17432 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17440 */
-	{.type Absolute, {.p 9}},		/* dd 9 17448 */
-	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 17456 */
-	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 17464 */
-	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 17472 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17480 */
-	{.type Header, {.hdr { 11, "create-file", /* C_create_file = 17504 */ colon }}}, /* CENTRY "create-file" create_file 11 ; ( a n mode perm -- fd ioresult ) not part of the original ff. could move this to a forth file. h 17512 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a n mode ) (R perm)"},		/* dd M_rpush	; ( a n mode ) (R perm) 17520 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a n ) (R perm mode)"},		/* dd M_rpush	; ( a n ) (R perm mode) 17528 */
-	{.type FromH0, {.p C_pad}, .src = "dd C_pad	; ( a n padaddr)"},		/* dd C_pad	; ( a n padaddr) 17536 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17544 */
-	{.type Absolute, {.p 1024}},		/* dd 1024		; ( a n padaddr 1024 ) 17552 */
-	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( a n padaddr+1024 )"},		/* dd M_plus	; ( a n padaddr+1024 ) 17560 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap	; ( a padaddr+1024 n )"},		/* dd M_xswap	; ( a padaddr+1024 n ) 17568 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( a padaddr+1024 n n )"},		/* dd M_dup	; ( a padaddr+1024 n n ) 17576 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a padaddr+1024 n ) (R perm mode n )"},		/* dd M_rpush	; ( a padaddr+1024 n ) (R perm mode n ) 17584 */
-	{.type FromH0, {.p M_cmove}, .src = "dd M_cmove	; moves the filename from a to paddaddr+1024"},		/* dd M_cmove	; moves the filename from a to paddaddr+1024 17592 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17600 */
-	{.type Absolute, {.p 0}},		/* dd 0		; ( 0 ) 17608 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( 0 n ) (R perm mode)"},		/* dd M_rpop	; ( 0 n ) (R perm mode) 17616 */
-	{.type FromH0, {.p C_pad}, .src = "dd C_pad	; ( 0 n padaddr)"},		/* dd C_pad	; ( 0 n padaddr) 17624 */
-	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( 0 padaddr+n )"},		/* dd M_plus	; ( 0 padaddr+n ) 17632 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17640 */
-	{.type Absolute, {.p 1024}},		/* dd 1024		; ( 0 padaddr+n 1024 ) 17648 */
-	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( 0 padaddr+n+1024 )"},		/* dd M_plus	; ( 0 padaddr+n+1024 ) 17656 */
-	{.type FromH0, {.p M_cstore}, .src = "dd M_cstore	; ( ) makes the filename to a null terminated string"},		/* dd M_cstore	; ( ) makes the filename to a null terminated string 17664 */
-	{.type FromH0, {.p C_pad}, .src = "dd C_pad"},		/* dd C_pad 17672 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17680 */
-	{.type Absolute, {.p 1024}},		/* dd 1024		; ( padaddr 1024 ) 17688 */
-	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( padaddr+1024 )"},		/* dd M_plus	; ( padaddr+1024 ) 17696 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( padaddr+1024 mode) (R perm )"},		/* dd M_rpop	; ( padaddr+1024 mode) (R perm ) 17704 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( padaddr+1024 mode perm ) (R )"},		/* dd M_rpop	; ( padaddr+1024 mode perm ) (R ) 17712 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap	; ( padaddr+1024 perm mode )"},		/* dd M_xswap	; ( padaddr+1024 perm mode ) 17720 */
-	{.type FromH0, {.p C_rot}, .src = "dd C_rot	; ( perm mode padaddr+1024 )"},		/* dd C_rot	; ( perm mode padaddr+1024 ) 17728 */
-	{.type FromH0, {.p M_fscreate}, .src = "dd M_fscreate"},		/* dd M_fscreate 17736 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 17744 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17752 */
-	{.type Absolute, {.p -1}},		/* dd -1 17760 */
-	{.type FromH0, {.p M_greater}, .src = "dd M_greater"},		/* dd M_greater 17768 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17776 */
-	{.type Header, {.hdr { 3, "bye", /* C_bye = 17792 */ colon }}}, /* CENTRY "bye" bye 3 h 17800 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17808 */
-	{.type Absolute, {.p 0}},		/* dd 0 17816 */
-	{.type FromH0, {.p M_terminate}, .src = "dd M_terminate"},		/* dd M_terminate 17824 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17832 */
-	{.type Header, {.hdr { 7, "include", /* C_include = 17848 */ colon }}}, /* CENTRY "include" include 7 h 17856 */
-	{.type FromH0, {.p C_bl}, .src = "dd C_bl"},		/* dd C_bl 17864 */
-	{.type FromH0, {.p C_word}, .src = "dd C_word"},		/* dd C_word 17872 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush"},		/* dd M_rpush 17880 */
-	{.type FromH0, {.p MV_toLimit}, .src = "dd MV_toLimit"},		/* dd MV_toLimit 17888 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 17896 */
-	{.type FromH0, {.p MV_toIn}, .src = "dd MV_toIn"},		/* dd MV_toIn 17904 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 17912 */
-	{.type FromH0, {.p C_save_input}, .src = "dd C_save_input"},		/* dd C_save_input 17920 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop"},		/* dd M_rpop 17928 */
-	{.type FromH0, {.p C_count}, .src = "dd C_count"},		/* dd C_count 17936 */
-	{.type FromH0, {.p C_ro}, .src = "dd C_ro"},		/* dd C_ro 17944 */
-	{.type FromH0, {.p C_open_file}, .src = "dd C_open_file"},		/* dd C_open_file 17952 */
-	{.type FromH0, {.p C_qfcheck}, .src = "dd C_qfcheck"},		/* dd C_qfcheck 17960 */
-	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 17968 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 17976 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17984 */
-	{.type Header, {.hdr { 5, "crash", /* C_crash = 18000 */ colon }}}, /* CENTRY "crash" crash 5 h 18008 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18016 */
-	{.type FromH0, {.p L251}, .src = "dd L251"},		/* dd L251 18024 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18032 */
-	{.type Absolute, {.p 30}},		/* dd 30 18040 */
-	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 18048 */
-	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 18056 */
-	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 18064 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 18072 */
-	{.type Header, {.hdr { 4, "quit", /* C_quit = 18088 */ colon }}}, /* CENTRY "quit" quit 4 ; interpreter loop h 18096 */
-	{.type FromH0, {.p M_reset}, .src = "dd M_reset ; initialize return stack"},		/* dd M_reset ; initialize return stack 18104 */
-	{.type FromH0, {.p M_clear}, .src = "dd M_clear	; SP = sstack_end initialize data stack"},		/* dd M_clear	; SP = sstack_end initialize data stack 18112 */
-	{.type FromH0, {.p C_query}, .src = "dd C_query"},		/* dd C_query 18120 */
-/* ; dd MV_toLimit	; show the line read, for debugging *//* ; dd M_fetch *//* ; dd M_Tib *//* ; dd MC_STDOUT *//* ; dd M_fswrite *//* ; dd M_drop		; drop the return value of write *//* ; dd C_cr *//* ; dd C_space */	{.type FromH0, {.p C_interpret}, .src = "dd C_interpret"},		/* dd C_interpret 18128 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 18136 */
-	{.type FromH0, {.p L253}, .src = "dd L253"},		/* dd L253 18144 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon	; why is this needed?"},		/* dd M_exitcolon	; why is this needed? 18152 */
-	{.type Header, {.hdr { 7, "(abort)", /* C_parenabort = 18168 */ colon }}}, /* CENTRY "(abort)" parenabort 7 ; TODO correct below stack notations h 18176 */
-	{.type FromH0, {.p MV_State}, .src = "dd MV_State	; ( mv_State -- )"},		/* dd MV_State	; ( mv_State -- ) 18184 */
-	{.type FromH0, {.p C_off}, .src = "dd C_off		; off sets variable state = 0"},		/* dd C_off		; off sets variable state = 0 18192 */
-	{.type FromH0, {.p M_Tib}, .src = "dd M_Tib	; constant puts address of tibuffer on the top of stack"},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 18200 */
-	{.type FromH0, {.p MV_Sourcebuf}, .src = "dd MV_Sourcebuf	; variable sourcebuf"},		/* dd MV_Sourcebuf	; variable sourcebuf 18208 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable sourcebuf = address of tibuffer"},		/* dd M_store	; variable sourcebuf = address of tibuffer 18216 */
-	{.type FromH0, {.p MV_Blk}, .src = "dd MV_Blk	; variable blk"},		/* dd MV_Blk	; variable blk 18224 */
-	{.type FromH0, {.p C_off}, .src = "dd C_off	; off variable blk = 0"},		/* dd C_off	; off variable blk = 0 18232 */
-	{.type FromH0, {.p MC_STDIN}, .src = "dd MC_STDIN"},		/* dd MC_STDIN 18240 */
-	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 18248 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18256 */
-	{.type FromH0, {.p MC_STDOUT}, .src = "dd MC_STDOUT"},		/* dd MC_STDOUT 18264 */
-	{.type FromH0, {.p MV_Outfd}, .src = "dd MV_Outfd"},		/* dd MV_Outfd 18272 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush"},		/* dd M_rpush 17256 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 17264 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( n a fd )"},		/* dd M_rpop	; ( n a fd ) 17272 */
+	{.type FromH0, {.p M_fswrite}, .src = "dd M_fswrite"},		/* dd M_fswrite 17280 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17288 */
+	{.type Absolute, {.p -1}},		/* dd -1 17296 */
+	{.type FromH0, {.p C_neq}, .src = "dd C_neq"},		/* dd C_neq 17304 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17312 */
+	{.type Header, {.hdr { 15, "reposition-file", /* C_reposition_file = 17336 */ colon }}}, /* CENTRY "reposition-file" reposition_file 15 ; ( type n fd -- ioresult ) h 17344 */
+	{.type FromH0, {.p M_fsseek}, .src = "dd M_fsseek"},		/* dd M_fsseek 17352 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17360 */
+	{.type Absolute, {.p -1}},		/* dd -1 17368 */
+	{.type FromH0, {.p C_neq}, .src = "dd C_neq"},		/* dd C_neq 17376 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17384 */
+	{.type Header, {.hdr { 7, "?fcheck", /* C_qfcheck = 17400 */ colon }}}, /* CENTRY "?fcheck" qfcheck 7 h 17408 */
+	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq"},		/* dd C_0eq 17416 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 17424 */
+	{.type FromH0, {.p L246}, .src = "dd L246"},		/* dd L246 17432 */
+	{.type FromH0, {.p C_space}, .src = "dd C_space"},		/* dd C_space 17440 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17448 */
+	{.type FromH0, {.p L247}, .src = "dd L247"},		/* dd L247 17456 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17464 */
+	{.type Absolute, {.p 9}},		/* dd 9 17472 */
+	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 17480 */
+	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 17488 */
+	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 17496 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17504 */
+	{.type Header, {.hdr { 11, "create-file", /* C_create_file = 17528 */ colon }}}, /* CENTRY "create-file" create_file 11 ; ( a n mode perm -- fd ioresult ) not part of the original ff. could move this to a forth file. h 17536 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a n mode ) (R perm)"},		/* dd M_rpush	; ( a n mode ) (R perm) 17544 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a n ) (R perm mode)"},		/* dd M_rpush	; ( a n ) (R perm mode) 17552 */
+	{.type FromH0, {.p C_pad}, .src = "dd C_pad	; ( a n padaddr)"},		/* dd C_pad	; ( a n padaddr) 17560 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17568 */
+	{.type Absolute, {.p 1024}},		/* dd 1024		; ( a n padaddr 1024 ) 17576 */
+	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( a n padaddr+1024 )"},		/* dd M_plus	; ( a n padaddr+1024 ) 17584 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap	; ( a padaddr+1024 n )"},		/* dd M_xswap	; ( a padaddr+1024 n ) 17592 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( a padaddr+1024 n n )"},		/* dd M_dup	; ( a padaddr+1024 n n ) 17600 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a padaddr+1024 n ) (R perm mode n )"},		/* dd M_rpush	; ( a padaddr+1024 n ) (R perm mode n ) 17608 */
+	{.type FromH0, {.p M_cmove}, .src = "dd M_cmove	; moves the filename from a to paddaddr+1024"},		/* dd M_cmove	; moves the filename from a to paddaddr+1024 17616 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17624 */
+	{.type Absolute, {.p 0}},		/* dd 0		; ( 0 ) 17632 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( 0 n ) (R perm mode)"},		/* dd M_rpop	; ( 0 n ) (R perm mode) 17640 */
+	{.type FromH0, {.p C_pad}, .src = "dd C_pad	; ( 0 n padaddr)"},		/* dd C_pad	; ( 0 n padaddr) 17648 */
+	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( 0 padaddr+n )"},		/* dd M_plus	; ( 0 padaddr+n ) 17656 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17664 */
+	{.type Absolute, {.p 1024}},		/* dd 1024		; ( 0 padaddr+n 1024 ) 17672 */
+	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( 0 padaddr+n+1024 )"},		/* dd M_plus	; ( 0 padaddr+n+1024 ) 17680 */
+	{.type FromH0, {.p M_cstore}, .src = "dd M_cstore	; ( ) makes the filename to a null terminated string"},		/* dd M_cstore	; ( ) makes the filename to a null terminated string 17688 */
+	{.type FromH0, {.p C_pad}, .src = "dd C_pad"},		/* dd C_pad 17696 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17704 */
+	{.type Absolute, {.p 1024}},		/* dd 1024		; ( padaddr 1024 ) 17712 */
+	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( padaddr+1024 )"},		/* dd M_plus	; ( padaddr+1024 ) 17720 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( padaddr+1024 mode) (R perm )"},		/* dd M_rpop	; ( padaddr+1024 mode) (R perm ) 17728 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( padaddr+1024 mode perm ) (R )"},		/* dd M_rpop	; ( padaddr+1024 mode perm ) (R ) 17736 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap	; ( padaddr+1024 perm mode )"},		/* dd M_xswap	; ( padaddr+1024 perm mode ) 17744 */
+	{.type FromH0, {.p C_rot}, .src = "dd C_rot	; ( perm mode padaddr+1024 )"},		/* dd C_rot	; ( perm mode padaddr+1024 ) 17752 */
+	{.type FromH0, {.p M_fscreate}, .src = "dd M_fscreate"},		/* dd M_fscreate 17760 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 17768 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17776 */
+	{.type Absolute, {.p -1}},		/* dd -1 17784 */
+	{.type FromH0, {.p M_greater}, .src = "dd M_greater"},		/* dd M_greater 17792 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17800 */
+	{.type Header, {.hdr { 3, "bye", /* C_bye = 17816 */ colon }}}, /* CENTRY "bye" bye 3 h 17824 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17832 */
+	{.type Absolute, {.p 0}},		/* dd 0 17840 */
+	{.type FromH0, {.p M_terminate}, .src = "dd M_terminate"},		/* dd M_terminate 17848 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17856 */
+	{.type Header, {.hdr { 7, "include", /* C_include = 17872 */ colon }}}, /* CENTRY "include" include 7 h 17880 */
+	{.type FromH0, {.p C_bl}, .src = "dd C_bl"},		/* dd C_bl 17888 */
+	{.type FromH0, {.p C_word}, .src = "dd C_word"},		/* dd C_word 17896 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush"},		/* dd M_rpush 17904 */
+	{.type FromH0, {.p MV_toLimit}, .src = "dd MV_toLimit"},		/* dd MV_toLimit 17912 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 17920 */
+	{.type FromH0, {.p MV_toIn}, .src = "dd MV_toIn"},		/* dd MV_toIn 17928 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 17936 */
+	{.type FromH0, {.p C_save_input}, .src = "dd C_save_input"},		/* dd C_save_input 17944 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop"},		/* dd M_rpop 17952 */
+	{.type FromH0, {.p C_count}, .src = "dd C_count"},		/* dd C_count 17960 */
+	{.type FromH0, {.p C_ro}, .src = "dd C_ro"},		/* dd C_ro 17968 */
+	{.type FromH0, {.p C_open_file}, .src = "dd C_open_file"},		/* dd C_open_file 17976 */
+	{.type FromH0, {.p C_qfcheck}, .src = "dd C_qfcheck"},		/* dd C_qfcheck 17984 */
+	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 17992 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18000 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 18008 */
+	{.type Header, {.hdr { 5, "crash", /* C_crash = 18024 */ colon }}}, /* CENTRY "crash" crash 5 h 18032 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18040 */
+	{.type FromH0, {.p L251}, .src = "dd L251"},		/* dd L251 18048 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18056 */
+	{.type Absolute, {.p 30}},		/* dd 30 18064 */
+	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 18072 */
+	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 18080 */
+	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 18088 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 18096 */
+	{.type Header, {.hdr { 4, "quit", /* C_quit = 18112 */ colon }}}, /* CENTRY "quit" quit 4 ; interpreter loop h 18120 */
+	{.type FromH0, {.p M_reset}, .src = "dd M_reset ; initialize return stack"},		/* dd M_reset ; initialize return stack 18128 */
+	{.type FromH0, {.p M_clear}, .src = "dd M_clear	; SP = sstack_end initialize data stack"},		/* dd M_clear	; SP = sstack_end initialize data stack 18136 */
+	{.type FromH0, {.p C_query}, .src = "dd C_query"},		/* dd C_query 18144 */
+/* ; dd MV_toLimit	; show the line read, for debugging *//* ; dd M_fetch *//* ; dd M_Tib *//* ; dd MC_STDOUT *//* ; dd M_fswrite *//* ; dd M_drop		; drop the return value of write *//* ; dd C_cr *//* ; dd C_space */	{.type FromH0, {.p C_interpret}, .src = "dd C_interpret"},		/* dd C_interpret 18152 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 18160 */
+	{.type FromH0, {.p L253}, .src = "dd L253"},		/* dd L253 18168 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon	; why is this needed?"},		/* dd M_exitcolon	; why is this needed? 18176 */
+	{.type Header, {.hdr { 7, "(abort)", /* C_parenabort = 18192 */ colon }}}, /* CENTRY "(abort)" parenabort 7 ; TODO correct below stack notations h 18200 */
+	{.type FromH0, {.p MV_State}, .src = "dd MV_State	; ( mv_State -- )"},		/* dd MV_State	; ( mv_State -- ) 18208 */
+	{.type FromH0, {.p C_off}, .src = "dd C_off		; off sets variable state = 0"},		/* dd C_off		; off sets variable state = 0 18216 */
+	{.type FromH0, {.p M_Tib}, .src = "dd M_Tib	; constant puts address of tibuffer on the top of stack"},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 18224 */
+	{.type FromH0, {.p MV_Sourcebuf}, .src = "dd MV_Sourcebuf	; variable sourcebuf"},		/* dd MV_Sourcebuf	; variable sourcebuf 18232 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable sourcebuf = address of tibuffer"},		/* dd M_store	; variable sourcebuf = address of tibuffer 18240 */
+	{.type FromH0, {.p MV_Blk}, .src = "dd MV_Blk	; variable blk"},		/* dd MV_Blk	; variable blk 18248 */
+	{.type FromH0, {.p C_off}, .src = "dd C_off	; off variable blk = 0"},		/* dd C_off	; off variable blk = 0 18256 */
+	{.type FromH0, {.p MC_STDIN}, .src = "dd MC_STDIN"},		/* dd MC_STDIN 18264 */
+	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 18272 */
 	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18280 */
-	{.type FromH0, {.p MC_STDERR}, .src = "dd MC_STDERR"},		/* dd MC_STDERR 18288 */
-	{.type FromH0, {.p MV_Errfd}, .src = "dd MV_Errfd"},		/* dd MV_Errfd 18296 */
+	{.type FromH0, {.p MC_STDOUT}, .src = "dd MC_STDOUT"},		/* dd MC_STDOUT 18288 */
+	{.type FromH0, {.p MV_Outfd}, .src = "dd MV_Outfd"},		/* dd MV_Outfd 18296 */
 	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18304 */
-	{.type FromH0, {.p C_quit}, .src = "dd C_quit	; quit resets stacks and is the interpreter loop"},		/* dd C_quit	; quit resets stacks and is the interpreter loop 18312 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon	; why is this needed? quit does not return unless it breaks"},		/* dd M_exitcolon	; why is this needed? quit does not return unless it breaks 18320 */
-	{.type Header, {.hdr { 7, "oldboot", /* C_oldboot = 18336 */ colon }}}, /* CENTRY "oldboot" oldboot 7 ; TODO correct below stack notations and this is obsolete. leaving it here for reference until it all works well h 18344 */
-	{.type FromH0, {.p M_reset}, .src = "dd M_reset"},		/* dd M_reset 18352 */
-	{.type FromH0, {.p M_clear}, .src = "dd M_clear	; SP = sstack_end"},		/* dd M_clear	; SP = sstack_end 18360 */
-	{.type FromH0, {.p M_stackptr}, .src = "dd M_stackptr	; (D -- FFEND)"},		/* dd M_stackptr	; (D -- FFEND) 18368 */
-	{.type FromH0, {.p M_S0}, .src = "dd M_S0"},		/* dd M_S0 18376 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; s0 = FFEND"},		/* dd M_store	; s0 = FFEND 18384 */
-	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp	; heaptop = heapend"},		/* dd M_Dp	; heaptop = heapend 18392 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; ( heapend -- )"},		/* dd M_fetch	; ( heapend -- ) 18400 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18408 */
-	{.type Absolute, {.p 1}},		/* dd 1		; ( heapend 1 -- ) 18416 */
-	{.type FromH0, {.p C_cells}, .src = "dd C_cells	; cells ( heapend 8 -- )"},		/* dd C_cells	; cells ( heapend 8 -- ) 18424 */
-	{.type FromH0, {.p M_minus}, .src = "dd M_minus	; ( heapend-8 -- )"},		/* dd M_minus	; ( heapend-8 -- ) 18432 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; ( contents_from_heapend-8 -- )"},		/* dd M_fetch	; ( contents_from_heapend-8 -- ) 18440 */
-	{.type FromH0, {.p M_Args}, .src = "dd M_Args	; variable args"},		/* dd M_Args	; variable args 18448 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; args = contents_from_heapend-8"},		/* dd M_store	; args = contents_from_heapend-8 18456 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18464 */
-	{.type FromH0, {.p C_parenabort}, .src = "dd C_parenabort ; ( (abort) -- )"},		/* dd C_parenabort ; ( (abort) -- ) 18472 */
-	{.type FromH0, {.p MV_Abortvec}, .src = "dd MV_Abortvec	; variable abortvec"},		/* dd MV_Abortvec	; variable abortvec 18480 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable abortvec = (abort) code address"},		/* dd M_store	; variable abortvec = (abort) code address 18488 */
-	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb	; constant puts address of wordbuffer on the top of stack"},		/* dd M_Wordb	; constant puts address of wordbuffer on the top of stack 18496 */
-	{.type FromH0, {.p MV_Wordbuf}, .src = "dd MV_Wordbuf	; variable wordbuf"},		/* dd MV_Wordbuf	; variable wordbuf 18504 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable wordbuf = address of wordbuffer"},		/* dd M_store	; variable wordbuf = address of wordbuffer 18512 */
-	{.type FromH0, {.p M_Tib}, .src = "dd M_Tib	; constant puts address of tibuffer on the top of stack"},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 18520 */
-	{.type FromH0, {.p MV_Sourcebuf}, .src = "dd MV_Sourcebuf	; variable sourcebuf"},		/* dd MV_Sourcebuf	; variable sourcebuf 18528 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable sourcebuf = address of tibuffer"},		/* dd M_store	; variable sourcebuf = address of tibuffer 18536 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18544 */
-	{.type Absolute, {.p 0}},		/* dd 0 18552 */
-	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 18560 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; stdin = 0"},		/* dd M_store	; stdin = 0 18568 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18576 */
-	{.type Absolute, {.p 1}},		/* dd 1 18584 */
-	{.type FromH0, {.p MV_Outfd}, .src = "dd MV_Outfd"},		/* dd MV_Outfd 18592 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; stdout = 1"},		/* dd M_store	; stdout = 1 18600 */
-	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 18608 */
-	{.type FromH0, {.p C_off}, .src = "dd C_off	; off stores 0 at state"},		/* dd C_off	; off stores 0 at state 18616 */
-	{.type FromH0, {.p C_decimal}, .src = "dd C_decimal	; decimal setting base = 0"},		/* dd C_decimal	; decimal setting base = 0 18624 */
-	{.type FromH0, {.p C_quit}, .src = "dd C_quit	; quit"},		/* dd C_quit	; quit 18632 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 18640 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal	; test code"},		/* dd M_literal	; test code 18648 */
-	{.type Absolute, {.p 66}},		/* dd 66 18656 */
-	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb"},		/* dd M_Wordb 18664 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18672 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18680 */
-	{.type Absolute, {.p 1}},		/* dd 1 18688 */
-	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb"},		/* dd M_Wordb 18696 */
-	{.type FromH0, {.p MC_STDOUT}, .src = "dd MC_STDOUT"},		/* dd MC_STDOUT 18704 */
-	{.type FromH0, {.p M_fswrite}, .src = "dd M_fswrite"},		/* dd M_fswrite 18712 */
-	{.type FromH0, {.p M_drop}, .src = "dd M_drop		; drop the return value of write"},		/* dd M_drop		; drop the return value of write 18720 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18728 */
-	{.type Absolute, {.p 1}},		/* dd 1 18736 */
-	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb"},		/* dd M_Wordb 18744 */
-	{.type FromH0, {.p MC_STDIN}, .src = "dd MC_STDIN"},		/* dd MC_STDIN 18752 */
-	{.type FromH0, {.p M_fsread}, .src = "dd M_fsread"},		/* dd M_fsread 18760 */
-	{.type FromH0, {.p M_drop}, .src = "dd M_drop		; drop the return value of read"},		/* dd M_drop		; drop the return value of read 18768 */
-	{.type Header, {.hdr { 4, "boot", /* C_boot = 18784 */ colon }}}, /* CENTRY "boot" boot 4 h 18792 */
-	{.type FromH0, {.p M_reset}, .src = "dd M_reset ; initialize return stack"},		/* dd M_reset ; initialize return stack 18800 */
-	{.type FromH0, {.p M_clear}, .src = "dd M_clear	; SP = sstack_end initialize data stack"},		/* dd M_clear	; SP = sstack_end initialize data stack 18808 */
-/* 			; s0 puts FFEND on the stack *//* 			; no args */	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18816 */
-	{.type FromH0, {.p C_parenabort}, .src = "dd C_parenabort ; ( (abort) -- )"},		/* dd C_parenabort ; ( (abort) -- ) 18824 */
-	{.type FromH0, {.p MV_Abortvec}, .src = "dd MV_Abortvec	; variable that puts (abort) code address on the stack"},		/* dd MV_Abortvec	; variable that puts (abort) code address on the stack 18832 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable abortvec = (abort) code address"},		/* dd M_store	; variable abortvec = (abort) code address 18840 */
-	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb	; variable puts address of wordbuffer on the top of stack"},		/* dd M_Wordb	; variable puts address of wordbuffer on the top of stack 18848 */
-	{.type FromH0, {.p MV_Wordbuf}, .src = "dd MV_Wordbuf ; variable wordbuf"},		/* dd MV_Wordbuf ; variable wordbuf 18856 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable wordbuf = address of wordbuffer"},		/* dd M_store	; variable wordbuf = address of wordbuffer 18864 */
-	{.type FromH0, {.p M_Tib}, .src = "dd M_Tib	; constant puts address of tibuffer on the top of stack"},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 18872 */
-	{.type FromH0, {.p MV_Sourcebuf}, .src = "dd MV_Sourcebuf	; variable sourcebuf"},		/* dd MV_Sourcebuf	; variable sourcebuf 18880 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable sourcebuf = address of tibuffer"},		/* dd M_store	; variable sourcebuf = address of tibuffer 18888 */
-	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp"},		/* dd M_Dp 18896 */
-	{.type FromH0, {.p MV_H0}, .src = "dd MV_H0	; H0 = here at startup"},		/* dd MV_H0	; H0 = here at startup 18904 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18912 */
-	{.type FromH0, {.p MC_STDIN}, .src = "dd MC_STDIN"},		/* dd MC_STDIN 18920 */
-	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 18928 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store     ; stdin = 0"},		/* dd M_store     ; stdin = 0 18936 */
-	{.type FromH0, {.p MC_STDOUT}, .src = "dd MC_STDOUT"},		/* dd MC_STDOUT 18944 */
-	{.type FromH0, {.p MV_Outfd}, .src = "dd MV_Outfd"},		/* dd MV_Outfd 18952 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18960 */
-	{.type FromH0, {.p MC_STDERR}, .src = "dd MC_STDERR"},		/* dd MC_STDERR 18968 */
-	{.type FromH0, {.p MV_Errfd}, .src = "dd MV_Errfd"},		/* dd MV_Errfd 18976 */
+	{.type FromH0, {.p MC_STDERR}, .src = "dd MC_STDERR"},		/* dd MC_STDERR 18312 */
+	{.type FromH0, {.p MV_Errfd}, .src = "dd MV_Errfd"},		/* dd MV_Errfd 18320 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18328 */
+	{.type FromH0, {.p C_quit}, .src = "dd C_quit	; quit resets stacks and is the interpreter loop"},		/* dd C_quit	; quit resets stacks and is the interpreter loop 18336 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon	; why is this needed? quit does not return unless it breaks"},		/* dd M_exitcolon	; why is this needed? quit does not return unless it breaks 18344 */
+	{.type Header, {.hdr { 7, "oldboot", /* C_oldboot = 18360 */ colon }}}, /* CENTRY "oldboot" oldboot 7 ; TODO correct below stack notations and this is obsolete. leaving it here for reference until it all works well h 18368 */
+	{.type FromH0, {.p M_reset}, .src = "dd M_reset"},		/* dd M_reset 18376 */
+	{.type FromH0, {.p M_clear}, .src = "dd M_clear	; SP = sstack_end"},		/* dd M_clear	; SP = sstack_end 18384 */
+	{.type FromH0, {.p M_stackptr}, .src = "dd M_stackptr	; (D -- FFEND)"},		/* dd M_stackptr	; (D -- FFEND) 18392 */
+	{.type FromH0, {.p M_S0}, .src = "dd M_S0"},		/* dd M_S0 18400 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; s0 = FFEND"},		/* dd M_store	; s0 = FFEND 18408 */
+	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp	; heaptop = heapend"},		/* dd M_Dp	; heaptop = heapend 18416 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; ( heapend -- )"},		/* dd M_fetch	; ( heapend -- ) 18424 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18432 */
+	{.type Absolute, {.p 1}},		/* dd 1		; ( heapend 1 -- ) 18440 */
+	{.type FromH0, {.p C_cells}, .src = "dd C_cells	; cells ( heapend 8 -- )"},		/* dd C_cells	; cells ( heapend 8 -- ) 18448 */
+	{.type FromH0, {.p M_minus}, .src = "dd M_minus	; ( heapend-8 -- )"},		/* dd M_minus	; ( heapend-8 -- ) 18456 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; ( contents_from_heapend-8 -- )"},		/* dd M_fetch	; ( contents_from_heapend-8 -- ) 18464 */
+	{.type FromH0, {.p M_Args}, .src = "dd M_Args	; variable args"},		/* dd M_Args	; variable args 18472 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; args = contents_from_heapend-8"},		/* dd M_store	; args = contents_from_heapend-8 18480 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18488 */
+	{.type FromH0, {.p C_parenabort}, .src = "dd C_parenabort ; ( (abort) -- )"},		/* dd C_parenabort ; ( (abort) -- ) 18496 */
+	{.type FromH0, {.p MV_Abortvec}, .src = "dd MV_Abortvec	; variable abortvec"},		/* dd MV_Abortvec	; variable abortvec 18504 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable abortvec = (abort) code address"},		/* dd M_store	; variable abortvec = (abort) code address 18512 */
+	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb	; constant puts address of wordbuffer on the top of stack"},		/* dd M_Wordb	; constant puts address of wordbuffer on the top of stack 18520 */
+	{.type FromH0, {.p MV_Wordbuf}, .src = "dd MV_Wordbuf	; variable wordbuf"},		/* dd MV_Wordbuf	; variable wordbuf 18528 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable wordbuf = address of wordbuffer"},		/* dd M_store	; variable wordbuf = address of wordbuffer 18536 */
+	{.type FromH0, {.p M_Tib}, .src = "dd M_Tib	; constant puts address of tibuffer on the top of stack"},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 18544 */
+	{.type FromH0, {.p MV_Sourcebuf}, .src = "dd MV_Sourcebuf	; variable sourcebuf"},		/* dd MV_Sourcebuf	; variable sourcebuf 18552 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable sourcebuf = address of tibuffer"},		/* dd M_store	; variable sourcebuf = address of tibuffer 18560 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18568 */
+	{.type Absolute, {.p 0}},		/* dd 0 18576 */
+	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 18584 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; stdin = 0"},		/* dd M_store	; stdin = 0 18592 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18600 */
+	{.type Absolute, {.p 1}},		/* dd 1 18608 */
+	{.type FromH0, {.p MV_Outfd}, .src = "dd MV_Outfd"},		/* dd MV_Outfd 18616 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; stdout = 1"},		/* dd M_store	; stdout = 1 18624 */
+	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 18632 */
+	{.type FromH0, {.p C_off}, .src = "dd C_off	; off stores 0 at state"},		/* dd C_off	; off stores 0 at state 18640 */
+	{.type FromH0, {.p C_decimal}, .src = "dd C_decimal	; decimal setting base = 0"},		/* dd C_decimal	; decimal setting base = 0 18648 */
+	{.type FromH0, {.p C_quit}, .src = "dd C_quit	; quit"},		/* dd C_quit	; quit 18656 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 18664 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal	; test code"},		/* dd M_literal	; test code 18672 */
+	{.type Absolute, {.p 66}},		/* dd 66 18680 */
+	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb"},		/* dd M_Wordb 18688 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18696 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18704 */
+	{.type Absolute, {.p 1}},		/* dd 1 18712 */
+	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb"},		/* dd M_Wordb 18720 */
+	{.type FromH0, {.p MC_STDOUT}, .src = "dd MC_STDOUT"},		/* dd MC_STDOUT 18728 */
+	{.type FromH0, {.p M_fswrite}, .src = "dd M_fswrite"},		/* dd M_fswrite 18736 */
+	{.type FromH0, {.p M_drop}, .src = "dd M_drop		; drop the return value of write"},		/* dd M_drop		; drop the return value of write 18744 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18752 */
+	{.type Absolute, {.p 1}},		/* dd 1 18760 */
+	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb"},		/* dd M_Wordb 18768 */
+	{.type FromH0, {.p MC_STDIN}, .src = "dd MC_STDIN"},		/* dd MC_STDIN 18776 */
+	{.type FromH0, {.p M_fsread}, .src = "dd M_fsread"},		/* dd M_fsread 18784 */
+	{.type FromH0, {.p M_drop}, .src = "dd M_drop		; drop the return value of read"},		/* dd M_drop		; drop the return value of read 18792 */
+	{.type Header, {.hdr { 4, "boot", /* C_boot = 18808 */ colon }}}, /* CENTRY "boot" boot 4 h 18816 */
+	{.type FromH0, {.p M_reset}, .src = "dd M_reset ; initialize return stack"},		/* dd M_reset ; initialize return stack 18824 */
+	{.type FromH0, {.p M_clear}, .src = "dd M_clear	; SP = sstack_end initialize data stack"},		/* dd M_clear	; SP = sstack_end initialize data stack 18832 */
+/* 			; s0 puts FFEND on the stack *//* 			; no args */	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18840 */
+	{.type FromH0, {.p C_parenabort}, .src = "dd C_parenabort ; ( (abort) -- )"},		/* dd C_parenabort ; ( (abort) -- ) 18848 */
+	{.type FromH0, {.p MV_Abortvec}, .src = "dd MV_Abortvec	; variable that puts (abort) code address on the stack"},		/* dd MV_Abortvec	; variable that puts (abort) code address on the stack 18856 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable abortvec = (abort) code address"},		/* dd M_store	; variable abortvec = (abort) code address 18864 */
+	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb	; variable puts address of wordbuffer on the top of stack"},		/* dd M_Wordb	; variable puts address of wordbuffer on the top of stack 18872 */
+	{.type FromH0, {.p MV_Wordbuf}, .src = "dd MV_Wordbuf ; variable wordbuf"},		/* dd MV_Wordbuf ; variable wordbuf 18880 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable wordbuf = address of wordbuffer"},		/* dd M_store	; variable wordbuf = address of wordbuffer 18888 */
+	{.type FromH0, {.p M_Tib}, .src = "dd M_Tib	; constant puts address of tibuffer on the top of stack"},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 18896 */
+	{.type FromH0, {.p MV_Sourcebuf}, .src = "dd MV_Sourcebuf	; variable sourcebuf"},		/* dd MV_Sourcebuf	; variable sourcebuf 18904 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable sourcebuf = address of tibuffer"},		/* dd M_store	; variable sourcebuf = address of tibuffer 18912 */
+	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp"},		/* dd M_Dp 18920 */
+	{.type FromH0, {.p MV_H0}, .src = "dd MV_H0	; H0 = here at startup"},		/* dd MV_H0	; H0 = here at startup 18928 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18936 */
+	{.type FromH0, {.p MC_STDIN}, .src = "dd MC_STDIN"},		/* dd MC_STDIN 18944 */
+	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 18952 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store     ; stdin = 0"},		/* dd M_store     ; stdin = 0 18960 */
+	{.type FromH0, {.p MC_STDOUT}, .src = "dd MC_STDOUT"},		/* dd MC_STDOUT 18968 */
+	{.type FromH0, {.p MV_Outfd}, .src = "dd MV_Outfd"},		/* dd MV_Outfd 18976 */
 	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18984 */
-	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 18992 */
-	{.type FromH0, {.p C_off}, .src = "dd C_off	; off stores 0 at state"},		/* dd C_off	; off stores 0 at state 19000 */
-	{.type FromH0, {.p C_decimal}, .src = "dd C_decimal	; decimal sets base = 10"},		/* dd C_decimal	; decimal sets base = 10 19008 */
-	{.type FromH0, {.p C_quit}, .src = "dd C_quit	; quit"},		/* dd C_quit	; quit 19016 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 19024 */
-	{.type Chars, {.str "unable to restore input"}},		/* 19048 */
-	{.type Chars, {.str " Q?"}},		/* 19052 */
-	{.type Chars, {.str " stack underflow"}},		/* 19069 */
-	{.type Chars, {.str " I?"}},		/* 19073 */
-	{.type Chars, {.str " C?"}},		/* 19077 */
-	{.type Chars, {.str "I/O error"}},		/* 19087 */
-	{.type Chars, {.str "uninitialized execution vector"}},		/* 19118 */
-	{.type Chars, {.str " ok"}},		/* 19122 */
+	{.type FromH0, {.p MC_STDERR}, .src = "dd MC_STDERR"},		/* dd MC_STDERR 18992 */
+	{.type FromH0, {.p MV_Errfd}, .src = "dd MV_Errfd"},		/* dd MV_Errfd 19000 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 19008 */
+	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 19016 */
+	{.type FromH0, {.p C_off}, .src = "dd C_off	; off stores 0 at state"},		/* dd C_off	; off stores 0 at state 19024 */
+	{.type FromH0, {.p C_decimal}, .src = "dd C_decimal	; decimal sets base = 10"},		/* dd C_decimal	; decimal sets base = 10 19032 */
+	{.type FromH0, {.p C_quit}, .src = "dd C_quit	; quit"},		/* dd C_quit	; quit 19040 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 19048 */
+	{.type Chars, {.str "unable to restore input"}},		/* 19072 */
+	{.type Chars, {.str " Q?"}},		/* 19076 */
+	{.type Chars, {.str " stack underflow"}},		/* 19093 */
+	{.type Chars, {.str " I?"}},		/* 19097 */
+	{.type Chars, {.str " C?"}},		/* 19101 */
+	{.type Chars, {.str "I/O error"}},		/* 19111 */
+	{.type Chars, {.str "uninitialized execution vector"}},		/* 19142 */
+	{.type Chars, {.str " ok"}},		/* 19146 */
 };
 

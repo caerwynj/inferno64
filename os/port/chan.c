@@ -954,8 +954,10 @@ ewalk(Chan *c, Chan *nc, char **name, int nname)
 {
 	Walkqid *wq;
 
-	if(waserror())
+	if(waserror()){
+		print("ewalk: waserror() loop\n");
 		return nil;
+	}
 	wq = devtab[c->type]->walk(c, nc, name, nname);
 	poperror();
 	return wq;
@@ -1317,6 +1319,7 @@ namec(char *aname, int amode, int omode, ulong perm)
 		error("empty file name");
 	aname = validnamedup(aname, 1);
 	if(waserror()){
+		print("namec: waserror() loop %r\n");
 		free(aname);
 		nexterror();
 	}
@@ -1379,6 +1382,7 @@ namec(char *aname, int amode, int omode, ulong perm)
 	e.nelems = 0;
 	e.nerror = 0;
 	if(waserror()){
+print("namec: waserror() loop before parsename\n");
 		cclose(c);
 		free(e.name);
 		free(e.elems);
@@ -1420,6 +1424,7 @@ namec(char *aname, int amode, int omode, ulong perm)
 	}
 
 	if(walk(&c, e.elems, e.nelems, nomount, &e.nerror) < 0){
+print("namec: walk < 0 e.nerror %d\n", e.nerror);
 		if(e.nerror < 0 || e.nerror > e.nelems){
 			print("namec %s walk error nerror=%d\n", aname, e.nerror);
 			e.nerror = 0;

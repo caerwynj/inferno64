@@ -38,7 +38,7 @@ not doing
 
 up->shm = Shmgrp*
 c->aux (for QTFile) = Svalue*
-c->qid.path = array index of Svalue* in Sgrp.ent[] +1
+c->qid.path = array index of Svalue* in Sgrp.ent[]
  */
 enum
 {
@@ -49,7 +49,7 @@ enum
 /*
 struct Qid
 {
-	u64	path; == array index of Svalue* in ent +1
+	u64	path; == array index of Svalue* in ent
 	u32	vers; for version control
 	uchar	type; QTFILE | QTDIR;
 } Qid;
@@ -137,10 +137,10 @@ shmlookuppath(Sgrp *g, s64 qidpath)
 {
 	if(qidpath == -1)
 		return nil;
-	if(qidpath > g->nent)
+	if(qidpath >= g->nent)
 		return nil;
 
-	return g->ent[qidpath-1];
+	return g->ent[qidpath];
 }
 
 /* same as envlookup */
@@ -191,11 +191,12 @@ shmgen(Chan *c, char *name, Dirtab*, int, int s, Dir *dp)
 
 	i = -1;
 	rlock(g);
-	if(name != nil)
+	if(name != nil){
 		i = shmlookupidx(g, name);
-	if((name == nil || i == -1) && s <= g->nent)
+	}
+	if(i == -1 && s >= 0 && s < g->nent)
 		i = s;
-	if(i == -1){
+	if(i == -1 || i >= g->nent){
 		runlock(g);
 		return -1;
 	}
@@ -208,7 +209,7 @@ shmgen(Chan *c, char *name, Dirtab*, int, int s, Dir *dp)
 
 	/* make sure name string continues to exist after we release lock */
 	kstrcpy(up->genbuf, v->name, sizeof up->genbuf);
-	mkqid(&q, i+1, v->vers, QTFILE);
+	mkqid(&q, i, v->vers, QTFILE);
 	devdir(c, q, up->genbuf, v->len, eve, 0664, dp);
 	return 1;
 }
@@ -221,7 +222,6 @@ shmattach(char *spec)
 	if(up->shm == nil)
 		up->shm = newshmgrp();
 
-print("devshm: attach up->shm 0x%p\n", up->shm);
 	c = devattach('h', spec);
 	mkqid(&c->qid, 0, 0, QTDIR);
 	c->aux = up->shm;
@@ -234,7 +234,6 @@ shmwalk(Chan *c, Chan *nc, char **name, int nname)
 {
 	Walkqid *wq;
 
-print("shmwalk nname %d name %s\n", nname, name);
 	wq = devwalk(c, nc, name, nname, 0, 0, shmgen);
 	return wq;
 }
@@ -251,9 +250,7 @@ shmstat(Chan *c, uchar *db, int n)
 	if(c->qid.type & QTDIR)
 		c->qid.vers = g->vers;
 
-	rlock(g);
 	s = devstat(c, db, n, 0, 0, shmgen);
-	runlock(g);
 	return s;
 }
 
@@ -284,7 +281,7 @@ shmopen(Chan *c, u32 omode)
 	else
 		rlock(g);
 
-	v = c->aux;
+	c->aux = v = shmlookuppath(g, c->qid.path);
 	if(v == nil) {
 		if(trunc)
 			wunlock(g);
@@ -317,7 +314,6 @@ shmcreate(Chan *c, char *name, u32 omode, u32 perm)
 	Svalue *v;
 	s32 i;
 
-print("devshm: create name %s mode 0x%ux perm 0x%ux\n", name, omode, perm);
 	if(c->qid.type != QTDIR || shmwriteable(c) == 0)
 		error(Eperm);
 
@@ -362,7 +358,7 @@ found:
 	v->len = v->vers = 0;
 	v->name = smalloc(strlen(name)+1);
 	strcpy(v->name, name);
-	mkqid(&c->qid, i+1, 0, QTFILE);
+	mkqid(&c->qid, i, 0, QTFILE);
 	incref(v);
 	g->ent[i] = v;
 	wunlock(g);
@@ -372,7 +368,8 @@ found:
 	c->offset = 0;
 	c->mode = omode;
 	c->flag |= COPEN;
-print("devshm: created chanpath(c) %s\n", chanpath(c));
+print("devshm: created c->type %d devtab[c->type]->dc %c chanpath(c) %s c->qid.path 0x%ux c->qid.type 0x%ux\n",
+	c->type, devtab[c->type]->dc, chanpath(c), c->qid.path, c->qid.type);
 	return;
 }
 
@@ -476,7 +473,7 @@ shmremove(Chan *c)
 	wunlock(v);
 
 	wlock(g);
-	g->ent[c->qid.path-1] = nil;
+	g->ent[c->qid.path] = nil;
 	free(v);
 	wunlock(g);
 }
@@ -551,22 +548,22 @@ newshmgrp(void)
 void
 closesgrp(Sgrp *g)
 {
-	Svalue **v, **ev;
+	Svalue **ent, **eent;
 	s32 i;
 
 	if(g == nil)
 		return;
 	if(decref(g) <= 0){
-		v = g->ent;
-		for(i = 0, ev = v + g->nent; v < ev; v++, i++){
-			if(v == nil)
+		ent = g->ent;
+		for(i = 0, eent = ent + g->nent; ent < eent; ent++, i++){
+			if(ent == nil)
 				continue;
-			wlock(*v);
-			free((*v)->name);
-			free((*v)->value);
+			wlock(*ent);
+			free((*ent)->name);
+			free((*ent)->value);
 			g->ent[i] = nil;
-			/* wunlock(v); */
-			free(v);
+			/* wunlock(ent); */
+			free(ent);
 		}
 		free(g->ent);
 		free(g);
