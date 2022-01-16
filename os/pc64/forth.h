@@ -991,7 +991,7 @@ Fentry fentries[] = {
 	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp"},		/* dd M_Dp 6840 */
 	{.type FromH0, {.p C_plusstore}, .src = "dd C_plusstore"},		/* dd C_plusstore 6848 */
 	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 6856 */
-	{.type Header, {.hdr { 5, "vallot", /* C_vallot = 6872 */ colon }}}, /* CENTRY "vallot" vallot 5 ; allot on the variable space ( n -- ) vhere = vhere+n h 6880 */
+	{.type Header, {.hdr { 6, "vallot", /* C_vallot = 6872 */ colon }}}, /* CENTRY "vallot" vallot 6 ; allot on the variable space ( n -- ) vhere = vhere+n h 6880 */
 	{.type FromH0, {.p M_Vp}, .src = "dd M_Vp"},		/* dd M_Vp 6888 */
 	{.type FromH0, {.p C_plusstore}, .src = "dd C_plusstore"},		/* dd C_plusstore 6896 */
 	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 6904 */

@@ -368,8 +368,8 @@ found:
 	c->offset = 0;
 	c->mode = omode;
 	c->flag |= COPEN;
-print("devshm: created c->type %d devtab[c->type]->dc %c chanpath(c) %s c->qid.path 0x%ux c->qid.type 0x%ux\n",
-	c->type, devtab[c->type]->dc, chanpath(c), c->qid.path, c->qid.type);
+	DBG("devshm: created c->type %d devtab[c->type]->dc %c chanpath(c) %s c->qid.path 0x%ux c->qid.type 0x%ux\n",
+		c->type, devtab[c->type]->dc, chanpath(c), c->qid.path, c->qid.type);
 	return;
 }
 
@@ -383,6 +383,8 @@ shmread(Chan *c, void *a, s32 n, s64 off)
 	Svalue *v;
 	u64 offset = off;
 
+	DBG("devshm: read chanpath(c) %s c->qid.path 0x%ux n %d off %d c->aux 0x%p a[0] %c\n",
+			chanpath(c), c->qid.path, n, off, c->aux, ((char*)a)[0]);
 	if(up->shm == nil)
 		error(Enonexist);
 
@@ -404,6 +406,7 @@ shmread(Chan *c, void *a, s32 n, s64 off)
 	c->qid.vers = v->vers;
 	runlock(v);
 
+	DBG("devshm: read n %d a[0] %c\n", n, ((char*)a)[0]);
 	return n;
 }
 
@@ -415,6 +418,8 @@ shmwrite(Chan *c, void *a, s32 n, s64 off)
 	Svalue *v;
 	u64 offset = off;
 
+	DBG("devshm: write chanpath(c) %s c->qid.path 0x%ux n %d off %d c->aux 0x%p a[0] %c\n",
+			chanpath(c), c->qid.path, n, off, c->aux, ((char*)a)[0]);
 	if(n <= 0)
 		return 0;
 	if(offset > Maxshmsize || n > (Maxshmsize - offset))
@@ -442,6 +447,7 @@ shmwrite(Chan *c, void *a, s32 n, s64 off)
 	c->qid.vers = v->vers;
 	wunlock(v);
 
+	DBG("v->value[0] %c\n", ((char *)v->value)[0]);
 	return n;
 }
 

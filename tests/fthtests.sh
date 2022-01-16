@@ -23,6 +23,8 @@
 # T{ 1 2 3 SWAP -> 1 2 3 }T INCORRECT RESULT: T{ 1 2 3 SWAP -> 1 2 3 }T 
 # T{ 1 2 SWAP -> 1 }T WRONG NUMBER OF RESULTS: T{ 1 2 SWAP -> 1 }T 
 
+load std
+echo my pid is ${pid}
 bind '#|' /n/ff
 <[7]/n/ff/data >[8]/n/ff/data1 >[9]/n/ff/data <[10]/n/ff/data1 {
 
@@ -447,7 +449,7 @@ bind '#|' /n/ff
 	t ' 10 : testif 0 0 = if ." 0 0 = true" else ." 0 0 = false" then ; testif . ' '0 0 = true' 10 $space
 	t ' 10 : testif 0 1 = if ." 0 0 = true" else ." 0 1 = false" then ; testif . ' '0 1 = false' 10 $space
 	t '10 constant  MYCONSTANT MYCONSTANT . ' 10 $space
-	t '10 variable myfd 9 myfd ! myfd @ . . ' 9 $space 10 $space
+	t '10 variable Myfd 9 Myfd ! Myfd @ . . ' 9 $space 10 $space
 
 	t ' 10 " /dis/init" r/o open-file . . . ' -1 $space 4 $space 10 $space
 
@@ -469,6 +471,16 @@ bind '#|' /n/ff
 	# 10 is the number of characters read by read-file
 	# 9 is the top of stack at the start
 	t ' 9 Tib 10 " /dis/init" r/o open-file drop dup variable myfd myfd ! read-file Tib 10 type 0 0 myfd @ reposition-file Tib 10 erase Tib 10 myfd @ read-file Tib 10 type myfd @ close-file . . . . . . . ' '#!/dis/sh ' '#!/dis/sh ' -1 $space -1 $space 10 $space -1 $space -1 $space 10 $space 9 $space
+
+	t ' variable Shmfd 10 Shmfd ! Shmfd @ . ' 10 $space
+	t ' 9 : shmfd@ Shmfd @ ; . ' 9 $space
+	t ' 9 : shmfd! Shmfd ! ; . ' 9 $space
+	t ' 11 shmfd! shmfd@ . ' 11 $space
+	t ' variable Outputchars 1 vallot 65 Outputchars ! 66 Outputchars 1+ ! Outputchars 2 type ' AB
+	t ' 9 Outputchars 2 type . ' AB 9 $space
+	t ' 9 " #h/init" r/w 420 create-file drop shmfd! Outputchars 2 shmfd@ write-file drop shmfd@ close-file drop . ' 9 $space
+	t ' variable Oc1 1 vallot 67 Oc1 ! 68 Oc1 1+ ! Oc1 2 type ' CD
+	t ' 9 " #h/init" r/o open-file ( fd ioresult ) drop shmfd! Oc1 2 shmfd@ read-file ( n ioresult ) drop dup . ( n ) Oc1 swap type . ' 2 $space AB 9 $space
 
 	load expr
 	echo '		looping with forth '

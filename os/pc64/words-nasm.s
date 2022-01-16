@@ -491,7 +491,7 @@ CENTRY "allot" C_allot 5 ; ( n -- ) here = here+n
 dd M_Dp
 dd C_plusstore
 dd M_exitcolon
-CENTRY "vallot" C_vallot 5	; allot on the variable space ( n -- ) vhere = vhere+n
+CENTRY "vallot" C_vallot 6 ; allot on the variable space ( n -- ) vhere = vhere+n
 dd M_Vp
 dd C_plusstore
 dd M_exitcolon

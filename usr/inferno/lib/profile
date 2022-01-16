@@ -3,3 +3,6 @@
 echo starting /usr/inferno/lib/profile
 
 cp /locale/US_Arizona /locale/timezone
+
+echo running forth tests
+/n/remote/tests/fthtests.sh
