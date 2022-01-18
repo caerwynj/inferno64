@@ -329,8 +329,8 @@ void
 forthentry(void *fmem)
 {
 	up->type = Forth;
-	loadforthdictionary((u8*)fmem);
 
+	loadforthdictionary((u8*)fmem);
 	/* load dictionary */
 	print("forthentry pid %d forthmem 0x%zx end 0x%zx forthmem+RSTACK 0x%zx\n",
 		up->pid, (intptr)fmem, ((intptr*)fmem)[1], (intptr)fmem+RSTACK);
@@ -341,11 +341,6 @@ forthentry(void *fmem)
 		poperror();
 	}else
 		forthmain((u8*)fmem);
-	print("after forthmain\n");
-/*for(;;){
-up->state = Moribund;
-sched();
-}*/
 	free(fmem);
 
 	flock();
@@ -358,7 +353,6 @@ sched();
 	}
 	nforthprocs--;
 	funlock();
-	print("before pexit\n");
 	pexit("exit", 0);
 }
 
@@ -835,7 +829,8 @@ forthopen(Chan *c, u32 omode0)
 		snprint(path, 64, "#f/forth/%ud/ctl", p->pid);
 		free(c->path);
 		c->path = newpath(path);
-		print("forthopen: new proc pid %d slot %d SLOT(c->qid) %d chanpath(c) %s c->aux 0x%p\n",
+		print("forthopen: new proc pid %d slot %d SLOT(c->qid) %d chanpath(c) %s\n"
+				"	c->aux 0x%p\n",
 				p->pid, slot, SLOT(c->qid), chanpath(c), c->aux);
 	}
 	funlock();

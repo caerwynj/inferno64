@@ -245,10 +245,11 @@ TEXT	cstore(SB), 1, $-4	/* ( c a -- ) */
 	NEXT
 
 TEXT	terminate(SB), 1, $-4	/* ( n -- ) */
+_fthterminate:
 	MOVQ TOP, AX
 	RET
 
-TEXT	fthdump(SB), 1, $-4	/* ( n -- ) */
+TEXT	fthdump(SB), 1, $8	/* ( n -- ) */
 	INT $0
 	CALL dumpstack(SB)
 	RET
