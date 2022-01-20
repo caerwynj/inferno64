@@ -251,7 +251,6 @@ _fthterminate:
 
 TEXT	fthdump(SB), 1, $8	/* ( n -- ) */
 	INT $0
-	CALL dumpstack(SB)
 	RET
 
 #include "bindings.s"

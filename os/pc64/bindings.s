@@ -118,6 +118,7 @@ TEXT	fsclose(SB), 1, $16	/* ( fd -- n ) */
  * if fd == 0 and read return value == 0 == End of file, terminate
  */
 TEXT	fsread(SB), 1, $40	/* ( n a fd -- n2 ) */
+
 	PUSH(TOP)
 	MOVQ 16(PSP), TOP
 	MOVQ 8(PSP), CX
@@ -141,32 +142,10 @@ fsread_checkfd:
 	MOVQ 32(SP), CX		/* read return value == 0, check if fd is stdin */
 	TESTQ CX, CX
 	JNZ fsread_continue
+
 	/* and fd == 0, terminate */
 	ADDQ $40, SP
-	/* TODO
-	 * this should have been JMP terminate(SB), but it is raising a #GP error.
-	 * CALL terminate(SB) works fine.
-	 * Would have to dig through the amd64 manuals and
-	 * https://www.felixcloutier.com/x86/jmp to figure out why.
-	 * until then, use the label to jump to
-
-JMP to a label: JMP _fthterminate
-2011b8 4883c428 (644)   ADDQ    $40,SP
-2011bc e9d0fcffff       (493)   JMP     ,200e91
-2011c1 4883c428 (656)   ADDQ    $40,SP
-
-JMP to symbol: JMP terminate(SB)
-2011b8 4883c428 (645)   ADDQ    $40,SP
-2011bc ff2425910e2000   (654)   JMP     ,terminate+0(SB)
-2011c3 4883c428 (657)   ADDQ    $40,SP
-
-CALL to symbol: CALL terminate(SB)
-2011b8 4883c428 (645)   ADDQ    $40,SP
-2011bc e8d0fcffff       (655)   CALL    ,200e91+terminate
-2011c1 4883c428 (657)   ADDQ    $40,SP
-	 */
 	JMP _fthterminate
-	/* TODO fix this JMP terminate(SB) */
 
 fsread_continue:
 	ADDQ $40, SP

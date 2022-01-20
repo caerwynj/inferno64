@@ -953,42 +953,52 @@ TEXT forkret(SB), 1, $-4
 
 	MOVQ	8(SP), AX			/* return value */
 
-	MOVQ	(15*8)(SP), RMACH		/* r15 */
-	MOVQ	(14*8)(SP), RUSER		/* r14 */
+	MOVQ	(15*8)(SP), RMACH	/* r15 */
+	MOVQ	(14*8)(SP), RUSER	/* r14 */
 
-	MOVQ	(19*8)(SP), CX			/* ip */
-	MOVQ	(21*8)(SP), R11			/* flags */
-	MOVQ	(22*8)(SP), SP			/* sp */
+	MOVQ	(19*8)(SP), CX		/* ip */
+	MOVQ	(21*8)(SP), R11		/* flags */
+	MOVQ	(22*8)(SP), SP		/* sp */
 
 	BYTE $0x48; SYSRET			/* SYSRETQ */
 
 /*
  * Interrupt/exception handling.
+ * Each entry in the vector table calls either _strayintr or _strayintrx depending
+ * on whether an error code has been automatically pushed onto the stack
+ * (_strayintrx) or not, in which case a dummy entry must be pushed before retrieving
+ * the trap type from the vector table entry and placing it on the stack as part
+ * of the Ureg structure.
+ * The size of each entry in the vector table (6 bytes) is known in trapinit0().
+ * Volume 3A 6-14
+ * Stack is (high -> low)
+ * SS, RSP, RFLAGS, CS, RIP, Error Code (if any), Vectortable(SB) return PC
+ * (SP) = Vectortable(SB) return PC. The first byte of this return PC will be the
+ * byte we used to identify the trap type.
+ * Removed the nested check that 9front does as we are not using different code
+ * segments or tasks.
  */
 
-TEXT _strayintr(SB), 1, $-4			/* no error code pushed */
-	PUSHQ	AX				/* save AX */
-	MOVQ	8(SP), AX			/* vectortable(SB) PC */
+TEXT _strayintr(SB), 1, $-4	/* no error code pushed */
+	PUSHQ	AX				/* save AX, some junk to fill the ecode slot in the stack */
+	MOVQ	8(SP), AX		/* vectortable(SB) PC */
 	JMP	_intrcommon
 
-TEXT _strayintrx(SB), 1, $-4			/* error code pushed */
-	XCHGQ	AX, (SP)
+TEXT _strayintrx(SB), 1, $-4/* error code pushed */
+	XCHGQ	AX, (SP)		/* exchange AX with pointer to trap type */
 _intrcommon:
-	MOVBQZX	(AX), AX
-	XCHGQ	AX, (SP)
+	MOVBQZX	(AX), AX		/* extract trap type from the vectortable(SB) return PC -> AX */
+	XCHGQ	AX, (SP)		/* exchange vectortable(SB) return PC with the trap type in AX */
 
-	SUBQ	$24, SP				/* R1[45], [DEFG]S */
-	CMPW	48(SP), $KESEL			/* old CS */
-	JEQ	_intrnested
+	PUSHW	GS
+	PUSHW	FS
+	MOVW	ES, AX	/* PUSHW ES is invalid in amd64, but showing the value for debugging */
+	PUSHW	AX
+	MOVW	DS, AX	/* PUSHW DS is invalid in amd64, but showing the value as JMP uses it */
+	PUSHW	AX
 
-	MOVQ	RUSER, 0(SP)
-	MOVQ	RMACH, 8(SP)
-
-	SWAPGS
-	BYTE $0x65; MOVQ 0, RMACH		/* m-> (MOVQ GS:0x0, R15) */
-	MOVQ	16(RMACH), RUSER		/* up */
-
-_intrnested:
+	PUSHQ	R15		/* RMACH m-> */
+	PUSHQ	R14		/* RUSER up-> */
 	PUSHQ	R13
 	PUSHQ	R12
 	PUSHQ	R11
@@ -1003,15 +1013,15 @@ _intrnested:
 	PUSHQ	BX
 	PUSHQ	AX
 
-	MOVQ	SP, RARG
+	MOVQ	SP, RARG /* Ureg* argument to trap */
 	PUSHQ	SP
 	CALL	trap(SB)
 
 TEXT _intrr(SB), 1, $-4
 _intrestore:
-	POPQ	AX
+	POPQ	AX		/* ignore the SP pushed before the call to trap() */
 
-	POPQ	AX
+	POPQ	AX		/* restore registers */
 	POPQ	BX
 	POPQ	CX
 	POPQ	DX
@@ -1024,17 +1034,12 @@ _intrestore:
 	POPQ	R11
 	POPQ	R12
 	POPQ	R13
+	POPQ	R14		/* RUSER up-> */
+	POPQ	R15		/* RMACH m-> */
 
-	CMPQ	48(SP), $KESEL
-	JEQ	_iretnested
+	ADDQ $8, SP		/* to ignore the [DEFG]S registers as they should not be changing */
 
-	SWAPGS
-
-	MOVQ	8(SP), RMACH
-	MOVQ	0(SP), RUSER
-
-_iretnested:
-	ADDQ	$40, SP
+	ADDQ	$16, SP	/* pop error code and trap type */
 	IRETQ
 
 TEXT noteret(SB), 1, $-4

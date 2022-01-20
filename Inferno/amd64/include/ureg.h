@@ -20,14 +20,14 @@ struct Ureg {
 	u16	fs;
 	u16	gs;
 
-	u64	trap;				/* trap type */
-	u64	ecode;				/* error code (or zero) */
-	u64	pc;				/* pc */
-	u64	cs;				/* old context */
-	u64	flags;				/* old flags */
-	union {					/* sp */
+	u64	trap;	/* trap type */
+	u64	ecode;	/* error code (or zero) */
+	u64	pc;		/* pc */
+	u64	cs;		/* old context */
+	u64	flags;	/* old flags */
+	union {		/* sp */
 		u64	usp;
 		u64	sp;
 	};
-	u64	ss;				/* old stack segment */
+	u64	ss;		/* old stack segment */
 };

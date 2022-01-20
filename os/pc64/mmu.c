@@ -122,6 +122,13 @@ mmuinit(void)
 	m->gdt[TSSSEG+1].d0 = x>>32;
 	m->gdt[TSSSEG+1].d1 = 0;
 
+	if(0){
+		print("GDT: m 0x%p m+MACHSIZE 0x%p\n", m, (uintptr)m+MACHSIZE);
+		for(i=0; i<NGDT; i++){
+			print("	i %d d0 0x%ux d1 0x%ux\n", i, m->gdt[i].d0, m->gdt[i].d1);
+		}
+	}
+
 	loadptr(sizeof(gdt)-1, (uintptr)m->gdt, lgdt);
 	loadptr(sizeof(Segdesc)*512-1, (uintptr)IDTADDR, lidt);
 	taskswitch((uintptr)m + MACHSIZE);

@@ -19,6 +19,7 @@ static void faultamd64(Ureg*, void*);
 static void doublefault(Ureg*, void*);
 static void unexpected(Ureg*, void*);
 static void _dumpstack(Ureg*);
+static void dumpureg(Ureg* ureg);
 
 void
 trapinit0(void)
@@ -264,6 +265,7 @@ trap(Ureg* ureg)
 					m->machno, ureg->pc);
 			}
 		}
+		dumpureg(ureg);
 		dumpregs(ureg);
 		if(vno < nelem(excname)){
 			dumprstack(ureg->r11, ureg->r8, ureg->r12);
@@ -346,6 +348,36 @@ dumpregs(Ureg* ureg)
 		}
 	}
 }
+/* displays in the order pushed into the stack */
+void
+dumpureg(Ureg* ureg)
+{
+	if(up)
+		print("cpu%d: registers for %s %ud\n",
+			m->machno, up->text, up->pid);
+	else
+		print("cpu%d: registers for kernel\n", m->machno);
+
+	print("SS %4.4zuX SP %zux\n", ureg->ss & 0xFFFF, ureg->usp);
+	print("	FLAGS %zux CS %zux PC %zux ECODE %zux TRAP %zux\n",
+		ureg->flags, ureg->cs, ureg->pc, ureg->ecode, ureg->trap);
+	print("	GS %4.4zux  FS %4.4ux  ES %4.4ux  DS %4.4ux\n",
+		ureg->gs & 0xFFFF, ureg->fs & 0xFFFF, ureg->es & 0xFFFF,
+		ureg->ds & 0xFFFF);
+
+	print("	R15 m %8.8zux  R14 up %8.8zux R13 %8.8zux\n",
+		ureg->r15, ureg->r14, ureg->r13);
+	print("	R12 UPE %8.8zux	R11 UP %8.8zzux	R10 W %8.8zux\n"
+			"	R9 IP %8.8zux	R8 RSP %8.8zux\n",
+		ureg->r12, ureg->r11, ureg->r10,
+		ureg->r9, ureg->r8);
+	print("	BP RARG %8.8zux	DI %8.8zzux	SI %8.8zux\n"
+			"	DX PSP %8.8zux	CX %8.8zux	BX TOP %8.8zux\n"
+			"	AX %8.8zux\n",
+		ureg->bp, ureg->di, ureg->si,
+		ureg->dx, ureg->cx, ureg->bx,
+		ureg->ax);
+}
 
 /*
  * Fill in enough of Ureg to get a stack trace, and call a function.
@@ -367,7 +399,7 @@ _dumpstack(Ureg *ureg)
 	extern uintptr etext;
 	int onlypc = 0;
 
-	print("ktrace /kernel/path pc 0x%zux sp 0x%zux &l 0x%zux\n", ureg->pc, ureg->sp, &l);
+	print("ktrace /kernel/path pc 0x%zux sp 0x%zux &l 0x%zux up 0x%p\n", ureg->pc, ureg->sp, &l, up);
 	i = 0;
 	if(up &&
 		(uintptr)&l >= (uintptr)up->kstack &&

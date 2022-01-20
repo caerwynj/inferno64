@@ -72,6 +72,7 @@ struct Params
 int nforthprocs = 0;
 Proc *fhead, *ftail;
 static QLock forthlock;
+static char forthname[] = "forth";
 
 static void
 flock(void)
@@ -336,11 +337,13 @@ forthentry(void *fmem)
 		up->pid, (intptr)fmem, ((intptr*)fmem)[1], (intptr)fmem+RSTACK);
 	DBG("fentries[0].name %s\n", fentries[0].hdr.name);
 	DBG("fentries[1].name %s nfentries %d\n", fentries[1].hdr.name, nelem(fentries));
+	DBG("up->kstack 0x%p\n", up->kstack);
 	if(waserror()){
 		print("forthentry error: %r\n");
-		poperror();
+		nexterror();
 	}else
 		forthmain((u8*)fmem);
+	poperror();
 	free(fmem);
 
 	flock();
@@ -494,7 +497,7 @@ print("stdinfd devtab[c->type]->dc %c c 0x%p chanpath(c) %s c->aux 0x%p\n", devt
 /* this does all of the above 3 lines */
 	kprocchild(p, forthentry, p->fmem);
 
-	strcpy(p->text, "forth");
+	p->text = forthname;
 
 	memset(p->time, 0, sizeof(p->time));
 	p->time[TReal] = MACHP(0)->ticks;
