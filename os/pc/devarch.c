@@ -923,7 +923,7 @@ fastticks(uvlong *hz)
 	return (*arch->fastclock)(hz);
 }
 
-u64
+u32
 µs(void)
 {
 	return fastticks2us((*arch->fastclock)(nil));

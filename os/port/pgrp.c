@@ -33,6 +33,7 @@ dumpmhead(char *s, Mhead *mh)
 	if(mh == nil)
 		return;
 
+	USED(s);
 	dumpchan("		from ", mh->from);
 	print("			to\n");
 	m = mh->mount;

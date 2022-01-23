@@ -200,7 +200,7 @@ trap(Ureg* ureg)
 
 		if(ctl->isintr){
 			if(up && ctl->irq != IrqTIMER && ctl->irq != IrqCLOCK)
-				preemption(0);
+				preempted();
 		}
 	}
 	else if(vno <= nelem(excname) && up->type == Interp){
@@ -528,9 +528,7 @@ kprocchild(Proc* p, void (*func)(void*), void* arg)
 	p->kparg = arg;
 }
 
-
-
-ulong
+uintptr
 dbgpc(Proc *p)
 {
 	Ureg *ureg;

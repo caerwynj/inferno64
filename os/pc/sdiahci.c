@@ -1294,7 +1294,7 @@ ledstate(Ledport *p, uint seq)
 		i = led2[8*p->led + seq%8];
 	if(i != p->ledbits){
 		p->ledbits = i;
-		ledprint("ledstate %,.011ub %ud\n", p->ledbits, seq);
+		ledprint("ledstate %,.011ud %ud\n", p->ledbits, seq);
 		return 1;
 	}
 	return 0;

@@ -508,7 +508,7 @@ struct Waitq
 enum {
 	/* Mode */
 	Trelative,	/* timer programmed in ns from now */
-	Tabsolute,	/* timer programmed in ns since epoch */
+	Tabsolute,	/* timer programmed in ns since epoch - not used in 9front */
 	Tperiodic,	/* periodic timer, period in ns */
 };
 
@@ -548,6 +548,7 @@ enum
 	Proc_exitme,
 	Proc_traceme,
 	Proc_exitbig,
+	Proc_tracesyscall,
 
 	TUser = 0, 		/* Proc.time */
 	TSys,
@@ -556,7 +557,7 @@ enum
 	TCSys,
 	TCReal,
 
-	NERR		= 30,
+	NERR		= 64,
 	NNOTE = 5,
 
 	Unknown		= 0,
@@ -565,18 +566,23 @@ enum
 	Forth,
 	BusyGC,
 
-	PriLock		= 0,	/* Holding Spin lock */
-	PriEdf,	/* active edf processes */
-	PriRelease,	/* released edf processes */
-	PriRealtime,		/* Video telephony */
-	PriHicodec,		/* MPEG codec */
-	PriLocodec,		/* Audio codec */
-	PriHi,			/* Important task */
-	PriNormal,
-	PriLo,
-	PriBackground,
-	PriExtra,	/* edf processes we don't care about */
-	Nrq
+	Npriq		= 20,		/* number of scheduler priority levels */
+	Nrq		= Npriq+2,	/* number of priority levels including real time */
+	PriRelease	= Npriq,	/* released edf processes */
+	PriEdf		= Npriq+1,	/* active edf processes */
+	PriNormal	= 10,		/* base priority for normal processes */
+	PriExtra	= Npriq-1,	/* edf processes at high best-effort pri */
+	PriKproc	= 13,		/* base priority for kernel processes */
+	PriRoot		= 13,		/* base priority for root processes */
+
+	/* used by inferno, remove them at some point when /prog is removed */
+	PriLock		= Npriq,	/* Holding Spin lock */
+	PriRealtime = Npriq+1,	/* Video telephony */
+	PriHicodec	= Npriq,	/* MPEG codec */
+	PriLocodec	= Npriq,	/* Audio codec */
+	PriHi		= Npriq,	/* Important task */
+	PriLo		= 7,
+	PriBackground = 4,
 };
 
 struct Schedq
@@ -604,10 +610,6 @@ struct Proc
 
 	Proc	*rnext;		/* next process in run queue */
 	Proc	*qnext;		/* next process on queue for a QLock */
-							/* check notes in proc.c for how these 2 fields are used */
-	void	*blockinglock;	/* address of QLock or RWLock being queued for, DEBUG */
-						/* not in 9front as we can reason that info from qpc */
-	uintptr	qpc;		/* last call that blocked in QLock or RWLock */
 
 	char	*psstate;	/* What /proc/#/status reports */
 	s32		state;
@@ -634,10 +636,10 @@ struct Proc
 
 /*	Fgrp	*closingfgrp;*/	/* used during teardown */
 
-/*	int	insyscall;*/
+	int	insyscall;
 	u32	time[6];	/* User, Sys, Real; child U, S, R */
 
-	uvlong	kentry;		/* Kernel entry time stamp (for profiling) */
+	u64	kentry;		/* Kernel entry time stamp (for profiling) */
 	/*
 	 * pcycles: cycles spent in this process (updated on procswitch)
 	 * when this is the current proc and we're in the kernel
@@ -646,7 +648,7 @@ struct Proc
 	 * when this is not the current process or we're in user mode
 	 * (procrestores and procsaves balance), it is pcycles.
 	 */
-	vlong	pcycles;
+	s64	pcycles;
 
 	QLock	debug;		/* to access debugging elements of User */
 	Proc	*pdbg;		/* the debugging process */
@@ -720,6 +722,7 @@ struct Proc
 	Edf	*edf;		/* if non-null, real-time proc, edf contains scheduling params */
 	int	trace;		/* process being traced? */
 
+	uintptr	qpc;		/* pc calling last blocking qlock */
 	QLock	*eql;		/* interruptable eqlock */
 
 	void	*ureg;		/* User registers for notes */
@@ -740,7 +743,7 @@ struct Proc
 	Osenv	*env;
 	Osenv	defenv;
 	s32		swipend;	/* software interrupt pending for Prog TODO replace with notepending? */
-	Lock	sysio;		/* note handler lock */
+	Lock	sysio;		/* note handler lock */ 
 
 	/* inferno specific fields that are obsolete? */
 	int		fpstate;
@@ -752,8 +755,8 @@ struct Proc
 	/* forth specific fields */
 	Proc	*fprev, *fnext;	/* forth processes linked list */
 	void	*fmem;			/* forth process memory - sandboxed except for macro primitives */
-	void	*shm;		/* for devshm */
-	void	*readyfds;	/* for devready.c */
+	void	*shm;		/* for devshm. move this into Osenv or maybe remove Osenv at some point to get more in sync with 9front */
+	void	*canread;	/* for devready.c */
 	u8		fstarted;	/* 0 while waiting for the pctl message */
 };
 
@@ -1080,3 +1083,32 @@ struct {
 	uint n;
 	char buf[16384];
 } kmesg;
+
+/*
+ * shared memory data structures. Modeled after Egrp. used by devshm.
+ */
+typedef struct Svalue Svalue;
+struct Svalue
+{
+	Ref;
+	RWlock;
+	char	*name;
+	char	*value;
+	s32	len;
+	s32 vers;
+	u8 dead;	/* set by remove() */
+};
+
+typedef struct Sgrp Sgrp;
+struct Sgrp
+{
+	Ref;
+	RWlock;
+	union{		/* array of Svalue pointers */
+		Svalue	**entries;
+		Svalue	**ent;
+	};
+	int	nent;	/* number of entries used */
+	int	ment;	/* maximum number of entries */
+	u32	vers;	/* of Sgrp */
+};

@@ -71,7 +71,7 @@ irqhandled(Ureg *ureg, int vno)
 				if(up->delaysched)
 					sched();
 			} else {
-				preemption(0);
+				preempted();
 			}
 		}
 		return 1;

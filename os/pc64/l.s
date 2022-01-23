@@ -972,7 +972,7 @@ TEXT forkret(SB), 1, $-4
  * The size of each entry in the vector table (6 bytes) is known in trapinit0().
  * Volume 3A 6-14
  * Stack is (high -> low)
- * SS, RSP, RFLAGS, CS, RIP, Error Code (if any), Vectortable(SB) return PC
+ * SS, RSP, RFLAGS, CS, RIP, Error Code (if any), vectortable(SB) return PC
  * (SP) = Vectortable(SB) return PC. The first byte of this return PC will be the
  * byte we used to identify the trap type.
  * Removed the nested check that 9front does as we are not using different code
@@ -980,15 +980,21 @@ TEXT forkret(SB), 1, $-4
  */
 
 TEXT _strayintr(SB), 1, $-4	/* no error code pushed */
-	PUSHQ	AX				/* save AX, some junk to fill the ecode slot in the stack */
-	MOVQ	8(SP), AX		/* vectortable(SB) PC */
+	PUSHQ	AX			/* some value to fill the ecode slot in the stack and also store AX value */
+	MOVQ	8(SP), AX	/* vectortable(SB) PC */
+						/* Stack is SS, RSP, RFLAGS, CS, RIP, vectortable(SB) Return PC, AX
+							AX = vectortable(SB) return PC */
 	JMP	_intrcommon
 
 TEXT _strayintrx(SB), 1, $-4/* error code pushed */
-	XCHGQ	AX, (SP)		/* exchange AX with pointer to trap type */
+	XCHGQ	AX, (SP)	/* exchange AX with pointer to trap type */
+						/* Stack is SS, RSP, RFLAGS, CS, RIP, Error Code, AX
+							AX = vectortable(SB) return PC */
 _intrcommon:
-	MOVBQZX	(AX), AX		/* extract trap type from the vectortable(SB) return PC -> AX */
-	XCHGQ	AX, (SP)		/* exchange vectortable(SB) return PC with the trap type in AX */
+	MOVBQZX	(AX), AX	/* extract trap type from the vectortable(SB) return PC -> AX */
+	XCHGQ	AX, (SP)	/* exchange vectortable(SB) return PC with the trap type in AX */
+						/* Stack is SS, RSP, RFLAGS, CS, RIP, Error Code or vectortable(SB) Return PC, trap type
+								AX = AX */
 
 	PUSHW	GS
 	PUSHW	FS

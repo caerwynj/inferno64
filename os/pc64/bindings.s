@@ -164,7 +164,7 @@ TEXT	fswrite(SB), 1, $32	/* ( n a fd -- n2|-1 ) */
 	PUSH(TOP)			/* ( -- n a fd n n ) */
 	MOVQ CX, TOP		/* ( n a fd -- n a fd n a ) */
 
-	CALL validatebuffer(SB)
+	CALL validatebuffer(SB)	/* ( n a fd n a -- n a fd ) */
 
 	MOVQ UP, 24(SP)
 	F_TO_C_3

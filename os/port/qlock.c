@@ -13,24 +13,6 @@ struct {
 	ulong qlockq;
 } rwstats;
 
-/*
-	*lock()
-		blockinglock = qpc = nil
-	*unlock()
-		blockinglock = qpc = nil
-
-	*lock()
-		blockinglock = qpc = nil
-	placed in the queue
-		blockinglock = lock address
-		qpc = pc that called lock()
-	out of the queue, ready to run
-		blockinglock = nil
-		qpc = pc that called lock()
-	*unlock()
-		blockinglock = qpc = nil
- */
-
 void
 eqlock(QLock *q)
 {
@@ -66,20 +48,17 @@ eqlock(QLock *q)
 	else
 		p->qnext = up;
 	q->tail = up;
-	up->qnext = nil;
-	up->blockinglock = q;
 	up->eql = q;
+	up->qnext = nil;
 	up->qpc = getcallerpc(&q);
 	up->state = Queueing;
 	unlock(&q->use);
 	sched();
-	up->blockinglock = nil;
 	if(up->eql == nil){
 		up->notepending = 0;
 		interrupted();
 	}
 	up->eql = nil;
-	up->qpc = 0;
 }
 
 void
@@ -110,9 +89,7 @@ qlock(QLock *q)
 		q->head = up;
 	else
 		p->qnext = up;
-	up->qnext = nil;
 	q->tail = up;
-	up->blockinglock = q;
 	up->eql = nil;
 	up->state = Queueing;
 	up->qpc = getcallerpc(&q);
@@ -134,7 +111,6 @@ canqlock(QLock *q)
 	return 1;
 }
 
-/* blockinglock should not be nil */
 void
 qunlock(QLock *q)
 {
@@ -144,18 +120,12 @@ qunlock(QLock *q)
 	if (q->locked == 0)
 		print("qunlock called with qlock not held, from %#p\n",
 			getcallerpc(&q));
-	if (up != nil && up->blockinglock != nil)
-		print("qunlock called with blockinglock %#p, from %#p\n",
-			up->blockinglock, getcallerpc(&q));
-	if (up != nil)
-			up->qpc = 0;
 	p = q->head;
 	if(p != nil) {
 		/* some other process is waiting for this lock */
 		q->head = p->qnext;
 		if(q->head == nil)
 			q->tail = nil;
-		p->blockinglock = nil;
 		unlock(&q->use);
 		ready(p);
 		return;
@@ -189,28 +159,10 @@ rlock(RWlock *q)
 		p->qnext = up;
 	q->tail = up;
 	up->qnext = nil;
-	up->blockinglock = q;
-	up->eql = nil;
 	up->state = QueueingR;
 	up->qpc = getcallerpc(&q);
 	unlock(&q->use);
 	sched();
-}
-
-/* same as rlock but punts if there are any writers waiting */
-int
-canrlock(RWlock *q)
-{
-	lock(&q->use);
-	rwstats.rlock++;
-	if(q->writer == 0 && q->head == nil){
-		/* no writer, go for it */
-		q->readers++;
-		unlock(&q->use);
-		return 1;
-	}
-	unlock(&q->use);
-	return 0;
 }
 
 void
@@ -219,11 +171,6 @@ runlock(RWlock *q)
 	Proc *p;
 
 	lock(&q->use);
-	if (up != nil && up->blockinglock != nil)
-		print("runlock called with blockinglock %#p, from %#p\n",
-			up->blockinglock, getcallerpc(&q));
-	if (up != nil)
-			up->qpc = 0;
 	p = q->head;
 	if(--(q->readers) > 0 || p == nil){
 		unlock(&q->use);
@@ -237,7 +184,6 @@ runlock(RWlock *q)
 	if(q->head == nil)
 		q->tail = nil;
 	q->writer = 1;
-	p->blockinglock = nil;
 	unlock(&q->use);
 	ready(p);
 }
@@ -269,10 +215,7 @@ wlock(RWlock *q)
 		p->qnext = up;
 	q->tail = up;
 	up->qnext = nil;
-	up->blockinglock = q;
-	up->eql = nil;
 	up->state = QueueingW;
-	up->qpc = getcallerpc(&q);
 	unlock(&q->use);
 	sched();
 }
@@ -283,11 +226,6 @@ wunlock(RWlock *q)
 	Proc *p;
 
 	lock(&q->use);
-	if (up != nil && up->blockinglock != nil)
-		print("runlock called with blockinglock %#p, from %#p\n",
-			up->blockinglock, getcallerpc(&q));
-	if (up != nil)
-			up->qpc = 0;
 	p = q->head;
 	if(p == nil){
 		q->writer = 0;
@@ -299,7 +237,6 @@ wunlock(RWlock *q)
 		q->head = p->qnext;
 		if(q->head == nil)
 			q->tail = nil;
-		p->blockinglock = nil;
 		unlock(&q->use);
 		ready(p);
 		return;
@@ -313,11 +250,27 @@ wunlock(RWlock *q)
 		p = q->head;
 		q->head = p->qnext;
 		q->readers++;
-		p->blockinglock = nil;
 		ready(p);
 	}
 	if(q->head == nil)
 		q->tail = nil;
 	q->writer = 0;
 	unlock(&q->use);
+}
+
+
+/* same as rlock but punts if there are any writers waiting */
+int
+canrlock(RWlock *q)
+{
+	lock(&q->use);
+	rwstats.rlock++;
+	if(q->writer == 0 && q->head == nil){
+		/* no writer, go for it */
+		q->readers++;
+		unlock(&q->use);
+		return 1;
+	}
+	unlock(&q->use);
+	return 0;
 }
