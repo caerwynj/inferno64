@@ -50,7 +50,12 @@ lockloop(Lock *l, uintptr pc)
 		dumpaproc(p);
 }
 
-/* if looped to obtain a lock, return 1. Else, return 0 */
+/*
+	if looped to obtain a lock, return 1. else, return 0
+	Why not have a sched() in the waiting loop to give up the processor?
+	< ori> the idea is that going through the scheduler takes more time than
+	waiting for the other cpu to do the few protected instructions
+ */
 int
 lock(Lock *l)
 {
@@ -63,11 +68,8 @@ lock(Lock *l)
 	if(up)
 		up->nlocks++;	/* prevent being scheded */
 	if(tas(&l->key) == 0){ /* got the lock on the 1st attempt, done */
-		if(up){
-				up->lastlock = l;
-				l->priority = up->priority;
-				up->priority = PriLock;
-			}
+		if(up)
+			up->lastlock = l;
 		l->pc = pc;
 		l->p = up;
 		l->m = MACHP(m->machno);
@@ -85,15 +87,14 @@ lock(Lock *l)
 		lockstats.inglare++;
 		i = 0;
 		while(l->key){
-			if(conf.nmach < 2 && up && up->state == Running && islo()
-				/* && up->edf && (up->edf->flags & Admitted)*/){
+			if(conf.nmach < 2 && up && up->edf && (up->edf->flags & Admitted)){
 				/*
 				 * Priority inversion, yield on a uniprocessor; on a
 				 * multiprocessor, the other processor will unlock
 				 */
-				print("inversion %#p pc %#p proc %zud held by pc %#p proc %zud\n",
+				print("inversion %#p pc %#p proc %ud held by pc %#p proc %ud\n",
 					l, pc, up != nil ? up->pid : 0, l->pc, l->p != nil ? ((Proc*)l->p)->pid : 0);
-				/* up->edf->d = todget(nil);*/	/* yield to process with lock */
+				up->edf->d = todget(nil);	/* yield to process with lock */
 				up->pc = pc;
 				sched();
 			}
@@ -105,11 +106,8 @@ lock(Lock *l)
 		if(up)
 			up->nlocks++;
 		if(tas(&l->key) == 0){
-			if(up){
+			if(up)
 				up->lastlock = l;
-				l->priority = up->priority;
-				up->priority = PriLock;
-			}
 			l->pc = pc;
 			l->p = up;
 			l->m = MACHP(m->machno);
@@ -136,10 +134,6 @@ ilock(Lock *l)
 	x = splhi();
 	if(tas(&l->key) != 0){
 		lockstats.glare++;
-		if(conf.nmach < 2)
-			panic("ilock: no way out: pc 0x%zux:"
-					" lock 0x%p held by pc 0x%zux",
-					pc, l, l->pc);
 		/*
 		 * Cannot also check l->pc, l->m, or l->isilock here
 		 * because they might just not be set yet, or
@@ -198,7 +192,6 @@ canlock(Lock *l)
 void
 unlock(Lock *l)
 {
-	int pri;
 #ifdef LOCKCYCLES
 	l->lockcycles += lcycles();
 	cumlockcycles += l->lockcycles;
@@ -220,23 +213,16 @@ unlock(Lock *l)
 		dumpaproc(l->p);
 		dumpaproc(up);
 	}
-	pri = l->priority;
-	l->pc = 0;
-	l->p = nil;
 	l->m = nil;
 	coherence();
 	l->key = 0;
 
-	if(up){
-		up->priority = pri;
-		up->lastlock = nil;
-		if(--up->nlocks == 0 && up->delaysched && islo()){
-			/*
-			 * Call sched if the need arose while locks were held
-			 * But, don't do it from interrupt routines, hence the islo() test
-			 */
-			sched();
-		}
+	if(up && --up->nlocks >= 0 && up->delaysched && islo()){
+		/*
+		 * Call sched if the need arose while locks were held
+		 * But, don't do it from interrupt routines, hence the islo() test
+		 */
+		sched();
 	}
 }
 
@@ -266,9 +252,6 @@ iunlock(Lock *l)
 		print("iunlock(%#p) while lo: pc %#p, held by %#p\n", l, getcallerpc(&l), l->pc);
 
 	sr = l->sr;
-	l->sr = 0;
-	l->pc = 0;
-	l->p = nil;
 	l->m = nil;
 	coherence();
 	l->key = 0;
