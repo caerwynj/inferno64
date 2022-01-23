@@ -1319,7 +1319,7 @@ namec(char *aname, int amode, int omode, ulong perm)
 		error("empty file name");
 	aname = validnamedup(aname, 1);
 	if(waserror()){
-		print("namec: waserror() loop %r\n");
+		print("namec: waserror() loop pid %d %r\n", up->pid);
 		free(aname);
 		nexterror();
 	}
@@ -1382,7 +1382,7 @@ namec(char *aname, int amode, int omode, ulong perm)
 	e.nelems = 0;
 	e.nerror = 0;
 	if(waserror()){
-print("namec: waserror() loop before parsename\n");
+print("namec: waserror() loop before parsename pid %d\n", up->pid);
 		cclose(c);
 		free(e.name);
 		free(e.elems);
@@ -1424,10 +1424,14 @@ print("namec: waserror() loop before parsename\n");
 	}
 
 	if(walk(&c, e.elems, e.nelems, nomount, &e.nerror) < 0){
-print("namec: walk < 0 e.nerror %d\n", e.nerror);
+print("namec: walk < 0 e.nerror %d pid %d\n", e.nerror, up->pid);
 		if(e.nerror < 0 || e.nerror > e.nelems){
 			print("namec %s walk error nerror=%d\n", aname, e.nerror);
 			e.nerror = 0;
+		}else{
+			for(int j=0; j<e.nelems; j++){
+				print("	e.elems[%d] %s\n", j, e.elems[j]);
+			}
 		}
 		nexterror();
 	}

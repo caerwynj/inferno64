@@ -1,7 +1,7 @@
 #!/dis/sh
 
 load std
-echo my pid is ${pid}
+echo starting fthclose.sh pid ${pid}
 
 #{echo testing; sleep 1; echo exiting} | { cat - ; echo exiting the receiver }
 bind '#|' /n/ff

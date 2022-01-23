@@ -7,6 +7,7 @@
 #include	"io.h"
 #include	"ureg.h"
 #include	"rebootcode.i"
+#include	"kernel.h"		/* for kopen() only */
 
 #define X86STEPPING(x)	((x) & 0x0F)
 #define X86MODEL(x)	(((x)>>4) & 0x0F)
@@ -317,6 +318,13 @@ init0(void)
 	}
 	kproc("alarm", alarmkproc, 0, 0);
 
+	if(kopen("#c/cons", OREAD) != 0)
+		panic("failed to make fd0 from #c/cons");
+	kopen("#c/cons", OWRITE);
+	kopen("#c/cons", OWRITE);
+
+	goforth(up->fmem);
+	/* disinit("/osinit.dis"); */
 	/* disinit("/osinit.dis"); */
 	/* init0 will never return */
 	panic("init0");
@@ -329,7 +337,7 @@ userinit(void)
 	Osenv *o;
 
 	up = nil;
-	if((p = newproc()) == nil){
+	if((p = newforthproc()) == nil){
 		panic("no procs for userinit");
 	}
 	o = p->env;

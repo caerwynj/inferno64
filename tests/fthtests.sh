@@ -24,7 +24,7 @@
 # T{ 1 2 SWAP -> 1 }T WRONG NUMBER OF RESULTS: T{ 1 2 SWAP -> 1 }T 
 
 load std
-echo my pid is ${pid}
+echo starting fthtests.sh pid ${pid}
 bind '#|' /n/ff
 <[7]/n/ff/data >[8]/n/ff/data1 >[9]/n/ff/data <[10]/n/ff/data1 {
 

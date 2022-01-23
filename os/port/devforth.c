@@ -327,19 +327,19 @@ loadforthdictionary(u8 *fmem)
 
 extern intptr forthmain(u8 *);
 void
-forthentry(void *fmem)
+goforth(void *fmem)
 {
 	up->type = Forth;
 
 	/* load dictionary */
 	loadforthdictionary((u8*)fmem);
-	print("forthentry pid %d forthmem 0x%zx end 0x%zx forthmem+RSTACK 0x%zx\n",
+	print("goforth pid %d forthmem 0x%zx end 0x%zx forthmem+RSTACK 0x%zx\n",
 		up->pid, (intptr)fmem, ((intptr*)fmem)[1], (intptr)fmem+RSTACK);
 	DBG("fentries[0].name %s\n", fentries[0].hdr.name);
 	DBG("fentries[1].name %s nfentries %d\n", fentries[1].hdr.name, nelem(fentries));
 	DBG("up->kstack 0x%p\n", up->kstack);
 	if(waserror()){
-		print("forthentry error: %r\n");
+		print("goforth error: %r\n");
 		nexterror();
 	}else
 		forthmain((u8*)fmem);
@@ -498,7 +498,7 @@ print("stdinfd devtab[c->type]->dc %c c 0x%p chanpath(c) %s c->aux 0x%p\n", devt
 	p->kparg = arg;
 	kprocchild(p, linkproc);*/
 /* this does all of the above 3 lines */
-	kprocchild(p, forthentry, p->fmem);
+	kprocchild(p, goforth, p->fmem);
 
 	p->text = forthname;
 
@@ -507,7 +507,7 @@ print("stdinfd devtab[c->type]->dc %c c 0x%p chanpath(c) %s c->aux 0x%p\n", devt
 /*	cycles(&p->kentry);
 	p->pcycles = -p->kentry;*/
 
-	p->fstarted = 1;
+	p->fisgo = 1;
 	qunlock(&p->debug);
 	p->psstate = nil;
 
@@ -776,7 +776,7 @@ newforthproc(void)
 		freebroken();
 		resrcwait("no procs for kproc");
 	}
-	p->fstarted = 0; /* until the pctl message comes through */
+	p->fisgo = 0; /* until the pctl message comes through */
 	kstrdup(&p->env->user, up->env->user);
 
 	if(fhead == nil){
@@ -1012,7 +1012,7 @@ forthwrite(Chan *c, void *buf, s32 n, s64)
 	DBG("forthwrite c->path %s f->pid %d\n", chanpath(c), f->pid);
 	switch(QID(c->qid)){
 	case Qctl:
-		if(f->fstarted == 0){
+		if(f->fisgo == 0){
 			/* pctl message */
 			((char*)buf)[n] = '\0';
 			DBG("forthwrite n %d buf %s\n", n, buf);
@@ -1030,12 +1030,33 @@ forthwrite(Chan *c, void *buf, s32 n, s64)
 	return rv;
 }
 
+/* sets up the forth environment for the forth init */
+void
+forthinit(void)
+{
+	Proc *p;
+
+	p = up;
+	if(p == nil)
+		panic("goforth up == nil\n");
+
+	p->fmem = mallocalign(FORTHHEAPSIZE, BY2PG, 0, 0);
+	if(p->fmem == nil)
+		panic("goforth p->fmem == nil\n");
+
+	/* store the start address at that address too - magic check */
+	((intptr*)p->fmem)[0] = (intptr)p->fmem;	/* heap start */
+	((intptr*)p->fmem)[1] = (intptr)p->fmem+FORTHHEAPSIZE-1; /* heap end */
+
+	p->fisgo = 1;
+}
+
 Dev forthdevtab = {
 	'f',
 	"forth",
 
 	devreset,
-	devinit,
+	forthinit,
 	devshutdown,
 	forthattach,
 	forthwalk,

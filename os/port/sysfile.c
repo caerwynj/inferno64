@@ -983,14 +983,14 @@ rread(int fd, void *p, s32 n, s64 *offp)
 	s64 off;
 
 	if(waserror()){
-		print("rread fd %d p 0x%p n %d offp %lld fdtochan failed: %r\n", fd, p, n, offp);
+		print("rread fd %d p 0x%p n %d fdtochan failed: %r\n", fd, p, n);
 		return -1;
 	}
 
 	c = fdtochan(up->env->fgrp, fd, OREAD, 1, 1);
 
 	if(waserror()){
-		print("rread fd %d p 0x%p n %d offp %lld fdtochan failed: %r\n", fd, p, n, offp);
+		print("rread fd %d p 0x%p n %d fdtochan failed: %r\n", fd, p, n);
 		cclose(c);
 		nexterror();
 	}
@@ -1052,7 +1052,23 @@ rread(int fd, void *p, s32 n, s64 *offp)
 s32
 kread(int fd, void *va, s32 n)
 {
-	return rread(fd, va, n, nil);
+	s32 rv /*, i*/;
+
+/* print("kread pid %d fd %d va 0x%p n %d\n", up->pid, fd, va, n);
+	if(up->pid == 28){
+		print("kread: started ");
+	}*/
+	rv = rread(fd, va, n, nil);
+/*	if(up->pid == 28){
+		i=rv;
+		print("returned: rv %d -", rv);
+		while(i-- > 0){
+			print("%c", ((char*)va)[i]);
+		}
+		print("-\n");
+	} */
+	/* return rread(fd, va, n, nil); */
+	return rv;
 }
 
 s32

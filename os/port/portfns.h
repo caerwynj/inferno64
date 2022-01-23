@@ -122,6 +122,7 @@ void		freeskey(Signerkey*);
 void		getcolor(u32, u32*, u32*, u32*);
 uintptr	getmalloctag(void*);
 uintptr	getrealloctag(void*);
+void	goforth(void *);
 void		gotolabel(Label*);
 char*		getconfenv(void);
 void		halt(void);

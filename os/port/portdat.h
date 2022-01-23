@@ -763,7 +763,7 @@ struct Proc
 	void	*fmem;			/* forth process memory - sandboxed except for macro primitives */
 	void	*shm;		/* for devshm. move this into Osenv or maybe remove Osenv at some point to get more in sync with 9front */
 	void	*canread;	/* for devready.c */
-	u8		fstarted;	/* 0 while waiting for the pctl message */
+	u8		fisgo;	/* 0 while waiting for the pctl message */
 };
 
 enum

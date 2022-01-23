@@ -1015,6 +1015,7 @@ mountio(Mnt *m, Mntrpc *r)
 	int n;
 
 	while(waserror()) {
+print("mountio waserror() at the start pid %ud\n", up->pid);
 		if(m->rip == up)
 			mntgate(m);
 		if(strcmp(up->env->errstr, Eintr) != 0 || waserror()){

@@ -717,6 +717,12 @@ newproc(void)
 		panic("pidalloc");
 	/* addprog(p); no more dis */
 
+	/* TODO should we do this just user forth procs or does it need to be done for kproc's too */
+	memset(p->time, 0, sizeof(p->time));
+	p->time[TReal] = MACHP(0)->ticks;
+	cycles(&p->kentry);
+	p->pcycles = -p->kentry;
+
 	return p;
 }
 
