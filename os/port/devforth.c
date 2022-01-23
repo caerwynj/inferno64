@@ -331,8 +331,8 @@ forthentry(void *fmem)
 {
 	up->type = Forth;
 
-	loadforthdictionary((u8*)fmem);
 	/* load dictionary */
+	loadforthdictionary((u8*)fmem);
 	print("forthentry pid %d forthmem 0x%zx end 0x%zx forthmem+RSTACK 0x%zx\n",
 		up->pid, (intptr)fmem, ((intptr*)fmem)[1], (intptr)fmem+RSTACK);
 	DBG("fentries[0].name %s\n", fentries[0].hdr.name);
@@ -360,7 +360,7 @@ forthentry(void *fmem)
 }
 
 void
-startforthproc(Proc *p, Params *params)
+initializeforthproc(Proc *p, Params *params)
 {
 	Pgrp *pg;
 	Fgrp *fg;
@@ -402,6 +402,9 @@ startforthproc(Proc *p, Params *params)
 	if(params->shmem == 0 || params->shmem == 2){
 		p->shm = nil;
 	}else if(params->shmem == 1){
+		if(up->shm == nil)
+			up->shm = shmgrpnew();
+
 		p->shm = up->shm;
 		incref(up->shm);
 	}
@@ -508,7 +511,7 @@ print("stdinfd devtab[c->type]->dc %c c 0x%p chanpath(c) %s c->aux 0x%p\n", devt
 	qunlock(&p->debug);
 	p->psstate = nil;
 
-	print("startforthproc: ready p->pid %d\n", p->pid);
+	print("initializeforthproc: ready p->pid %d\n", p->pid);
 	ready(p);
 }
 
@@ -759,6 +762,36 @@ nonone(Proc *p)
 	error(Eperm);
 }
 
+Proc *
+newforthproc(void)
+{
+	Proc *p;
+
+	flock();
+	if(waserror()){
+		funlock();
+		nexterror();
+	}
+	while((p = newproc()) == nil){
+		freebroken();
+		resrcwait("no procs for kproc");
+	}
+	p->fstarted = 0; /* until the pctl message comes through */
+	kstrdup(&p->env->user, up->env->user);
+
+	if(fhead == nil){
+		fhead = ftail = p;
+	}else{
+		ftail->fnext = p;
+		p->fprev = ftail;
+		ftail = p;
+	}
+	nforthprocs++;
+	funlock();
+	poperror();
+	return p;
+}
+
 /*
 	 Opening the new file creates a forth process.	The file
 	 descriptor returned from the open(2) will point to the	con-
@@ -801,29 +834,9 @@ forthopen(Chan *c, u32 omode0)
 		return tc;
 	}
 
-	flock();
-	if(waserror()){
-		funlock();
-		nexterror();
-	}
 	if(QID(c->qid) == Qnew){
-		while((p = newproc()) == nil){
-			/* TODO freebroken(); */
-			resrcwait("no procs for kproc");
-		}
-		p->fstarted = 0; /* until the pctl message comes through */
+		p = newforthproc();
 		c->aux = p;
-		kstrdup(&p->env->user, up->env->user);
-
-		if(fhead == nil){
-			fhead = ftail = p;
-		}else{
-			ftail->fnext = p;
-			p->fprev = ftail;
-			ftail = p;
-		}
-		nforthprocs++;
-
 		slot = procindex(p->pid);
 		if(slot < 0)
 			panic("forthopen");
@@ -836,8 +849,6 @@ forthopen(Chan *c, u32 omode0)
 				"	c->aux 0x%p\n",
 				p->pid, slot, SLOT(c->qid), chanpath(c), c->aux);
 	}
-	funlock();
-	poperror();
 
 	p = proctab(SLOT(c->qid));
 	eqlock(&p->debug);
@@ -1006,7 +1017,7 @@ forthwrite(Chan *c, void *buf, s32 n, s64)
 			((char*)buf)[n] = '\0';
 			DBG("forthwrite n %d buf %s\n", n, buf);
 			params = parseparams(buf);
-			startforthproc(f, &params);
+			initializeforthproc(f, &params);
 		}else
 			error(Ebadctl);
 		break;

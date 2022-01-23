@@ -5,6 +5,7 @@
 #include "fns.h"
 #include "io.h"
 #include "ureg.h"
+#include "tos.h"
 
 struct Timers
 {
@@ -146,7 +147,7 @@ hzclock(Ureg *ur)
 	if(m->proc)
 		m->proc->pc = ur->pc;
 
-	/* accounttime(); */
+	accounttime();
 	kmapinval();
 
 	if(kproftick != nil)
@@ -155,19 +156,17 @@ hzclock(Ureg *ur)
 	if(active.machs[m->machno] == 0)
 		return;
 
-	if(active.exiting) {
-		print("someone's exiting\n");
+	if(active.exiting)
 		exit(0);
-	}
 
 	if(m->machno == 0)
 		checkalarms();
 
 	if(up && up->state == Running){
-		if(anyready()){
-			sched();
-			splhi();
-		}
+		/* user profiling clock */
+		Tos *tos = (Tos*)(USTKTOP-sizeof(Tos));
+		tos->clock += TK2MS(1);
+		hzsched();	/* in proc.c */
 	}
 }
 

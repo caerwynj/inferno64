@@ -1,4 +1,5 @@
 #include	"u.h"
+#include	"tos.h"
 #include	"../port/lib.h"
 #include	"mem.h"
 #include	"dat.h"
@@ -298,18 +299,27 @@ init0(void)
 	o->pgrp->dot = cclone(o->pgrp->slash);
 
 	chandevinit();
+/*	print("devtab\n");
+	for(int i=0; devtab[i] != nil; i++){
+		print("	i %d devtab[i] 0x%p dc %d name %s\n", i, devtab[i], devtab[i]->dc, devtab[i]->name);
+		print("		reset 0x%p init 0x%p shutdown 0x%p\n", devtab[i]->reset, devtab[i]->init, devtab[i]->shutdown);
+		print("		attach 0x%p walk 0x%p stat 0x%p\n", devtab[i]->attach, devtab[i]->walk, devtab[i]->stat);
+		print("		open 0x%p create 0x%p close 0x%p\n", devtab[i]->open, devtab[i]->create, devtab[i]->close);
+		print("		read 0x%p bread 0x%p write 0x%p\n", devtab[i]->read, devtab[i]->bread, devtab[i]->write);
+	}*/
 
-	if(!waserror()){
+	if(waserror() == 0){
 		ksetenv("cputype", "am64", 0);
 		//snprint(buf, sizeof(buf), "amd64 %s", conffile);
 		//ksetenv("terminal", buf, 0);
 		setconfenv();
 		poperror();
 	}
+	kproc("alarm", alarmkproc, 0, 0);
 
-	poperror();
-
-	disinit("/osinit.dis");
+	/* disinit("/osinit.dis"); */
+	/* init0 will never return */
+	panic("init0");
 }
 
 void
@@ -318,9 +328,9 @@ userinit(void)
 	Proc *p;
 	Osenv *o;
 
-	while((p = newproc()) == nil){
-/* TODO		freebroken(); */
-		resrcwait("no procs for userinit");
+	up = nil;
+	if((p = newproc()) == nil){
+		panic("no procs for userinit");
 	}
 	o = p->env;
 
@@ -329,10 +339,7 @@ userinit(void)
 	o->pgrp = newpgrp();
 	kstrdup(&o->user, eve);
 
-	strcpy(p->text, "interp");
-
-	pidalloc(p);
-
+	strcpy(p->text, "*init*");
 	/*
 	 * Kernel Stack
 	 *
@@ -340,7 +347,9 @@ userinit(void)
 	 *	8 bytes for gotolabel's return PC
 	 */
 	p->sched.pc = (uintptr)init0;
-	p->sched.sp = (uintptr)p->kstack+KSTACK-sizeof(uintptr);
+	p->sched.sp = (uintptr)p->kstack+KSTACK-sizeof(uintptr) - sizeof(Tos) -sizeof(uintptr)/* for the string "boot" */;
+	((uintptr*)p->sched.sp)[0] = 0;
+	strcpy((char*)p->sched.sp+1,"boot");
 
 	ready(p);
 }

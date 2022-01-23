@@ -595,11 +595,17 @@ struct Schedq
 
 /* inferno uses Osenv for environment information. It is cheaper to create
  * new processes with a default environment (spawn, not fork)
+ *
+ * When using forth for the userspace, forth's stack is in fmem.
+ * The kstack is used for everything else. Hence, there is no
+ * stack switching to kstack on a syscall. Forth uses
+ * DX and R8 for stack manipulations to avoid
+ * messing around with SP.
  */
 struct Proc
 {
 	Label	sched;		/* known to l.s */
-	char	*kstack;	/* known to l.s */
+	char	*kstack;	/* known to l.s in 9front to switch to the kernel stack on syscallentry */
 	Mach	*mach;		/* machine running this proc */
 	char	*text;
 	char	*user;		/* inferno uses Osenv.user */

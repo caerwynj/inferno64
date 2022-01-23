@@ -78,7 +78,7 @@
 #define	CPU0MACH	(KDZERO+0x2000ull)	/* Mach for bootstrap processor (BSP) */
 #define CPU0END		(KDZERO+0x12000ull)	/* CPU0MACH + (MACHSIZE = 64 KiB = 0x10 000) */
 										/* MACHSIZE includes stack size */
-#define CPU0SP		(KDZERO+0x12000ull)
+#define CPU0SP		CPU0END
 #define FFSTART		(KDZERO+0x12000ull) /* FF stacks, system variables, tib, word buffer */
 #define FFEND		(KDZERO+0x15000ull) /* 3 pages */
 /* 1 PD table has 512 entries
@@ -205,6 +205,8 @@
 
 #define RMACH		R15			/* m-> */
 #define RUSER		R14			/* up-> */
+
+#define USTKTOP		(up->kstack+KSTACK)
 
 /* forth locations */
 /*

@@ -145,6 +145,7 @@ port
 	dial
 	dis
 	discall
+	edf
 	exception
 	exportfs
 	inferno

@@ -850,7 +850,7 @@ writewatchpt(Proc *pr, char *buf, int nbuf, uvlong offset)
 		x = strtoull(f[2], &q, 0);
 		if(f[2] == q || *q != 0 || x > (uintptr)-wq->addr) error("invalid length");
 		wq->len = x;
-		/*if(wq->addr + wq->len > USTKTOP) error("bad address");*/
+		if(wq->addr + wq->len > (uintptr)USTKTOP) error("bad address");
 		wq++;
 	}
 	nwp = wq - (wp + nwp0);

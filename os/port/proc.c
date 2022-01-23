@@ -664,6 +664,7 @@ found:
 /*
  * not using memset 0 on the Proc structure
  * to avoid leaking KSTACK
+TODO fpusetup() and procsetup() of 9front
  */
 Proc*
 newproc(void)
@@ -697,6 +698,12 @@ newproc(void)
 	p->env->errstr = p->env->errbuf0;
 	p->env->syserrstr = p->env->errbuf1;
 
+	/*
+	 * a user process. kproc() can change it as it needs.
+	 */
+	up->kp = 0;
+	up->noswap = 0;
+	up->privatemem = 0;
 	/* sched params */
 	p->mp = 0;
 	p->wired = 0;
@@ -708,9 +715,7 @@ newproc(void)
 	pidalloc(p);
 	if(p->pid == 0)
 		panic("pidalloc");
-	if(p->kstack == 0)
-		p->kstack = smalloc(KSTACK);
-	addprog(p);
+	/* addprog(p); no more dis */
 
 	return p;
 }

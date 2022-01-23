@@ -24,14 +24,13 @@ alarmkproc(void*)
 				continue;
 			if((long)(now - when) < 0)
 				break;
-/* TODO		if(!canqlock(&rp->debug))
+		if(!canqlock(&rp->debug))
 				break;
 			if(rp->alarm != 0){
 				postnote(rp, 0, "alarm", NUser);
 				rp->alarm = 0;
 			}
 			qunlock(&rp->debug);
-*/
 		}
 		alarms.head = rp;
 		qunlock(&alarms);
