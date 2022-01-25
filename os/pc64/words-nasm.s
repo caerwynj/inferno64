@@ -259,12 +259,12 @@ L52:
 dd M_exitcolon
 
 CENTRY "key" C_key 3	 ; ( -- c ) (G read a single character from the input onto the stack )
-dd M_literal
-dd 1			; ( 1 -- )
-dd MV_Iobuf		; variable iobuf to store the character read
 dd MV_Infd
-dd M_fetch		; ( 1 Iobuf -- 1 Iobuf infd )
-dd M_fsread	; ( 1 Iobuf infd -- n )
+dd M_fetch		; ( infd )
+dd MV_Iobuf		; variable iobuf to store the character read
+dd M_literal
+dd 1			; ( infd Iobuf 1 )
+dd M_sysread	; ( infd Iobuf 1 -- n )
 dd C_0eq
 dd M_cjump		; if 0 characters read
 dd L78			; if qread n != 0 jump to L78. If n == 0 jump over
@@ -283,21 +283,23 @@ dd M_exitcolon
 CENTRY "emit" C_emit 4	; ( character -- )
 dd MV_Iobuf		; variable iobuf address
 dd M_cstore	; variable iobuf has character
-dd MV_Iobuf		; variable iobuf address
-dd M_literal
-dd 1
-dd M_xswap		; ( iobuf 1 --  1 iobuf )
 dd MV_Outfd
 dd M_fetch		; outfd
-dd M_fswrite	; ( 1 iobuf outfd --  )
+dd MV_Iobuf		; variable iobuf address
+dd M_literal
+dd 1			; ( outfd iobuf 1 )
+dd M_syswrite	; ( 1 iobuf outfd --  )
 dd M_drop		; drop the return value of write
 dd M_exitcolon
 
 CENTRY "type" C_type 4	; ( addr n -- )
-dd M_xswap			; ( addr n --  n addr )
+dd M_rpush			; ( addr ) (R n )
+dd M_rpush			; ( ) (R n addr )
 dd M_literal
 dd 1				; stdout
-dd M_fswrite		; ( n addr 1 --  )
+dd M_rpop			; ( stdout addr ) (R n )
+dd M_rpop			; ( stdout addr n ) (R )
+dd M_syswrite		; ( 1 addr n --  )
 dd M_drop		; drop the return value of write
 dd M_exitcolon
 
@@ -1157,11 +1159,10 @@ L172:
 dd M_exitcolon
 
 
-dd M_dup ; debug code to show the word found
-dd C_count ; ( -- a n)
-dd M_xswap ; ( -- n a)
-dd MC_STDOUT
-dd M_fswrite
+dd MC_STDOUT	; ( str -- str 1) ; debug code to show the word found
+dd M_over		; ( str 1 str )
+dd C_count 		; ( str 1 a n)
+dd M_syswrite
 dd M_drop		; drop the return value of write
 
 CENTRY "interpret" C_interpret 9 ; there is stuff in TIB to be interpreted >In and >Limit are set
@@ -1693,38 +1694,37 @@ dd M_literal
 dd 1024		; ( -- padaddr 1024 )
 dd M_plus	; ( padaddr 1024 -- padaddr+1024 )
 dd M_rpop	; ( padaddr+1024 -- padaddr+1024 mode) (R mode -- )
-dd M_xswap	; M_literal dd 420		; ( padaddr+1024 mode 420 ) 420 for hardcoded mode?
-dd M_fsopen
+dd M_sysopen
 dd M_dup
 dd M_literal
 dd -1
 dd M_greater
 dd M_exitcolon
 CENTRY "close-file" C_close_file 10	; ( fd -- ioresult )
-dd M_fsclose
+dd M_sysclose
 dd C_0eq
 dd M_exitcolon
 CENTRY "read-file" C_read_file 9	; ( a n fd -- n2 ioresult )
-dd M_rpush
-dd M_xswap
-dd M_rpop	; ( n a fd )
-dd M_fsread
+dd C_rot	; ( n fd a )
+dd C_rot	; ( fd a n )
+dd M_sysread
 dd M_dup
 dd M_literal
 dd -1
 dd C_neq
 dd M_exitcolon
 CENTRY "write-file" C_write_file 10	; ( a n fd -- ioresult )
-dd M_rpush
-dd M_xswap
-dd M_rpop	; ( n a fd )
-dd M_fswrite
+dd C_rot	; ( n fd a )
+dd C_rot	; ( fd a n )
+dd M_syswrite
 dd M_literal
 dd -1
 dd C_neq
 dd M_exitcolon
 CENTRY "reposition-file" C_reposition_file 15	;	( type n fd -- ioresult )
-dd M_fsseek
+dd M_xswap		; ( type fd n )
+dd C_rot		; ( fd n type )
+dd M_sysseek
 dd M_literal
 dd -1
 dd C_neq
@@ -1769,9 +1769,7 @@ dd 1024		; ( padaddr 1024 )
 dd M_plus	; ( padaddr+1024 )
 dd M_rpop	; ( padaddr+1024 mode) (R perm )
 dd M_rpop	; ( padaddr+1024 mode perm ) (R )
-dd M_xswap	; ( padaddr+1024 perm mode )
-dd C_rot	; ( perm mode padaddr+1024 )
-dd M_fscreate
+dd M_syscreate
 dd M_dup
 dd M_literal
 dd -1
@@ -1896,17 +1894,17 @@ dd M_literal	; test code
 dd 66
 dd M_Wordb
 dd M_store
-dd M_literal
-dd 1
-dd M_Wordb
 dd MC_STDOUT
-dd M_fswrite
-dd M_drop		; drop the return value of write
+dd M_Wordb
 dd M_literal
 dd 1
-dd M_Wordb
+dd M_syswrite
+dd M_drop		; drop the return value of write
 dd MC_STDIN
-dd M_fsread
+dd M_Wordb
+dd M_literal
+dd 1
+dd M_sysread
 dd M_drop		; drop the return value of read
 
 CENTRY "boot" C_boot 4

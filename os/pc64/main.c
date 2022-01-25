@@ -278,6 +278,10 @@ machinit(void)
 	m->loopconst = 100000;
 }
 
+/*
+ * could move this to port/userinit.c as 9front does
+ * there is nothing arch specific here
+ */
 void
 init0(void)
 {

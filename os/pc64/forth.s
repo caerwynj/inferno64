@@ -26,8 +26,8 @@ plan9 amd64 assembler puts the first argument in BP (RARG), return value in AX.
  RSP: R8 return stack pointer, grows towards higher memory (upwards)
  IP:  R9 instruction pointer
  W:   R10 work register (holds CFA)
- UP:  R11 register holding the start of this process's heap memory
- UPE: R12 register holding the end of this process's heap memory -- TODO, use this
+ UM:  R11 register holding the start of this process's heap memory
+ UME: R12 register holding the end of this process's heap memory -- TODO, use this
 	CX, SI, DI, R13 temporary registers
 
 coding standard
@@ -74,8 +74,8 @@ Pad is 256 bytes from here
 	|
 	|
 User dictionary	upto n pages from the start
-UPE: heap end
-UP: heap start
+UME: heap end
+UM: heap start
 	forth constants
 low memory
 
@@ -91,8 +91,8 @@ TODO Move variable space out of the dictionary from #forth
 #define RSP R8 /* return stack pointer, grows towards higher memory (upwards) */
 #define IP  R9 /* instruction pointer */
 #define W   R10/* work register (holds CFA) */
-#define UP	R11/* start of heap memory */
-#define UPE	R12/* end of heap memory */
+#define UM	R11/* start of heap memory */
+#define UME	R12/* end of heap memory */
 
 #define PSTACK_SIZE BY2PG
 #define RSTACK_SIZE BY2PG
@@ -113,17 +113,17 @@ TODO Move variable space out of the dictionary from #forth
 TEXT	forthmain(SB), 1, $-4		/* no stack storage required */
 
 	/* Argument has the start of heap */
-	MOVQ RARG, UP		/* start of heap memory */
-	MOVQ 8(UP), UPE		/* HEAPEND populated by the caller */
+	MOVQ RARG, UM		/* start of heap memory */
+	MOVQ 8(UM), UME		/* HEAPEND populated by the caller */
 
-	MOVQ UP, RSP
+	MOVQ UM, RSP
 	ADDQ $RSTACK, RSP	/* return stack pointer, reset */
 
-	MOVQ UP, PSP
+	MOVQ UM, PSP
 	ADDQ $PSTACK, PSP	/* parameter stack pointer - stack setup, clear */
 
 	/* execute boot */
-	MOVQ UP, CX
+	MOVQ UM, CX
 	ADDQ $DTOP, CX	/* address of last defined word (c_boot) is at DTOP */
 	MOVQ (CX), IP	/* IP = address of c_boot */
 	ADDQ $24, IP	/* to get to the parameter field address of boot word */
@@ -157,12 +157,12 @@ Assume IP = 8
 	NEXT
 
 TEXT	reset(SB), 1, $-4
-	MOVQ UP, RSP
+	MOVQ UM, RSP
 	ADDQ $RSTACK, RSP
 	NEXT
 
 TEXT	clear(SB), 1, $-4
-	MOVQ UP, PSP
+	MOVQ UM, PSP
 	ADDQ $PSTACK, PSP
 	NEXT
 
@@ -583,44 +583,44 @@ TEXT	cas(SB), 1, $-4	/* ( a old new -- f ) */
 /* static locations */
 TEXT	S0(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
 	PUSH(TOP)
-	MOVQ UP, TOP
+	MOVQ UM, TOP
 	ADDQ $PSTACK, TOP
 	NEXT
 
 TEXT	Wordb(SB), 1, $-4	/* WORDB location */
 	PUSH(TOP)
-	MOVQ UP, TOP
+	MOVQ UM, TOP
 	ADDQ $WORDB, TOP
 	NEXT
 
 TEXT	Tib(SB), 1, $-4		/* TIB location */
 	PUSH(TOP)
-	MOVQ UP, TOP
+	MOVQ UM, TOP
 	ADDQ $TIB, TOP
 	NEXT
 
 TEXT	Dp(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
 	PUSH(TOP)
-	MOVQ UP, TOP
+	MOVQ UM, TOP
 	ADDQ $HERE, TOP
 	NEXT
 
 TEXT	Dtop(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
 	PUSH(TOP)
-	MOVQ UP, TOP
+	MOVQ UM, TOP
 	ADDQ $DTOP, TOP
 	NEXT
 
 /* Dp for the variable space */
 TEXT	Vp(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
 	PUSH(TOP)
-	MOVQ UP, TOP
+	MOVQ UM, TOP
 	ADDQ $VHERE, TOP
 	NEXT
 
 TEXT	Args(SB), 1, $-4
 	PUSH(TOP)
-	MOVQ UP, TOP
+	MOVQ UM, TOP
 	ADDQ $ARGS, TOP
 	NEXT
 
@@ -628,7 +628,7 @@ TEXT	Args(SB), 1, $-4
  * variables used by the core words. Using variable code word instead of known locations.
 #define	VARIABLE(name, location)	TEXT	name(SB), 1, $-4 ;\
 	PUSH(TOP); \
-	MOVQ UP, TOP ;\
+	MOVQ UM, TOP ;\
 	ADDQ location, TOP ;\
 	NEXT;
 VARIABLE(Tib, $TIB)
@@ -644,49 +644,48 @@ callable by forth primitives to check address
 	argument 1 in TOP = address
 	return value in TOP
 	-1			0			1
-	if UP < address < UPE
+	if UM < address < UME
 		return 0	within range
-	else if address < UP
-		return -1	below UP
-	else if UPE < address
-		return 1	above UP
+	else if address < UM
+		return -1	below UM
+	else if UME < address
+		return 1	above UM
  */
-TEXT	inup(SB), 1, $-4
-	CMPQ TOP, UPE
-	JGT aboveupe	/* a > UPE */
-	CMPQ TOP, UP
-	JLT belowup		/* a < UP */
+TEXT	inum(SB), 1, $-4
+	CMPQ TOP, UME
+	JGT aboveume	/* a > UME */
+	CMPQ TOP, UM
+	JLT belowum		/* a < UM */
 	MOVQ $0, TOP	/* could use XORQ TOP, TOP to zero too */
 	RET
-belowup:
+belowum:
 	MOVQ $-1, TOP
 	RET
-aboveupe:
+aboveume:
 	MOVQ $1, TOP
 	RET
 
 /*
 callable by forth primitives to check address
-	( n a -- -1|0|1 )
-	argument 1 in TOP = address
+	argument 2 = address
 	return value in TOP
 	-1			0			1
-	if UP < address && address+n < UPE
+	if UM < address && address+n < UME
 		return 0	within range
-	else if address < UP
-		return -1	below UP
-	else if UPE < address+n
-		return 1	above UP
+	else if address < UM
+		return -1	below UM
+	else if UME < address+n
+		return 1	above UM
  */
-TEXT	bufinup(SB), 1, $-4
-	POP(CX)
-	CMPQ CX, $0 	/* negative n? */
-	JLT belowup		/* TODO have an appropriate error message */
-	ADDQ TOP, CX
-	CMPQ CX, UPE	/* a+n, UPE */
-	JGT aboveupe	/* a+n > UPE */
-	CMPQ TOP, UP
-	JLT belowup		/* a < UP */
+TEXT	isbufinum(SB), 1, $-4 /* is buffer in user memory? ( a n -- -1|0|1 ) */
+	CMPQ TOP, $0 	/* negative n? */
+	JLT belowum		/* TODO have an appropriate error message */
+	ADDQ (PSP), TOP	/* TOP = a+n */
+	CMPQ TOP, UME	/* a+n, UME */
+	JGT aboveume	/* a+n > UME */
+	CMPQ (PSP), UM	/* a, UM */
+	JLT belowum		/* a < UM */
+	ADDQ $8, PSP	/* get rid of a from the stack */
 	MOVQ $0, TOP
 	RET
 
@@ -696,15 +695,15 @@ invalidaddress:
 	RET
 
 TEXT validateaddress(SB), 1, $0 /* a -- */
-	CALL inup(SB)
+	CALL inum(SB)
 	MOVQ TOP, CX
 	POP(TOP)
 	CMPQ CX, $0
 	JNE	invalidaddress
 	RET
 
-TEXT validatebuffer(SB), 1, $0 /* n a -- */
-	CALL bufinup(SB)
+TEXT validatebuffer(SB), 1, $0 /* a n -- */
+	CALL isbufinum(SB)
 	MOVQ TOP, CX
 	POP(TOP)
 	CMPQ CX, $0

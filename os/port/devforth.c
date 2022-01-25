@@ -73,6 +73,7 @@ int nforthprocs = 0;
 Proc *fhead, *ftail;
 static QLock forthlock;
 static char forthname[] = "forth";
+extern intptr forthmain(u8 *);
 
 static void
 flock(void)
@@ -325,7 +326,7 @@ loadforthdictionary(u8 *fmem)
 			b, b->magic, b->size, b->allocpc);
 }
 
-extern intptr forthmain(u8 *);
+/* also called by init0 for the init forth proc */
 void
 goforth(void *fmem)
 {
