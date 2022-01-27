@@ -64,7 +64,7 @@ SDEV=`{cd ../pc; echo devsd.c sd*.c | sed 's/\.c/.'$O'/g'}
 
 i$CONF: $OBJ $CONF.c $CONF.root.h $LIBNAMES
 	$CC $CFLAGS '-DKERNDATE='$KERNDATE $CONF.c
-	$LD -v -a -o $target -T$KTZERO -R4096 -l $OBJ $CONF.$O $LIBFILES > $target.loader >[2=1]
+	$LD -v -a -o $target -T$KTZERO -R4096 -l $OBJ $CONF.$O $LIBFILES > $target.loader
 	$LD -o $target -T$KTZERO -R4096 -l $OBJ $CONF.$O $LIBFILES
 	$KSIZE $target
 

@@ -285,23 +285,23 @@ machinit(void)
 void
 init0(void)
 {
-	Osenv *o;
 	/*char buf[2*KNAMELEN];*/
 
 	up->nerrlab = 0;
 
 	spllo();
-	if(waserror())
+	if(waserror()){
+		print("init0: waserror() loop\n");
 		panic("init0: %r");
+	}
 	/*
 	 * These are o.k. because rootinit is null.
 	 * Then early kproc's will have a root and dot.
 	 */
-	o = up->env;
-	o->pgrp->slash = namec("#/", Atodir, 0, 0);
-	pathclose(o->pgrp->slash->path);
-	o->pgrp->slash->path = newpath("/");
-	o->pgrp->dot = cclone(o->pgrp->slash);
+	up->pgrp->slash = namec("#/", Atodir, 0, 0);
+	pathclose(up->pgrp->slash->path);
+	up->pgrp->slash->path = newpath("/");
+	up->pgrp->dot = cclone(up->pgrp->slash);
 
 	chandevinit();
 /*	print("devtab\n");
@@ -338,18 +338,16 @@ void
 userinit(void)
 {
 	Proc *p;
-	Osenv *o;
 
 	up = nil;
 	if((p = newforthproc()) == nil){
 		panic("no procs for userinit");
 	}
-	o = p->env;
 
-	o->fgrp = newfgrp(nil);
-	o->egrp = newegrp();
-	o->pgrp = newpgrp();
-	kstrdup(&o->user, eve);
+	p->fgrp = newfgrp(nil);
+	p->egrp = newegrp();
+	p->pgrp = newpgrp();
+	kstrdup(&p->user, eve);
 
 	strcpy(p->text, "*init*");
 	/*

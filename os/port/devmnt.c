@@ -283,7 +283,7 @@ mntauth(Chan *c, char *spec)
 
 	r->request.type = Tauth;
 	r->request.afid = c->fid;
-	r->request.uname = up->env->user;
+	r->request.uname = up->user;
 	r->request.aname = spec;
 	mountrpc(m, r);
 
@@ -340,7 +340,7 @@ mntattach(Chan *c, Chan *ac, char *spec, int flags)
 		r->request.afid = NOFID;
 	else
 		r->request.afid = ac->fid;
-	r->request.uname = up->env->user;
+	r->request.uname = up->user;
 	r->request.aname = spec;
 	mountrpc(m, r);
 
@@ -396,6 +396,7 @@ mntwalk(Chan *c, Chan *nc, char **name, int nname)
 	alloc = 0;
 	wq = smalloc(sizeof(Walkqid)+(nname-1)*sizeof(Qid));
 	if(waserror()){
+print("mntwalk waserror() for mntralloc pid %ud %r\n", up->pid);
 		if(alloc && wq->clone!=nil)
 			cclose(wq->clone);
 		free(wq);
@@ -418,6 +419,7 @@ mntwalk(Chan *c, Chan *nc, char **name, int nname)
 	wq->clone = nc;
 
 	if(waserror()) {
+print("mntwalk waserror() for mountrpc pid %ud %r\n", up->pid);
 		mntfree(r);
 		nexterror();
 	}
@@ -994,13 +996,21 @@ mountrpc(Mnt *m, Mntrpc *r)
 	t = r->reply.type;
 	switch(t) {
 	case Rerror:
+		print("mountrpc: Rerror %s proc %s pid %ud: mismatch from %s %s rep %#p tag %d fid %d T%d R%d rp %d\n",
+			r->reply.ename, up->text, up->pid, chanpath(m->c), chanpath(r->c),
+			r, r->request.tag, r->request.fid, r->request.type,
+			r->reply.type, r->reply.tag);
 		error(r->reply.ename);
 	case Rflush:
+		print("mountrpc: Rflush proc %s pid %ud: mismatch from %s %s rep %#p tag %d fid %d T%d R%d rp %d\n",
+			up->text, up->pid, chanpath(m->c), chanpath(r->c),
+			r, r->request.tag, r->request.fid, r->request.type,
+			r->reply.type, r->reply.tag);
 		error(Eintr);
 	default:
 		if(t == r->request.type+1)
 			break;
-		print("mnt: proc %s %ud: mismatch from %s %s rep %#p tag %d fid %d T%d R%d rp %d\n",
+		print("mountrpc: default proc %s pid %ud: mismatch from %s %s rep %#p tag %d fid %d T%d R%d rp %d\n",
 			up->text, up->pid, chanpath(m->c), chanpath(r->c),
 			r, r->request.tag, r->request.fid, r->request.type,
 			r->reply.type, r->reply.tag);
@@ -1018,13 +1028,13 @@ mountio(Mnt *m, Mntrpc *r)
 print("mountio waserror() at the start pid %ud\n", up->pid);
 		if(m->rip == up)
 			mntgate(m);
-		if(strcmp(up->env->errstr, Eintr) != 0 || waserror()){
+		if(strcmp(up->errstr, Eintr) != 0 || waserror()){
 			r = mntflushfree(m, r);
 			switch(r->request.type){
 			case Tremove:
 			case Tclunk:
 				/* botch, abandon fid */ 
-				if(strcmp(up->env->errstr, Ehungup) != 0)
+				if(strcmp(up->errstr, Ehungup) != 0)
 					r->c->fid = 0;
 			}
 			nexterror();
@@ -1044,12 +1054,13 @@ print("mountio waserror() at the start pid %ud\n", up->pid);
 	n = sizeS2M(&r->request);
 	b = allocb(n);
 	if(waserror()){
+print("mountio waserror() convS2M pid %ud\n", up->pid);
 		freeb(b);
 		nexterror();
 	}
 	n = convS2M(&r->request, b->wp, n);
 	if(n <= 0 || n > m->msize) {
-		print("mountio: proc %s %lud: convS2M returned %d for tag %d fid %d T%d\n",
+		print("mountio: proc %s pid %lud: convS2M returned %d for tag %d fid %d T%d\n",
 			up->text, up->pid, n, r->request.tag, r->request.fid, r->request.type);
 		error(Emountrpc);
 	}

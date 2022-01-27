@@ -955,7 +955,7 @@ etherread(void *a)
 		// release lock to read - error means it is time to quit
 		qunlock(b);
 		if(waserror()) {
-			print("etherread read error: %s\n", up->env->errstr);
+			print("etherread read error: %s\n", up->errstr);
 			qlock(b);
 			break;
 		}

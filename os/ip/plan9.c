@@ -13,17 +13,17 @@
 char*
 commonuser(void)
 {
-	return up->env->user;
+	return up->user;
 }
 
 Chan*
 commonfdtochan(int fd, int mode, int a, int b)
 {
-	return fdtochan(up->env->fgrp, fd, mode, a, b);
+	return fdtochan(up->fgrp, fd, mode, a, b);
 }
 
 char*
 commonerror(void)
 {
-	return up->env->errstr;
+	return up->errstr;
 }

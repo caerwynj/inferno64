@@ -510,7 +510,7 @@ ipifcadd(Ipifc *ifc, char **argv, int argc, int tentative, Iplifc *lifcp)
 	f = ifc->conv->p->f;
 	if(waserror()){
 		wunlock(ifc);
-		return up->env->errstr;
+		return up->errstr;
 	}
 
 	if(mtu > 0)
@@ -1574,7 +1574,7 @@ static void
 ipifcregisteraddr(Fs *f, Ipifc *ifc, Iplifc *lifc, uchar *ip)
 {
 	if(waserror()){
-		print("ipifcregisteraddr %s %I %I: %s\n", ifc->dev, lifc->local, ip, up->env->errstr);
+		print("ipifcregisteraddr %s %I %I: %s\n", ifc->dev, lifc->local, ip, up->errstr);
 		return;
 	}
 	if(ifc->m != nil && ifc->m->areg != nil)

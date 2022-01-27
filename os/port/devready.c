@@ -17,7 +17,7 @@ static int debug = 0;
  */
 enum
 {
-	NFD = 16,
+	NRFD = 16,
 
 	Qcanread = 0,
 };
@@ -36,7 +36,7 @@ struct Readyfd
 typedef struct Canread Canread;
 struct Canread
 {
-	Readyfd rfd[NFD];
+	Readyfd rfd[NRFD];
 	s32 nrfd;
 	Queue *commq;	/* queue for the different watcher kproc's to communicate */
 };
@@ -206,7 +206,7 @@ crwrite(Chan *c, void *a, s32 n, s64 offset)
 			break;
 		s = p;
 		nfd++;
-		if(nfd > NFD)
+		if(nfd > NRFD)
 			error(Etoobig);
 		i = r->nrfd;
 		r->rfd[i].fd = fd;

@@ -283,13 +283,13 @@ closefgrp(Fgrp *f)
 	 * If we get into trouble, forceclosefgrp
 	 * will bail us out.
 	 */
-	up->env->closingfgrp = f;
+	up->closingfgrp = f;
 	for(i = 0; i <= f->maxfd; i++)
 		if((c = f->fd[i]) != nil){
 			f->fd[i] = nil;
 			cclose(c);
 		}
-	up->env->closingfgrp = nil;
+	up->closingfgrp = nil;
 
 	free(f->fd);
 	free(f->flag);
@@ -313,12 +313,12 @@ forceclosefgrp(void)
 	Chan *c;
 	Fgrp *f;
 
-	if(up->procctl != Proc_exitme || up->env->closingfgrp == nil){
+	if(up->procctl != Proc_exitme || up->closingfgrp == nil){
 		print("bad forceclosefgrp call");
 		return;
 	}
 
-	f = up->env->closingfgrp;
+	f = up->closingfgrp;
 	for(i = 0; i <= f->maxfd; i++)
 		if((c = f->fd[i]) != nil){
 			f->fd[i] = nil;
@@ -406,3 +406,42 @@ freeskey(Signerkey *key)
 	(*key->pkfree)(key->pk);
 	free(key);
 }
+
+/*
+ * kernel interface to shm
+ */
+Sgrp*
+shmgrpnew(void)
+{
+	Sgrp	*e;
+
+	e = smalloc(sizeof(Sgrp));
+	incref(e);
+	return e;
+}
+
+void
+shmgrpclose(Sgrp *g)
+{
+	Svalue **ent, **eent;
+	s32 i;
+
+	if(g == nil)
+		return;
+	if(decref(g) <= 0){
+		ent = g->ent;
+		for(i = 0, eent = ent + g->nent; ent < eent; ent++, i++){
+			if(ent == nil)
+				continue;
+			wlock(*ent);
+			free((*ent)->name);
+			free((*ent)->value);
+			g->ent[i] = nil;
+			/* wunlock(ent); */
+			free(ent);
+		}
+		free(g->ent);
+		free(g);
+	}
+}
+

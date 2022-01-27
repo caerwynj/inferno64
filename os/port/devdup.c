@@ -10,7 +10,7 @@
 static int
 dupgen(Chan *c, char *, Dirtab*, int, int s, Dir *dp)
 {
-	Fgrp *fgrp = up->env->fgrp;
+	Fgrp *fgrp = up->fgrp;
 	Chan *f;
 	static int perm[] = { 0400, 0200, 0600, 0 };
 	int p;
@@ -83,7 +83,7 @@ dupopen(Chan *c, u32 omode)
 		f->offset = 0;
 	}else{
 		/* fd file */
-		f = fdtochan(up->env->fgrp, fd, openmode(omode), 0, 1);
+		f = fdtochan(up->fgrp, fd, openmode(omode), 0, 1);
 		cclose(c);
 	}
 	if(omode & OCEXEC)
@@ -108,7 +108,7 @@ dupread(Chan *c, void *va, s32 n, s64 offset)
 	twicefd = c->qid.path - 1;
 	fd = twicefd/2;
 	if(twicefd & 1){
-		c = fdtochan(up->env->fgrp, fd, -1, 0, 1);
+		c = fdtochan(up->fgrp, fd, -1, 0, 1);
 		if(waserror()){
 			cclose(c);
 			nexterror();

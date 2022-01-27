@@ -161,9 +161,9 @@ parseparams(char *params)
 			}
 		}else if(cistrncmp("KEEPFDS", s, 7) == 0){
 			s += 7;
-			p.keepfds = smalloc(up->env->fgrp->nfd*sizeof(s32));
+			p.keepfds = smalloc(up->fgrp->nfd*sizeof(s32));
 			for(i=0; ;i++,p.nkeepfds++){
-				if(i>=up->env->fgrp->nfd){
+				if(i>=up->fgrp->nfd){
 					print("should not happen\n");
 					error(Etoobig);
 				}
@@ -174,9 +174,9 @@ parseparams(char *params)
 			}
 		}else if(cistrncmp("CLOSEFDS", s, 8) == 0){
 			s += 8;
-			p.closefds = smalloc(up->env->fgrp->nfd*sizeof(s32));
+			p.closefds = smalloc(up->fgrp->nfd*sizeof(s32));
 			for(i=0; ;i++,p.nclosefds++){
-				if(i>=up->env->fgrp->nfd){
+				if(i>=up->fgrp->nfd){
 					print("should not happen\n");
 					error(Etoobig);
 				}
@@ -330,8 +330,6 @@ loadforthdictionary(u8 *fmem)
 void
 goforth(void *fmem)
 {
-	up->type = Forth;
-
 	/* load dictionary */
 	loadforthdictionary((u8*)fmem);
 	print("goforth pid %d forthmem 0x%zx end 0x%zx forthmem+RSTACK 0x%zx\n",
@@ -376,24 +374,24 @@ initializeforthproc(Proc *p, Params *params)
 	p->fpsave = up->fpsave;
 	p->nerrlab = 0;
 
-	kstrdup(&p->env->user, up->env->user);
+	kstrdup(&p->user, up->user);
 
 	if(params->newenv == 1)
 		eg = newegrp();
 	else{
-		eg = up->env->egrp;
+		eg = up->egrp;
 		if(eg != nil)
 			incref(eg);
 	}
-	p->env->egrp = eg;
+	p->egrp = eg;
 
 	pg = newpgrp();
 	if(params->newns == 0)
-		pgrpcpy(pg, up->env->pgrp);
+		pgrpcpy(pg, up->pgrp);
 	if(pg == nil)
 		panic("newforthproc: nil process group\n");
 	pg->nodevs = params->nodevs;
-	p->env->pgrp = pg;
+	p->pgrp = pg;
 
 	/*
 		shmem = 0, NOSHMEM no shared memory
@@ -410,10 +408,10 @@ initializeforthproc(Proc *p, Params *params)
 		incref(up->shm);
 	}
 
-	fg = dupfgrp(up->env->fgrp);
+	fg = dupfgrp(up->fgrp);
 	if(fg == nil)
 		panic("newforthproc: nil file descriptor group\n");
-	p->env->fgrp = fg;
+	p->fgrp = fg;
 
 	if(params->redirfds == 1){
 		/* similar to kdup() */
@@ -630,7 +628,7 @@ forthgen(Chan *c, char *name, Dirtab *, int, int s, Dir *dp)
 		if(name != nil && strcmp(name, up->genbuf) != 0)
 			return -1;
 		mkqid(&q, Qfprocdir|((slot+1)<<QSHIFT), pid, QTDIR);
-		devdir(c, q, up->genbuf, 0, p->env->user, 0555, dp);
+		devdir(c, q, up->genbuf, 0, p->user, 0555, dp);
 		DBG("forthgen Qforthdir s %d returning Dir\n"
 				"	name %s qid.path 0x%zux slot %d qid %d qid.vers %d qid.type %d 0x%ux\n"
 				"	mode 0x%ux type 0x%ux\n",
@@ -649,11 +647,11 @@ forthgen(Chan *c, char *name, Dirtab *, int, int s, Dir *dp)
 	switch(s){
 	case 0:
 		mkqid(&q, path|Qctl, c->qid.vers, QTFILE);
-		devdir(c, q, "ctl", 0, p->env->user, 0600, dp);
+		devdir(c, q, "ctl", 0, p->user, 0600, dp);
 		break;
 	case 1:
 		mkqid(&q, path|Qvars, c->qid.vers, QTFILE);
-		devdir(c, q, "vars", 0, p->env->user, 0600, dp);
+		devdir(c, q, "vars", 0, p->user, 0600, dp);
 		break;
 	default:
 		return -1;
@@ -756,7 +754,7 @@ nonone(Proc *p)
 {
 	if(p == up)
 		return;
-	if(strcmp(up->env->user, "none") != 0)
+	if(strcmp(up->user, "none") != 0)
 		return;
 	if(iseve())
 		return;
@@ -778,7 +776,7 @@ newforthproc(void)
 		resrcwait("no procs for kproc");
 	}
 	p->fisgo = 0; /* until the pctl message comes through */
-	kstrdup(&p->env->user, up->env->user);
+	kstrdup(&p->user, up->user);
 
 	if(fhead == nil){
 		fhead = ftail = p;

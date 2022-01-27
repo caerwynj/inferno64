@@ -10,8 +10,9 @@
 #include	"keyboard.h"
 
 extern int cflag;
-extern int keepbroken;
+int keepbroken = 1;
 extern int rdbstarted;
+extern u32 kerndate;
 
 void	(*serwrite)(char *, int);
 
@@ -47,7 +48,13 @@ static struct
 /* above until kbdfs */
 
 char*	sysname;
-char*	eve;
+char	*sysname;
+vlong	fasthz;
+
+static int	readtime(ulong, char*, int);
+static int	readbintime(char*, int);
+static int	writetime(char*, int);
+static int	writebintime(char*, int);
 
 enum
 {
@@ -57,6 +64,7 @@ enum
 	CMbroken,
 	CMnobroken,
 	CMconsole,
+	CMrdb,
 };
 
 static Cmdtab sysctlcmd[] =
@@ -67,23 +75,19 @@ static Cmdtab sysctlcmd[] =
 	CMconsole,	"console", 1,
 	CMbroken,	"broken", 0,
 	CMnobroken,	"nobroken", 0,
+	CMrdb,		"rdb",		0,
+};
+
+Cmdtab rebootmsg[] =
+{
+	CMreboot,	"reboot",	0,
+	CMpanic,	"panic",	0,
+	CMrdb,		"rdb",		0,
 };
 
 void
 printinit(void)
 {
-}
-
-/*
- *  return true if current user is eve
- */
-int
-iseve(void)
-{
-	Osenv *o;
-
-	o = up->env;
-	return strcmp(eve, o->user) == 0;
 }
 
 static int
@@ -361,10 +365,10 @@ pprint(char *fmt, ...)
 	va_list arg;
 	char buf[2*PRINTSIZE];
 
-	if(up == nil || up->env->fgrp == nil)
+	if(up == nil || up->fgrp == nil)
 		return 0;
 
-	c = up->env->fgrp->fd[2];
+	c = up->fgrp->fd[2];
 	if(c==nil || (c->flag&CMSG)!=0 || (c->mode!=OWRITE && c->mode!=ORDWR))
 		return 0;
 	n = snprint(buf, sizeof buf, "%s %ud: ", up->text, up->pid);
@@ -386,47 +390,71 @@ pprint(char *fmt, ...)
 
 enum{
 	Qdir,
+	Qbintime,
 	Qcons,
-	Qsysctl,
 	Qconsctl,
+	Qcputime,
 	Qdrivers,
+	Qhostdomain,
 	Qhostowner,
+	Qjit,
 	Qkeyboard,
-	Qklog,		/* same as 9front's kmesg */
+	Qkmesg,
 	Qkprint,	/* tail of kprint's and cons. Why not just a tail of klog? Why is this needed? */
-	Qscancode,
 	Qmemory,
-	Qmsec,
 	Qnull,
+	Qosversion,
+	Qpid,
+	Qppid,
 	Qrandom,
-	Qnotquiterandom,
+	Qreboot,
+	Qscancode,
+	Qsysctl,
 	Qsysname,
+	Qsysstat,
 	Qtime,
 	Quser,
-	Qjit,
+	Qzero,
+	Qconfig,
+	Qmordor,
+};
+
+enum
+{
+	DOMLEN=		48,	/* authentication domain name length */
+	VLNUMSIZE=	22,
 };
 
 static Dirtab consdir[]=
 {
 	".",	{Qdir, 0, QTDIR},	0,		DMDIR|0555,
+	"bintime",	{Qbintime},	24,		0664,
 	"cons",		{Qcons},	0,		0660,
 	"consctl",	{Qconsctl},	0,		0220,
-	"sysctl",	{Qsysctl},	0,		0644,
+	"cputime",	{Qcputime},	6*NUMSIZE,	0444,
 	"drivers",	{Qdrivers},	0,		0444,
+	"hostdomain",	{Qhostdomain},	DOMLEN,		0664,
 	"hostowner",	{Qhostowner},	0,	0644,
-	"jit",		{Qjit},	0,	0666,
+	"jit",		{Qjit},	0,	0666,					/* obsolete unless forth wants to use it */
 	"keyboard",	{Qkeyboard},	0,		0666,
-	"klog",		{Qklog},	0,		0444,
+	"kmesg",	{Qkmesg},	0,		0440,
 	"kprint",		{Qkprint},	0,		0444,
-	"scancode",	{Qscancode},	0,		0444,
-	"memory",	{Qmemory},	0,		0444,
-	"msec",		{Qmsec},	NUMSIZE,	0444,
+	"memory",	{Qmemory},	0,		0444,			/* not in 9front */
 	"null",		{Qnull},	0,		0666,
+	"osversion",	{Qosversion},	0,		0444,
+	"pid",		{Qpid},		NUMSIZE,	0444,
+	"ppid",		{Qppid},	NUMSIZE,	0444,
 	"random",	{Qrandom},	0,		0444,
-	"notquiterandom", {Qnotquiterandom}, 0,	0444,
+	"reboot",	{Qreboot},	0,		0220,
+	"scancode",	{Qscancode},	0,		0444,
+	"sysctl",	{Qsysctl},	0,		0644,			/* obsoleted by reboot and osversion */
 	"sysname",	{Qsysname},	0,		0664,
-	"time",		{Qtime},	0,		0664,
-	"user",		{Quser},	0,	0644,
+	"sysstat",	{Qsysstat},	0,		0664,
+	"time",		{Qtime},	NUMSIZE+3*VLNUMSIZE,	0664,
+	"user",		{Quser},	0,		0666,
+	"zero",		{Qzero},	0,		0444,
+	"config",	{Qconfig},	0,		0444,
+	"mordor",	{Qmordor},	0,		0666,
 };
 
 ulong	boottime;		/* seconds since epoch at boot */
@@ -490,14 +518,12 @@ void
 fddump()
 {
 	Proc *p;
-	Osenv *o;
 	int i;
 	Chan *c;
 
 	p = proctab(6);
-	o = p->env;
-	for(i = 0; i <= o->fgrp->maxfd; i++) {
-		if((c = o->fgrp->fd[i]) == nil)
+	for(i = 0; i <= p->fgrp->maxfd; i++) {
+		if((c = p->fgrp->fd[i]) == nil)
 			continue;
 		print("%d: %s\n", i, c->path == nil? "???": c->path->s);
 	}
@@ -576,8 +602,10 @@ consopen(Chan *c, u32 omode)
 	c = devopen(c, omode, consdir, nelem(consdir), devgen);
 	switch((u64)c->qid.path){
 	case Qconsctl:
-		if(!iseve())
+		if(!iseve()){
+			print("consopen not eve\n");
 			error(Eperm);
+		}
 		qlock(&kbd);
 		kbd.ctl++;
 		qunlock(&kbd);
@@ -628,19 +656,25 @@ consclose(Chan *c)
 static s32
 consread(Chan *c, void *buf, s32 n, s64 offset)
 {
-	int l;
-	Osenv *o;
-	int i;
-	char *p, tmp[128];
+	Proc *o;
+	u32 l;
+	Mach *mp;
+	char *b, *bp;
+	char tmp[256];
+	int i, k, id;
+	extern char configfile[];
 
 	if(n <= 0)
 		return n;
-	o = up->env;
+	o = up;
 	switch((u64)c->qid.path){
+
 	case Qdir:
 		return devdirread(c, buf, n, consdir, nelem(consdir), devgen);
+
 	case Qsysctl:
 		return readstr(offset, buf, n, VERSION);
+
 	case Qcons:
 		/* below belongs in kbdfs */
 		qlock(&kbd);
@@ -698,58 +732,27 @@ consread(Chan *c, void *buf, s32 n, s64 offset)
 		/* commented until the above is removed
 		error(Egreg); */
 
-	case Qtime:
-		snprint(tmp, sizeof(tmp), "%.lld", (vlong)mseconds()*1000);
-		return readstr(offset, buf, n, tmp);
-
-	case Qhostowner:
-		return readstr(offset, buf, n, eve);
-
-	case Quser:
-		return readstr(offset, buf, n, o->user);
+	case Qcputime:
+		k = offset;
+		if(k >= 6*NUMSIZE)
+			return 0;
+		if(k+n > 6*NUMSIZE)
+			n = 6*NUMSIZE - k;
+		/* easiest to format in a separate buffer and copy out */
+		for(i=0; i<6 && NUMSIZE*i<k+n; i++){
+			l = up->time[i];
+			if(i == TReal)
+				l = MACHP(0)->ticks - l;
+			readnum(0, tmp+NUMSIZE*i, NUMSIZE, tk2ms(l), NUMSIZE);
+		}
+		memmove(buf, tmp+k, n);
+		return n;
 
 	case Qjit:
 		snprint(tmp, sizeof(tmp), "%d", cflag);
 		return readstr(offset, buf, n, tmp);
 
-	case Qnull:
-		return 0;
-
-	case Qmsec:
-		return readnum(offset, buf, n, TK2MS(MACHP(0)->ticks), NUMSIZE);
-
-	case Qsysname:
-		if(sysname == nil)
-			return 0;
-		return readstr(offset, buf, n, sysname);
-
-	case Qnotquiterandom:
-		genrandom(buf, n);
-		return n;
-
-	case Qrandom:
-		return randomread(buf, n);
-
-	case Qmemory:
-		return poolread(buf, n, offset);
-
-	case Qdrivers:
-		p = malloc(READSTR);
-		if(p == nil)
-			error(Enomem);
-		l = 0;
-		for(i = 0; devtab[i] != nil; i++)
-			l += snprint(p+l, READSTR-l, "#%C %s\n", devtab[i]->dc,  devtab[i]->name);
-		if(waserror()){
-			free(p);
-			nexterror();
-		}
-		n = readstr(offset, buf, n, p);
-		free(p);
-		poperror();
-		return n;
-
-	case Qklog:
+	case Qkmesg:
 		/*
 		 * This is unlocked to avoid tying up a process
 		 * that's writing to the buffer.  kmesg.n never 
@@ -768,6 +771,115 @@ consread(Chan *c, void *buf, s32 n, s64 offset)
 	case Qkprint:
 		return qread(kprintoq, buf, n);
 
+	case Qpid:
+		return readnum((ulong)offset, buf, n, up->pid, NUMSIZE);
+
+	case Qppid:
+		return readnum((ulong)offset, buf, n, up->parentpid, NUMSIZE);
+
+	case Qtime:
+		return readtime((ulong)offset, buf, n);
+
+	case Qbintime:
+		return readbintime(buf, n);
+
+	case Qhostowner:
+		return readstr((ulong)offset, buf, n, eve);
+
+	case Qhostdomain:
+		return readstr((ulong)offset, buf, n, hostdomain);
+
+	case Quser:
+		return readstr((ulong)offset, buf, n, up->user);
+
+	case Qnull:
+		return 0;
+
+	case Qconfig:
+		return readstr((ulong)offset, buf, n, conffile);
+
+	case Qsysstat:
+		b = smalloc(conf.nmach*(NUMSIZE*11+1) + 1);	/* +1 for NUL */
+		bp = b;
+		for(id = 0; id < MAXMACH; id++) {
+			if(active.machs[id]) {
+				mp = MACHP(id);
+				readnum(0, bp, NUMSIZE, id, NUMSIZE);
+				bp += NUMSIZE;
+				readnum(0, bp, NUMSIZE, mp->cs, NUMSIZE);
+				bp += NUMSIZE;
+				readnum(0, bp, NUMSIZE, mp->intr, NUMSIZE);
+				bp += NUMSIZE;
+				readnum(0, bp, NUMSIZE, mp->syscall, NUMSIZE);
+				bp += NUMSIZE;
+				readnum(0, bp, NUMSIZE, mp->pfault, NUMSIZE);
+				bp += NUMSIZE;
+				readnum(0, bp, NUMSIZE, mp->tlbfault, NUMSIZE);
+				bp += NUMSIZE;
+				readnum(0, bp, NUMSIZE, mp->tlbpurge, NUMSIZE);
+				bp += NUMSIZE;
+				readnum(0, bp, NUMSIZE, mp->load, NUMSIZE);
+				bp += NUMSIZE;
+				l = mp->perf.period;
+				if(l == 0)
+					l = 1;
+				readnum(0, bp, NUMSIZE,
+					(mp->perf.avg_inidle*100)/l, NUMSIZE);
+				bp += NUMSIZE;
+				readnum(0, bp, NUMSIZE,
+					(mp->perf.avg_inintr*100)/l, NUMSIZE);
+				bp += NUMSIZE;
+				*bp++ = '\n';
+			}
+		}
+		if(waserror()){
+			free(b);
+			nexterror();
+		}
+		n = readstr((ulong)offset, buf, n, b);
+		free(b);
+		poperror();
+		return n;
+
+	case Qsysname:
+		if(sysname == nil)
+			return 0;
+		return readstr((ulong)offset, buf, n, sysname);
+
+	case Qrandom:
+		return randomread(buf, n);
+
+	case Qdrivers:
+		b = smalloc(READSTR);
+		k = 0;
+		for(i = 0; devtab[i] != nil; i++)
+			k += snprint(b+k, READSTR-k, "#%C %s\n",
+				devtab[i]->dc, devtab[i]->name);
+		if(waserror()){
+			free(b);
+			nexterror();
+		}
+		n = readstr((ulong)offset, buf, n, b);
+		poperror();
+		free(b);
+		return n;
+
+	case Qzero:
+		memset(buf, 0, n);
+		return n;
+
+	case Qmemory:
+		return poolread(buf, n, offset);
+
+	case Qmordor:
+		error("one does not simply read from mordor");
+		return 0;
+
+	case Qosversion:
+		snprint(tmp, sizeof tmp, "2000 %ud", kerndate);
+		n = readstr((ulong)offset, buf, n, tmp);
+		return n;
+
 	default:
 		print("consread %llud\n", c->qid.path);
 		error(Egreg);
@@ -778,14 +890,17 @@ consread(Chan *c, void *buf, s32 n, s64 offset)
 static s32
 conswrite(Chan *c, void *va, s32 n, s64 offset)
 {
-	s64 t;
+	char buf[256];
 	long l, bp;
-	char *a = va;
+	char *a;
+	Mach *mp;
+	int id;
 	Cmdbuf *cb;
 	Cmdtab *ct;
-	char buf[256];
+	s64 t;
 	int x;
 
+	a = va;
 	switch((u64)c->qid.path){
 	case Qcons:
 		/*
@@ -827,44 +942,20 @@ conswrite(Chan *c, void *va, s32 n, s64 offset)
 
 	
 	case Qtime:
-		if(n >= sizeof(buf))
-			n = sizeof(buf)-1;
-		strncpy(buf, a, n);
-		buf[n] = 0;
-		t = strtoll(buf, 0, 0)/1000000;
-		boottime = t - TK2SEC(MACHP(0)->ticks);
-		break;
+		if(!iseve())
+			error(Eperm);
+		return writetime(a, n);
+
+	case Qbintime:
+		if(!iseve())
+			error(Eperm);
+		return writebintime(a, n);
 
 	case Qhostowner:
-		if(!iseve())
-			error(Eperm);
-		if(offset != 0 || n >= sizeof(buf))
-			error(Ebadarg);
-		memmove(buf, a, n);
-		buf[n] = '\0';
-		if(n > 0 && buf[n-1] == '\n')
-			buf[--n] = 0;
-		if(n <= 0)
-			error(Ebadarg);
-		renameuser(eve, buf);
-		renameproguser(eve, buf);
-		kstrdup(&eve, buf);
-		kstrdup(&up->env->user, buf);
-		break;
+		return hostownerwrite(a, n);
 
-	case Quser:
-		if(!iseve())
-			error(Eperm);
-		if(offset != 0)
-			error(Ebadarg);
-		if(n <= 0 || n >= sizeof(buf))
-			error(Ebadarg);
-		strncpy(buf, a, n);
-		buf[n] = 0;
-		if(buf[n-1] == '\n')
-			buf[n-1] = 0;
-		kstrdup(&up->env->user, buf);
-		break;
+	case Qhostdomain:
+		return hostdomainwrite(a, n);
 
 	case Qjit:
 		if(n >= sizeof(buf))
@@ -877,13 +968,61 @@ conswrite(Chan *c, void *va, s32 n, s64 offset)
 		cflag = x;
 		return n;
 
+	case Quser:
+		return userwrite(a, n);
+
 	case Qnull:
+		break;
+
+	case Qconfig:
+		error(Eperm);
+		break;
+
+	case Qreboot:
+		if(!iseve())
+			error(Eperm);
+		cb = parsecmd(a, n);
+
+		if(waserror()) {
+			free(cb);
+			nexterror();
+		}
+		ct = lookupcmd(cb, rebootmsg, nelem(rebootmsg));
+		switch(ct->index) {
+		case CMreboot:
+			/* TODO rebootcmd(cb->nf-1, cb->f+1); */
+			break;
+		case CMpanic:
+			*(ulong*)0=0;
+			panic("/dev/reboot");
+		case CMrdb:
+			if(consdebug == nil)
+				consdebug = rdb;
+			consdebug();
+			break;
+		}
+		poperror();
+		free(cb);
+		break;
+
+	case Qsysstat:
+		for(id = 0; id < MAXMACH; id++) {
+			if(active.machs[id]) {
+				mp = MACHP(id);
+				mp->cs = 0;
+				mp->intr = 0;
+				mp->syscall = 0;
+				mp->pfault = 0;
+				mp->tlbfault = 0;
+				mp->tlbpurge = 0;
+			}
+		}
 		break;
 
 	case Qsysname:
 		if(offset != 0)
 			error(Ebadarg);
-		if(n <= 0 || n >= sizeof(buf))
+		if(n <= 0 || n >= sizeof buf)
 			error(Ebadarg);
 		strncpy(buf, a, n);
 		buf[n] = 0;
@@ -891,6 +1030,10 @@ conswrite(Chan *c, void *va, s32 n, s64 offset)
 			buf[n-1] = 0;
 		kstrdup(&sysname, buf);
 		break;
+	
+	case Qmordor:
+		error("one does not simply write into mordor");
+		return 0;
 
 	case Qsysctl:
 		if(!iseve())
@@ -983,6 +1126,203 @@ truerand(void)
 
 	randomread(&x, sizeof(x));
 	return x;
+}
+
+static uvlong uvorder = 0x0001020304050607ULL;
+
+static uchar*
+le2vlong(vlong *to, uchar *f)
+{
+	uchar *t, *o;
+	int i;
+
+	t = (uchar*)to;
+	o = (uchar*)&uvorder;
+	for(i = 0; i < sizeof(vlong); i++)
+		t[o[i]] = f[i];
+	return f+sizeof(vlong);
+}
+
+static uchar*
+vlong2le(uchar *t, vlong from)
+{
+	uchar *f, *o;
+	int i;
+
+	f = (uchar*)&from;
+	o = (uchar*)&uvorder;
+	for(i = 0; i < sizeof(vlong); i++)
+		t[i] = f[o[i]];
+	return t+sizeof(vlong);
+}
+
+static long order = 0x00010203;
+
+static uchar*
+le2long(long *to, uchar *f)
+{
+	uchar *t, *o;
+	int i;
+
+	t = (uchar*)to;
+	o = (uchar*)&order;
+	for(i = 0; i < sizeof(long); i++)
+		t[o[i]] = f[i];
+	return f+sizeof(long);
+}
+
+static uchar*
+long2le(uchar *t, long from)
+{
+	uchar *f, *o;
+	int i;
+
+	f = (uchar*)&from;
+	o = (uchar*)&order;
+	for(i = 0; i < sizeof(long); i++)
+		t[i] = f[o[i]];
+	return t+sizeof(long);
+}
+
+char *Ebadtimectl = "bad time control";
+
+/*
+ *  like the old #c/time but with added info.  Return
+ *
+ *	secs	nanosecs	fastticks	fasthz
+ */
+static int
+readtime(ulong off, char *buf, int n)
+{
+	vlong	nsec, ticks;
+	long sec;
+	char str[7*NUMSIZE];
+
+	nsec = todget(&ticks);
+	if(fasthz == 0LL)
+		fastticks((uvlong*)&fasthz);
+	sec = nsec/1000000000ULL;
+	snprint(str, sizeof(str), "%*lud %*llud %*llud %*llud ",
+		NUMSIZE-1, sec,
+		VLNUMSIZE-1, nsec,
+		VLNUMSIZE-1, ticks,
+		VLNUMSIZE-1, fasthz);
+	return readstr(off, buf, n, str);
+}
+
+/*
+ *  set the time in seconds
+ */
+static int
+writetime(char *buf, int n)
+{
+	char b[13];
+	long i;
+	vlong now;
+
+	if(n >= sizeof(b))
+		error(Ebadtimectl);
+	strncpy(b, buf, n);
+	b[n] = 0;
+	i = strtol(b, 0, 0);
+	if(i <= 0)
+		error(Ebadtimectl);
+	now = i*1000000000LL;
+	todset(now, 0, 0);
+	return n;
+}
+
+/*
+ *  read binary time info.  all numbers are little endian.
+ *  ticks and nsec are syncronized.
+ */
+static int
+readbintime(char *buf, int n)
+{
+	int i;
+	vlong nsec, ticks;
+	uchar *b = (uchar*)buf;
+
+	i = 0;
+	if(fasthz == 0LL)
+		fastticks((uvlong*)&fasthz);
+	nsec = todget(&ticks);
+	if(n >= 3*sizeof(uvlong)){
+		vlong2le(b+2*sizeof(uvlong), fasthz);
+		i += sizeof(uvlong);
+	}
+	if(n >= 2*sizeof(uvlong)){
+		vlong2le(b+sizeof(uvlong), ticks);
+		i += sizeof(uvlong);
+	}
+	if(n >= 8){
+		vlong2le(b, nsec);
+		i += sizeof(vlong);
+	}
+	return i;
+}
+
+/*
+ *  set any of the following
+ *	- time in nsec
+ *	- nsec trim applied over some seconds
+ *	- clock frequency
+ */
+static int
+writebintime(char *buf, int n)
+{
+	uchar *p;
+	vlong delta;
+	long period;
+
+	if(--n <= 0)
+		error(Ebadtimectl);
+	p = (uchar*)buf + 1;
+	switch(*buf){
+	case 'n':
+		if(n < sizeof(vlong))
+			error(Ebadtimectl);
+		le2vlong(&delta, p);
+		todset(delta, 0, 0);
+		break;
+	case 'd':
+		if(n < sizeof(vlong)+sizeof(long))
+			error(Ebadtimectl);
+		p = le2vlong(&delta, p);
+		le2long(&period, p);
+		todset(-1, delta, period);
+		break;
+	case 'f':
+		if(n < sizeof(uvlong))
+			error(Ebadtimectl);
+		le2vlong(&fasthz, p);
+		if(fasthz <= 0)
+			error(Ebadtimectl);
+		todsetfreq(fasthz);
+		break;
+	}
+	return n+1;
+}
+
+void
+cpushutdown(void)
+{
+	int ms, once;
+
+	once = active.machs[m->machno];
+	active.machs[m->machno] = 0;
+	active.exiting = 1;
+
+	if(once)
+		iprint("cpu%d: exiting\n", m->machno);
+
+	/* wait for any other processors to shutdown */
+	spllo();
+	for(ms = 5*1000; ms > 0; ms -= TK2MS(2)){
+		delay(TK2MS(2));
+		if(memchr(active.machs, 1, MAXMACH) == nil && consactive() == 0)
+			break;
+	}
 }
 
 /* all the below belongs in kbdfs  */

@@ -184,7 +184,7 @@ netifopen(Netif *nif, Chan *c, int omode)
 		case Ndataqid:
 		case Nctlqid:
 			f = nif->f[id];
-			if(netown(f, up->env->user, omode&7) < 0)
+			if(netown(f, up->user, omode&7) < 0)
 				error(Eperm);
 			break;
 		}
@@ -216,9 +216,9 @@ netifread(Netif *nif, Chan *c, void *a, long n, ulong offset)
 		p = malloc(READSTR);
 		if(p == nil)
 			return 0;
-		j = snprint(p, READSTR, "in: %d\n", nif->inpackets);
+		j = snprint(p, READSTR, "in: %llud\n", nif->inpackets);
 		j += snprint(p+j, READSTR-j, "link: %d\n", nif->link);
-		j += snprint(p+j, READSTR-j, "out: %d\n", nif->outpackets);
+		j += snprint(p+j, READSTR-j, "out: %llud\n", nif->outpackets);
 		j += snprint(p+j, READSTR-j, "crc errs: %d\n", nif->crcs);
 		j += snprint(p+j, READSTR-j, "overflows: %d\n", nif->overflows);
 		j += snprint(p+j, READSTR-j, "soft overflows: %d\n", nif->soverflows);
@@ -370,7 +370,7 @@ netifwstat(Netif *nif, Chan *c, uchar *db, int n)
 	if(f == 0)
 		error(Enonexist);
 
-	if(netown(f, up->env->user, OWRITE) < 0)
+	if(netown(f, up->user, OWRITE) < 0)
 		error(Eperm);
 
 	dir = smalloc(sizeof(Dir)+n);
@@ -530,7 +530,7 @@ openfile(Netif *nif, int id)
 		}
 		f->inuse = 1;
 		qreopen(f->in);
-		netown(f, up->env->user, 0);
+		netown(f, up->user, 0);
 		qunlock(f);
 		qunlock(nif);
 		poperror();

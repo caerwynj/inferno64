@@ -8,12 +8,13 @@ dev
 	mnt
 	pipe
 	proc
-	prog
+#	prog
 	rtc
-	srv
+#	srv
 	ssl
-	dup
+#	dup
 	cap
+	ready
 	shm
 
 	ether		netif
@@ -46,14 +47,17 @@ ip
 #	esp
 #	il
 
+# the order of the libraries here matters. If there is a library
+# with an undefined symbol at the end, the linker throws out an
+# undefined symbol error
 lib
 	aml
 	fis
-	interp
+#	interp
 	keyring
-	draw 
 	memlayer
 	memdraw
+	draw
 	tk
 	sec
 	mp
@@ -117,11 +121,11 @@ misc
 #	vgavmware	+cur
 
 mod
-	sys
-	draw
-	tk
-	keyring
-	math
+#	sys
+#	draw
+#	tk
+#	keyring
+#	math
 
 init
 	disinit
@@ -140,15 +144,16 @@ port
 	alarm
 	alloc
 	allocb
+	auth
 	chan
 	dev
 	dial
-	dis
-	discall
+#	dis
+#	discall
 	edf
-	exception
-	exportfs
-	inferno
+#	exception
+#	exportfs TODO for forth
+#	inferno TODO for forth
 	iomap
 	irq
 	latin1
@@ -162,6 +167,7 @@ port
 	qlock
 	random
 	rdb
+#	rebootcmd
 	swcursor
 	sysfile
 	taslock

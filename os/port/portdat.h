@@ -27,7 +27,6 @@ typedef struct Mntwalk	Mntwalk;
 typedef struct Mnt	Mnt;
 typedef struct Mhead	Mhead;
 typedef struct Note	Note;
-typedef struct Osenv	Osenv;
 typedef struct Path	Path;
 typedef struct Perf	Perf;
 typedef struct Pgrp	Pgrp;
@@ -92,31 +91,6 @@ struct Rept
 	s32	(*active)(void*);
 	s32	(*ck)(void*, int);
 	void	(*f)(void*);	/* called with VM acquire()'d */
-};
-
-struct Osenv
-{
-	char	*syserrstr;	/* last error from a system call, errbuf0 or 1 - obsolete in inferno */
-	intptr	errpc;
-	char	*errstr;	/* reason we're unwinding the error stack, errbuf1 or 0 */
-	char	errbuf0[ERRMAX];
-	char	errbuf1[ERRMAX];
-	Pgrp	*pgrp;		/* Ref to namespace, working dir and root */
-	Fgrp	*fgrp;		/* Ref to file descriptors */
-	Egrp	*egrp;	/* Environment vars */
-	Skeyset	*sigs;		/* Signed module keys */
-	Rendez	*rend;		/* Synchro point */
-	Queue	*waitq;		/* Info about dead children */
-	Queue	*childq;		/* Info about children for debuggers */
-	void	*debug;		/* Debugging master */
-	s32	uid;		/* Numeric user id for system */
-	s32	gid;		/* Numeric group id for system */
-	char	*user;		/* Inferno user name */
-	int	fpuostate;
-
-	/* from 9front */
-	Rgrp	*rgrp;		/* Rendez group */
-	Fgrp	*closingfgrp;	/* used during teardown */
 };
 
 enum
@@ -397,6 +371,9 @@ enum
 	DELTAFD=		20,		/* allocation quantum for process file descriptors */
 	MAXNFD =		4000,		/* max per process file descriptors */
 	MAXKEY =		8,	/* keys for signed modules */
+	NFD =		100,		/* per process file descriptors */
+	ENVLOG =	5,
+	ENVHASH =	1<<ENVLOG,	/* Egrp hash for variable lookup */
 };
 #define REND(p,s)	((p)->rendhash[(s)&((1<<RENDLOG)-1)])
 #define MOUNTH(p,qid)	((p)->mnthash[(qid).path&((1<<MNTLOG)-1)])
@@ -455,24 +432,25 @@ struct Rgrp
 
 struct Evalue
 {
-	char	*name;
 	char	*value;
-	s32	len;
-	Qid	qid;
+	int	len;
+	ulong	vers;
+	uvlong	path;			/* qid.path: Egrp.path << 32 | index (of Egrp.ent[]) */
+	Evalue	*hash;
+	char	name[];
 };
 
 struct Egrp
 {
 	Ref;
 	RWlock;
-	union{		/* array of Evalue's */
-		Evalue	*entries;
-		Evalue	*ent;
-	};
-	int	nent;
-	int	ment;
-	u32	path;	/* qid.path of next Evalue to be allocated */
-	u32	vers;	/* of Egrp */
+	Evalue	**ent;
+	int	nent;			/* numer of slots in ent[] */
+	int	low;			/* lowest free index in ent[] */
+	int	alloc;			/* bytes allocated for env */
+	ulong	path;			/* generator for qid path */
+	ulong	vers;			/* of Egrp */
+	Evalue	*hash[ENVHASH];		/* hashtable for name lookup */
 };
 
 struct Signerkey
@@ -593,8 +571,7 @@ struct Schedq
 	int	n;
 };
 
-/* inferno uses Osenv for environment information. It is cheaper to create
- * new processes with a default environment (spawn, not fork)
+/* Needs a default environment to create new processes (spawn, not fork)
  *
  * When using forth for the userspace, forth's stack is in fmem.
  * The kstack is used for everything else. Hence, there is no
@@ -608,7 +585,7 @@ struct Proc
 	char	*kstack;	/* known to l.s in 9front to switch to the kernel stack on syscallentry */
 	Mach	*mach;		/* machine running this proc */
 	char	*text;
-	char	*user;		/* inferno uses Osenv.user */
+	char	*user;
 
 	char	*args;
 	int	nargs;		/* number of bytes of args */
@@ -632,15 +609,15 @@ struct Proc
 	QLock	qwaitr;
 	Rendez	waitr;		/* Place to hang out in wait */
 
-/*	QLock	seglock;	*//* locked whenever seg[] changes */
-/*	Segment	*seg[NSEG]; */
+/*	QLock	seglock;	\/* locked whenever seg[] changes *\/
+	Segment	*seg[NSEG];*/
 
-/*	Pgrp	*pgrp;	*/	/* Process group for namespace */
-/*	Egrp 	*egrp;	*/	/* Environment group */
-/*	Fgrp	*fgrp;	*/	/* File descriptor group */
+	Pgrp	*pgrp;		/* Process group for namespace */
+	Egrp 	*egrp;		/* Environment group */
+	Fgrp	*fgrp;		/* File descriptor group */
 	Rgrp	*rgrp;		/* Rendez group */
 
-/*	Fgrp	*closingfgrp;*/	/* used during teardown */
+	Fgrp	*closingfgrp;	/* used during teardown */
 
 	int	insyscall;
 	u32	time[6];	/* User, Sys, Real; child U, S, R */
@@ -688,18 +665,17 @@ struct Proc
 	void	(*kpfun)(void*);
 	void	*kparg;
 
-/*	Sargs	s;		*//* syscall arguments */
+/*	Sargs	s;		*//* TODO uncomment this and scallnr syscall arguments */
 /*	int	scallnr;	*//* sys call number */
 	int	nerrlab;
 	Label	errlab[NERR];
-						/* below fields are in Osenv */
-/*	char	*syserrstr;	*//* last error from a system call, errbuf0 or 1 */
-/*	char	*errstr;	*//* reason we're unwinding the error stack, errbuf1 or 0 */
-/*	char	errbuf0[ERRMAX];*/
-/*	char	errbuf1[ERRMAX];*/
-	char	genbuf[ERRMAX];	/* buffer used e.g. for last name element from namec */
-/*	Chan	*slash; part of Pgrp in inferno */
-/*	Chan	*dot; part of Pgrp in inferno */
+	char	*syserrstr;	/* last error from a system call, errbuf0 or 1 */
+	char	*errstr;	/* reason we're unwinding the error stack, errbuf1 or 0 */
+	char	errbuf0[ERRMAX];
+	char	errbuf1[ERRMAX];
+	char	genbuf[128];	/* buffer used e.g. for last name element from namec */
+	Chan	*slash;
+	Chan	*dot;
 
 	Note	note[NNOTE];
 	short	nnote;
@@ -742,28 +718,15 @@ struct Proc
 	Watchpt	*watchpt;	/* watchpoints */
 	int	nwatchpt;
 
-	/* inferno specific fields */
-	s32		type;
-	void	*prog;		/* Dummy Prog for interp release */
-	void	*iprog;
-	Osenv	*env;
-	Osenv	defenv;
-	s32		swipend;	/* software interrupt pending for Prog TODO replace with notepending? */
-	Lock	sysio;		/* note handler lock */ 
-
-	/* inferno specific fields that are obsolete? */
-	int		fpstate;
-	int		killed;		/* by swiproc */
-	Proc	*tlink;
-	ulong	movetime;	/* next time process should switch processors */
- 	int		dbgstop;		/* don't run this kproc */
-
 	/* forth specific fields */
 	Proc	*fprev, *fnext;	/* forth processes linked list */
 	void	*fmem;			/* forth process memory - sandboxed except for macro primitives */
-	void	*shm;		/* for devshm. move this into Osenv or maybe remove Osenv at some point to get more in sync with 9front */
+	void	*shm;		/* for devshm */
 	void	*canread;	/* for devready.c */
 	u8		fisgo;	/* 0 while waiting for the pctl message */
+
+	/* not used by 9front. get rid of it at some point */
+	intptr errpc;
 };
 
 enum
@@ -812,6 +775,7 @@ extern	char*	conffile;
 extern	int	consoleprint;
 extern	Dev*	devtab[];
 extern	char*	eve;
+extern	char	hostdomain[];
 extern	int	hwcurs;
 extern	Queue*	kprintoq;
 extern  Queue	*kbdq;

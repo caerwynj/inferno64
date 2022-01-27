@@ -726,7 +726,7 @@ cmount(Chan *new, Chan *old, int flag, char *spec)
 		poperror();
 	}
 
-	pg = up->env->pgrp;
+	pg = up->pgrp;
 	wlock(&pg->ns);
 	l = &MOUNTH(pg, old->qid);
 	for(m = *l; m != nil; m = m->hash){
@@ -792,7 +792,7 @@ cunmount(Chan *mnt, Chan *mounted)
 	 * cclose will take care of freeing the umh.
 	 */
 
-	pg = up->env->pgrp;
+	pg = up->pgrp;
 	wlock(&pg->ns);
 
 	l = &MOUNTH(pg, mnt->qid);
@@ -869,7 +869,7 @@ findmount(Chan **cp, Mhead **mp, int type, int dev, Qid qid)
 	Pgrp *pg;
 	Mhead *m;
 
-	pg = up->env->pgrp;
+	pg = up->pgrp;
 	rlock(&pg->ns);
 	for(m = MOUNTH(pg, qid); m != nil; m = m->hash){
 		if(eqchantdqid(m->from, type, dev, qid, 1)){
@@ -1004,7 +1004,7 @@ walk(Chan **cp, char **names, int nnames, int nomount, int *nerror)
 				*nerror = nhave;
 			pathclose(path);
 			cclose(c);
-			kstrcpy(up->env->errstr, Enotdir, ERRMAX);
+			kstrcpy(up->errstr, Enotdir, ERRMAX);
 			putmhead(mh);
 			return -1;
 		}
@@ -1083,11 +1083,11 @@ walk(Chan **cp, char **names, int nnames, int nomount, int *nerror)
 					if(wq->nqid == 0 || (wq->qid[wq->nqid-1].type&QTDIR) != 0){
 						if(nerror)
 							*nerror = nhave+wq->nqid+1;
-						kstrcpy(up->env->errstr, Edoesnotexist, ERRMAX);
+						kstrcpy(up->errstr, Edoesnotexist, ERRMAX);
 					}else{
 						if(nerror)
 							*nerror = nhave+wq->nqid;
-						kstrcpy(up->env->errstr, Enotdir, ERRMAX);
+						kstrcpy(up->errstr, Enotdir, ERRMAX);
 					}
 					free(wq);
 					putmhead(mh);
@@ -1264,7 +1264,7 @@ namelenerror(char *aname, int len, char *err)
 		snprint(up->genbuf, sizeof up->genbuf, "...%.*s",
 			utfnlen(name, ename-name), name);
 	}
-	snprint(up->env->errstr, ERRMAX, "%#q %s", up->genbuf, err);
+	snprint(up->errstr, ERRMAX, "%#q %s", up->genbuf, err);
 	nexterror();
 }
 
@@ -1333,7 +1333,7 @@ namec(char *aname, int amode, int omode, ulong perm)
 	nomount = 0;
 	switch(name[0]){
 	case '/':
-		c = up->env->pgrp->slash;
+		c = up->pgrp->slash;
 		incref(c);
 		break;
 
@@ -1360,7 +1360,7 @@ namec(char *aname, int amode, int omode, ulong perm)
 		 *	   any others left unprotected)
 		 */
 		n = chartorune(&r, up->genbuf+1)+1;
-		if(up->env->pgrp->noattach && utfrune("|decp", r)==nil)
+		if(up->pgrp->noattach && utfrune("|decp", r)==nil)
 			error(Enoattach);
 		t = devno(r, 1);
 		if(t == -1)
@@ -1369,7 +1369,7 @@ namec(char *aname, int amode, int omode, ulong perm)
 		break;
 
 	default:
-		c = up->env->pgrp->dot;
+		c = up->pgrp->dot;
 		incref(c);
 		break;
 	}
@@ -1382,7 +1382,6 @@ namec(char *aname, int amode, int omode, ulong perm)
 	e.nelems = 0;
 	e.nerror = 0;
 	if(waserror()){
-print("namec: waserror() loop before parsename pid %d\n", up->pid);
 		cclose(c);
 		free(e.name);
 		free(e.elems);
@@ -1396,9 +1395,9 @@ print("namec: waserror() loop before parsename pid %d\n", up->pid);
 				e.nerror, e.off[e.nerror]);
 		len = e.prefix+e.off[e.nerror];
 		free(e.off);
-		err = up->env->errstr;
-		up->env->errstr = up->env->syserrstr;
-		up->env->syserrstr = err;
+		err = up->errstr;
+		up->errstr = up->syserrstr;
+		up->syserrstr = err;
 		namelenerror(aname, len, err);
 	}
 
@@ -1414,17 +1413,20 @@ print("namec: waserror() loop before parsename pid %d\n", up->pid);
 		/* perm must have DMDIR if last element is / or /. */
 		if(e.mustbedir && !(perm&DMDIR)){
 			e.nerror = e.nelems;
+			print("namec: Acreate create without DMDIR pid %d\n", up->pid);
 			error("create without DMDIR");
 		}
 
 		/* don't try to walk the last path element just yet. */
-		if(e.nelems == 0)
+		if(e.nelems == 0){
+			print("namec: Acreate Eexist pid %d\n", up->pid);
 			error(Eexist);
+		}
 		e.nelems--;
 	}
 
 	if(walk(&c, e.elems, e.nelems, nomount, &e.nerror) < 0){
-print("namec: walk < 0 e.nerror %d pid %d\n", e.nerror, up->pid);
+		print("namec: walk < 0 e.nerror %d pid %d\n", e.nerror, up->pid);
 		if(e.nerror < 0 || e.nerror > e.nelems){
 			print("namec %s walk error nerror=%d\n", aname, e.nerror);
 			e.nerror = 0;
@@ -1449,6 +1451,7 @@ print("namec: walk < 0 e.nerror %d pid %d\n", e.nerror, up->pid);
 		if(!nomount)
 			domount(&c, &m, nil);
 		if(waserror()){
+			print("namec: Abind\n");
 			putmhead(m);
 			nexterror();
 		}
@@ -1465,6 +1468,7 @@ print("namec: walk < 0 e.nerror %d pid %d\n", e.nerror, up->pid);
 		path = c->path;
 		incref(path);
 		if(waserror()){
+			print("namec: Aopen\n");
 			pathclose(path);
 			nexterror();
 		}
@@ -1472,6 +1476,7 @@ print("namec: walk < 0 e.nerror %d pid %d\n", e.nerror, up->pid);
 		if(!nomount)
 			domount(&c, &m, &path);
 		if(waserror()){
+			print("namec: Aopen 1\n");
 			putmhead(m);
 			nexterror();
 		}
@@ -1509,8 +1514,8 @@ print("namec: walk < 0 e.nerror %d pid %d\n", e.nerror, up->pid);
 
 			/* save registers else error() in open has wrong value of c saved */
 			saveregisters();
-			DBG("namec walk c->type %d devtab[c->type]->name %s c->path %s\n",
-					c->type, devtab[c->type]->name, chanpath(c));
+			DBG("namec walk pid %d c->type %d devtab[c->type]->name %s c->path %s\n",
+					up->pid, c->type, devtab[c->type]->name, chanpath(c));
 			c = devtab[c->type]->open(c, omode&~OCEXEC);
 			if(omode & ORCLOSE)
 				c->flag |= CRCLOSE;
@@ -1544,6 +1549,7 @@ print("namec: walk < 0 e.nerror %d pid %d\n", e.nerror, up->pid);
 		e.nelems++;
 		e.nerror++;
 		if(walk(&c, e.elems+e.nelems-1, 1, nomount, nil) == 0){
+			print("namec: Acreate\n");
 			if(omode&OEXCL)
 				error(Eexist);
 			omode |= OTRUNC;
@@ -1628,16 +1634,16 @@ print("namec: walk < 0 e.nerror %d pid %d\n", e.nerror, up->pid);
 		if(omode & OEXCL)
 			nexterror();
 		/* save error */
-		err = up->env->errstr;
-		up->env->errstr = up->env->syserrstr;
-		up->env->syserrstr = err;
+		err = up->errstr;
+		up->errstr = up->syserrstr;
+		up->syserrstr = err;
 		/* note: we depend that walk does not error */
 		if(walk(&c, e.elems+e.nelems-1, 1, nomount, nil) < 0)
 			error(err);	/* report true error */
 		/* restore error */
-		err = up->env->syserrstr;
-		up->env->syserrstr = up->env->errstr;
-		up->env->errstr = err;
+		err = up->syserrstr;
+		up->syserrstr = up->errstr;
+		up->errstr = err;
 		omode |= OTRUNC;
 		goto Open;
 

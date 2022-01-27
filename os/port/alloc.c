@@ -91,7 +91,7 @@ poolmutable(void *v)
 
 	D2B(b, v);
 	b->magic = MAGIC_A;
-	((Heap*)v)->color = mutator;
+	/* ((Heap*)v)->color = mutator; */
 }
 
 char*
@@ -256,12 +256,12 @@ poolalloc(Pool *p, uintptr asize)
 
 	// if(asize >= 1024*1024*1024)	/* for sanity and to avoid overflow */
 	//	return nil;
-	if(p->cursize > p->ressize &&
+/*	if(p->cursize > p->ressize &&
 		(prog = currun()) != nil &&
 		prog->flags&Prestricted){
 		print("poolalloc exception\n");
 		return nil;
-	}
+	}*/
 	size = asize;
 	osize = size;
 	size = (size + BHDRSIZE + p->quanta) & ~(p->quanta);
@@ -404,7 +404,7 @@ void
 poolfree(Pool *p, void *v)
 {
 	Bhdr *b, *c;
-	extern Bhdr *ptr;
+	/* extern Bhdr *ptr; defined in libinterp/gc.c */
 
 	D2B(b, v);
 
@@ -414,8 +414,8 @@ poolfree(Pool *p, void *v)
 
 	c = B2NB(b);
 	if(c->magic == MAGIC_F) {	/* Join forward */
-		if(c == ptr)
-			ptr = b;
+		/*if(c == ptr)
+			ptr = b; */
 		pooldel(p, c);
 		c->magic = 0;
 		b->size += c->size;
@@ -424,8 +424,8 @@ poolfree(Pool *p, void *v)
 
 	c = B2PT(b)->hdr;
 	if(c->magic == MAGIC_F) {	/* Join backward */
-		if(b == ptr)
-			ptr = c;
+		/*if(b == ptr)
+			ptr = c; */
 		pooldel(p, c);
 		b->magic = 0;
 		c->size += b->size;

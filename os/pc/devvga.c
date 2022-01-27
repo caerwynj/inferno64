@@ -270,7 +270,7 @@ vgaclose(Chan* c)
 	if((u64)c->qid.path == Qvgaovlctl)
 		if(scr->dev && scr->dev->ovlctl){
 			if(waserror()){
-				print("ovlctl error: %s\n", up->env->errstr);
+				print("ovlctl error: %s\n", up->errstr);
 				return;
 			}
 			scr->dev->ovlctl(scr, c, closectl, strlen(closectl));

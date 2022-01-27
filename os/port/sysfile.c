@@ -87,7 +87,7 @@ newfd(Chan *c, int mode)
 	int fd, flag;
 	Fgrp *f;
 
-	f = up->env->fgrp;
+	f = up->fgrp;
 	lock(f);
 	fd = findfreefd(f, 0);
 	if(fd < 0){
@@ -113,7 +113,7 @@ newfd2(int fd[2], Chan *c[2])
 {
 	Fgrp *f;
 
-	f = up->env->fgrp;
+	f = up->fgrp;
 	lock(f);
 	fd[0] = findfreefd(f, 0);
 	if(fd[0] < 0){
@@ -249,7 +249,7 @@ kchdir(char *path)
 		return -1;
 
 	c = namec(path, Atodir, 0, 0);
-	pg = up->env->pgrp;
+	pg = up->pgrp;
 	cclose(pg->dot);
 	pg->dot = c;
 	poperror();
@@ -277,7 +277,7 @@ kfgrpclose(Fgrp *f, int fd)
 int
 kclose(int fd)
 {
-	return kfgrpclose(up->env->fgrp, fd);
+	return kfgrpclose(up->fgrp, fd);
 }
 
 int
@@ -309,12 +309,12 @@ kdup(int old, int new)
 {
 	int fd;
 	Chan *c, *oc;
-	Fgrp *f = up->env->fgrp;
+	Fgrp *f = up->fgrp;
 
 	if(waserror())
 		return -1;
 
-	c = fdtochan(up->env->fgrp, old, -1, 0, 1);
+	c = fdtochan(up->fgrp, old, -1, 0, 1);
 	if(c->qid.type & QTAUTH)
 		error(Eperm);
 	fd = new;
@@ -355,7 +355,7 @@ kfstat(int fd, uchar *buf, int n)
 	if(waserror())
 		return -1;
 
-	c = fdtochan(up->env->fgrp, fd, -1, 0, 1);
+	c = fdtochan(up->fgrp, fd, -1, 0, 1);
 	if(waserror()) {
 		cclose(c);
 		nexterror();
@@ -377,7 +377,7 @@ kfd2path(int fd)
 
 	if(waserror())
 		return nil;
-	c = fdtochan(up->env->fgrp, fd, -1, 0, 1);
+	c = fdtochan(up->fgrp, fd, -1, 0, 1);
 	s = nil;
 	if(c->path != nil){
 		s = malloc(c->path->len+1);
@@ -401,7 +401,7 @@ kfauth(int fd, char *aname)
 		return -1;
 
 	validname(aname, 1);
-	c = fdtochan(up->env->fgrp, fd, ORDWR, 0, 1);
+	c = fdtochan(up->fgrp, fd, ORDWR, 0, 1);
 	if(waserror()){
 		cclose(c);
 		nexterror();
@@ -441,7 +441,7 @@ kfversion(int fd, uint msize, char *vers, uint arglen)
 	if(arglen==0 || memchr(vers, 0, arglen)==0)
 		error(Ebadarg);
 
-	c = fdtochan(up->env->fgrp, fd, ORDWR, 0, 1);
+	c = fdtochan(up->fgrp, fd, ORDWR, 0, 1);
 	if(waserror()){
 		cclose(c);
 		nexterror();
@@ -774,7 +774,7 @@ kfwstat(int fd, uchar *buf, int n)
 		return -1;
 
 	validstat(buf, n);
-	c = fdtochan(up->env->fgrp, fd, -1, 1, 1);
+	c = fdtochan(up->fgrp, fd, -1, 1, 1);
 	return (wstat(c, buf, n));
 }
 
@@ -794,11 +794,11 @@ bindmount(int ismount, int fd, int afd, char* arg0, char* arg1, int flag, char* 
 			nexterror();
 		}
 
-		if(up->env->pgrp->noattach)
+		if(up->pgrp->noattach)
 			error(Enoattach);
 
 		ac = nil;
-		bc = fdtochan(up->env->fgrp, fd, ORDWR, 0, 1);
+		bc = fdtochan(up->fgrp, fd, ORDWR, 0, 1);
 		if(waserror()) {
 			if(ac != nil)
 				cclose(ac);
@@ -807,7 +807,7 @@ bindmount(int ismount, int fd, int afd, char* arg0, char* arg1, int flag, char* 
 		}
 
 		if(afd >= 0)
-			ac = fdtochan(up->env->fgrp, afd, ORDWR, 0, 1);
+			ac = fdtochan(up->fgrp, afd, ORDWR, 0, 1);
 
 		c0 = mntattach(bc, ac, spec, flag&MCACHE);
 		poperror();	/* ac bc */
@@ -837,7 +837,7 @@ bindmount(int ismount, int fd, int afd, char* arg0, char* arg1, int flag, char* 
 	poperror();
 	cclose(c0);
 	if(ismount){
-		fdclose(up->env->fgrp, fd, 0);
+		fdclose(up->fgrp, fd, 0);
 		poperror();
 		free(spec);
 	}
@@ -987,7 +987,7 @@ rread(int fd, void *p, s32 n, s64 *offp)
 		return -1;
 	}
 
-	c = fdtochan(up->env->fgrp, fd, OREAD, 1, 1);
+	c = fdtochan(up->fgrp, fd, OREAD, 1, 1);
 
 	if(waserror()){
 		print("rread fd %d p 0x%p n %d fdtochan failed: %r\n", fd, p, n);
@@ -1122,7 +1122,7 @@ kseek(int fd, s64 o, int type)
 	int n;
 	s64 off;
 
-	c = fdtochan(up->env->fgrp, fd, -1, 1, 1);
+	c = fdtochan(up->fgrp, fd, -1, 1, 1);
 	if(waserror()){
 		cclose(c);
 		nexterror();
@@ -1261,7 +1261,7 @@ rwrite(int fd, void *buf, s32 len, s64 *offp)
 	s64 off;
 
 	n = 0;
-	c = fdtochan(up->env->fgrp, fd, OWRITE, 1, 1);
+	c = fdtochan(up->fgrp, fd, OWRITE, 1, 1);
 	if(c == nil)
 		print("rwrite fdtochan nil %r\n");
 	if(waserror()) {
@@ -1419,7 +1419,7 @@ kdirfstat(int fd)
 	if(waserror())
 		return nil;
 
-	c = fdtochan(up->env->fgrp, fd, -1, 0, 1);
+	c = fdtochan(up->fgrp, fd, -1, 0, 1);
 	if(waserror()) {
 		cclose(c);
 		nexterror();
@@ -1540,7 +1540,7 @@ kiounit(int fd)
 	Chan *c;
 	int n;
 
-	c = fdtochan(up->env->fgrp, fd, -1, 0, 1);
+	c = fdtochan(up->fgrp, fd, -1, 0, 1);
 	if(waserror()){
 		cclose(c);
 		return 0;	/* n.b. */

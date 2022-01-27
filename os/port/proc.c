@@ -153,6 +153,19 @@ schedinit(void)		/* never returns */
 }
 
 /*
+ * in 9front, userureg() checks if the current code segment
+ * is the user's code segment. We use the same segment for
+ * the kernel and the user. Hence, return !Proc.kp. Proc.kp
+ * is true for a kernel process.
+ */
+int
+userureg(Ureg *ur)
+{
+	if(ur == nil || ur->r14 == 0 || ((Proc*)(ur->r14))->kp == 0)
+		return 0;
+	return 1;
+}
+
 int
 kenter(Ureg *ureg)
 {
@@ -174,13 +187,12 @@ kexit(Ureg*)
 
 	cycles(&t);
 
-	\/* precise time accounting, kernel exit *\/
+	/* precise time accounting, kernel exit */
 	tos = (Tos*)(USTKTOP-sizeof(Tos));
 	tos->kcycles += t - up->kentry;
 	tos->pcycles = t + up->pcycles;
 	tos->pid = up->pid;
 }
-*/
 
 static void
 procswitch(void)
@@ -687,16 +699,13 @@ newproc(void)
 	p->ureg = nil;
 	p->dbgreg = nil;
 	p->nerrlab = 0;
-	p->type = Unknown;
 	p->nlocks = 0;
 	p->delaysched = 0;
 	p->trace = 0;
 
-	memset(&p->defenv, 0, sizeof(p->defenv));
-	p->env = &p->defenv;
-	kstrdup(&p->env->user, "*nouser");
-	p->env->errstr = p->env->errbuf0;
-	p->env->syserrstr = p->env->errbuf1;
+	kstrdup(&p->user, "*nouser");
+	p->errstr = p->errbuf0;
+	p->syserrstr = p->errbuf1;
 
 	/*
 	 * a user process. kproc() can change it as it needs.
@@ -878,7 +887,7 @@ sleep(Rendez *r, int (*f)(void*), void *arg)
 void
 interrupted(void)
 {
-	if(up->procctl == Proc_exitme && up->env->closingfgrp != nil)
+	if(up->procctl == Proc_exitme && up->closingfgrp != nil)
 		forceclosefgrp();
 	error(Eintr);
 }
@@ -1074,11 +1083,11 @@ postnote(Proc *p, int dolock, char *n, int flag)
 		break;
 	case Rendezvous:
 		/* Try and pull out of a rendezvous */
-		lock(p->env->rgrp);
+		lock(p->rgrp);
 		if(p->state == Rendezvous) {
 			Proc *d, **l;
 
-			l = &REND(p->env->rgrp, p->rendtag);
+			l = &REND(p->rgrp, p->rendtag);
 			for(d = *l; d != nil; d = d->rendhash) {
 				if(d == p) {
 					*l = p->rendhash;
@@ -1089,7 +1098,7 @@ postnote(Proc *p, int dolock, char *n, int flag)
 				l = &d->rendhash;
 			}
 		}
-		unlock(p->env->rgrp);
+		unlock(p->rgrp);
 		break;
 	}
 	return ret;
@@ -1158,6 +1167,7 @@ freebroken(void)
 }
 
 
+/*
 void
 notkilled(void)
 {
@@ -1165,6 +1175,7 @@ notkilled(void)
 	up->killed = 0;
 	unlock(&up->rlock);
 }
+*/
 
 void
 pexit(char *exitstr, int freemem)
@@ -1189,16 +1200,16 @@ pexit(char *exitstr, int freemem)
 
 	/* nil out all the resources under lock (free later) */
 	qlock(&up->debug);
-	fgrp = up->env->fgrp;
-	up->env->fgrp = nil;
-	egrp = up->env->egrp;
-	up->env->egrp = nil;
-	rgrp = up->env->rgrp;
-	up->env->rgrp = nil;
-/*	dot = up->env->pgrp->dot;
-	up->env->pgrp->dot = nil;*/
-	pgrp = up->env->pgrp;
-	up->env->pgrp = nil;
+	fgrp = up->fgrp;
+	up->fgrp = nil;
+	egrp = up->egrp;
+	up->egrp = nil;
+	rgrp = up->rgrp;
+	up->rgrp = nil;
+/*	dot = up->pgrp->dot;
+	up->pgrp->dot = nil;*/
+	pgrp = up->pgrp;
+	up->pgrp = nil;
 	qunlock(&up->debug);
 
 	if(fgrp != nil)
@@ -1395,7 +1406,7 @@ procdump(void)
 			continue;
 
 		dumpaproc(p);
-		dumppgrp("	", p->env->pgrp);
+		dumppgrp("	", p->pgrp);
 	}
 }
 
@@ -1415,20 +1426,20 @@ kproc(char *name, void (*func)(void *), void *arg, int flags)
 
 	qlock(&p->debug);
 	if(flags & KPDUPPG) {
-		pg = up->env->pgrp;
+		pg = up->pgrp;
 		incref(pg);
-		p->env->pgrp = pg;
+		p->pgrp = pg;
 	}
 	if(flags & KPDUPFDG) {
-		fg = up->env->fgrp;
+		fg = up->fgrp;
 		incref(fg);
-		p->env->fgrp = fg;
+		p->fgrp = fg;
 	}
 	if(flags & KPDUPENVG) {
-		eg = up->env->egrp;
+		eg = up->egrp;
 		if(eg != nil)
 			incref(eg);
-		p->env->egrp = eg;
+		p->egrp = eg;
 	}
 
 	p->nnote = 0;
@@ -1448,7 +1459,7 @@ kproc(char *name, void (*func)(void *), void *arg, int flags)
 /* this does all of the above 3 lines */
 	kprocchild(p, func, arg);
 
-	kstrdup(&p->env->user, up->env->user);
+	kstrdup(&p->user, up->user);
 	kstrdup(&p->text, name);
 	kstrdup(&p->args, "");
 	p->nargs = 0;
@@ -1562,15 +1573,15 @@ error(char *err)
 		panic("error stack too deep");
 	if(err == nil)
 		panic("error: nil parameter");
-	kstrcpy(up->env->errstr, err, ERRMAX);
+	kstrcpy(up->errstr, err, ERRMAX);
 	setlabel(&up->errlab[NERR-1]);
 	if(emptystr(err) == 1){
 		DBG("error nil error err %s caller 0x%p up->pid %d\n", err, getcallerpc(&err), up->pid);
-		up->env->errpc = 0;
+		up->errpc = 0;
 		/* showerrlabs("error == nil"); */
 	}else{
 		DBG("error err %s caller 0x%p up->pid %d\n", err, getcallerpc(&err), up->pid);
-		up->env->errpc = getcallerpc(&err);
+		up->errpc = getcallerpc(&err);
 		/* proactively show issues */
 		/* print("up->nerrlab %d error %s raised by 0x%zx\n",
 			up->nerrlab, err, getcallerpc(&err)); */
@@ -1595,8 +1606,8 @@ kerrstr(char *err, uint size)
 
 	char tmp[ERRMAX];
 
-	kstrcpy(tmp, up->env->errstr, sizeof(tmp));
-	kstrcpy(up->env->errstr, err, ERRMAX);
+	kstrcpy(tmp, up->errstr, sizeof(tmp));
+	kstrcpy(up->errstr, err, ERRMAX);
 	kstrcpy(err, tmp, size);
 }
 
@@ -1606,8 +1617,8 @@ kgerrstr(char *err, uint size)
 {
 	char tmp[ERRMAX];
 
-	kstrcpy(tmp, up->env->errstr, sizeof(tmp));
-	kstrcpy(up->env->errstr, err, ERRMAX);
+	kstrcpy(tmp, up->errstr, sizeof(tmp));
+	kstrcpy(up->errstr, err, ERRMAX);
 	kstrcpy(err, tmp, size);
 }
 
@@ -1621,7 +1632,7 @@ kwerrstr(char *fmt, ...)
 	va_start(arg, fmt);
 	vseprint(buf, buf+sizeof(buf), fmt, arg);
 	va_end(arg);
-	kstrcpy(up->env->errstr, buf, ERRMAX);
+	kstrcpy(up->errstr, buf, ERRMAX);
 }
 
 void
@@ -1633,7 +1644,7 @@ werrstr(char *fmt, ...)
 	va_start(arg, fmt);
 	vseprint(buf, buf+sizeof(buf), fmt, arg);
 	va_end(arg);
-	kstrcpy(up->env->errstr, buf, ERRMAX);
+	kstrcpy(up->errstr, buf, ERRMAX);
 }
 
 /* for dynamic modules - functions not macros */
@@ -1654,7 +1665,7 @@ poperr(void)
 char*
 enverror(void)
 {
-	return up->env->errstr;
+	return up->errstr;
 }
 
 void
@@ -1677,13 +1688,13 @@ void
 setid(char *name, int owner)
 {
 	if(!owner || iseve())
-		kstrdup(&up->env->user, name);
+		kstrdup(&up->user, name);
 }
 
 /* TODO no idea what this rptproc() does
  * something to do with repeat of tk actions
  */
-void
+/*void
 rptwakeup(void *o, void *ar)
 {
 	Rept *r;
@@ -1735,7 +1746,7 @@ Wait:
 		poperror();
 		if(i == -1)
 			goto Wait;
-		if(i == 0)
+		if(i == 0) 
 			continue;
 		then = now;
 		acquire();
@@ -1766,7 +1777,7 @@ rptproc(char *s, int t, void *o, int (*active)(void*), int (*ck)(void*, int), vo
 	kproc(s, rproc, r, KPDUP);
 	return r;
 }
-
+*/
 s32
 getpid(void)
 {

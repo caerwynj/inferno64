@@ -4,30 +4,25 @@
 #include	"dat.h"
 #include	"fns.h"
 #include	"../port/error.h"
-#include "interp.h"
 
-#define NETTYPE(x)	((ulong)(x)&0x1f)
-#define NETID(x)	(((ulong)(x))>>5)
-#define NETQID(i,t)	(((i)<<5)|(t))
+#include	"netif.h"
 
 typedef struct Pipe	Pipe;
 struct Pipe
 {
 	QLock;
-	Pipe*	next;
+	Pipe	*next;
 	int	ref;
 	ulong	path;
-	Queue*	q[2];
+	long	perm;
+	Queue	*q[2];
 	int	qref[2];
-	Dirtab	*pipedir;
-	char*	user;
 };
 
-static struct
+struct
 {
 	Lock;
 	ulong	path;
-	int	pipeqsize;	
 } pipealloc;
 
 enum
@@ -37,30 +32,23 @@ enum
 	Qdata1,
 };
 
-static 
 Dirtab pipedir[] =
 {
 	".",		{Qdir,0,QTDIR},	0,		DMDIR|0500,
-	"data",		{Qdata0},	0,			0660,
-	"data1",	{Qdata1},	0,			0660,
+	"data",		{Qdata0},	0,		0600,
+	"data1",	{Qdata1},	0,		0600,
 };
-
-static void
-freepipe(Pipe *p)
-{
-	if(p != nil){
-		free(p->user);
-		free(p->q[0]);
-		free(p->q[1]);
-		free(p->pipedir);
-		free(p);
-	}
-}
+#define NPIPEDIR 3
 
 static void
 pipeinit(void)
 {
-	pipealloc.pipeqsize = 32*1024;
+	if(conf.pipeqsize == 0){
+		if(conf.nmach > 1)
+			conf.pipeqsize = 256*1024;
+		else
+			conf.pipeqsize = 32*1024;
+	}
 }
 
 /*
@@ -73,45 +61,44 @@ pipeattach(char *spec)
 	Chan *c;
 
 	c = devattach('|', spec);
-	p = malloc(sizeof(Pipe));
-	if(p == 0)
-		error(Enomem);
 	if(waserror()){
-		freepipe(p);
+		chanfree(c);
 		nexterror();
 	}
-	p->pipedir = malloc(sizeof(pipedir));
-	if (p->pipedir == 0)
-		error(Enomem);
-	memmove(p->pipedir, pipedir, sizeof(pipedir));
-	kstrdup(&p->user, up->env->user);
+	p = malloc(sizeof(Pipe));
+	if(p == 0)
+		exhausted("memory");
 	p->ref = 1;
 
-	p->q[0] = qopen(pipealloc.pipeqsize, 0, 0, 0);
-	if(p->q[0] == 0)
-		error(Enomem);
-	p->q[1] = qopen(pipealloc.pipeqsize, 0, 0, 0);
-	if(p->q[1] == 0)
-		error(Enomem);
+	p->q[0] = qopen(conf.pipeqsize, 0, 0, 0);
+	if(p->q[0] == 0){
+		free(p);
+		exhausted("memory");
+	}
+	p->q[1] = qopen(conf.pipeqsize, 0, 0, 0);
+	if(p->q[1] == 0){
+		qfree(p->q[0]);
+		free(p);
+		exhausted("memory");
+	}
 	poperror();
 
 	lock(&pipealloc);
 	p->path = ++pipealloc.path;
 	unlock(&pipealloc);
+	p->perm = pipedir[Qdata0].perm;
 
-	c->qid.path = NETQID(2*p->path, Qdir);
-	c->qid.vers = 0;
-	c->qid.type = QTDIR;
+	mkqid(&c->qid, NETQID(2*p->path, Qdir), 0, QTDIR);
 	c->aux = p;
 	c->dev = 0;
 	return c;
 }
 
 static int
-pipegen(Chan *c, char *, Dirtab *tab, int ntab, int i, Dir *dp)
+pipegen(Chan *c, char*, Dirtab *tab, int ntab, int i, Dir *dp)
 {
-	int id, len;
-	Qid qid;
+	Qid q;
+	int len;
 	Pipe *p;
 
 	if(i == DEVDOTDOT){
@@ -121,9 +108,10 @@ pipegen(Chan *c, char *, Dirtab *tab, int ntab, int i, Dir *dp)
 	i++;	/* skip . */
 	if(tab==0 || i>=ntab)
 		return -1;
+
 	tab += i;
 	p = c->aux;
-	switch(NETTYPE(tab->qid.path)){
+	switch((ulong)tab->qid.path){
 	case Qdata0:
 		len = qlen(p->q[0]);
 		break;
@@ -134,27 +122,25 @@ pipegen(Chan *c, char *, Dirtab *tab, int ntab, int i, Dir *dp)
 		len = tab->length;
 		break;
 	}
-	id = NETID(c->qid.path);
-	qid.path = NETQID(id, tab->qid.path);
-	qid.vers = 0;
-	qid.type = QTFILE;
-	devdir(c, qid, tab->name, len, eve, tab->perm, dp);
+	mkqid(&q, NETQID(NETID(c->qid.path), tab->qid.path), 0, QTFILE);
+	devdir(c, q, tab->name, len, eve, p->perm, dp);
 	return 1;
 }
 
 
 static Walkqid*
-pipewalk(Chan *c, Chan *nc, char **name, s32 nname)
+pipewalk(Chan *c, Chan *nc, char **name, int nname)
 {
 	Walkqid *wq;
 	Pipe *p;
 
-	p = c->aux;
-	wq = devwalk(c, nc, name, nname, p->pipedir, nelem(pipedir), pipegen);
+	wq = devwalk(c, nc, name, nname, pipedir, NPIPEDIR, pipegen);
 	if(wq != nil && wq->clone != nil && wq->clone != c){
+		p = c->aux;
 		qlock(p);
 		p->ref++;
 		if(c->flag & COPEN){
+			print("channel open in pipewalk\n");
 			switch(NETTYPE(c->qid.path)){
 			case Qdata0:
 				p->qref[0]++;
@@ -174,20 +160,18 @@ pipestat(Chan *c, uchar *db, s32 n)
 {
 	Pipe *p;
 	Dir dir;
-	Dirtab *tab;
 
 	p = c->aux;
-	tab = p->pipedir;
 
 	switch(NETTYPE(c->qid.path)){
 	case Qdir:
-		devdir(c, c->qid, ".", 0, eve, DMDIR|0555, &dir);
+		devdir(c, c->qid, ".", 0, eve, 0555, &dir);
 		break;
 	case Qdata0:
-		devdir(c, c->qid, tab[1].name, qlen(p->q[0]), eve, tab[1].perm, &dir);
+		devdir(c, c->qid, "data", qlen(p->q[0]), eve, p->perm, &dir);
 		break;
 	case Qdata1:
-		devdir(c, c->qid, tab[2].name, qlen(p->q[1]), eve, tab[2].perm, &dir);
+		devdir(c, c->qid, "data1", qlen(p->q[1]), eve, p->perm, &dir);
 		break;
 	default:
 		panic("pipestat");
@@ -196,6 +180,36 @@ pipestat(Chan *c, uchar *db, s32 n)
 	if(n < BIT16SZ)
 		error(Eshortstat);
 	return n;
+}
+
+static int
+pipewstat(Chan* c, uchar* db, int n)
+{
+	int m;
+	Dir *dir;
+	Pipe *p;
+
+	p = c->aux;
+	if(strcmp(up->user, eve) != 0)
+		error(Eperm);
+	if(NETTYPE(c->qid.path) == Qdir)
+		error(Eisdir);
+
+	dir = smalloc(sizeof(Dir)+n);
+	if(waserror()){
+		free(dir);
+		nexterror();
+	}
+	m = convM2D(db, n, &dir[0], (char*)&dir[1]);
+	if(m == 0)
+		error(Eshortstat);
+	if(!emptystr(dir[0].uid))
+		error("can't change owner");
+	if(dir[0].mode != ~0UL)
+		p->perm = dir[0].mode;
+	poperror();
+	free(dir);
+	return m;
 }
 
 /*
@@ -215,25 +229,16 @@ pipeopen(Chan *c, u32 omode)
 		return c;
 	}
 
-	openmode(omode);	/* check it */
-
 	p = c->aux;
 	qlock(p);
-	if(waserror()){
-		qunlock(p);
-		nexterror();
-	}
 	switch(NETTYPE(c->qid.path)){
 	case Qdata0:
-		devpermcheck(p->user, p->pipedir[1].perm, omode);
 		p->qref[0]++;
 		break;
 	case Qdata1:
-		devpermcheck(p->user, p->pipedir[2].perm, omode);
 		p->qref[1]++;
 		break;
 	}
-	poperror();
 	qunlock(p);
 
 	c->mode = openmode(omode);
@@ -273,7 +278,7 @@ pipeclose(Chan *c)
 		}
 	}
 
-	
+
 	/*
 	 *  if both sides are closed, they are reusable
 	 */
@@ -288,7 +293,9 @@ pipeclose(Chan *c)
 	p->ref--;
 	if(p->ref == 0){
 		qunlock(p);
-		freepipe(p);
+		free(p->q[0]);
+		free(p->q[1]);
+		free(p);
 	} else
 		qunlock(p);
 }
@@ -302,7 +309,7 @@ piperead(Chan *c, void *va, s32 n, s64)
 
 	switch(NETTYPE(c->qid.path)){
 	case Qdir:
-		return devdirread(c, va, n, p->pipedir, nelem(pipedir), pipegen);
+		return devdirread(c, va, n, pipedir, NPIPEDIR, pipegen);
 	case Qdata0:
 		return qread(p->q[0], va, n);
 	case Qdata1:
@@ -331,22 +338,20 @@ pipebread(Chan *c, s32 n, u32 offset)
 }
 
 /*
- *  a write to a closed pipe causes an exception to be sent to
- *  the prog.
+ *  a write to a closed pipe causes a note to be sent to
+ *  the process.
  */
 static s32
 pipewrite(Chan *c, void *va, s32 n, s64)
 {
 	Pipe *p;
-	Prog *r;
 
+	if(!islo())
+		print("pipewrite hi %#p\n", getcallerpc(&c));
 	if(waserror()) {
-		/* avoid exceptions when pipe is a mounted queue */
-		if((c->flag & CMSG) == 0) {
-			r = up->iprog;
-			if(r != nil && r->kill == nil)
-				r->kill = "write on closed pipe";
-		}
+		/* avoid notes when pipe is a mounted queue */
+		if((c->flag & CMSG) == 0)
+			postnote(up, 1, "sys: write on closed pipe", NUser);
 		nexterror();
 	}
 
@@ -370,20 +375,15 @@ pipewrite(Chan *c, void *va, s32 n, s64)
 }
 
 static s32
-pipebwrite(Chan *c, Block *bp, u32 junk)
+pipebwrite(Chan *c, Block *bp, u32)
 {
 	long n;
 	Pipe *p;
-	Prog *r;
 
-	USED(junk);
 	if(waserror()) {
-		/* avoid exceptions when pipe is a mounted queue */
-		if((c->flag & CMSG) == 0) {
-			r = up->iprog;
-			if(r != nil && r->kill == nil)
-				r->kill = "write on closed pipe";
-		}
+		/* avoid notes when pipe is a mounted queue */
+		if((c->flag & CMSG) == 0)
+			postnote(up, 1, "sys: write on closed pipe", NUser);
 		nexterror();
 	}
 
@@ -403,42 +403,6 @@ pipebwrite(Chan *c, Block *bp, u32 junk)
 	}
 
 	poperror();
-	return n;
-}
-
-static s32
-pipewstat(Chan *c, uchar *dp, s32 n)
-{
-	Dir *d;
-	Pipe *p;
-	int d1;
-
-	if (c->qid.type&QTDIR)
-		error(Eperm);
-	p = c->aux;
-	if(strcmp(up->env->user, p->user) != 0)
-		error(Eperm);
-	d = smalloc(sizeof(*d)+n);
-	if(waserror()){
-		free(d);
-		nexterror();
-	}
-	n = convM2D(dp, n, d, (char*)&d[1]);
-	if(n == 0)
-		error(Eshortstat);
-	d1 = NETTYPE(c->qid.path) == Qdata1;
-	if(!emptystr(d->name)){
-		validwstatname(d->name);
-		if(strlen(d->name) >= KNAMELEN)
-			error(Efilename);
-		if(strcmp(p->pipedir[1+!d1].name, d->name) == 0)
-			error(Eexist);
-		kstrcpy(p->pipedir[1+d1].name, d->name, KNAMELEN);
-	}
-	if(d->mode != ~0UL)
-		p->pipedir[d1 + 1].perm = d->mode & 0777;
-	poperror();
-	free(d);
 	return n;
 }
 

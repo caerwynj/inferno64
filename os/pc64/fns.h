@@ -28,6 +28,7 @@ int	dmadone(int);
 void	dmaend(int);
 int	dmainit(int, int);
 s32	dmasetup(int, void*, s32, s32);
+void	dumpmcregs(void);
 void	dumpregs(Ureg*);
 int	ecinit(int cmdport, int dataport);
 int	ecread(uchar addr);
@@ -49,6 +50,7 @@ u64	getcr0(void);
 u64	getcr2(void);
 u64	getcr3(void);
 u64	getcr4(void);
+u64	getdr6(void);
 char*	getconf(char*);
 void	guesscpuhz(int);
 void	mwait(void*);
@@ -204,6 +206,7 @@ u64	upaallocwin(u64, u32, u32, u32);
 void	upafree(uintptr, u32);
 void	upareserve(uintptr, u32);
 u64	us2fastticks(u64);
+s32	userureg(Ureg*);
 void	vectortable(void);
 void*	vmap(uintptr, s32);
 void	vunmap(void*, s32);
@@ -214,7 +217,6 @@ ulong	kzeromap(ulong, ulong, int);
 void	nmiscreen(void);
 int	kbdinready(void);
 
-#define	userureg(ur)	(((ur)->cs & 3) == 3)
 #define getcallerpc(x)	(((uintptr*)(x))[-1])
 #define KADDR(a)	((void*)((uintptr)(a)|KZERO))
 #define PADDR(a)	((uintptr)(a)&~(uintptr)KZERO)

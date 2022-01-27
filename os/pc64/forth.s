@@ -214,6 +214,12 @@ TEXT	cjump(SB), 1, $-4	/* ( f -- ) */
 	POP(TOP)
 	NEXT
 
+/*
+	TODO replace the CALL to validateaddress with a macro
+	using UM and UME masks or CMPQ with UM and UME in
+	fetch, store, cfetch and cstore to speed up these words
+	(a || UM) && ~UME
+ */
 TEXT	fetch(SB), 1, $-4	/* ( a -- n) */
 	PUSH(TOP)
 	CALL validateaddress(SB)	/* a a -- a */

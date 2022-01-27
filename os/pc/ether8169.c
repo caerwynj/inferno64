@@ -795,7 +795,7 @@ rtl8169attach(Ether* edev)
 		return;
 	}
 	if(waserror()){
-		print("#l%d: rtl8169: %s\n", edev->ctlrno, up->env->errstr);
+		print("#l%d: rtl8169: %s\n", edev->ctlrno, up->errstr);
 		qunlock(&ctlr->alock);
 		nexterror();
 	}

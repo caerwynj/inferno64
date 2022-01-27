@@ -135,7 +135,7 @@ export(int fd, char *dir, int async)
 
 	if(waserror())
 		return -1;
-	c = fdtochan(up->env->fgrp, fd, ORDWR, 1, 1);
+	c = fdtochan(up->fgrp, fd, ORDWR, 1, 1);
 	poperror();
 
 	if(waserror()){
@@ -153,15 +153,15 @@ export(int fd, char *dir, int async)
 	}
 
 	fs->r.ref = 1;
-	pg = up->env->pgrp;
+	pg = up->pgrp;
 	fs->pgrp = pg;
 	incref(pg);
-	eg = up->env->egrp;
+	eg = up->egrp;
 	fs->egrp = eg;
 	if(eg != nil)
 		incref(eg);
 	fs->fgrp = newfgrp(nil);
-	kstrdup(&fs->user, up->env->user);
+	kstrdup(&fs->user, up->user);
 	fs->root = dc;
 	fs->io = c;
 	fs->pathgen = 0;
@@ -354,7 +354,7 @@ exportproc(void *a)
 
 	if(exdebug){
 		if(n < 0)
-			print("exportproc %d shut down: %s\n", up->pid, up->env->errstr);
+			print("exportproc %d shut down: %s\n", up->pid, up->errstr);
 		else
 			print("exportproc %d shut down\n", up->pid);
 	}
@@ -550,17 +550,17 @@ exslave(void*)
 		unlock(fs);
 		unlock(&exq.l);
 
-		up->env->pgrp = q->export->pgrp;
-		up->env->egrp = q->export->egrp;
-		up->env->fgrp = q->export->fgrp;
-		kstrdup(&up->env->user, q->export->user);
+		up->pgrp = q->export->pgrp;
+		up->egrp = q->export->egrp;
+		up->fgrp = q->export->fgrp;
+		kstrdup(&up->user, q->export->user);
 
 		if(exdebug > 1)
 			print("exslave %d dispatch %F\n", up->pid, &q->in);
 
 		if(waserror()){
-			print("exslave %d err %s\n", up->pid, up->env->errstr);	/* shouldn't happen */
-			err = up->env->errstr;
+			print("exslave %d err %s\n", up->pid, up->errstr);	/* shouldn't happen */
+			err = up->errstr;
 		}else{
 			if(q->in.type >= Tmax || !fcalls[q->in.type]){
 				snprint(up->genbuf, sizeof(up->genbuf), "unknown message: %F", &q->in);
@@ -830,7 +830,7 @@ Exattach(Export *fs, Fcall *t, Fcall *r)
 	if(waserror()){
 		f->attached = 0;
 		Exputfid(fs, f);
-		return up->env->errstr;
+		return up->errstr;
 	}
 	f->chan = cclone(fs->root);
 	f->qid = uqidalloc(fs, f->chan);
@@ -885,7 +885,7 @@ Exwalk(Export *fs, Fcall *t, Fcall *r)
 	}
 
 	if(waserror())
-		return up->env->errstr;
+		return up->errstr;
 	c = cclone(f->chan);
 	poperror();
 	qid = f->qid;
@@ -901,7 +901,7 @@ Exwalk(Export *fs, Fcall *t, Fcall *r)
 					freeuqid(fs, qid);
 					Exputfid(fs, f);
 					if(i == 0)
-						return up->env->errstr;
+						return up->errstr;
 					return nil;
 				}
 				freeuqid(fs, qid);
@@ -952,7 +952,7 @@ Exopen(Export *fs, Fcall *t, Fcall *r)
 	if(waserror()){
 		cclose(c);
 		Exputfid(fs, f);
-		return up->env->errstr;
+		return up->errstr;
 	}
 
 	/* only save the mount head if it's a multiple element union */
@@ -996,7 +996,7 @@ Excreate(Export *fs, Fcall *t, Fcall *r)
 	}
 	if(waserror()){
 		Exputfid(fs, f);
-		return up->env->errstr;
+		return up->errstr;
 	}
 	validname(t->name, 0);
 	if(t->name[0] == '.' && (t->name[1] == '\0' || t->name[1] == '.' && t->name[2] == '\0'))
@@ -1062,7 +1062,7 @@ Exread(Export *fs, Fcall *t, Fcall *r)
 
 	if(waserror()) {
 		Exputfid(fs, f);
-		return up->env->errstr;
+		return up->errstr;
 	}
 	c = f->chan;
 	if((c->flag & COPEN) == 0)
@@ -1127,7 +1127,7 @@ Exwrite(Export *fs, Fcall *t, Fcall *r)
 		return Enofid;
 	if(waserror()){
 		Exputfid(fs, f);
-		return up->env->errstr;
+		return up->errstr;
 	}
 	c = f->chan;
 	if((c->flag & COPEN) == 0)
@@ -1160,7 +1160,7 @@ Exstat(Export *fs, Fcall *t, Fcall *r)
 	if(waserror()){
 		cclose(c);
 		Exputfid(fs, f);
-		return up->env->errstr;
+		return up->errstr;
 	}
 	n = devtab[c->type]->stat(c, r->stat, r->nstat);
 	if(n <= BIT16SZ)
@@ -1184,7 +1184,7 @@ Exwstat(Export *fs, Fcall *t, Fcall *r)
 		return Enofid;
 	if(waserror()){
 		Exputfid(fs, f);
-		return up->env->errstr;
+		return up->errstr;
 	}
 	validstat(t->stat, t->nstat);	/* check name */
 
@@ -1215,7 +1215,7 @@ Exremove(Export *fs, Fcall *t, Fcall *r)
 	if(waserror()){
 		f->attached = 0;
 		Exputfid(fs, f);
-		return up->env->errstr;
+		return up->errstr;
 	}
 	c = exmount(f->chan, nil, 0);
 	if(waserror()){

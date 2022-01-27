@@ -310,11 +310,16 @@ static void
 swiprog(Prog *p)
 {
 	Proc *q, *eq;
+	char c[ERRMAX];
 
+	snprint(c, ERRMAX, "interrupted by swiprog 0x%p\n", getcallerpc(&p));
+	/* print("swiprog: %s\n", c); */
 	q = proctab(0);
 	for(eq = q+conf.nproc; q < eq; q++) {
 		if(q->iprog == p) {
-			postnote(q, 1, "interrupted", NUser);
+			/*	postnote(q, 1, "interrupted by swiprog", NUser); */
+			postnote(q, 1, c, NUser);
+			/* dumpstack(); */
 			return;
 		}
 	}
@@ -954,12 +959,12 @@ progexit(void)
 	Prog *r;
 	Module *m;
 	int broken;
-	char *estr, msg[ERRMAX+2*KNAMELEN];
+	char *estr, msg[ERRMAX+2*KNAMELEN] = {'\0'};
 
 	estr = up->env->errstr;
 	broken = 0;
 	DBG("progexit estr %s\n", estr);
-	if(estr[0] != '\0' && strcmp(estr, Eintr) != 0 && strncmp(estr, "fail:", 5) != 0)
+	if(emptystr(up->env->errstr) == 0 && strcmp(estr, Eintr) != 0 && strncmp(estr, "fail:", 5) != 0)
 		broken = 1;
 
 	r = up->iprog;
@@ -973,21 +978,13 @@ progexit(void)
 
 	m = R.M->m;
 	if(broken){
-		if(cflag){	/* only works on Plan9 for now */
-			DBG("progexit cflag set\n");
-			char *pc = strstr(estr, "pc=");
-
-			if(pc != nil)
-				R.PC = r->R.PC = (Inst*)strtol(pc+3, nil, 0);	/* for debugging */
-		}
-		print("[%s] Broken: \"%s\" at 0x%p\n", m->name, estr, up->env->errpc);
+		print("[%s] Broken: \"%s\" at 0x%p pid %d\n", m->name, estr, up->env->errpc, up->pid);
+		if(1) dumpstack();
 	}
-	if(r->exstr != nil)
+	if(r->exval != H)
 		DBG("progexit pid %d name %s estr %s exval %p exstr %s\n",
 			r->pid, m->name, estr, r->exval, r->exstr);
-	else
-		DBG("progexit pid %d name %s estr %s exval %p\n",
-			r->pid, m->name, estr, r->exval);
+
 	// sh.b is matching on fail: not on "<pid> fail: "
 	snprint(msg, sizeof(msg), "%d \"%s\":%s", r->pid, m->name, estr);
 	// snprint(msg, sizeof(msg), "%s", estr);
@@ -1037,6 +1034,7 @@ disfault(void *reg, char *msg)
 		panic("Interp faults with no dis prog");
 
 	/* cause an exception in the dis prog. */
+print("disfault caller 0x%p\n", getcallerpc(&reg));
 	error(msg);
 }
 
@@ -1049,14 +1047,21 @@ vmachine(void*)
 
 	startup();
 
+	/* cleans out the exception stack (error labels) */
 	while(waserror()) {
+		DBG("vmachine waserror() loop up->env->errstr %s\n",  up->env->errstr);
 		if(up->type != Interp)
 			panic("vmachine: non-interp kproc");
-		if(up->iprog != nil)
+		if(up->iprog != nil){
+			DBG("vmachine waserror() before acquire up->env->errstr %s\n",  up->env->errstr);
 			acquire();
+		}
+		DBG("vmachine waserror() after acquire up->env->errstr %s\n",  up->env->errstr);
 		if(handler(up->env->errstr) == 0) {
 			propex(currun(), up->env->errstr);
+			DBG("vmachine waserror() after propex up->env->errstr %s\n",  up->env->errstr);
 			progexit();
+			DBG("vmachine waserror() after progexit\n");
 		}
 		up->env = &up->defenv;
 	}

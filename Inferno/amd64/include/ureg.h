@@ -12,16 +12,22 @@ struct Ureg {
 	u64	r11;
 	u64	r12;
 	u64	r13;
-	u64	r14;
-	u64	r15;
+	u64	r14;	/* up-> */
+	u64	r15;	/* m-> */
 
 	u16	ds;
 	u16	es;
 	u16	fs;
 	u16	gs;
 
-	u64	trap;	/* trap type */
-	u64	ecode;	/* error code (or zero) */
+	union {
+		u64	trap;	/* trap type */
+		u64 type;
+	};
+	union {
+		u64	ecode;	/* error code (or zero) */
+		u64 error;
+	};
 	u64	pc;		/* pc */
 	u64	cs;		/* old context */
 	u64	flags;	/* old flags */

@@ -276,7 +276,7 @@ sslopen(Chan *c, u32 omode)
 			dsnew(c, pp);
 		else {
 			if((perm & (s->perm>>6)) != perm
-			   && (strcmp(up->env->user, s->user) != 0
+			   && (strcmp(up->user, s->user) != 0
 			     || (perm & s->perm) != perm))
 				error(Eperm);
 
@@ -307,7 +307,7 @@ sslwstat(Chan *c, uchar *db, int n)
 	s = dstate[CONV(c->qid)];
 	if(s == 0)
 		error(Ebadusefd);
-	if(strcmp(s->user, up->env->user) != 0)
+	if(strcmp(s->user, up->user) != 0)
 		error(Eperm);
 
 	dir = smalloc(sizeof(Dir)+n);
@@ -1352,7 +1352,7 @@ buftochan(char *p)
 	fd = strtoul(p, 0, 0);
 	if(fd < 0)
 		error(Ebadarg);
-	c = fdtochan(up->env->fgrp, fd, -1, 0, 1);	/* error check and inc ref */
+	c = fdtochan(up->fgrp, fd, -1, 0, 1);	/* error check and inc ref */
 	return c;
 }
 
@@ -1421,7 +1421,7 @@ dsnew(Chan *ch, Dstate **pp)
 		dshiwat++;
 	s->state = Sincomplete;
 	s->ref = 1;
-	kstrdup(&s->user, up->env->user);
+	kstrdup(&s->user, up->user);
 	s->perm = 0660;
 	t = TYPE(ch->qid);
 	if(t == Qclonus)

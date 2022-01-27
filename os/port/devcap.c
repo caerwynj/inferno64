@@ -191,9 +191,9 @@ capwriteuse(uchar *a, int len)
 			*l = c->next;
 			qunlock(&allcaps.l);
 			free(c);
-			if(n == 2 && strcmp(up->env->user, users[0]) != 0)
+			if(n == 2 && strcmp(up->user, users[0]) != 0)
 				return -1;
-			kstrdup(&up->env->user, users[1]);
+			kstrdup(&up->user, users[1]);
 			return 0;
 		}
 	qunlock(&allcaps.l);

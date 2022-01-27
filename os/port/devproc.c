@@ -210,7 +210,7 @@ procgen(Chan *c, char *name, Dirtab *tab, int, int s, Dir *dp)
 		if(name != nil && strcmp(name, up->genbuf) != 0)
 			return -1;
 		mkqid(&qid, (s+1)<<QSHIFT, pid, QTDIR);
-		devdir(c, qid, up->genbuf, 0, p->env->user, 0555, dp);
+		devdir(c, qid, up->genbuf, 0, p->user, 0555, dp);
 		return 1;
 	}
 	if(c->qid.path == Qtrace){
@@ -254,7 +254,7 @@ procgen(Chan *c, char *name, Dirtab *tab, int, int s, Dir *dp)
 	}
 
 	mkqid(&qid, path|tab->qid.path, c->qid.vers, QTFILE);
-	devdir(c, qid, tab->name, len, p->env->user, perm, dp);
+	devdir(c, qid, tab->name, len, p->user, perm, dp);
 	return 1;
 }
 
@@ -313,7 +313,7 @@ nonone(Proc *p)
 {
 	if(p == up)
 		return;
-	if(strcmp(up->env->user, "none") != 0)
+	if(strcmp(up->user, "none") != 0)
 		return;
 	if(iseve())
 		return;
@@ -338,7 +338,7 @@ changenoteid(Proc *p, ulong noteid)
 		pp = proctab(i);
 		if(pp->noteid != noteid || pp->kp)
 			continue;
-		if(strcmp(pp->env->user, p->env->user) == 0){
+		if(strcmp(pp->user, p->user) == 0){
 			nonone(pp);
 			setnoteid(p, noteid);
 			return;
@@ -534,13 +534,13 @@ procwstat(Chan *c, uchar *db, int n)
 		error(Eprocdied);
 
 	nonone(p);
-	if(strcmp(up->env->user, p->env->user) != 0 && !iseve())
+	if(strcmp(up->user, p->user) != 0 && !iseve())
 		error(Eperm);
 
-	if(!emptystr(d->uid) && strcmp(d->uid, p->env->user) != 0){
+	if(!emptystr(d->uid) && strcmp(d->uid, p->user) != 0){
 		if(strcmp(d->uid, "none") != 0 && !iseve())
 			error(Eperm);
-		kstrdup(&p->env->user, d->uid);
+		kstrdup(&p->user, d->uid);
 	}
 	/* p->procmode determines default mode for files in /proc */
 	if(d->mode != ~0UL)
@@ -653,7 +653,7 @@ readns1(Chan *c, Proc *p, char *buf, int nbuf)
 	char flag[10], *srv;
 	int i;
 
-	pg = p->env->pgrp;
+	pg = p->pgrp;
 	if(pg == nil || pg->dot == nil || p->pid != PID(c->qid))
 		error(Eprocdied);
 
@@ -1017,7 +1017,7 @@ procread(Chan *c, void *va, s32 n, s64 off)
 			"%11lud %11lud %11lud "
 			"%11lud %11lud %11lud\n",*/
 			"%11ud\n",
-			p->text, p->env->user, sps,
+			p->text, p->user, sps,
 /*			tk2ms(p->time[TUser]),
 			tk2ms(p->time[TSys]),
 			tk2ms(MACHP(0)->ticks - p->time[TReal]),
@@ -1274,7 +1274,7 @@ procwrite(Chan *c, void *va, s32 n, s64 off)
 }
 
 Dev procdevtab = {
-	'o',
+	'p',
 	"proc",
 
 	devreset,
@@ -1372,7 +1372,7 @@ procctlclosefiles(Proc *p, int all, int fd)
 
 	if(fd < 0)
 		error(Ebadfd);
-	f = p->env->fgrp;
+	f = p->fgrp;
 	if(f == nil)
 		error(Eprocdied);
 

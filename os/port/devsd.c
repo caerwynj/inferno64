@@ -160,7 +160,7 @@ sddelpart(SDunit* unit, char* name)
 	}
 	if(i >= unit->npart)
 		error(Ebadctl);
-	if(strcmp(up->env->user, pp->user) && !iseve())
+	if(strcmp(up->user, pp->user) && !iseve())
 		error(Eperm);
 	pp->valid = 0;
 	pp->vers++;
@@ -793,7 +793,7 @@ sdbio(Chan* c, int write, char* a, long len, uvlong off)
 	qlock(&unit->ctl);
 	while(waserror()){
 		/* notification of media change; go around again */
-		if(strcmp(up->env->errstr, Eio) == 0 && unit->sectors == 0 && nchange++ == 0){
+		if(strcmp(up->errstr, Eio) == 0 && unit->sectors == 0 && nchange++ == 0){
 			sdinitpart(unit);
 			continue;
 		}
@@ -1590,7 +1590,7 @@ sdwstat(Chan* c, uchar* dp, int n)
 		break;
 	}
 
-	if(strcmp(up->env->user, perm->user) && !iseve())
+	if(strcmp(up->user, perm->user) && !iseve())
 		error(Eperm);
 
 	d = smalloc(sizeof(Dir)+n);
