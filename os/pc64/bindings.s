@@ -117,13 +117,25 @@ TEXT	sysclose(SB), 1, $16	/* ( fd -- n ) */
  * Hence, need 40 bytes on the stack
  * if fd == 0 and read return value == 0 == End of file, terminate
  */
-TEXT	sysread(SB), 1, $40	/* ( fd a n -- n2 ) */
-
 	PUSH(TOP)		/* ( fd a n n ) */
 	MOVQ 8(PSP), CX	/*  CX = a  ( fd a n n ) */
 	PUSH(CX)		/* ( fd a n a n ) */
 
 	CALL validatebuffer(SB)	/* ( fd a n a n -- fd a n ) */
+
+#define CHECKBUFFER	\
+	MOVQ TOP, CX; \
+	CMPQ CX, $0;	/* negative n? */\
+	JLT belowum;	/* TODO have an appropriate error message */\
+	ADDQ (PSP), CX;	/* CX = a+n */\
+	CMPQ CX, UME;	/* a+n, UME */\
+	JGT aboveume;	/* a+n > UME */\
+	CMPQ (PSP), UM;	/* a, UM */\
+	JLT belowum;	/* a < UM */
+
+TEXT	sysread(SB), 1, $40	/* ( fd a n -- n2 ) */
+
+	CHECKBUFFER;
 
 	MOVQ 8(PSP), CX
 	MOVQ CX, 32(SP)	/* storing the fd to double check later */
@@ -157,11 +169,8 @@ fsread_continue:
  * Hence, need 32 bytes on the stack
  */
 TEXT	syswrite(SB), 1, $32	/* ( fd a n -- n2|-1 ) */
-	PUSH(TOP)		/* ( fd a n n ) */
-	MOVQ 8(PSP), CX	/*  CX = a  ( fd a n n ) */
-	PUSH(CX)		/* ( fd a n a n ) */
 
-	CALL validatebuffer(SB)	/* ( fd a n a n -- fd a n ) */
+	CHECKBUFFER
 
 	MOVQ UM, 24(SP)
 	F_TO_C_3

@@ -220,31 +220,33 @@ TEXT	cjump(SB), 1, $-4	/* ( f -- ) */
 	fetch, store, cfetch and cstore to speed up these words
 	(a || UM) && ~UME
  */
+#define CHECKADDRESS \
+	CMPQ TOP, UME; \
+	JGT aboveume;	/* a > UME */\
+	CMPQ TOP, UM;\
+	JLT belowum;	/* a < UM */
+
 TEXT	fetch(SB), 1, $-4	/* ( a -- n) */
-	PUSH(TOP)
-	CALL validateaddress(SB)	/* a a -- a */
+	CHECKADDRESS
 	MOVQ (TOP), TOP
 	NEXT
 
 TEXT	store(SB), 1, $-4	/* ( n a -- ) */
-	PUSH(TOP)
-	CALL validateaddress(SB)	/* a a -- a */
+	CHECKADDRESS
 	POP(CX)
 	MOVQ CX, (TOP)
 	POP(TOP)
 	NEXT
 
 TEXT	cfetch(SB), 1, $-4	/* ( a -- c ) */
-	PUSH(TOP)
-	CALL validateaddress(SB)	/* a a -- a */
+	CHECKADDRESS
 	XORQ CX, CX
 	MOVB (TOP), CL
 	MOVQ CX, TOP
 	NEXT
 
 TEXT	cstore(SB), 1, $-4	/* ( c a -- ) */
-	PUSH(TOP)
-	CALL validateaddress(SB)	/* c a a -- c a */
+	CHECKADDRESS
 	POP(CX)
 	MOVB CL, (TOP)
 	POP(TOP)
