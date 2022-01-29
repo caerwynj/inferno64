@@ -293,13 +293,13 @@ dd M_drop		; drop the return value of write
 dd M_exitcolon
 
 CENTRY "type" C_type 4	; ( addr n -- )
-dd M_rpush			; ( addr ) (R n )
-dd M_rpush			; ( ) (R n addr )
-dd M_literal
-dd 1				; stdout
-dd M_rpop			; ( stdout addr ) (R n )
-dd M_rpop			; ( stdout addr n ) (R )
-dd M_syswrite		; ( 1 addr n --  )
+dd M_rpush		; ( addr ) (R n )
+dd M_rpush		; ( ) (R n addr )
+dd MV_Outfd
+dd M_fetch		; ( outfd )
+dd M_rpop		; ( outfd addr ) (R n )
+dd M_rpop		; ( outfd addr n ) (R )
+dd M_syswrite	; ( 1 addr n --  )
 dd M_drop		; drop the return value of write
 dd M_exitcolon
 
@@ -786,8 +786,9 @@ dd M_plus		; Sourcebuf + >In
 dd M_cfetch
 dd M_exitcolon
 
-CENTRY "save-input" C_save_input 10
+CENTRY "save-input" C_save_input 10 ; save input stream onto the stack to use another input stream
 dd MV_Infd
+dd M_fetch
 dd MV_toIn
 dd M_fetch
 dd MV_toLimit
@@ -802,7 +803,7 @@ dd MV_Ninputs
 dd C_plusstore	; Ninputs++
 dd M_exitcolon
 
-CENTRY "default-input" C_default_input 13
+CENTRY "default-input" C_default_input 13 ; stream input from stdin into Text input buffer
 dd MC_STDIN
 dd MV_toIn
 dd C_off
@@ -954,7 +955,7 @@ dd C_plusstore	; >In++
 dd M_jump		; repeat
 dd L145
 L146:
-dd M_rpop		; ( -- cinitial ) Sourcebuf+>In = location of first non-matching character
+dd M_rpop		; ( cinitial ) Sourcebuf+>In = location of first non-matching character
 dd C_parse
 dd M_exitcolon
 
@@ -966,7 +967,7 @@ dd M_rpush	; ( n -- ) (R a a -- )
 L148:
 dd C_qdup	; ( n n -- ) (R a a -- )
 dd M_cjump	; (if)
-dd L149	; n == 0
+dd L149		; n == 0
 dd C_key	; n > 0 ( n -- n c )
 dd M_dup	; ( -- n c c )
 dd M_literal
@@ -1001,7 +1002,7 @@ dd M_exitcolon
 
 CENTRY "query" C_query 5	; read from input stream into the Text Input Buffer
 dd MV_Eof
-dd C_off		; clear EOF flag
+dd C_off	; clear EOF flag
 dd M_Tib	; constant puts address of tibuffer on the top
 dd M_literal
 dd 4096	; ( tibuffer -- tibuffer 4096 )
@@ -1833,7 +1834,7 @@ dd M_exitcolon	; why is this needed?
 
 CENTRY "(abort)" C_parenabort 7 ; TODO correct below stack notations
 dd MV_State	; ( mv_State -- )
-dd C_off		; off sets variable state = 0
+dd C_off	; off sets variable state = 0
 dd M_Tib	; constant puts address of tibuffer on the top of stack
 dd MV_Sourcebuf	; variable sourcebuf
 dd M_store	; variable sourcebuf = address of tibuffer
