@@ -2304,7 +2304,7 @@ Fentry fentries[] = {
 	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18944 */
 	{.type FromH0, {.p MC_STDIN}, .src = "dd MC_STDIN"},		/* dd MC_STDIN 18952 */
 	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 18960 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store     ; stdin = 0"},		/* dd M_store     ; stdin = 0 18968 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; stdin = 0"},		/* dd M_store	; stdin = 0 18968 */
 	{.type FromH0, {.p MC_STDOUT}, .src = "dd MC_STDOUT"},		/* dd MC_STDOUT 18976 */
 	{.type FromH0, {.p MV_Outfd}, .src = "dd MV_Outfd"},		/* dd MV_Outfd 18984 */
 	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18992 */

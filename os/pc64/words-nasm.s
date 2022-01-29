@@ -1158,7 +1158,6 @@ dd C_abort
 L172:
 dd M_exitcolon
 
-
 dd MC_STDOUT	; ( str -- str 1) ; debug code to show the word found
 dd M_over		; ( str 1 str )
 dd C_count 		; ( str 1 a n)
@@ -1180,6 +1179,7 @@ dd M_cjump
 dd L177
 
 dd M_execute	; found in dictionary, execute
+
 dd C_qstack
 dd M_jump
 dd L178
@@ -1813,6 +1813,7 @@ CENTRY "quit" C_quit 4 ; interpreter loop
 dd M_reset ; initialize return stack
 dd M_clear	; SP = sstack_end initialize data stack
 L253:
+
 dd C_query
 
 ; dd MV_toLimit	; show the line read, for debugging
@@ -1933,7 +1934,7 @@ dd M_store
 
 dd MC_STDIN
 dd MV_Infd
-dd M_store     ; stdin = 0
+dd M_store	; stdin = 0
 dd MC_STDOUT
 dd MV_Outfd
 dd M_store

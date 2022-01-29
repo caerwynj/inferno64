@@ -186,14 +186,6 @@ TEXT	jump(SB), 1, $-4	/* ( -- ) */
 	MOVQ (IP),IP
 	NEXT
 
-TEXT	execute(SB), 1, $-4	/* ( ... a -- ... ) */
-	PUSH(TOP)
-	CALL validateaddress(SB)	/* a a -- a */
-	MOVQ TOP, W
-	POP(TOP)
-	MOVQ (W), CX
-	JMP* CX
-
 TEXT	deferred(SB), 1, $-4
 	MOVQ 8(W), W
 	MOVQ (W), CX
@@ -214,17 +206,18 @@ TEXT	cjump(SB), 1, $-4	/* ( f -- ) */
 	POP(TOP)
 	NEXT
 
-/*
-	TODO replace the CALL to validateaddress with a macro
-	using UM and UME masks or CMPQ with UM and UME in
-	fetch, store, cfetch and cstore to speed up these words
-	(a || UM) && ~UME
- */
 #define CHECKADDRESS \
 	CMPQ TOP, UME; \
 	JGT aboveume;	/* a > UME */\
 	CMPQ TOP, UM;\
 	JLT belowum;	/* a < UM */
+
+TEXT	execute(SB), 1, $-4	/* ( ... a -- ... ) */
+	CHECKADDRESS
+	MOVQ TOP, W
+	POP(TOP)
+	MOVQ (W), CX
+	JMP* CX
 
 TEXT	fetch(SB), 1, $-4	/* ( a -- n) */
 	CHECKADDRESS
