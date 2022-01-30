@@ -13,7 +13,7 @@ MENTRY "halt" terminate 4
 MENTRY "dump" fthdump 4
 MENTRY "clear" clear 5
 MENTRY "reset" reset 5
-MENTRY "exitcolon" exitcolon 4
+MENTRY "exit" exitcolon 4
 MENTRY "(literal)" literal 9
 MENTRY "(sliteral)" sliteral 10
 MENTRY "(do)" doinit 4

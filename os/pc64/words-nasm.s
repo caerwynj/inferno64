@@ -786,7 +786,7 @@ dd M_plus		; Sourcebuf + >In
 dd M_cfetch
 dd M_exitcolon
 
-CENTRY "save-input" C_save_input 10 ; save input stream onto the stack to use another input stream
+CENTRY "save-input" C_save_input 10 ; ( -- infd >in >limit sourcebuf blk 5 ) save input stream onto the stack
 dd MV_Infd
 dd M_fetch
 dd MV_toIn
@@ -799,8 +799,6 @@ dd MV_Blk
 dd M_fetch
 dd M_literal
 dd 5
-dd MV_Ninputs
-dd C_plusstore	; Ninputs++
 dd M_exitcolon
 
 CENTRY "default-input" C_default_input 13 ; stream input from stdin into Text input buffer
@@ -816,37 +814,19 @@ dd MV_Blk
 dd C_off
 dd M_exitcolon
 
-CENTRY "restore-input" C_restore_input 13 ; ( <input>|empty -- f )
-
-dd MV_Ninputs	; if Ninputs == 0, leave 0 on the stack. Or, Ninputs--
-dd M_fetch
-dd C_0neq
-dd M_cjump
-dd L300
-dd MV_Ninputs	; there are <input>'s pending on the stack
-dd M_fetch
-dd C_1minus
-dd MV_Ninputs
-dd M_store
-dd M_jump
-dd L301		; ( <input> -- <input>)
-L300:	; no more <input>'s on the stack, put 0 on the stack for the 5 <> below to work
-dd M_literal
-dd 0
-
-L301:
+CENTRY "restore-input" C_restore_input 13 ; ( <input>|empty -- f )	; restore input stream from the stack or set the default-input as the input stream
 dd MV_Eof
-dd C_off
+dd C_off			; reset Eof back to 0
 dd M_literal
-dd 5
+dd 5				; input stream is on the stack 
 dd C_neq
 dd M_cjump
-dd L133
-dd C_default_input
+dd L133				; there is an input stream on the stack
+dd C_default_input	; no input stream on the stack, using default input
 dd C_false
-dd M_jump
+dd M_jump			; ( false )
 dd L134
-L133:
+L133:				; ( infd >in >limit sourcebuf blk 5 )
 dd MV_Blk
 dd M_store
 dd MV_Sourcebuf
@@ -857,11 +837,11 @@ dd MV_toIn
 dd M_store
 dd MV_Infd
 dd M_store
-dd C_true
+dd C_true			; ( true )
 L134:
 dd M_exitcolon
 
-CENTRY "?restore-input" C_qrestore_input 14 ; ( <input> -- f )
+CENTRY "?restore-input" C_qrestore_input 14 ; ( <input> -- f ) ; use the input stream on the stack or abort
 dd C_restore_input
 dd C_0eq
 dd M_cjump
@@ -899,7 +879,7 @@ dd C_false
 L140:
 dd M_exitcolon
 
-CENTRY "parse" C_parse 5	; ( c -- a ) Place the counted string in the address in Wordbuf and return that address. c = word delimiter.
+CENTRY "parse" C_parse 5	; ( c -- a ) Place the counted string in Wordbuf and return that address. c = word delimiter.
 dd M_rpush		; ( c -- ) (R -- c )
 dd MV_Wordbuf
 dd M_fetch		; ( -- Wordb )
@@ -908,7 +888,7 @@ L142:
 dd C_next_input ; ( Wordb+1 -- Wordb+1 f c )
 dd M_rfetch 	; ( Wordb+1 f c -- Wordb+1 f  cinitial ) (R c -- c )
 dd C_neq 		; ( Wordb+1 f c cinitial -- Wordb+1 f f(c!=cinitial) )
-dd M_binand
+dd M_binand		; ( Wordb+1 f&(c!=cinitial) )
 dd M_cjump
 dd L143		; ( Wordb+1 ) >In >= >Limit || cinitial == cnew
 dd C_current_input	; ( Wordb+1 -- Wordb+1 c )
@@ -1174,7 +1154,7 @@ dd M_dup
 dd M_cfetch
 dd C_0neq
 dd M_cjump
-dd L176	; count at a = 0
+dd L176	; count at a = 0, drop a and exit
 dd C_find	; ( a -- a1 f ) a = address of counted string
 dd M_cjump
 dd L177
@@ -1190,8 +1170,8 @@ dd C_number
 dd C_0eq
 dd M_cjump
 dd L179
-dd C_space
-dd C_type
+dd C_space	; the word is neither in the dictionary nor a number
+dd C_type	; show the word
 dd M_literal
 dd L180	; error I?
 dd M_literal

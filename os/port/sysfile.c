@@ -1052,23 +1052,28 @@ rread(int fd, void *p, s32 n, s64 *offp)
 s32
 kread(int fd, void *va, s32 n)
 {
-	s32 rv /*, i*/;
 
+	/* moved this check to bindings.s
+	if(up->fmem != nil &&
+		((intptr)va < ((intptr*)up->fmem)[0] || ((intptr*)up->fmem)[1] < (intptr)(((char*)va)+n)))
+		error(Eio);	*//* TODO come up with a more appropriate message */
+
+	return rread(fd, va, n, nil);
 /* print("kread pid %d fd %d va 0x%p n %d\n", up->pid, fd, va, n);
+	s32 rv;
 	if(up->pid == 28){
 		print("kread: started ");
-	}*/
+	}
 	rv = rread(fd, va, n, nil);
-/*	if(up->pid == 28){
+	if(up->pid == 28){
 		i=rv;
 		print("returned: rv %d -", rv);
 		while(i-- > 0){
 			print("%c", ((char*)va)[i]);
 		}
 		print("-\n");
-	} */
-	/* return rread(fd, va, n, nil); */
-	return rv;
+	}
+	return rv; */
 }
 
 s32

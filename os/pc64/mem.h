@@ -218,28 +218,27 @@
 
 /* TODO check stacks for over flow */
 #define DICTIONARY	(HEAPSTART+(BY2WD*2))	/* dictionary ends at (HEAPSTART+(16*BY2PG)) */
-#define PSTACK		(HEAPSTART+(17*BY2PG))	/* upto (HEAPSTART+(16*BY2PG)) */
+#define PSTACK		(HEAPSTART+(17*BY2PG))	/* upto (HEAPSTART+(16*BY2PG)), going down */
 #define TIB			(HEAPSTART+(17*BY2PG))	/* text input buffer */
-#define RSTACK		(HEAPSTART+(19*BY2PG))	/* upto (HEAPSTART+(18*BY2PG)) */
+#define RSTACK		(HEAPSTART+(19*BY2PG))	/* upto (HEAPSTART+(18*BY2PG)), going down */
 
-#define FORTHVARS	RSTACK					/* magic word? */
-#define VHERE		(FORTHVARS+(BY2WD*1))	/* store WORDB+256 here at boot */
+#define ARGS		(RSTACK+(BY2WD*0))	/* args size = 32*8 = 256 bytes */
+#define WORDB		(RSTACK+(BY2WD*32))	/* word buffer = 32*8 = 256 */
+#define ERRSTR		(RSTACK+(BY2WD*64))	/* errstr size = 32*8 = 256 bytes */
 
+#define FORTHVARS	(RSTACK+(BY2WD*96))		/* magic word here? */
 /* storage for Forth registers when calling C */
-#define FORTHTOP	(FORTHVARS+(BY2WD*2))
-#define FORTHPSP	(FORTHVARS+(BY2WD*3))
-#define FORTHRSP	(FORTHVARS+(BY2WD*4))
-#define FORTHIP		(FORTHVARS+(BY2WD*5))
-#define FORTHW		(FORTHVARS+(BY2WD*6))
-#define FORTHUM		(FORTHVARS+(BY2WD*7))
-#define FORTHUME	(FORTHVARS+(BY2WD*8))
+#define FORTHTOP	(FORTHVARS+(BY2WD*0))
+#define FORTHPSP	(FORTHVARS+(BY2WD*1))
+#define FORTHRSP	(FORTHVARS+(BY2WD*2))
+#define FORTHIP		(FORTHVARS+(BY2WD*3))
+#define FORTHW		(FORTHVARS+(BY2WD*4))
+#define FORTHUM		(FORTHVARS+(BY2WD*5))
+#define FORTHUME	(FORTHVARS+(BY2WD*6))
 
-#define HERE		(FORTHVARS+(BY2WD*9))
-#define DTOP		(FORTHVARS+(BY2WD*10))
-#define ARGS		(FORTHVARS+(BY2WD*11))
-#define ERRSTR		(FORTHVARS+(BY2WD*16))
-#define WORDB		(FORTHVARS+(BY2WD*144))	/* word buffer */
-#define WORDBEND	(FORTHVARS+(BY2WD*176))	/* word buffer = 32*8 = 256 */
+#define HERE		(FORTHVARS+(BY2WD*7))
+#define DTOP		(FORTHVARS+(BY2WD*8))
+#define VHERE		(FORTHVARS+(BY2WD*9))	/* store fmem+VHERE here at boot */
 
 #define FORTHEND	(HEAPSTART+(22*BY2PG))
 #define FORTHHEAPSIZE	FORTHEND

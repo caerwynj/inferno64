@@ -23,6 +23,7 @@ TODO
  */
 enum
 {
+	Argslen		= 256,
 	NForthproc	= 256,
 	QMAX		= 192*1024-1,
 
@@ -67,6 +68,7 @@ struct Params
 	s32 stdinfd, stdoutfd, stderrfd;
 	s32 *keepfds, *closefds;
 	s32 nkeepfds, nclosefds;
+	char args[Argslen];
 };
 
 int nforthprocs = 0;
@@ -185,6 +187,14 @@ parseparams(char *params)
 					break;
 				s = e+1;
 			}
+		}else if(cistrncmp("ARGS", s, 4) == 0){ // until the end or Argslen
+			s += 4;
+			for(i = 0; i < Argslen && *s != '\0'; i++){
+				p.args[i] = *s;
+				s++;
+			}
+			if(i == Argslen)
+				error(Ebadctl);
 		}else if(*s == ' ' || *s == '	' || *s == '\r' || *s == '\n'){
 			/* would be nice to use isspace(*s) here */
 			s++;
@@ -200,9 +210,11 @@ parseparams(char *params)
 	}
 	if(1 == 1){
 		print("parseparams newenv %d newfd %d newns %d shmem %d nodevs %d\n"
-				"	redirfds %d %d %d\n",
+				"	redirfds %d %d %d\n"
+				"	args %s\n",
 				p.newenv, p.newfd, p.newns, p.shmem, p.nodevs,
-				p.stdinfd, p.stdoutfd, p.stderrfd);
+				p.stdinfd, p.stdoutfd, p.stderrfd,
+				p.args);
 		if(p.nclosefds > 0){
 			print("	closefds ");
 			for(i = 0; i < p.nclosefds; i++){
@@ -232,7 +244,7 @@ loadforthdictionary(u8 *fmem)
 
 	h = fmem+DICTIONARY;
 	dtop = nil;
-	vh = fmem+WORDBEND+8;
+	vh = fmem+VHERE+8;
 	DBG("loadforthdictionary fmem 0x%p h 0x%p dtop 0x%p vh 0x%p\n"
 			"	(intptr*)(fmem + DTOP) 0x%p *(intptr*)(fmem + DTOP) 0x%zx\n"
 			"	PSTACK 0x%p (intptr*)(fmem + PSTACK) 0x%p\n"
@@ -294,9 +306,9 @@ loadforthdictionary(u8 *fmem)
 			DBG("	0x%p: 0x%zx 0x%p src %s\n", h, *(intptr*)h, fmem+DICTIONARY+f->p, f->src);
 			h += sizeof(intptr);
 		}else if(f->type == FromV0){
-			*(intptr*)h = (intptr)fmem+WORDBEND+8+f->p; /* pfa with the address where the value is */
+			*(intptr*)h = (intptr)fmem+VHERE+8+f->p; /* pfa with the address where the value is */
 			*(intptr*)vh = 0; /* actual value */
-			DBG("	0x%p: 0x%zx 0x%p\n", h, *(intptr*)h, fmem+WORDBEND+8+f->p);
+			DBG("	0x%p: 0x%zx 0x%p\n", h, *(intptr*)h, (intptr)fmem+VHERE+8+f->p);
 			DBG("	0x%p: 0x%zx 0\n", vh, *(intptr*)vh);
 			h += sizeof(intptr);	/* space for pfa with the variable address */
 			vh += sizeof(intptr);	/* space for the actual value */
@@ -492,6 +504,7 @@ print("stdinfd devtab[c->type]->dc %c c 0x%p chanpath(c) %s c->aux 0x%p\n", devt
 	/* store the start address at that address too - magic check */
 	((intptr*)p->fmem)[0] = (intptr)p->fmem;	/* heap start */
 	((intptr*)p->fmem)[1] = (intptr)p->fmem+FORTHHEAPSIZE-1; /* heap end */
+	strncpy((s8*)p->fmem + ARGS, params->args, Argslen);
 
 /*	p->kpfun = func;
 	p->kparg = arg;
@@ -499,7 +512,7 @@ print("stdinfd devtab[c->type]->dc %c c 0x%p chanpath(c) %s c->aux 0x%p\n", devt
 /* this does all of the above 3 lines */
 	kprocchild(p, goforth, p->fmem);
 
-	p->text = forthname;
+	p->text = forthname; /* TODO change this to a kstrdup(), else pexit() free() will error */
 
 	memset(p->time, 0, sizeof(p->time));
 	p->time[TReal] = MACHP(0)->ticks;
