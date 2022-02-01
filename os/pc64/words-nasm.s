@@ -778,6 +778,7 @@ dd MV_Sourcebuf
 dd M_fetch
 dd M_exitcolon
 
+; current-input-char
 CENTRY "current-input" C_current_input 13 ; ( -- c ) read the next character from the location in Sourcebuf
 dd MV_toIn
 dd M_fetch
@@ -786,7 +787,7 @@ dd M_plus		; Sourcebuf + >In
 dd M_cfetch
 dd M_exitcolon
 
-CENTRY "save-input" C_save_input 10 ; ( -- infd >in >limit sourcebuf blk 5 ) save input stream onto the stack
+CENTRY "save-input" C_save_input 10 ; ( -- infd >in >limit sourcebuf 'Acceptvec 5 ) save input stream onto the stack
 dd MV_Infd
 dd M_fetch
 dd MV_toIn
@@ -862,6 +863,7 @@ dd C_abort
 L136:
 dd M_exitcolon
 
+; next-input-char
 CENTRY "next-input" C_next_input 10 ; when >In < >Limit ( -- true c ). ( --  0 false ) otherwise
 dd MV_toIn
 dd M_fetch
@@ -943,18 +945,22 @@ dd C_parse
 dd M_exitcolon
 
 ; accept is the Brdline of bio
-; if Acceptvec == 0, accept_key, so the initial booting works fine
+; if Acceptvec == 0, set Eof on and get out
 ;	else execute it
 CENTRY "accept" C_accept 6	; ( a n -- n ) get line or n chars or EOF from input and store at a
 dd MV_Acceptvec
 dd M_fetch
 dd C_qdup
 dd M_cjump
-dd L300	; Acceptvec == 0, use accept-key
+dd L300	; Acceptvec == 0, set Eof on and get out
 dd M_execute
 dd M_exitcolon
-L300:
-dd C_accept_key
+L300:	; Acceptvec == 0, set Eof on and get out
+dd C_2drop	; ( )
+dd M_literal
+dd 0		; ( 0 )
+dd MV_Eof
+dd C_on
 dd M_exitcolon
 
 CENTRY "accept-line" C_accept_line 11 ; ( a n -- n1 ) get line or n chars or EOF from input and store at a using key
@@ -1005,6 +1011,7 @@ dd MV_Eof	; n == 0, set Eof
 dd C_on		; EOF
 dd M_exitcolon	; ( 0 )
 
+; loops through 1 character at a time until a newline unlike accept-line which gets the line in one call.
 CENTRY "accept-key" C_accept_key 10	; ( a n -- n ) get line or n chars or EOF from input and store at a using key
 dd M_xswap	; ( n a -- )
 dd M_dup	; ( n a a -- )
@@ -1072,7 +1079,14 @@ dd C_off		; start from 0 >In = 0
 L153:
 dd M_exitcolon
 
-CENTRY "refill" C_refill 6
+CENTRY "refill" C_refill 6	; no more refills when there is no 'Acceptvec
+dd MV_Acceptvec
+dd M_fetch
+dd M_cjump
+dd L155
+dd C_false
+dd M_exitcolon
+L155:
 dd C_query
 dd C_true
 dd M_exitcolon
@@ -1378,7 +1392,7 @@ dd C_0eq
 dd M_cjump
 dd L197
 dd M_drop
-dd C_refill
+dd C_refill	; no more refills when there is no Acceptvec. Is it a problem? did not dig through to figure out
 dd M_jump
 dd L198
 L197:
@@ -1516,11 +1530,21 @@ dd M_drop
 dd M_exitcolon
 
 ; if the line is longer than Tib, then skipping this line is not good enough. hence, throwing an error when >Limit == Tib length
-CIENTRY "\\" CI_backslash 1
-dd MV_toLimit
+CIENTRY "\\" CI_backslash 1 ; when there is no Acceptvec, find a newline in the buffer and skip until that
+dd MV_Acceptvec
+dd M_fetch
+dd M_cjump
+dd L214		; there is no Acceptvec, we are processing a buffer
+dd MV_toLimit	; there is an Acceptvec, skip the rest of this line
 dd M_fetch
 dd MV_toIn
 dd M_store
+dd M_exitcolon
+L214:
+dd M_literal
+dd 10
+dd C_parse	; find the next 10 = LF character
+dd M_drop	; skip all characters not equal to 10
 dd M_exitcolon
 
 CENTRY "(?abort)" C_qabort_parens 8
@@ -1932,8 +1956,28 @@ dd 1
 dd M_sysread
 dd M_drop		; drop the return value of read
 
+CENTRY "do-args" C_do_args 7
+dd M_literal
+dd 0
+dd MV_Acceptvec	; no more refills
+dd M_store 	; C_off	; Acceptvec == 0, reading from a buffer. no more refills.
+
+dd M_literal
+dd 0
+dd MV_toIn
+dd M_store	; >in = 0
+
+dd M_Args	; ( a )
+dd C_count	; ( a+1 n )
+dd MV_toLimit
+dd M_store	; ( a+1 ) >limit = n
+dd MV_Sourcebuf
+dd M_store	; sourcebuf = a+1
+
+dd C_interpret
+dd M_exitcolon
+
 CENTRY "boot" C_boot 4
-; good here depth = 0
 dd M_reset ; initialize return stack
 dd M_clear	; SP = sstack_end initialize data stack
 
@@ -1951,7 +1995,7 @@ dd MV_Sourcebuf	; variable sourcebuf
 dd M_store	; variable sourcebuf = address of tibuffer
 
 dd M_literal
-dd C_accept_line
+dd C_accept_line	; could also use C_accept_key
 dd MV_Acceptvec
 dd M_store 	; C_off	; Acceptvec = 0, use accept-key until changed
 
@@ -1972,7 +2016,13 @@ dd M_store
 dd MV_State
 dd C_off	; off stores 0 at state
 dd C_decimal	; decimal sets base = 10
-dd C_quit	; quit
+
+dd M_Args
+dd M_cfetch
+dd C_0eq
+dd M_cjump
+dd C_do_args ; process args
+dd C_quit	; interpreter loop when there are no args or fall through after processing args
 dd M_exitcolon
 
 L137:

@@ -246,120 +246,123 @@ enum {
 	L146 = 10608,
 	C_accept = 10648,
 	L300 = 10712,
-	C_accept_line = 10752,
-	L303 = 10960,
-	L301 = 10976,
-	L302 = 11032,
-	C_accept_key = 11080,
-	L148 = 11120,
-	L150 = 11280,
-	L149 = 11344,
-	C_query = 11392,
-	L152 = 11536,
-	L153 = 11568,
-	C_refill = 11592,
-	C_findname = 11648,
-	L158 = 11688,
-	L160 = 11800,
-	L162 = 11928,
-	L161 = 11936,
-	L159 = 11952,
-	C_find = 12000,
-	L165 = 12192,
-	L166 = 12208,
-	L164 = 12232,
-	L167 = 12240,
-	C_single_quote = 12264,
-	L169 = 12400,
-	C_qstack = 12424,
-	L172 = 12528,
-	C_interpret = 12600,
-	L175 = 12608,
-	L177 = 12720,
-	L179 = 12832,
-	L178 = 12832,
-	L176 = 12848,
-	C_create = 12880,
-	C_variable = 13128,
-	C_constant = 13224,
-	C_immediate = 13352,
-	C_tocfa = 13464,
-	C_compile = 13544,
-	L189 = 13672,
-	L190 = 13688,
-	L188 = 13704,
-	L192 = 13832,
-	L194 = 13864,
-	L191 = 13864,
-	C_close_bracket = 13888,
-	L196 = 13912,
-	L197 = 14000,
-	L198 = 14024,
-	L199 = 14056,
-	CI_open_bracket = 14080,
-	C_smudge = 14128,
-	C_reveal = 14240,
-	C_colon = 14360,
-	CI_semicolon = 14488,
-	CI_recurse = 14568,
-	C_char = 14640,
-	C_literal = 14704,
-	C_sliteral = 14776,
-	C_string = 14944,
-	CI_char_brackets = 15056,
-	CI_quote_brackets = 15128,
-	CI_openparen = 15176,
-	CI_backslash = 15240,
-	C_qabort_parens = 15312,
-	L217 = 15392,
-	L218 = 15400,
-	CI_abort_double_quote = 15424,
-	C_double_quote = 15488,
-	C_cdouble_quote = 15616,
-	CI_sdouble_quote = 15752,
-	CI_dotstr = 15792,
-	CI_if = 15856,
-	CI_else = 15944,
-	CI_then = 16072,
-	CI_begin = 16128,
-	CI_again = 16168,
-	CI_until = 16232,
-	CI_while = 16296,
-	CI_repeat = 16384,
-	CI_do = 16480,
-	CI_loop = 16560,
-	L234 = 16648,
-	CI_ploop = 16672,
-	L236 = 16760,
-	C_wo = 16784,
-	C_ro = 16880,
-	C_rw = 16928,
-	C_open_file = 16984,
-	C_close_file = 17248,
-	C_read_file = 17304,
-	C_write_file = 17400,
-	C_reposition_file = 17488,
-	C_qfcheck = 17568,
-	L246 = 17664,
-	C_create_file = 17696,
-	C_bye = 17968,
-	C_include = 18024,
-	C_crash = 18176,
-	C_quit = 18264,
-	L253 = 18288,
-	C_parenabort = 18344,
-	C_oldboot = 18512,
-	C_boot = 18960,
-	L137 = 19232,
-	L170 = 19256,
-	L173 = 19260,
-	L180 = 19277,
-	L193 = 19281,
-	L247 = 19285,
-	L251 = 19295,
-	L255 = 19326,
-	L304 = 19330,
-	L305 = 19367,
+	C_accept_line = 10784,
+	L303 = 10992,
+	L301 = 11008,
+	L302 = 11064,
+	C_accept_key = 11112,
+	L148 = 11152,
+	L150 = 11312,
+	L149 = 11376,
+	C_query = 11424,
+	L152 = 11568,
+	L153 = 11600,
+	C_refill = 11624,
+	L155 = 11680,
+	C_findname = 11728,
+	L158 = 11768,
+	L160 = 11880,
+	L162 = 12008,
+	L161 = 12016,
+	L159 = 12032,
+	C_find = 12080,
+	L165 = 12272,
+	L166 = 12288,
+	L164 = 12312,
+	L167 = 12320,
+	C_single_quote = 12344,
+	L169 = 12480,
+	C_qstack = 12504,
+	L172 = 12608,
+	C_interpret = 12680,
+	L175 = 12688,
+	L177 = 12800,
+	L179 = 12912,
+	L178 = 12912,
+	L176 = 12928,
+	C_create = 12960,
+	C_variable = 13208,
+	C_constant = 13304,
+	C_immediate = 13432,
+	C_tocfa = 13544,
+	C_compile = 13624,
+	L189 = 13752,
+	L190 = 13768,
+	L188 = 13784,
+	L192 = 13912,
+	L194 = 13944,
+	L191 = 13944,
+	C_close_bracket = 13968,
+	L196 = 13992,
+	L197 = 14080,
+	L198 = 14104,
+	L199 = 14136,
+	CI_open_bracket = 14160,
+	C_smudge = 14208,
+	C_reveal = 14320,
+	C_colon = 14440,
+	CI_semicolon = 14568,
+	CI_recurse = 14648,
+	C_char = 14720,
+	C_literal = 14784,
+	C_sliteral = 14856,
+	C_string = 15024,
+	CI_char_brackets = 15136,
+	CI_quote_brackets = 15208,
+	CI_openparen = 15256,
+	CI_backslash = 15320,
+	L214 = 15400,
+	C_qabort_parens = 15464,
+	L217 = 15544,
+	L218 = 15552,
+	CI_abort_double_quote = 15576,
+	C_double_quote = 15640,
+	C_cdouble_quote = 15768,
+	CI_sdouble_quote = 15904,
+	CI_dotstr = 15944,
+	CI_if = 16008,
+	CI_else = 16096,
+	CI_then = 16224,
+	CI_begin = 16280,
+	CI_again = 16320,
+	CI_until = 16384,
+	CI_while = 16448,
+	CI_repeat = 16536,
+	CI_do = 16632,
+	CI_loop = 16712,
+	L234 = 16800,
+	CI_ploop = 16824,
+	L236 = 16912,
+	C_wo = 16936,
+	C_ro = 17032,
+	C_rw = 17080,
+	C_open_file = 17136,
+	C_close_file = 17400,
+	C_read_file = 17456,
+	C_write_file = 17552,
+	C_reposition_file = 17640,
+	C_qfcheck = 17720,
+	L246 = 17816,
+	C_create_file = 17848,
+	C_bye = 18120,
+	C_include = 18176,
+	C_crash = 18328,
+	C_quit = 18416,
+	L253 = 18440,
+	C_parenabort = 18496,
+	C_oldboot = 18664,
+	C_do_args = 19112,
+	C_boot = 19264,
+	L137 = 19576,
+	L170 = 19600,
+	L173 = 19604,
+	L180 = 19621,
+	L193 = 19625,
+	L247 = 19629,
+	L251 = 19639,
+	L255 = 19670,
+	L304 = 19674,
+	L305 = 19711,
 };
 extern void *sliteral(void);
 extern void *cjump(void);
@@ -1257,14 +1260,14 @@ Fentry fentries[] = {
 	{.type FromH0, {.p MV_Sourcebuf}, .src = "dd MV_Sourcebuf"},		/* dd MV_Sourcebuf 9272 */
 	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 9280 */
 	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 9288 */
-	{.type Header, {.hdr { 13, "current-input", /* C_current_input = 9312 */ colon }}}, /* CENTRY "current-input" current_input 13 ; ( -- c ) read the next character from the location in Sourcebuf h 9320 */
+/* ; current-input-char */	{.type Header, {.hdr { 13, "current-input", /* C_current_input = 9312 */ colon }}}, /* CENTRY "current-input" current_input 13 ; ( -- c ) read the next character from the location in Sourcebuf h 9320 */
 	{.type FromH0, {.p MV_toIn}, .src = "dd MV_toIn"},		/* dd MV_toIn 9328 */
 	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 9336 */
 	{.type FromH0, {.p C_source}, .src = "dd C_source"},		/* dd C_source 9344 */
 	{.type FromH0, {.p M_plus}, .src = "dd M_plus		; Sourcebuf + >In"},		/* dd M_plus		; Sourcebuf + >In 9352 */
 	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 9360 */
 	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 9368 */
-	{.type Header, {.hdr { 10, "save-input", /* C_save_input = 9392 */ colon }}}, /* CENTRY "save-input" save_input 10 ; ( -- infd >in >limit sourcebuf blk 5 ) save input stream onto the stack h 9400 */
+	{.type Header, {.hdr { 10, "save-input", /* C_save_input = 9392 */ colon }}}, /* CENTRY "save-input" save_input 10 ; ( -- infd >in >limit sourcebuf 'Acceptvec 5 ) save input stream onto the stack h 9400 */
 	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 9408 */
 	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 9416 */
 	{.type FromH0, {.p MV_toIn}, .src = "dd MV_toIn"},		/* dd MV_toIn 9424 */
@@ -1333,7 +1336,7 @@ Fentry fentries[] = {
 	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 10000 */
 	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 10008 */
 	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 10016 */
-	{.type Header, {.hdr { 10, "next-input", /* C_next_input = 10040 */ colon }}}, /* CENTRY "next-input" next_input 10 ; when >In < >Limit ( -- true c ). ( -- 0 false ) otherwise h 10048 */
+/* ; next-input-char */	{.type Header, {.hdr { 10, "next-input", /* C_next_input = 10040 */ colon }}}, /* CENTRY "next-input" next_input 10 ; when >In < >Limit ( -- true c ). ( -- 0 false ) otherwise h 10048 */
 	{.type FromH0, {.p MV_toIn}, .src = "dd MV_toIn"},		/* dd MV_toIn 10056 */
 	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 10064 */
 	{.type FromH0, {.p MV_toLimit}, .src = "dd MV_toLimit"},		/* dd MV_toLimit 10072 */
@@ -1403,945 +1406,986 @@ Fentry fentries[] = {
 	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop		; ( cinitial ) Sourcebuf+>In = location of first non-matching character"},		/* dd M_rpop		; ( cinitial ) Sourcebuf+>In = location of first non-matching character 10616 */
 	{.type FromH0, {.p C_parse}, .src = "dd C_parse"},		/* dd C_parse 10624 */
 	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 10632 */
-/* ; accept is the Brdline of bio *//* ; if Acceptvec == 0, accept_key, so the initial booting works fine *//* ;	else execute it */	{.type Header, {.hdr { 6, "accept", /* C_accept = 10648 */ colon }}}, /* CENTRY "accept" accept 6 ; ( a n -- n ) get line or n chars or EOF from input and store at a h 10656 */
+/* ; accept is the Brdline of bio *//* ; if Acceptvec == 0, set Eof on and get out *//* ;	else execute it */	{.type Header, {.hdr { 6, "accept", /* C_accept = 10648 */ colon }}}, /* CENTRY "accept" accept 6 ; ( a n -- n ) get line or n chars or EOF from input and store at a h 10656 */
 	{.type FromH0, {.p MV_Acceptvec}, .src = "dd MV_Acceptvec"},		/* dd MV_Acceptvec 10664 */
 	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 10672 */
 	{.type FromH0, {.p C_qdup}, .src = "dd C_qdup"},		/* dd C_qdup 10680 */
 	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 10688 */
-	{.type FromH0, {.p L300}, .src = "dd L300	; Acceptvec == 0, use accept-key"},		/* dd L300	; Acceptvec == 0, use accept-key 10696 */
+	{.type FromH0, {.p L300}, .src = "dd L300	; Acceptvec == 0, set Eof on and get out"},		/* dd L300	; Acceptvec == 0, set Eof on and get out 10696 */
 	{.type FromH0, {.p M_execute}, .src = "dd M_execute"},		/* dd M_execute 10704 */
 	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 10712 */
-	{.type FromH0, {.p C_accept_key}, .src = "dd C_accept_key"},		/* dd C_accept_key 10720 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 10728 */
-	{.type Header, {.hdr { 11, "accept-line", /* C_accept_line = 10752 */ colon }}}, /* CENTRY "accept-line" accept_line 11 ; ( a n -- n1 ) get line or n chars or EOF from input and store at a using key h 10760 */
-	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 10768 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch		; ( a n infd )"},		/* dd M_fetch		; ( a n infd ) 10776 */
-	{.type FromH0, {.p C_read_file}, .src = "dd C_read_file	; ( n ioresult )"},		/* dd C_read_file	; ( n ioresult ) 10784 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 10792 */
-	{.type FromH0, {.p L301}, .src = "dd L301			; ioresult == false as n = -1"},		/* dd L301			; ioresult == false as n = -1 10800 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup		; ( n n )"},		/* dd M_dup		; ( n n ) 10808 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 10816 */
-	{.type FromH0, {.p L302}, .src = "dd L302			; ( 0 )"},		/* dd L302			; ( 0 ) 10824 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup		; n > 0. if n == 4096, error out. ( n n )"},		/* dd M_dup		; n > 0. if n == 4096, error out. ( n n ) 10832 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 10840 */
-	{.type Absolute, {.p 4096}},		/* dd 4096			; ( n n 4096 ) 10848 */
-	{.type FromH0, {.p M_equal}, .src = "dd M_equal		; ( n n==4096 )"},		/* dd M_equal		; ( n n==4096 ) 10856 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump		; ( n )"},		/* dd M_cjump		; ( n ) 10864 */
-	{.type FromH0, {.p L303}, .src = "dd L303			; n < 4096 ( n )"},		/* dd L303			; n < 4096 ( n ) 10872 */
-	{.type FromH0, {.p MV_Sourcebuf}, .src = "dd MV_Sourcebuf	; n == 4096 ( n )"},		/* dd MV_Sourcebuf	; n == 4096 ( n ) 10880 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch		; ( n tib )"},		/* dd M_fetch		; ( n tib ) 10888 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap		; ( tib n )"},		/* dd M_xswap		; ( tib n ) 10896 */
-	{.type FromH0, {.p C_type}, .src = "dd C_type		; show the long line and an error message"},		/* dd C_type		; show the long line and an error message 10904 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 10912 */
-	{.type FromH0, {.p L304}, .src = "dd L304"},		/* dd L304 10920 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 10928 */
-	{.type Absolute, {.p 37}},		/* dd 37 10936 */
-	{.type FromH0, {.p C_type}, .src = "dd C_type		; show the error message"},		/* dd C_type		; show the error message 10944 */
-	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 10952 */
-	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 10960 */
-	{.type FromH0, {.p C_1minus}, .src = "dd C_1minus		; n-- to avoid parsing the newline character"},		/* dd C_1minus		; n-- to avoid parsing the newline character 10968 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon	; ( n ) n = number of bytes read"},		/* dd M_exitcolon	; ( n ) n = number of bytes read 10976 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 10984 */
-	{.type FromH0, {.p L305}, .src = "dd L305"},		/* dd L305 10992 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 11000 */
-	{.type Absolute, {.p 12}},		/* dd 12 11008 */
-	{.type FromH0, {.p C_type}, .src = "dd C_type		; show the error message"},		/* dd C_type		; show the error message 11016 */
-	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 11024 */
-	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 11032 */
-	{.type FromH0, {.p MV_Eof}, .src = "dd MV_Eof	; n == 0, set Eof"},		/* dd MV_Eof	; n == 0, set Eof 11040 */
-	{.type FromH0, {.p C_on}, .src = "dd C_on		; EOF"},		/* dd C_on		; EOF 11048 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon	; ( 0 )"},		/* dd M_exitcolon	; ( 0 ) 11056 */
-	{.type Header, {.hdr { 10, "accept-key", /* C_accept_key = 11080 */ colon }}}, /* CENTRY "accept-key" accept_key 10 ; ( a n -- n ) get line or n chars or EOF from input and store at a using key h 11088 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap	; ( n a -- )"},		/* dd M_xswap	; ( n a -- ) 11096 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( n a a -- )"},		/* dd M_dup	; ( n a a -- ) 11104 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush"},		/* dd M_rpush 11112 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( n -- ) (R a a -- )"},		/* dd M_rpush	; ( n -- ) (R a a -- ) 11120 */
-	{.type FromH0, {.p C_qdup}, .src = "dd C_qdup	; ( n n -- ) (R a a -- )"},		/* dd C_qdup	; ( n n -- ) (R a a -- ) 11128 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump	; (if)"},		/* dd M_cjump	; (if) 11136 */
-	{.type FromH0, {.p L149}, .src = "dd L149		; n == 0"},		/* dd L149		; n == 0 11144 */
-	{.type FromH0, {.p C_key}, .src = "dd C_key	; n > 0 ( n -- n c )"},		/* dd C_key	; n > 0 ( n -- n c ) 11152 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( -- n c c )"},		/* dd M_dup	; ( -- n c c ) 11160 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 11168 */
-	{.type Absolute, {.p 10}},		/* dd 10		; ( -- n c c 10 ) 11176 */
-	{.type FromH0, {.p M_equal}, .src = "dd M_equal	; ( n c c 10 -- n c f ) checking for newline"},		/* dd M_equal	; ( n c c 10 -- n c f ) checking for newline 11184 */
-	{.type FromH0, {.p M_over}, .src = "dd M_over	; ( -- n c f c )"},		/* dd M_over	; ( -- n c f c ) 11192 */
+	{.type FromH0, {.p C_2drop}, .src = "dd C_2drop	; ( )"},		/* dd C_2drop	; ( ) 10720 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 10728 */
+	{.type Absolute, {.p 0}},		/* dd 0		; ( 0 ) 10736 */
+	{.type FromH0, {.p MV_Eof}, .src = "dd MV_Eof"},		/* dd MV_Eof 10744 */
+	{.type FromH0, {.p C_on}, .src = "dd C_on"},		/* dd C_on 10752 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 10760 */
+	{.type Header, {.hdr { 11, "accept-line", /* C_accept_line = 10784 */ colon }}}, /* CENTRY "accept-line" accept_line 11 ; ( a n -- n1 ) get line or n chars or EOF from input and store at a using key h 10792 */
+	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 10800 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch		; ( a n infd )"},		/* dd M_fetch		; ( a n infd ) 10808 */
+	{.type FromH0, {.p C_read_file}, .src = "dd C_read_file	; ( n ioresult )"},		/* dd C_read_file	; ( n ioresult ) 10816 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 10824 */
+	{.type FromH0, {.p L301}, .src = "dd L301			; ioresult == false as n = -1"},		/* dd L301			; ioresult == false as n = -1 10832 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup		; ( n n )"},		/* dd M_dup		; ( n n ) 10840 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 10848 */
+	{.type FromH0, {.p L302}, .src = "dd L302			; ( 0 )"},		/* dd L302			; ( 0 ) 10856 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup		; n > 0. if n == 4096, error out. ( n n )"},		/* dd M_dup		; n > 0. if n == 4096, error out. ( n n ) 10864 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 10872 */
+	{.type Absolute, {.p 4096}},		/* dd 4096			; ( n n 4096 ) 10880 */
+	{.type FromH0, {.p M_equal}, .src = "dd M_equal		; ( n n==4096 )"},		/* dd M_equal		; ( n n==4096 ) 10888 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump		; ( n )"},		/* dd M_cjump		; ( n ) 10896 */
+	{.type FromH0, {.p L303}, .src = "dd L303			; n < 4096 ( n )"},		/* dd L303			; n < 4096 ( n ) 10904 */
+	{.type FromH0, {.p MV_Sourcebuf}, .src = "dd MV_Sourcebuf	; n == 4096 ( n )"},		/* dd MV_Sourcebuf	; n == 4096 ( n ) 10912 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch		; ( n tib )"},		/* dd M_fetch		; ( n tib ) 10920 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap		; ( tib n )"},		/* dd M_xswap		; ( tib n ) 10928 */
+	{.type FromH0, {.p C_type}, .src = "dd C_type		; show the long line and an error message"},		/* dd C_type		; show the long line and an error message 10936 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 10944 */
+	{.type FromH0, {.p L304}, .src = "dd L304"},		/* dd L304 10952 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 10960 */
+	{.type Absolute, {.p 37}},		/* dd 37 10968 */
+	{.type FromH0, {.p C_type}, .src = "dd C_type		; show the error message"},		/* dd C_type		; show the error message 10976 */
+	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 10984 */
+	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 10992 */
+	{.type FromH0, {.p C_1minus}, .src = "dd C_1minus		; n-- to avoid parsing the newline character"},		/* dd C_1minus		; n-- to avoid parsing the newline character 11000 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon	; ( n ) n = number of bytes read"},		/* dd M_exitcolon	; ( n ) n = number of bytes read 11008 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 11016 */
+	{.type FromH0, {.p L305}, .src = "dd L305"},		/* dd L305 11024 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 11032 */
+	{.type Absolute, {.p 12}},		/* dd 12 11040 */
+	{.type FromH0, {.p C_type}, .src = "dd C_type		; show the error message"},		/* dd C_type		; show the error message 11048 */
+	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 11056 */
+	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 11064 */
+	{.type FromH0, {.p MV_Eof}, .src = "dd MV_Eof	; n == 0, set Eof"},		/* dd MV_Eof	; n == 0, set Eof 11072 */
+	{.type FromH0, {.p C_on}, .src = "dd C_on		; EOF"},		/* dd C_on		; EOF 11080 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon	; ( 0 )"},		/* dd M_exitcolon	; ( 0 ) 11088 */
+/* ; loops through 1 character at a time until a newline unlike accept-line which gets the line in one call. */	{.type Header, {.hdr { 10, "accept-key", /* C_accept_key = 11112 */ colon }}}, /* CENTRY "accept-key" accept_key 10 ; ( a n -- n ) get line or n chars or EOF from input and store at a using key h 11120 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap	; ( n a -- )"},		/* dd M_xswap	; ( n a -- ) 11128 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( n a a -- )"},		/* dd M_dup	; ( n a a -- ) 11136 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush"},		/* dd M_rpush 11144 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( n -- ) (R a a -- )"},		/* dd M_rpush	; ( n -- ) (R a a -- ) 11152 */
+	{.type FromH0, {.p C_qdup}, .src = "dd C_qdup	; ( n n -- ) (R a a -- )"},		/* dd C_qdup	; ( n n -- ) (R a a -- ) 11160 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump	; (if)"},		/* dd M_cjump	; (if) 11168 */
+	{.type FromH0, {.p L149}, .src = "dd L149		; n == 0"},		/* dd L149		; n == 0 11176 */
+	{.type FromH0, {.p C_key}, .src = "dd C_key	; n > 0 ( n -- n c )"},		/* dd C_key	; n > 0 ( n -- n c ) 11184 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( -- n c c )"},		/* dd M_dup	; ( -- n c c ) 11192 */
 	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 11200 */
-	{.type Absolute, {.p -1}},		/* dd -1		; ( -- n c f c -1 ) 11208 */
-	{.type FromH0, {.p M_equal}, .src = "dd M_equal	; ( -- n c f1 f2 )"},		/* dd M_equal	; ( -- n c f1 f2 ) 11216 */
-	{.type FromH0, {.p M_binor}, .src = "dd M_binor	; ( -- n c f )"},		/* dd M_binor	; ( -- n c f ) 11224 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 11232 */
-	{.type FromH0, {.p L150}, .src = "dd L150"},		/* dd L150 11240 */
-	{.type FromH0, {.p C_2drop}, .src = "dd C_2drop	; n == -1 || n == 10 (	-- )"},		/* dd C_2drop	; n == -1 || n == 10 (	-- ) 11248 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop"},		/* dd M_rpop 11256 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop"},		/* dd M_rpop 11264 */
-	{.type FromH0, {.p M_minus}, .src = "dd M_minus	; ( -- a2-a1 )"},		/* dd M_minus	; ( -- a2-a1 ) 11272 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon	; ( -- n ) (R -- )"},		/* dd M_exitcolon	; ( -- n ) (R -- ) 11280 */
-	{.type FromH0, {.p M_rfetch}, .src = "dd M_rfetch	; ( n c a -- ) (R a a -- )"},		/* dd M_rfetch	; ( n c a -- ) (R a a -- ) 11288 */
-	{.type FromH0, {.p M_cstore}, .src = "dd M_cstore	; store the character at a"},		/* dd M_cstore	; store the character at a 11296 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( n a -- ) (R a -- )"},		/* dd M_rpop	; ( n a -- ) (R a -- ) 11304 */
-	{.type FromH0, {.p C_1plus}, .src = "dd C_1plus"},		/* dd C_1plus 11312 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( n -- ) (R a1 -- a1 a2 ) a1 = begin address a2 = current address"},		/* dd M_rpush	; ( n -- ) (R a1 -- a1 a2 ) a1 = begin address a2 = current address 11320 */
-	{.type FromH0, {.p C_1minus}, .src = "dd C_1minus	; ( n -- n-1 )"},		/* dd C_1minus	; ( n -- n-1 ) 11328 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 11336 */
-	{.type FromH0, {.p L148}, .src = "dd L148	; loop again for the next character"},		/* dd L148	; loop again for the next character 11344 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( -- a2 ) (R a1 a2 -- a1 )"},		/* dd M_rpop	; ( -- a2 ) (R a1 a2 -- a1 ) 11352 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( a2 a1 -- ) (R a1 -- )"},		/* dd M_rpop	; ( a2 a1 -- ) (R a1 -- ) 11360 */
-	{.type FromH0, {.p M_minus}, .src = "dd M_minus	; ( a2 a1 -- a2-a1 )"},		/* dd M_minus	; ( a2 a1 -- a2-a1 ) 11368 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 11376 */
-	{.type Header, {.hdr { 5, "query", /* C_query = 11392 */ colon }}}, /* CENTRY "query" query 5 ; read from input stream into the Text Input Buffer h 11400 */
-	{.type FromH0, {.p MV_Eof}, .src = "dd MV_Eof"},		/* dd MV_Eof 11408 */
-	{.type FromH0, {.p C_off}, .src = "dd C_off	; clear EOF flag"},		/* dd C_off	; clear EOF flag 11416 */
-	{.type FromH0, {.p M_Tib}, .src = "dd M_Tib	; constant puts address of tibuffer on the top"},		/* dd M_Tib	; constant puts address of tibuffer on the top 11424 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 11432 */
-	{.type Absolute, {.p 4096}},		/* dd 4096	; ( tibuffer -- tibuffer 4096 ) 11440 */
-	{.type FromH0, {.p C_accept}, .src = "dd C_accept ; ( tibuffer 4096 -- n )"},		/* dd C_accept ; ( tibuffer 4096 -- n ) 11448 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( n -- n n )"},		/* dd M_dup	; ( n -- n n ) 11456 */
-	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq	; ( n n -- n f )"},		/* dd C_0eq	; ( n n -- n f ) 11464 */
-	{.type FromH0, {.p MV_Eof}, .src = "dd MV_Eof"},		/* dd MV_Eof 11472 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 11480 */
-	{.type FromH0, {.p M_binand}, .src = "dd M_binand	; n == 0 && EOF"},		/* dd M_binand	; n == 0 && EOF 11488 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 11496 */
-	{.type FromH0, {.p L152}, .src = "dd L152		; false condition"},		/* dd L152		; false condition 11504 */
-	{.type FromH0, {.p M_drop}, .src = "dd M_drop	; n == 0 && EOF ( n -- )"},		/* dd M_drop	; n == 0 && EOF ( n -- ) 11512 */
-	{.type FromH0, {.p C_qrestore_input}, .src = "dd C_qrestore_input"},		/* dd C_qrestore_input 11520 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 11528 */
-	{.type FromH0, {.p L153}, .src = "dd L153"},		/* dd L153 11536 */
-	{.type FromH0, {.p MV_toLimit}, .src = "dd MV_toLimit"},		/* dd MV_toLimit 11544 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store		; number of characters to read >Limit = n"},		/* dd M_store		; number of characters to read >Limit = n 11552 */
-	{.type FromH0, {.p MV_toIn}, .src = "dd MV_toIn"},		/* dd MV_toIn 11560 */
-	{.type FromH0, {.p C_off}, .src = "dd C_off		; start from 0 >In = 0"},		/* dd C_off		; start from 0 >In = 0 11568 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 11576 */
-	{.type Header, {.hdr { 6, "refill", /* C_refill = 11592 */ colon }}}, /* CENTRY "refill" refill 6 h 11600 */
-	{.type FromH0, {.p C_query}, .src = "dd C_query"},		/* dd C_query 11608 */
-	{.type FromH0, {.p C_true}, .src = "dd C_true"},		/* dd C_true 11616 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 11624 */
-	{.type Header, {.hdr { 8, "findname", /* C_findname = 11648 */ colon }}}, /* CENTRY "findname" findname 8 ; ( a1 -- a2 f ) ; loop through the dictionary names h 11656 */
-	{.type FromH0, {.p MV_Findadr}, .src = "dd MV_Findadr"},		/* dd MV_Findadr 11664 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 11672 */
-	{.type FromH0, {.p M_Dtop}, .src = "dd M_Dtop"},		/* dd M_Dtop 11680 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; get latest dictionary link"},		/* dd M_fetch	; get latest dictionary link 11688 */
-	{.type FromH0, {.p C_qdup}, .src = "dd C_qdup"},		/* dd C_qdup 11696 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 11704 */
-	{.type FromH0, {.p L159}, .src = "dd L159	; seached until the first dictionary entry get out"},		/* dd L159	; seached until the first dictionary entry get out 11712 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( a -- a a )"},		/* dd M_dup	; ( a -- a a ) 11720 */
-	{.type FromH0, {.p C_cellplus}, .src = "dd C_cellplus	; ( a a -- a a+8) lenth + initial name address"},		/* dd C_cellplus	; ( a a -- a a+8) lenth + initial name address 11728 */
-	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch	; ( a a+8 -- a immediate|hidden|len) length + initial name"},		/* dd M_cfetch	; ( a a+8 -- a immediate|hidden|len) length + initial name 11736 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 11744 */
-	{.type Absolute, {.p 64}},		/* dd 64		; check the reveal'ed flag 1=hidden, 0=reveal 11752 */
-	{.type FromH0, {.p M_binand}, .src = "dd M_binand	; if hidden, goto L161 else L160"},		/* dd M_binand	; if hidden, goto L161 else L160 11760 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 11768 */
-	{.type FromH0, {.p L160}, .src = "dd L160"},		/* dd L160 11776 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; smudge'd dictionary entry, get the previous entry"},		/* dd M_fetch	; smudge'd dictionary entry, get the previous entry 11784 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 11792 */
-	{.type FromH0, {.p L161}, .src = "dd L161"},		/* dd L161 11800 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( a1 -- a1 a1)"},		/* dd M_dup	; ( a1 -- a1 a1) 11808 */
-	{.type FromH0, {.p C_cellplus}, .src = "dd C_cellplus	; ( a1 a1 -- a1 a1+8)"},		/* dd C_cellplus	; ( a1 a1 -- a1 a1+8) 11816 */
-	{.type FromH0, {.p C_count}, .src = "dd C_count	; ( a1 a1+8 -- a1 a1+8+1 n )"},		/* dd C_count	; ( a1 a1+8 -- a1 a1+8+1 n ) 11824 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 11832 */
-	{.type Absolute, {.p 63}},		/* dd 63 11840 */
-	{.type FromH0, {.p M_binand}, .src = "dd M_binand	; ( a1 a1+8+1 n 63 -- a1 a1+8+1 n&63=len )"},		/* dd M_binand	; ( a1 a1+8+1 n 63 -- a1 a1+8+1 n&63=len ) 11848 */
-	{.type FromH0, {.p MV_Findadr}, .src = "dd MV_Findadr"},		/* dd MV_Findadr 11856 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 11864 */
-	{.type FromH0, {.p C_count}, .src = "dd C_count	; ( a1 a1+8+1 len=n&63 a2 -- a1 a1+8+1 n&63 a2+1 n2 )"},		/* dd C_count	; ( a1 a1+8+1 len=n&63 a2 -- a1 a1+8+1 n&63 a2+1 n2 ) 11872 */
-	{.type FromH0, {.p C_compare}, .src = "dd C_compare	; ( a1 a1+8+1 len=n&63 a2+1 n2 -- a1 f ) compare dictionary entry with name"},		/* dd C_compare	; ( a1 a1+8+1 len=n&63 a2+1 n2 -- a1 f ) compare dictionary entry with name 11880 */
-	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq	; found a match?"},		/* dd C_0eq	; found a match? 11888 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 11896 */
-	{.type FromH0, {.p L162}, .src = "dd L162		; no match"},		/* dd L162		; no match 11904 */
-	{.type FromH0, {.p C_cellplus}, .src = "dd C_cellplus	; match found"},		/* dd C_cellplus	; match found 11912 */
-	{.type FromH0, {.p C_true}, .src = "dd C_true"},		/* dd C_true 11920 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 11928 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 11936 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 11944 */
-	{.type FromH0, {.p L158}, .src = "dd L158"},		/* dd L158 11952 */
-	{.type FromH0, {.p MV_Findadr}, .src = "dd MV_Findadr"},		/* dd MV_Findadr 11960 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 11968 */
-	{.type FromH0, {.p C_false}, .src = "dd C_false"},		/* dd C_false 11976 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 11984 */
-	{.type Header, {.hdr { 4, "find", /* C_find = 12000 */ colon }}}, /* CENTRY "find" find 4 ; ( a1 -- a2 f )? h 12008 */
-	{.type FromH0, {.p C_findname}, .src = "dd C_findname"},		/* dd C_findname 12016 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 12024 */
-	{.type FromH0, {.p L164}, .src = "dd L164"},		/* dd L164 12032 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 12040 */
-	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 12048 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 12056 */
-	{.type FromH0, {.p M_over}, .src = "dd M_over"},		/* dd M_over 12064 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12072 */
-	{.type Absolute, {.p 63}},		/* dd 63 12080 */
-	{.type FromH0, {.p M_binand}, .src = "dd M_binand"},		/* dd M_binand 12088 */
-	{.type FromH0, {.p M_plus}, .src = "dd M_plus"},		/* dd M_plus 12096 */
-	{.type FromH0, {.p C_1plus}, .src = "dd C_1plus"},		/* dd C_1plus 12104 */
-	{.type FromH0, {.p C_aligned}, .src = "dd C_aligned"},		/* dd C_aligned 12112 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 12120 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12128 */
-	{.type Absolute, {.p 128}},		/* dd 128 12136 */
-	{.type FromH0, {.p M_binand}, .src = "dd M_binand"},		/* dd M_binand 12144 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 12152 */
-	{.type FromH0, {.p L165}, .src = "dd L165"},		/* dd L165 12160 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12168 */
-	{.type Absolute, {.p 1}},		/* dd 1 12176 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 12184 */
-	{.type FromH0, {.p L166}, .src = "dd L166"},		/* dd L166 12192 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12200 */
-	{.type Absolute, {.p -1}},		/* dd -1 12208 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 12216 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 12224 */
-	{.type FromH0, {.p L167}, .src = "dd L167"},		/* dd L167 12232 */
-	{.type FromH0, {.p C_false}, .src = "dd C_false"},		/* dd C_false 12240 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 12248 */
-	{.type Header, {.hdr { 1, "'", /* C_single_quote = 12264 */ colon }}}, /* CENTRY "'" single_quote 1 h 12272 */
-	{.type FromH0, {.p C_bl}, .src = "dd C_bl"},		/* dd C_bl 12280 */
-	{.type FromH0, {.p C_word}, .src = "dd C_word"},		/* dd C_word 12288 */
-	{.type FromH0, {.p C_find}, .src = "dd C_find"},		/* dd C_find 12296 */
-	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq"},		/* dd C_0eq 12304 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 12312 */
-	{.type FromH0, {.p L169}, .src = "dd L169"},		/* dd L169 12320 */
-	{.type FromH0, {.p C_space}, .src = "dd C_space"},		/* dd C_space 12328 */
-	{.type FromH0, {.p C_count}, .src = "dd C_count"},		/* dd C_count 12336 */
-	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 12344 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12352 */
-	{.type FromH0, {.p L170}, .src = "dd L170"},		/* dd L170 12360 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12368 */
-	{.type Absolute, {.p 3}},		/* dd 3 12376 */
-	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 12384 */
-	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 12392 */
-	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 12400 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 12408 */
-	{.type Header, {.hdr { 6, "?stack", /* C_qstack = 12424 */ colon }}}, /* CENTRY "?stack" qstack 6 h 12432 */
-	{.type FromH0, {.p M_stackptr}, .src = "dd M_stackptr"},		/* dd M_stackptr 12440 */
-	{.type FromH0, {.p M_S0}, .src = "dd M_S0"},		/* dd M_S0 12448 */
-	{.type FromH0, {.p M_greater}, .src = "dd M_greater"},		/* dd M_greater 12456 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 12464 */
-	{.type FromH0, {.p L172}, .src = "dd L172"},		/* dd L172 12472 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12480 */
-	{.type FromH0, {.p L173}, .src = "dd L173"},		/* dd L173 12488 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12496 */
-	{.type Absolute, {.p 16}},		/* dd 16 12504 */
-	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 12512 */
-	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 12520 */
-	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 12528 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 12536 */
-	{.type FromH0, {.p MC_STDOUT}, .src = "dd MC_STDOUT	; ( str -- str 1) ; debug code to show the word found"},		/* dd MC_STDOUT	; ( str -- str 1) ; debug code to show the word found 12544 */
-	{.type FromH0, {.p M_over}, .src = "dd M_over		; ( str 1 str )"},		/* dd M_over		; ( str 1 str ) 12552 */
-	{.type FromH0, {.p C_count}, .src = "dd C_count 		; ( str 1 a n)"},		/* dd C_count 		; ( str 1 a n) 12560 */
-	{.type FromH0, {.p M_syswrite}, .src = "dd M_syswrite"},		/* dd M_syswrite 12568 */
-	{.type FromH0, {.p M_drop}, .src = "dd M_drop		; drop the return value of write"},		/* dd M_drop		; drop the return value of write 12576 */
-	{.type Header, {.hdr { 9, "interpret", /* C_interpret = 12600 */ colon }}}, /* CENTRY "interpret" interpret 9 ; there is stuff in TIB to be interpreted >In and >Limit are set h 12608 */
-	{.type FromH0, {.p C_bl}, .src = "dd C_bl"},		/* dd C_bl 12616 */
-	{.type FromH0, {.p C_word}, .src = "dd C_word	; ( bl -- a ) a = address of counted string"},		/* dd C_word	; ( bl -- a ) a = address of counted string 12624 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 12632 */
-	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 12640 */
-	{.type FromH0, {.p C_0neq}, .src = "dd C_0neq"},		/* dd C_0neq 12648 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 12656 */
-	{.type FromH0, {.p L176}, .src = "dd L176	; count at a = 0, drop a and exit"},		/* dd L176	; count at a = 0, drop a and exit 12664 */
-	{.type FromH0, {.p C_find}, .src = "dd C_find	; ( a -- a1 f ) a = address of counted string"},		/* dd C_find	; ( a -- a1 f ) a = address of counted string 12672 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 12680 */
-	{.type FromH0, {.p L177}, .src = "dd L177"},		/* dd L177 12688 */
-	{.type FromH0, {.p M_execute}, .src = "dd M_execute	; found in dictionary, execute"},		/* dd M_execute	; found in dictionary, execute 12696 */
-	{.type FromH0, {.p C_qstack}, .src = "dd C_qstack"},		/* dd C_qstack 12704 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 12712 */
-	{.type FromH0, {.p L178}, .src = "dd L178"},		/* dd L178 12720 */
-	{.type FromH0, {.p C_count}, .src = "dd C_count"},		/* dd C_count 12728 */
-	{.type FromH0, {.p C_number}, .src = "dd C_number"},		/* dd C_number 12736 */
-	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq"},		/* dd C_0eq 12744 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 12752 */
-	{.type FromH0, {.p L179}, .src = "dd L179"},		/* dd L179 12760 */
-	{.type FromH0, {.p C_space}, .src = "dd C_space	; the word is neither in the dictionary nor a number"},		/* dd C_space	; the word is neither in the dictionary nor a number 12768 */
-	{.type FromH0, {.p C_type}, .src = "dd C_type	; show the word"},		/* dd C_type	; show the word 12776 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12784 */
-	{.type FromH0, {.p L180}, .src = "dd L180	; error I?"},		/* dd L180	; error I? 12792 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12800 */
-	{.type Absolute, {.p 3}},		/* dd 3 12808 */
-	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 12816 */
-	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 12824 */
-	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 12832 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 12840 */
-	{.type FromH0, {.p L175}, .src = "dd L175"},		/* dd L175 12848 */
-	{.type FromH0, {.p M_drop}, .src = "dd M_drop	; count at a = 0 ( a -- )"},		/* dd M_drop	; count at a = 0 ( a -- ) 12856 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 12864 */
-	{.type Header, {.hdr { 6, "create", /* C_create = 12880 */ colon }}}, /* CENTRY "create" create 6 ; compiles dictionary header until the pfa (link, len, name, cfa) h 12888 */
-	{.type FromH0, {.p C_align}, .src = "dd C_align	; sets Dp = aligned here"},		/* dd C_align	; sets Dp = aligned here 12896 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here	; ( -- here )"},		/* dd C_here	; ( -- here ) 12904 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( -- ) (R -- linkaddr )"},		/* dd M_rpush	; ( -- ) (R -- linkaddr ) 12912 */
-	{.type FromH0, {.p M_Dtop}, .src = "dd M_Dtop	; ( -- Dtop ) (R -- linkaddr )"},		/* dd M_Dtop	; ( -- Dtop ) (R -- linkaddr ) 12920 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; ( Dtop -- dtop ) (R -- linkaddr )"},		/* dd M_fetch	; ( Dtop -- dtop ) (R -- linkaddr ) 12928 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma	; ( dtop -- ) (R -- linkaddr )"},		/* dd C_comma	; ( dtop -- ) (R -- linkaddr ) 12936 */
-	{.type FromH0, {.p C_bl}, .src = "dd C_bl"},		/* dd C_bl 12944 */
-	{.type FromH0, {.p C_word}, .src = "dd C_word	; get the word from the input stream ( c -- a ) skip any c. Placed the counted string in a (as in Wordbuf)"},		/* dd C_word	; get the word from the input stream ( c -- a ) skip any c. Placed the counted string in a (as in Wordbuf) 12952 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( a -- a a ) (R -- linkaddr )"},		/* dd M_dup	; ( a -- a a ) (R -- linkaddr ) 12960 */
-	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch	; ( a a -- a len ) (R -- linkaddr )"},		/* dd M_cfetch	; ( a a -- a len ) (R -- linkaddr ) 12968 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here	; ( a len -- a len here ) (R -- linkaddr )"},		/* dd C_here	; ( a len -- a len here ) (R -- linkaddr ) 12976 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap	; ( a len here -- a here len ) (R -- linkaddr )"},		/* dd M_xswap	; ( a len here -- a here len ) (R -- linkaddr ) 12984 */
-	{.type FromH0, {.p C_1plus}, .src = "dd C_1plus	; ( a here len -- a here len+1 ) (R -- linkaddr ) using len+1 to copy even the length byte"},		/* dd C_1plus	; ( a here len -- a here len+1 ) (R -- linkaddr ) using len+1 to copy even the length byte 12992 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( a here len+1 -- a here len+1 len+1 ) (R -- linkaddr )"},		/* dd M_dup	; ( a here len+1 -- a here len+1 len+1 ) (R -- linkaddr ) 13000 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a here len+1 len+1 -- a here len+1 ) (R -- linkaddr len+1 )"},		/* dd M_rpush	; ( a here len+1 len+1 -- a here len+1 ) (R -- linkaddr len+1 ) 13008 */
-	{.type FromH0, {.p M_cmove}, .src = "dd M_cmove	; ( a here len+1 -- ) (R -- linkaddr len+1 )"},		/* dd M_cmove	; ( a here len+1 -- ) (R -- linkaddr len+1 ) 13016 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( -- len+1 ) (R -- linkaddr )"},		/* dd M_rpop	; ( -- len+1 ) (R -- linkaddr ) 13024 */
-	{.type FromH0, {.p C_allot}, .src = "dd C_allot	; ( -- ) (R -- linkaddr ) here = here+len+1"},		/* dd C_allot	; ( -- ) (R -- linkaddr ) here = here+len+1 13032 */
-	{.type FromH0, {.p C_align}, .src = "dd C_align	; sets Dp = aligned here"},		/* dd C_align	; sets Dp = aligned here 13040 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13048 */
-	{.type FromH0, {.p M_variable}, .src = "dd M_variable"},		/* dd M_variable 13056 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; ( -- variablecfa) (R -- linkaddr )"},		/* dd M_fetch	; ( -- variablecfa) (R -- linkaddr ) 13064 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma	; ( -- ) put the variablecfa into the cfa"},		/* dd C_comma	; ( -- ) put the variablecfa into the cfa 13072 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( -- linkaddr) (R -- )"},		/* dd M_rpop	; ( -- linkaddr) (R -- ) 13080 */
-	{.type FromH0, {.p M_Dtop}, .src = "dd M_Dtop"},		/* dd M_Dtop 13088 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; Dtop = just created link address"},		/* dd M_store	; Dtop = just created link address 13096 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 13104 */
-	{.type Header, {.hdr { 8, "variable", /* C_variable = 13128 */ colon }}}, /* CENTRY "variable" variable 8 ; compile to put the vhere then on the stack h 13136 */
-	{.type FromH0, {.p C_create}, .src = "dd C_create"},		/* dd C_create 13144 */
-	{.type FromH0, {.p C_vhere}, .src = "dd C_vhere"},		/* dd C_vhere 13152 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma	; put the next available variable location in pfa"},		/* dd C_comma	; put the next available variable location in pfa 13160 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13168 */
-	{.type Absolute, {.p 1}},		/* dd 1 13176 */
-	{.type FromH0, {.p C_cells}, .src = "dd C_cells"},		/* dd C_cells 13184 */
-	{.type FromH0, {.p C_vallot}, .src = "dd C_vallot	; vhere = vhere+8, stored at Vp"},		/* dd C_vallot	; vhere = vhere+8, stored at Vp 13192 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 13200 */
-	{.type Header, {.hdr { 8, "constant", /* C_constant = 13224 */ colon }}}, /* CENTRY "constant" constant 8 ; ( n -- ) do the same as variable but change the cfa to (constant) h 13232 */
-	{.type FromH0, {.p C_create}, .src = "dd C_create	; create dictionary header upto the cfa"},		/* dd C_create	; create dictionary header upto the cfa 13240 */
+	{.type Absolute, {.p 10}},		/* dd 10		; ( -- n c c 10 ) 11208 */
+	{.type FromH0, {.p M_equal}, .src = "dd M_equal	; ( n c c 10 -- n c f ) checking for newline"},		/* dd M_equal	; ( n c c 10 -- n c f ) checking for newline 11216 */
+	{.type FromH0, {.p M_over}, .src = "dd M_over	; ( -- n c f c )"},		/* dd M_over	; ( -- n c f c ) 11224 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 11232 */
+	{.type Absolute, {.p -1}},		/* dd -1		; ( -- n c f c -1 ) 11240 */
+	{.type FromH0, {.p M_equal}, .src = "dd M_equal	; ( -- n c f1 f2 )"},		/* dd M_equal	; ( -- n c f1 f2 ) 11248 */
+	{.type FromH0, {.p M_binor}, .src = "dd M_binor	; ( -- n c f )"},		/* dd M_binor	; ( -- n c f ) 11256 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 11264 */
+	{.type FromH0, {.p L150}, .src = "dd L150"},		/* dd L150 11272 */
+	{.type FromH0, {.p C_2drop}, .src = "dd C_2drop	; n == -1 || n == 10 (	-- )"},		/* dd C_2drop	; n == -1 || n == 10 (	-- ) 11280 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop"},		/* dd M_rpop 11288 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop"},		/* dd M_rpop 11296 */
+	{.type FromH0, {.p M_minus}, .src = "dd M_minus	; ( -- a2-a1 )"},		/* dd M_minus	; ( -- a2-a1 ) 11304 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon	; ( -- n ) (R -- )"},		/* dd M_exitcolon	; ( -- n ) (R -- ) 11312 */
+	{.type FromH0, {.p M_rfetch}, .src = "dd M_rfetch	; ( n c a -- ) (R a a -- )"},		/* dd M_rfetch	; ( n c a -- ) (R a a -- ) 11320 */
+	{.type FromH0, {.p M_cstore}, .src = "dd M_cstore	; store the character at a"},		/* dd M_cstore	; store the character at a 11328 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( n a -- ) (R a -- )"},		/* dd M_rpop	; ( n a -- ) (R a -- ) 11336 */
+	{.type FromH0, {.p C_1plus}, .src = "dd C_1plus"},		/* dd C_1plus 11344 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( n -- ) (R a1 -- a1 a2 ) a1 = begin address a2 = current address"},		/* dd M_rpush	; ( n -- ) (R a1 -- a1 a2 ) a1 = begin address a2 = current address 11352 */
+	{.type FromH0, {.p C_1minus}, .src = "dd C_1minus	; ( n -- n-1 )"},		/* dd C_1minus	; ( n -- n-1 ) 11360 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 11368 */
+	{.type FromH0, {.p L148}, .src = "dd L148	; loop again for the next character"},		/* dd L148	; loop again for the next character 11376 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( -- a2 ) (R a1 a2 -- a1 )"},		/* dd M_rpop	; ( -- a2 ) (R a1 a2 -- a1 ) 11384 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( a2 a1 -- ) (R a1 -- )"},		/* dd M_rpop	; ( a2 a1 -- ) (R a1 -- ) 11392 */
+	{.type FromH0, {.p M_minus}, .src = "dd M_minus	; ( a2 a1 -- a2-a1 )"},		/* dd M_minus	; ( a2 a1 -- a2-a1 ) 11400 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 11408 */
+	{.type Header, {.hdr { 5, "query", /* C_query = 11424 */ colon }}}, /* CENTRY "query" query 5 ; read from input stream into the Text Input Buffer h 11432 */
+	{.type FromH0, {.p MV_Eof}, .src = "dd MV_Eof"},		/* dd MV_Eof 11440 */
+	{.type FromH0, {.p C_off}, .src = "dd C_off	; clear EOF flag"},		/* dd C_off	; clear EOF flag 11448 */
+	{.type FromH0, {.p M_Tib}, .src = "dd M_Tib	; constant puts address of tibuffer on the top"},		/* dd M_Tib	; constant puts address of tibuffer on the top 11456 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 11464 */
+	{.type Absolute, {.p 4096}},		/* dd 4096	; ( tibuffer -- tibuffer 4096 ) 11472 */
+	{.type FromH0, {.p C_accept}, .src = "dd C_accept ; ( tibuffer 4096 -- n )"},		/* dd C_accept ; ( tibuffer 4096 -- n ) 11480 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( n -- n n )"},		/* dd M_dup	; ( n -- n n ) 11488 */
+	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq	; ( n n -- n f )"},		/* dd C_0eq	; ( n n -- n f ) 11496 */
+	{.type FromH0, {.p MV_Eof}, .src = "dd MV_Eof"},		/* dd MV_Eof 11504 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 11512 */
+	{.type FromH0, {.p M_binand}, .src = "dd M_binand	; n == 0 && EOF"},		/* dd M_binand	; n == 0 && EOF 11520 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 11528 */
+	{.type FromH0, {.p L152}, .src = "dd L152		; false condition"},		/* dd L152		; false condition 11536 */
+	{.type FromH0, {.p M_drop}, .src = "dd M_drop	; n == 0 && EOF ( n -- )"},		/* dd M_drop	; n == 0 && EOF ( n -- ) 11544 */
+	{.type FromH0, {.p C_qrestore_input}, .src = "dd C_qrestore_input"},		/* dd C_qrestore_input 11552 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 11560 */
+	{.type FromH0, {.p L153}, .src = "dd L153"},		/* dd L153 11568 */
+	{.type FromH0, {.p MV_toLimit}, .src = "dd MV_toLimit"},		/* dd MV_toLimit 11576 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store		; number of characters to read >Limit = n"},		/* dd M_store		; number of characters to read >Limit = n 11584 */
+	{.type FromH0, {.p MV_toIn}, .src = "dd MV_toIn"},		/* dd MV_toIn 11592 */
+	{.type FromH0, {.p C_off}, .src = "dd C_off		; start from 0 >In = 0"},		/* dd C_off		; start from 0 >In = 0 11600 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 11608 */
+	{.type Header, {.hdr { 6, "refill", /* C_refill = 11624 */ colon }}}, /* CENTRY "refill" refill 6 ; no more refills when there is no 'Acceptvec h 11632 */
+	{.type FromH0, {.p MV_Acceptvec}, .src = "dd MV_Acceptvec"},		/* dd MV_Acceptvec 11640 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 11648 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 11656 */
+	{.type FromH0, {.p L155}, .src = "dd L155"},		/* dd L155 11664 */
+	{.type FromH0, {.p C_false}, .src = "dd C_false"},		/* dd C_false 11672 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 11680 */
+	{.type FromH0, {.p C_query}, .src = "dd C_query"},		/* dd C_query 11688 */
+	{.type FromH0, {.p C_true}, .src = "dd C_true"},		/* dd C_true 11696 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 11704 */
+	{.type Header, {.hdr { 8, "findname", /* C_findname = 11728 */ colon }}}, /* CENTRY "findname" findname 8 ; ( a1 -- a2 f ) ; loop through the dictionary names h 11736 */
+	{.type FromH0, {.p MV_Findadr}, .src = "dd MV_Findadr"},		/* dd MV_Findadr 11744 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 11752 */
+	{.type FromH0, {.p M_Dtop}, .src = "dd M_Dtop"},		/* dd M_Dtop 11760 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; get latest dictionary link"},		/* dd M_fetch	; get latest dictionary link 11768 */
+	{.type FromH0, {.p C_qdup}, .src = "dd C_qdup"},		/* dd C_qdup 11776 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 11784 */
+	{.type FromH0, {.p L159}, .src = "dd L159	; seached until the first dictionary entry get out"},		/* dd L159	; seached until the first dictionary entry get out 11792 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( a -- a a )"},		/* dd M_dup	; ( a -- a a ) 11800 */
+	{.type FromH0, {.p C_cellplus}, .src = "dd C_cellplus	; ( a a -- a a+8) lenth + initial name address"},		/* dd C_cellplus	; ( a a -- a a+8) lenth + initial name address 11808 */
+	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch	; ( a a+8 -- a immediate|hidden|len) length + initial name"},		/* dd M_cfetch	; ( a a+8 -- a immediate|hidden|len) length + initial name 11816 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 11824 */
+	{.type Absolute, {.p 64}},		/* dd 64		; check the reveal'ed flag 1=hidden, 0=reveal 11832 */
+	{.type FromH0, {.p M_binand}, .src = "dd M_binand	; if hidden, goto L161 else L160"},		/* dd M_binand	; if hidden, goto L161 else L160 11840 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 11848 */
+	{.type FromH0, {.p L160}, .src = "dd L160"},		/* dd L160 11856 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; smudge'd dictionary entry, get the previous entry"},		/* dd M_fetch	; smudge'd dictionary entry, get the previous entry 11864 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 11872 */
+	{.type FromH0, {.p L161}, .src = "dd L161"},		/* dd L161 11880 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( a1 -- a1 a1)"},		/* dd M_dup	; ( a1 -- a1 a1) 11888 */
+	{.type FromH0, {.p C_cellplus}, .src = "dd C_cellplus	; ( a1 a1 -- a1 a1+8)"},		/* dd C_cellplus	; ( a1 a1 -- a1 a1+8) 11896 */
+	{.type FromH0, {.p C_count}, .src = "dd C_count	; ( a1 a1+8 -- a1 a1+8+1 n )"},		/* dd C_count	; ( a1 a1+8 -- a1 a1+8+1 n ) 11904 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 11912 */
+	{.type Absolute, {.p 63}},		/* dd 63 11920 */
+	{.type FromH0, {.p M_binand}, .src = "dd M_binand	; ( a1 a1+8+1 n 63 -- a1 a1+8+1 n&63=len )"},		/* dd M_binand	; ( a1 a1+8+1 n 63 -- a1 a1+8+1 n&63=len ) 11928 */
+	{.type FromH0, {.p MV_Findadr}, .src = "dd MV_Findadr"},		/* dd MV_Findadr 11936 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 11944 */
+	{.type FromH0, {.p C_count}, .src = "dd C_count	; ( a1 a1+8+1 len=n&63 a2 -- a1 a1+8+1 n&63 a2+1 n2 )"},		/* dd C_count	; ( a1 a1+8+1 len=n&63 a2 -- a1 a1+8+1 n&63 a2+1 n2 ) 11952 */
+	{.type FromH0, {.p C_compare}, .src = "dd C_compare	; ( a1 a1+8+1 len=n&63 a2+1 n2 -- a1 f ) compare dictionary entry with name"},		/* dd C_compare	; ( a1 a1+8+1 len=n&63 a2+1 n2 -- a1 f ) compare dictionary entry with name 11960 */
+	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq	; found a match?"},		/* dd C_0eq	; found a match? 11968 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 11976 */
+	{.type FromH0, {.p L162}, .src = "dd L162		; no match"},		/* dd L162		; no match 11984 */
+	{.type FromH0, {.p C_cellplus}, .src = "dd C_cellplus	; match found"},		/* dd C_cellplus	; match found 11992 */
+	{.type FromH0, {.p C_true}, .src = "dd C_true"},		/* dd C_true 12000 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 12008 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 12016 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 12024 */
+	{.type FromH0, {.p L158}, .src = "dd L158"},		/* dd L158 12032 */
+	{.type FromH0, {.p MV_Findadr}, .src = "dd MV_Findadr"},		/* dd MV_Findadr 12040 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 12048 */
+	{.type FromH0, {.p C_false}, .src = "dd C_false"},		/* dd C_false 12056 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 12064 */
+	{.type Header, {.hdr { 4, "find", /* C_find = 12080 */ colon }}}, /* CENTRY "find" find 4 ; ( a1 -- a2 f )? h 12088 */
+	{.type FromH0, {.p C_findname}, .src = "dd C_findname"},		/* dd C_findname 12096 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 12104 */
+	{.type FromH0, {.p L164}, .src = "dd L164"},		/* dd L164 12112 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 12120 */
+	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 12128 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 12136 */
+	{.type FromH0, {.p M_over}, .src = "dd M_over"},		/* dd M_over 12144 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12152 */
+	{.type Absolute, {.p 63}},		/* dd 63 12160 */
+	{.type FromH0, {.p M_binand}, .src = "dd M_binand"},		/* dd M_binand 12168 */
+	{.type FromH0, {.p M_plus}, .src = "dd M_plus"},		/* dd M_plus 12176 */
+	{.type FromH0, {.p C_1plus}, .src = "dd C_1plus"},		/* dd C_1plus 12184 */
+	{.type FromH0, {.p C_aligned}, .src = "dd C_aligned"},		/* dd C_aligned 12192 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 12200 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12208 */
+	{.type Absolute, {.p 128}},		/* dd 128 12216 */
+	{.type FromH0, {.p M_binand}, .src = "dd M_binand"},		/* dd M_binand 12224 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 12232 */
+	{.type FromH0, {.p L165}, .src = "dd L165"},		/* dd L165 12240 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12248 */
+	{.type Absolute, {.p 1}},		/* dd 1 12256 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 12264 */
+	{.type FromH0, {.p L166}, .src = "dd L166"},		/* dd L166 12272 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12280 */
+	{.type Absolute, {.p -1}},		/* dd -1 12288 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 12296 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 12304 */
+	{.type FromH0, {.p L167}, .src = "dd L167"},		/* dd L167 12312 */
+	{.type FromH0, {.p C_false}, .src = "dd C_false"},		/* dd C_false 12320 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 12328 */
+	{.type Header, {.hdr { 1, "'", /* C_single_quote = 12344 */ colon }}}, /* CENTRY "'" single_quote 1 h 12352 */
+	{.type FromH0, {.p C_bl}, .src = "dd C_bl"},		/* dd C_bl 12360 */
+	{.type FromH0, {.p C_word}, .src = "dd C_word"},		/* dd C_word 12368 */
+	{.type FromH0, {.p C_find}, .src = "dd C_find"},		/* dd C_find 12376 */
+	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq"},		/* dd C_0eq 12384 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 12392 */
+	{.type FromH0, {.p L169}, .src = "dd L169"},		/* dd L169 12400 */
+	{.type FromH0, {.p C_space}, .src = "dd C_space"},		/* dd C_space 12408 */
+	{.type FromH0, {.p C_count}, .src = "dd C_count"},		/* dd C_count 12416 */
+	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 12424 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12432 */
+	{.type FromH0, {.p L170}, .src = "dd L170"},		/* dd L170 12440 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12448 */
+	{.type Absolute, {.p 3}},		/* dd 3 12456 */
+	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 12464 */
+	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 12472 */
+	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 12480 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 12488 */
+	{.type Header, {.hdr { 6, "?stack", /* C_qstack = 12504 */ colon }}}, /* CENTRY "?stack" qstack 6 h 12512 */
+	{.type FromH0, {.p M_stackptr}, .src = "dd M_stackptr"},		/* dd M_stackptr 12520 */
+	{.type FromH0, {.p M_S0}, .src = "dd M_S0"},		/* dd M_S0 12528 */
+	{.type FromH0, {.p M_greater}, .src = "dd M_greater"},		/* dd M_greater 12536 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 12544 */
+	{.type FromH0, {.p L172}, .src = "dd L172"},		/* dd L172 12552 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12560 */
+	{.type FromH0, {.p L173}, .src = "dd L173"},		/* dd L173 12568 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12576 */
+	{.type Absolute, {.p 16}},		/* dd 16 12584 */
+	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 12592 */
+	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 12600 */
+	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 12608 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 12616 */
+	{.type FromH0, {.p MC_STDOUT}, .src = "dd MC_STDOUT	; ( str -- str 1) ; debug code to show the word found"},		/* dd MC_STDOUT	; ( str -- str 1) ; debug code to show the word found 12624 */
+	{.type FromH0, {.p M_over}, .src = "dd M_over		; ( str 1 str )"},		/* dd M_over		; ( str 1 str ) 12632 */
+	{.type FromH0, {.p C_count}, .src = "dd C_count 		; ( str 1 a n)"},		/* dd C_count 		; ( str 1 a n) 12640 */
+	{.type FromH0, {.p M_syswrite}, .src = "dd M_syswrite"},		/* dd M_syswrite 12648 */
+	{.type FromH0, {.p M_drop}, .src = "dd M_drop		; drop the return value of write"},		/* dd M_drop		; drop the return value of write 12656 */
+	{.type Header, {.hdr { 9, "interpret", /* C_interpret = 12680 */ colon }}}, /* CENTRY "interpret" interpret 9 ; there is stuff in TIB to be interpreted >In and >Limit are set h 12688 */
+	{.type FromH0, {.p C_bl}, .src = "dd C_bl"},		/* dd C_bl 12696 */
+	{.type FromH0, {.p C_word}, .src = "dd C_word	; ( bl -- a ) a = address of counted string"},		/* dd C_word	; ( bl -- a ) a = address of counted string 12704 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 12712 */
+	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 12720 */
+	{.type FromH0, {.p C_0neq}, .src = "dd C_0neq"},		/* dd C_0neq 12728 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 12736 */
+	{.type FromH0, {.p L176}, .src = "dd L176	; count at a = 0, drop a and exit"},		/* dd L176	; count at a = 0, drop a and exit 12744 */
+	{.type FromH0, {.p C_find}, .src = "dd C_find	; ( a -- a1 f ) a = address of counted string"},		/* dd C_find	; ( a -- a1 f ) a = address of counted string 12752 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 12760 */
+	{.type FromH0, {.p L177}, .src = "dd L177"},		/* dd L177 12768 */
+	{.type FromH0, {.p M_execute}, .src = "dd M_execute	; found in dictionary, execute"},		/* dd M_execute	; found in dictionary, execute 12776 */
+	{.type FromH0, {.p C_qstack}, .src = "dd C_qstack"},		/* dd C_qstack 12784 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 12792 */
+	{.type FromH0, {.p L178}, .src = "dd L178"},		/* dd L178 12800 */
+	{.type FromH0, {.p C_count}, .src = "dd C_count"},		/* dd C_count 12808 */
+	{.type FromH0, {.p C_number}, .src = "dd C_number"},		/* dd C_number 12816 */
+	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq"},		/* dd C_0eq 12824 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 12832 */
+	{.type FromH0, {.p L179}, .src = "dd L179"},		/* dd L179 12840 */
+	{.type FromH0, {.p C_space}, .src = "dd C_space	; the word is neither in the dictionary nor a number"},		/* dd C_space	; the word is neither in the dictionary nor a number 12848 */
+	{.type FromH0, {.p C_type}, .src = "dd C_type	; show the word"},		/* dd C_type	; show the word 12856 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12864 */
+	{.type FromH0, {.p L180}, .src = "dd L180	; error I?"},		/* dd L180	; error I? 12872 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 12880 */
+	{.type Absolute, {.p 3}},		/* dd 3 12888 */
+	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 12896 */
+	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 12904 */
+	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 12912 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 12920 */
+	{.type FromH0, {.p L175}, .src = "dd L175"},		/* dd L175 12928 */
+	{.type FromH0, {.p M_drop}, .src = "dd M_drop	; count at a = 0 ( a -- )"},		/* dd M_drop	; count at a = 0 ( a -- ) 12936 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 12944 */
+	{.type Header, {.hdr { 6, "create", /* C_create = 12960 */ colon }}}, /* CENTRY "create" create 6 ; compiles dictionary header until the pfa (link, len, name, cfa) h 12968 */
+	{.type FromH0, {.p C_align}, .src = "dd C_align	; sets Dp = aligned here"},		/* dd C_align	; sets Dp = aligned here 12976 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here	; ( -- here )"},		/* dd C_here	; ( -- here ) 12984 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( -- ) (R -- linkaddr )"},		/* dd M_rpush	; ( -- ) (R -- linkaddr ) 12992 */
+	{.type FromH0, {.p M_Dtop}, .src = "dd M_Dtop	; ( -- Dtop ) (R -- linkaddr )"},		/* dd M_Dtop	; ( -- Dtop ) (R -- linkaddr ) 13000 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; ( Dtop -- dtop ) (R -- linkaddr )"},		/* dd M_fetch	; ( Dtop -- dtop ) (R -- linkaddr ) 13008 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma	; ( dtop -- ) (R -- linkaddr )"},		/* dd C_comma	; ( dtop -- ) (R -- linkaddr ) 13016 */
+	{.type FromH0, {.p C_bl}, .src = "dd C_bl"},		/* dd C_bl 13024 */
+	{.type FromH0, {.p C_word}, .src = "dd C_word	; get the word from the input stream ( c -- a ) skip any c. Placed the counted string in a (as in Wordbuf)"},		/* dd C_word	; get the word from the input stream ( c -- a ) skip any c. Placed the counted string in a (as in Wordbuf) 13032 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( a -- a a ) (R -- linkaddr )"},		/* dd M_dup	; ( a -- a a ) (R -- linkaddr ) 13040 */
+	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch	; ( a a -- a len ) (R -- linkaddr )"},		/* dd M_cfetch	; ( a a -- a len ) (R -- linkaddr ) 13048 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here	; ( a len -- a len here ) (R -- linkaddr )"},		/* dd C_here	; ( a len -- a len here ) (R -- linkaddr ) 13056 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap	; ( a len here -- a here len ) (R -- linkaddr )"},		/* dd M_xswap	; ( a len here -- a here len ) (R -- linkaddr ) 13064 */
+	{.type FromH0, {.p C_1plus}, .src = "dd C_1plus	; ( a here len -- a here len+1 ) (R -- linkaddr ) using len+1 to copy even the length byte"},		/* dd C_1plus	; ( a here len -- a here len+1 ) (R -- linkaddr ) using len+1 to copy even the length byte 13072 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( a here len+1 -- a here len+1 len+1 ) (R -- linkaddr )"},		/* dd M_dup	; ( a here len+1 -- a here len+1 len+1 ) (R -- linkaddr ) 13080 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a here len+1 len+1 -- a here len+1 ) (R -- linkaddr len+1 )"},		/* dd M_rpush	; ( a here len+1 len+1 -- a here len+1 ) (R -- linkaddr len+1 ) 13088 */
+	{.type FromH0, {.p M_cmove}, .src = "dd M_cmove	; ( a here len+1 -- ) (R -- linkaddr len+1 )"},		/* dd M_cmove	; ( a here len+1 -- ) (R -- linkaddr len+1 ) 13096 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( -- len+1 ) (R -- linkaddr )"},		/* dd M_rpop	; ( -- len+1 ) (R -- linkaddr ) 13104 */
+	{.type FromH0, {.p C_allot}, .src = "dd C_allot	; ( -- ) (R -- linkaddr ) here = here+len+1"},		/* dd C_allot	; ( -- ) (R -- linkaddr ) here = here+len+1 13112 */
+	{.type FromH0, {.p C_align}, .src = "dd C_align	; sets Dp = aligned here"},		/* dd C_align	; sets Dp = aligned here 13120 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13128 */
+	{.type FromH0, {.p M_variable}, .src = "dd M_variable"},		/* dd M_variable 13136 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; ( -- variablecfa) (R -- linkaddr )"},		/* dd M_fetch	; ( -- variablecfa) (R -- linkaddr ) 13144 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma	; ( -- ) put the variablecfa into the cfa"},		/* dd C_comma	; ( -- ) put the variablecfa into the cfa 13152 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( -- linkaddr) (R -- )"},		/* dd M_rpop	; ( -- linkaddr) (R -- ) 13160 */
+	{.type FromH0, {.p M_Dtop}, .src = "dd M_Dtop"},		/* dd M_Dtop 13168 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; Dtop = just created link address"},		/* dd M_store	; Dtop = just created link address 13176 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 13184 */
+	{.type Header, {.hdr { 8, "variable", /* C_variable = 13208 */ colon }}}, /* CENTRY "variable" variable 8 ; compile to put the vhere then on the stack h 13216 */
+	{.type FromH0, {.p C_create}, .src = "dd C_create"},		/* dd C_create 13224 */
+	{.type FromH0, {.p C_vhere}, .src = "dd C_vhere"},		/* dd C_vhere 13232 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma	; put the next available variable location in pfa"},		/* dd C_comma	; put the next available variable location in pfa 13240 */
 	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13248 */
-	{.type FromH0, {.p M_constant}, .src = "dd M_constant"},		/* dd M_constant 13256 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; ( Contstantcfa -- (constant) )"},		/* dd M_fetch	; ( Contstantcfa -- (constant) ) 13264 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here	; ( (constant) -- (constant) here )"},		/* dd C_here	; ( (constant) -- (constant) here ) 13272 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13280 */
-	{.type Absolute, {.p 1}},		/* dd 1 13288 */
-	{.type FromH0, {.p C_cells}, .src = "dd C_cells	; ( (constant) here -- (constant) here 8 )"},		/* dd C_cells	; ( (constant) here -- (constant) here 8 ) 13296 */
-	{.type FromH0, {.p M_minus}, .src = "dd M_minus	; ( (constant) here 8 -- (constant) here-8 )"},		/* dd M_minus	; ( (constant) here 8 -- (constant) here-8 ) 13304 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; ( (constant) here-8 -- ) changed cfa from (variable) to (constant) "},		/* dd M_store	; ( (constant) here-8 -- ) changed cfa from (variable) to (constant)  13312 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma	; store n into the dictionary"},		/* dd C_comma	; store n into the dictionary 13320 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 13328 */
-	{.type Header, {.hdr { 9, "immediate", /* C_immediate = 13352 */ colon }}}, /* CENTRY "immediate" immediate 9 h 13360 */
-	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp"},		/* dd M_Dp 13368 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 13376 */
-	{.type FromH0, {.p C_cellplus}, .src = "dd C_cellplus"},		/* dd C_cellplus 13384 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 13392 */
-	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 13400 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13408 */
-	{.type Absolute, {.p 128}},		/* dd 128 13416 */
-	{.type FromH0, {.p M_binor}, .src = "dd M_binor"},		/* dd M_binor 13424 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 13432 */
-	{.type FromH0, {.p M_cstore}, .src = "dd M_cstore"},		/* dd M_cstore 13440 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 13448 */
-	{.type Header, {.hdr { 4, ">cfa", /* C_tocfa = 13464 */ colon }}}, /* CENTRY ">cfa" tocfa 4 h 13472 */
-	{.type FromH0, {.p C_count}, .src = "dd C_count"},		/* dd C_count 13480 */
+	{.type Absolute, {.p 1}},		/* dd 1 13256 */
+	{.type FromH0, {.p C_cells}, .src = "dd C_cells"},		/* dd C_cells 13264 */
+	{.type FromH0, {.p C_vallot}, .src = "dd C_vallot	; vhere = vhere+8, stored at Vp"},		/* dd C_vallot	; vhere = vhere+8, stored at Vp 13272 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 13280 */
+	{.type Header, {.hdr { 8, "constant", /* C_constant = 13304 */ colon }}}, /* CENTRY "constant" constant 8 ; ( n -- ) do the same as variable but change the cfa to (constant) h 13312 */
+	{.type FromH0, {.p C_create}, .src = "dd C_create	; create dictionary header upto the cfa"},		/* dd C_create	; create dictionary header upto the cfa 13320 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13328 */
+	{.type FromH0, {.p M_constant}, .src = "dd M_constant"},		/* dd M_constant 13336 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; ( Contstantcfa -- (constant) )"},		/* dd M_fetch	; ( Contstantcfa -- (constant) ) 13344 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here	; ( (constant) -- (constant) here )"},		/* dd C_here	; ( (constant) -- (constant) here ) 13352 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13360 */
+	{.type Absolute, {.p 1}},		/* dd 1 13368 */
+	{.type FromH0, {.p C_cells}, .src = "dd C_cells	; ( (constant) here -- (constant) here 8 )"},		/* dd C_cells	; ( (constant) here -- (constant) here 8 ) 13376 */
+	{.type FromH0, {.p M_minus}, .src = "dd M_minus	; ( (constant) here 8 -- (constant) here-8 )"},		/* dd M_minus	; ( (constant) here 8 -- (constant) here-8 ) 13384 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; ( (constant) here-8 -- ) changed cfa from (variable) to (constant) "},		/* dd M_store	; ( (constant) here-8 -- ) changed cfa from (variable) to (constant)  13392 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma	; store n into the dictionary"},		/* dd C_comma	; store n into the dictionary 13400 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 13408 */
+	{.type Header, {.hdr { 9, "immediate", /* C_immediate = 13432 */ colon }}}, /* CENTRY "immediate" immediate 9 h 13440 */
+	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp"},		/* dd M_Dp 13448 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 13456 */
+	{.type FromH0, {.p C_cellplus}, .src = "dd C_cellplus"},		/* dd C_cellplus 13464 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 13472 */
+	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 13480 */
 	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13488 */
-	{.type Absolute, {.p 63}},		/* dd 63 13496 */
-	{.type FromH0, {.p M_binand}, .src = "dd M_binand"},		/* dd M_binand 13504 */
-	{.type FromH0, {.p M_plus}, .src = "dd M_plus"},		/* dd M_plus 13512 */
-	{.type FromH0, {.p C_aligned}, .src = "dd C_aligned"},		/* dd C_aligned 13520 */
+	{.type Absolute, {.p 128}},		/* dd 128 13496 */
+	{.type FromH0, {.p M_binor}, .src = "dd M_binor"},		/* dd M_binor 13504 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 13512 */
+	{.type FromH0, {.p M_cstore}, .src = "dd M_cstore"},		/* dd M_cstore 13520 */
 	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 13528 */
-	{.type Header, {.hdr { 7, "compile", /* C_compile = 13544 */ colon }}}, /* CENTRY "compile" compile 7 h 13552 */
-	{.type FromH0, {.p C_findname}, .src = "dd C_findname"},		/* dd C_findname 13560 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 13568 */
-	{.type FromH0, {.p L188}, .src = "dd L188"},		/* dd L188 13576 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 13584 */
-	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 13592 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13600 */
-	{.type Absolute, {.p 128}},		/* dd 128 13608 */
-	{.type FromH0, {.p M_binand}, .src = "dd M_binand"},		/* dd M_binand 13616 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 13624 */
-	{.type FromH0, {.p L189}, .src = "dd L189"},		/* dd L189 13632 */
-	{.type FromH0, {.p C_tocfa}, .src = "dd C_tocfa	; immediate"},		/* dd C_tocfa	; immediate 13640 */
-	{.type FromH0, {.p M_execute}, .src = "dd M_execute"},		/* dd M_execute 13648 */
-	{.type FromH0, {.p C_qstack}, .src = "dd C_qstack"},		/* dd C_qstack 13656 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 13664 */
-	{.type FromH0, {.p L190}, .src = "dd L190"},		/* dd L190 13672 */
-	{.type FromH0, {.p C_tocfa}, .src = "dd C_tocfa"},		/* dd C_tocfa 13680 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 13688 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 13696 */
-	{.type FromH0, {.p L191}, .src = "dd L191"},		/* dd L191 13704 */
-	{.type FromH0, {.p C_count}, .src = "dd C_count"},		/* dd C_count 13712 */
-	{.type FromH0, {.p C_number}, .src = "dd C_number"},		/* dd C_number 13720 */
-	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq"},		/* dd C_0eq 13728 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 13736 */
-	{.type FromH0, {.p L192}, .src = "dd L192"},		/* dd L192 13744 */
-	{.type FromH0, {.p C_space}, .src = "dd C_space"},		/* dd C_space 13752 */
-	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 13760 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13768 */
-	{.type FromH0, {.p L193}, .src = "dd L193"},		/* dd L193 13776 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13784 */
-	{.type Absolute, {.p 3}},		/* dd 3 13792 */
-	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 13800 */
-	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 13808 */
-	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 13816 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 13824 */
-	{.type FromH0, {.p L194}, .src = "dd L194"},		/* dd L194 13832 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13840 */
+	{.type Header, {.hdr { 4, ">cfa", /* C_tocfa = 13544 */ colon }}}, /* CENTRY ">cfa" tocfa 4 h 13552 */
+	{.type FromH0, {.p C_count}, .src = "dd C_count"},		/* dd C_count 13560 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13568 */
+	{.type Absolute, {.p 63}},		/* dd 63 13576 */
+	{.type FromH0, {.p M_binand}, .src = "dd M_binand"},		/* dd M_binand 13584 */
+	{.type FromH0, {.p M_plus}, .src = "dd M_plus"},		/* dd M_plus 13592 */
+	{.type FromH0, {.p C_aligned}, .src = "dd C_aligned"},		/* dd C_aligned 13600 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 13608 */
+	{.type Header, {.hdr { 7, "compile", /* C_compile = 13624 */ colon }}}, /* CENTRY "compile" compile 7 h 13632 */
+	{.type FromH0, {.p C_findname}, .src = "dd C_findname"},		/* dd C_findname 13640 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 13648 */
+	{.type FromH0, {.p L188}, .src = "dd L188"},		/* dd L188 13656 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 13664 */
+	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 13672 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13680 */
+	{.type Absolute, {.p 128}},		/* dd 128 13688 */
+	{.type FromH0, {.p M_binand}, .src = "dd M_binand"},		/* dd M_binand 13696 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 13704 */
+	{.type FromH0, {.p L189}, .src = "dd L189"},		/* dd L189 13712 */
+	{.type FromH0, {.p C_tocfa}, .src = "dd C_tocfa	; immediate"},		/* dd C_tocfa	; immediate 13720 */
+	{.type FromH0, {.p M_execute}, .src = "dd M_execute"},		/* dd M_execute 13728 */
+	{.type FromH0, {.p C_qstack}, .src = "dd C_qstack"},		/* dd C_qstack 13736 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 13744 */
+	{.type FromH0, {.p L190}, .src = "dd L190"},		/* dd L190 13752 */
+	{.type FromH0, {.p C_tocfa}, .src = "dd C_tocfa"},		/* dd C_tocfa 13760 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 13768 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 13776 */
+	{.type FromH0, {.p L191}, .src = "dd L191"},		/* dd L191 13784 */
+	{.type FromH0, {.p C_count}, .src = "dd C_count"},		/* dd C_count 13792 */
+	{.type FromH0, {.p C_number}, .src = "dd C_number"},		/* dd C_number 13800 */
+	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq"},		/* dd C_0eq 13808 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 13816 */
+	{.type FromH0, {.p L192}, .src = "dd L192"},		/* dd L192 13824 */
+	{.type FromH0, {.p C_space}, .src = "dd C_space"},		/* dd C_space 13832 */
+	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 13840 */
 	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13848 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 13856 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 13864 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 13872 */
-	{.type Header, {.hdr { 1, "]", /* C_close_bracket = 13888 */ colon }}}, /* CENTRY "]" close_bracket 1 h 13896 */
-	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 13904 */
-	{.type FromH0, {.p C_on}, .src = "dd C_on"},		/* dd C_on 13912 */
-	{.type FromH0, {.p C_bl}, .src = "dd C_bl"},		/* dd C_bl 13920 */
-	{.type FromH0, {.p C_word}, .src = "dd C_word"},		/* dd C_word 13928 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 13936 */
-	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 13944 */
-	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq"},		/* dd C_0eq 13952 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 13960 */
-	{.type FromH0, {.p L197}, .src = "dd L197"},		/* dd L197 13968 */
-	{.type FromH0, {.p M_drop}, .src = "dd M_drop"},		/* dd M_drop 13976 */
-	{.type FromH0, {.p C_refill}, .src = "dd C_refill"},		/* dd C_refill 13984 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 13992 */
-	{.type FromH0, {.p L198}, .src = "dd L198"},		/* dd L198 14000 */
-	{.type FromH0, {.p C_compile}, .src = "dd C_compile"},		/* dd C_compile 14008 */
-	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 14016 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 14024 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 14032 */
-	{.type FromH0, {.p L199}, .src = "dd L199"},		/* dd L199 14040 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 14048 */
-	{.type FromH0, {.p L196}, .src = "dd L196"},		/* dd L196 14056 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14064 */
-	{.type IHeader, {.hdr { 1, "[", /* CI_open_bracket = 14080 */ colon }}}, /* CIENTRY "[" open_bracket 1 h 14088 */
+	{.type FromH0, {.p L193}, .src = "dd L193"},		/* dd L193 13856 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13864 */
+	{.type Absolute, {.p 3}},		/* dd 3 13872 */
+	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 13880 */
+	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 13888 */
+	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 13896 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 13904 */
+	{.type FromH0, {.p L194}, .src = "dd L194"},		/* dd L194 13912 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13920 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 13928 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 13936 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 13944 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 13952 */
+	{.type Header, {.hdr { 1, "]", /* C_close_bracket = 13968 */ colon }}}, /* CENTRY "]" close_bracket 1 h 13976 */
+	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 13984 */
+	{.type FromH0, {.p C_on}, .src = "dd C_on"},		/* dd C_on 13992 */
+	{.type FromH0, {.p C_bl}, .src = "dd C_bl"},		/* dd C_bl 14000 */
+	{.type FromH0, {.p C_word}, .src = "dd C_word"},		/* dd C_word 14008 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 14016 */
+	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 14024 */
+	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq"},		/* dd C_0eq 14032 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 14040 */
+	{.type FromH0, {.p L197}, .src = "dd L197"},		/* dd L197 14048 */
+	{.type FromH0, {.p M_drop}, .src = "dd M_drop"},		/* dd M_drop 14056 */
+	{.type FromH0, {.p C_refill}, .src = "dd C_refill	; no more refills when there is no Acceptvec. Is it a problem? did not dig through to figure out"},		/* dd C_refill	; no more refills when there is no Acceptvec. Is it a problem? did not dig through to figure out 14064 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 14072 */
+	{.type FromH0, {.p L198}, .src = "dd L198"},		/* dd L198 14080 */
+	{.type FromH0, {.p C_compile}, .src = "dd C_compile"},		/* dd C_compile 14088 */
 	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 14096 */
-	{.type FromH0, {.p C_off}, .src = "dd C_off"},		/* dd C_off 14104 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14112 */
-	{.type Header, {.hdr { 6, "smudge", /* C_smudge = 14128 */ colon }}}, /* CENTRY "smudge" smudge 6 h 14136 */
-	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp"},		/* dd M_Dp 14144 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 14152 */
-	{.type FromH0, {.p C_cellplus}, .src = "dd C_cellplus"},		/* dd C_cellplus 14160 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 14168 */
-	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 14176 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14184 */
-	{.type Absolute, {.p 64}},		/* dd 64 14192 */
-	{.type FromH0, {.p M_binor}, .src = "dd M_binor"},		/* dd M_binor 14200 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 14208 */
-	{.type FromH0, {.p M_cstore}, .src = "dd M_cstore"},		/* dd M_cstore 14216 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14224 */
-	{.type Header, {.hdr { 6, "reveal", /* C_reveal = 14240 */ colon }}}, /* CENTRY "reveal" reveal 6 h 14248 */
-	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp"},		/* dd M_Dp 14256 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 14264 */
-	{.type FromH0, {.p C_cellplus}, .src = "dd C_cellplus"},		/* dd C_cellplus 14272 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 14280 */
-	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 14288 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14296 */
-	{.type Absolute, {.p 64}},		/* dd 64 14304 */
-	{.type FromH0, {.p C_invert}, .src = "dd C_invert"},		/* dd C_invert 14312 */
-	{.type FromH0, {.p M_binand}, .src = "dd M_binand"},		/* dd M_binand 14320 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 14328 */
-	{.type FromH0, {.p M_cstore}, .src = "dd M_cstore"},		/* dd M_cstore 14336 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14344 */
-	{.type Header, {.hdr { 1, ":", /* C_colon = 14360 */ colon }}}, /* CENTRY ":" colon 1 h 14368 */
-	{.type FromH0, {.p C_create}, .src = "dd C_create	; create a dictionary header with (variable) at cfa"},		/* dd C_create	; create a dictionary header with (variable) at cfa 14376 */
-	{.type FromH0, {.p C_smudge}, .src = "dd C_smudge"},		/* dd C_smudge 14384 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14392 */
-	{.type FromH0, {.p M_colon}, .src = "dd M_colon"},		/* dd M_colon 14400 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; ( Coloncfa -- (colon) ) fetches the cfa of M_colon"},		/* dd M_fetch	; ( Coloncfa -- (colon) ) fetches the cfa of M_colon 14408 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here	; ( (colon) -- (colon) here )"},		/* dd C_here	; ( (colon) -- (colon) here ) 14416 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14424 */
-	{.type Absolute, {.p 1}},		/* dd 1 14432 */
-	{.type FromH0, {.p C_cells}, .src = "dd C_cells"},		/* dd C_cells 14440 */
-	{.type FromH0, {.p M_minus}, .src = "dd M_minus	; ( (colon) here -- (colon) here-8 )"},		/* dd M_minus	; ( (colon) here -- (colon) here-8 ) 14448 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; ( (colon) here-8 -- ) change the cfa from (variable) to colon"},		/* dd M_store	; ( (colon) here-8 -- ) change the cfa from (variable) to colon 14456 */
-	{.type FromH0, {.p C_close_bracket}, .src = "dd C_close_bracket"},		/* dd C_close_bracket 14464 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14472 */
-	{.type IHeader, {.hdr { 1, ";", /* CI_semicolon = 14488 */ colon }}}, /* CIENTRY ";" semicolon 1 h 14496 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 14104 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 14112 */
+	{.type FromH0, {.p L199}, .src = "dd L199"},		/* dd L199 14120 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 14128 */
+	{.type FromH0, {.p L196}, .src = "dd L196"},		/* dd L196 14136 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14144 */
+	{.type IHeader, {.hdr { 1, "[", /* CI_open_bracket = 14160 */ colon }}}, /* CIENTRY "[" open_bracket 1 h 14168 */
+	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 14176 */
+	{.type FromH0, {.p C_off}, .src = "dd C_off"},		/* dd C_off 14184 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14192 */
+	{.type Header, {.hdr { 6, "smudge", /* C_smudge = 14208 */ colon }}}, /* CENTRY "smudge" smudge 6 h 14216 */
+	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp"},		/* dd M_Dp 14224 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 14232 */
+	{.type FromH0, {.p C_cellplus}, .src = "dd C_cellplus"},		/* dd C_cellplus 14240 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 14248 */
+	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 14256 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14264 */
+	{.type Absolute, {.p 64}},		/* dd 64 14272 */
+	{.type FromH0, {.p M_binor}, .src = "dd M_binor"},		/* dd M_binor 14280 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 14288 */
+	{.type FromH0, {.p M_cstore}, .src = "dd M_cstore"},		/* dd M_cstore 14296 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14304 */
+	{.type Header, {.hdr { 6, "reveal", /* C_reveal = 14320 */ colon }}}, /* CENTRY "reveal" reveal 6 h 14328 */
+	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp"},		/* dd M_Dp 14336 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 14344 */
+	{.type FromH0, {.p C_cellplus}, .src = "dd C_cellplus"},		/* dd C_cellplus 14352 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 14360 */
+	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 14368 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14376 */
+	{.type Absolute, {.p 64}},		/* dd 64 14384 */
+	{.type FromH0, {.p C_invert}, .src = "dd C_invert"},		/* dd C_invert 14392 */
+	{.type FromH0, {.p M_binand}, .src = "dd M_binand"},		/* dd M_binand 14400 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 14408 */
+	{.type FromH0, {.p M_cstore}, .src = "dd M_cstore"},		/* dd M_cstore 14416 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14424 */
+	{.type Header, {.hdr { 1, ":", /* C_colon = 14440 */ colon }}}, /* CENTRY ":" colon 1 h 14448 */
+	{.type FromH0, {.p C_create}, .src = "dd C_create	; create a dictionary header with (variable) at cfa"},		/* dd C_create	; create a dictionary header with (variable) at cfa 14456 */
+	{.type FromH0, {.p C_smudge}, .src = "dd C_smudge"},		/* dd C_smudge 14464 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14472 */
+	{.type FromH0, {.p M_colon}, .src = "dd M_colon"},		/* dd M_colon 14480 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; ( Coloncfa -- (colon) ) fetches the cfa of M_colon"},		/* dd M_fetch	; ( Coloncfa -- (colon) ) fetches the cfa of M_colon 14488 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here	; ( (colon) -- (colon) here )"},		/* dd C_here	; ( (colon) -- (colon) here ) 14496 */
 	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14504 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14512 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 14520 */
-	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 14528 */
-	{.type FromH0, {.p C_off}, .src = "dd C_off"},		/* dd C_off 14536 */
-	{.type FromH0, {.p C_reveal}, .src = "dd C_reveal"},		/* dd C_reveal 14544 */
+	{.type Absolute, {.p 1}},		/* dd 1 14512 */
+	{.type FromH0, {.p C_cells}, .src = "dd C_cells"},		/* dd C_cells 14520 */
+	{.type FromH0, {.p M_minus}, .src = "dd M_minus	; ( (colon) here -- (colon) here-8 )"},		/* dd M_minus	; ( (colon) here -- (colon) here-8 ) 14528 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; ( (colon) here-8 -- ) change the cfa from (variable) to colon"},		/* dd M_store	; ( (colon) here-8 -- ) change the cfa from (variable) to colon 14536 */
+	{.type FromH0, {.p C_close_bracket}, .src = "dd C_close_bracket"},		/* dd C_close_bracket 14544 */
 	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14552 */
-	{.type IHeader, {.hdr { 7, "recurse", /* CI_recurse = 14568 */ colon }}}, /* CIENTRY "recurse" recurse 7 h 14576 */
-	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp"},		/* dd M_Dp 14584 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 14592 */
-	{.type FromH0, {.p C_cellplus}, .src = "dd C_cellplus"},		/* dd C_cellplus 14600 */
-	{.type FromH0, {.p C_tocfa}, .src = "dd C_tocfa"},		/* dd C_tocfa 14608 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 14616 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14624 */
-	{.type Header, {.hdr { 4, "char", /* C_char = 14640 */ colon }}}, /* CENTRY "char" char 4 ; ( -- c ) fetch the first character of the next word from input h 14648 */
-	{.type FromH0, {.p C_bl}, .src = "dd C_bl"},		/* dd C_bl 14656 */
-	{.type FromH0, {.p C_word}, .src = "dd C_word	; ( c -- a ) puts the address of the counted string from the input on the stack"},		/* dd C_word	; ( c -- a ) puts the address of the counted string from the input on the stack 14664 */
-	{.type FromH0, {.p C_1plus}, .src = "dd C_1plus	; skip the count"},		/* dd C_1plus	; skip the count 14672 */
-	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch	; fetch the first character"},		/* dd M_cfetch	; fetch the first character 14680 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14688 */
-	{.type Header, {.hdr { 7, "literal", /* C_literal = 14704 */ colon }}}, /* CENTRY "literal" literal 7 ; ( n -- ) adds (literal) n to the dictionary h 14712 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14720 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14728 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 14736 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 14744 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14752 */
-	{.type Header, {.hdr { 8, "sliteral", /* C_sliteral = 14776 */ colon }}}, /* CENTRY "sliteral" sliteral 8 ; ( -- ) adds (sliteral) a n to the dictionary h 14784 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14792 */
-	{.type FromH0, {.p M_sliteral}, .src = "dd M_sliteral"},		/* dd M_sliteral 14800 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma	; adds (sliteral) to the dictionary"},		/* dd C_comma	; adds (sliteral) to the dictionary 14808 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here	; ( -- here)"},		/* dd C_here	; ( -- here) 14816 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14824 */
-	{.type Absolute, {.p 34}},		/* dd 34		; ascii value of " 14832 */
-	{.type FromH0, {.p C_parse}, .src = "dd C_parse	; ( here \" -- here a ) \" = word delimiter. a = address of counted string (in Wordbuf)."},		/* dd C_parse	; ( here \" -- here a ) \" = word delimiter. a = address of counted string (in Wordbuf). 14840 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( here a -- here a a )"},		/* dd M_dup	; ( here a -- here a a ) 14848 */
-	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch	; ( here a a -- here a n )"},		/* dd M_cfetch	; ( here a a -- here a n ) 14856 */
-	{.type FromH0, {.p C_1plus}, .src = "dd C_1plus	; ( here a n -- here a n+1 ) n+1 as 1 for the count and n for the length of the string"},		/* dd C_1plus	; ( here a n -- here a n+1 ) n+1 as 1 for the count and n for the length of the string 14864 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( here a n+1 -- here a ) (R -- n+1)"},		/* dd M_rpush	; ( here a n+1 -- here a ) (R -- n+1) 14872 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap	; ( here a -- a here ) (R -- n+1)"},		/* dd M_xswap	; ( here a -- a here ) (R -- n+1) 14880 */
-	{.type FromH0, {.p M_rfetch}, .src = "dd M_rfetch	; ( a here -- a here n+1 ) (R -- n+1 )"},		/* dd M_rfetch	; ( a here -- a here n+1 ) (R -- n+1 ) 14888 */
-	{.type FromH0, {.p M_cmove}, .src = "dd M_cmove	; ( a here n+1 -- ) moves n+1 from a to here"},		/* dd M_cmove	; ( a here n+1 -- ) moves n+1 from a to here 14896 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( -- n+1 ) (R -- )"},		/* dd M_rpop	; ( -- n+1 ) (R -- ) 14904 */
-	{.type FromH0, {.p C_allot}, .src = "dd C_allot	; ( n+1 -- ) here = here+n+1"},		/* dd C_allot	; ( n+1 -- ) here = here+n+1 14912 */
-	{.type FromH0, {.p C_align}, .src = "dd C_align	; align here"},		/* dd C_align	; align here 14920 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14928 */
-	{.type Header, {.hdr { 6, "string", /* C_string = 14944 */ colon }}}, /* CENTRY "string" string 6 ; ( c -- ) h 14952 */
-	{.type FromH0, {.p C_word}, .src = "dd C_word"},		/* dd C_word 14960 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 14968 */
-	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 14976 */
-	{.type FromH0, {.p C_1plus}, .src = "dd C_1plus"},		/* dd C_1plus 14984 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush"},		/* dd M_rpush 14992 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 15000 */
-	{.type FromH0, {.p M_rfetch}, .src = "dd M_rfetch"},		/* dd M_rfetch 15008 */
-	{.type FromH0, {.p M_cmove}, .src = "dd M_cmove"},		/* dd M_cmove 15016 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop"},		/* dd M_rpop 15024 */
-	{.type FromH0, {.p C_allot}, .src = "dd C_allot"},		/* dd C_allot 15032 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15040 */
-	{.type IHeader, {.hdr { 6, "[char]", /* CI_char_brackets = 15056 */ colon }}}, /* CIENTRY "[char]" char_brackets 6 ; take the next character from the input stream during compilation h 15064 */
-	{.type FromH0, {.p C_bl}, .src = "dd C_bl"},		/* dd C_bl 15072 */
-	{.type FromH0, {.p C_word}, .src = "dd C_word"},		/* dd C_word 15080 */
-	{.type FromH0, {.p C_1plus}, .src = "dd C_1plus"},		/* dd C_1plus 15088 */
-	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 15096 */
-	{.type FromH0, {.p C_literal}, .src = "dd C_literal"},		/* dd C_literal 15104 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15112 */
-	{.type IHeader, {.hdr { 3, "[']", /* CI_quote_brackets = 15128 */ colon }}}, /* CIENTRY "[']" quote_brackets 3 ; take the address of next token from the input stream during compilation h 15136 */
-	{.type FromH0, {.p C_single_quote}, .src = "dd C_single_quote"},		/* dd C_single_quote 15144 */
-	{.type FromH0, {.p C_literal}, .src = "dd C_literal"},		/* dd C_literal 15152 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15160 */
-	{.type IHeader, {.hdr { 1, "(", /* CI_openparen = 15176 */ colon }}}, /* CIENTRY "(" openparen 1 ; ignore until ) from the input stream during compilation h 15184 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 15192 */
-	{.type Absolute, {.p 41}},		/* dd 41 15200 */
-	{.type FromH0, {.p C_parse}, .src = "dd C_parse"},		/* dd C_parse 15208 */
-	{.type FromH0, {.p M_drop}, .src = "dd M_drop"},		/* dd M_drop 15216 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15224 */
-/* ; if the line is longer than Tib, then skipping this line is not good enough. hence, throwing an error when >Limit == Tib length */	{.type IHeader, {.hdr { 1, "\\", /* CI_backslash = 15240 */ colon }}}, /* CIENTRY "\\" backslash 1 h 15248 */
-	{.type FromH0, {.p MV_toLimit}, .src = "dd MV_toLimit"},		/* dd MV_toLimit 15256 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 15264 */
-	{.type FromH0, {.p MV_toIn}, .src = "dd MV_toIn"},		/* dd MV_toIn 15272 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 15280 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15288 */
-	{.type Header, {.hdr { 8, "(?abort)", /* C_qabort_parens = 15312 */ colon }}}, /* CENTRY "(?abort)" qabort_parens 8 h 15320 */
-	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 15328 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 15336 */
-	{.type FromH0, {.p L217}, .src = "dd L217"},		/* dd L217 15344 */
-	{.type FromH0, {.p C_space}, .src = "dd C_space"},		/* dd C_space 15352 */
-	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 15360 */
-	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 15368 */
-	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 15376 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 15384 */
-	{.type FromH0, {.p L218}, .src = "dd L218"},		/* dd L218 15392 */
-	{.type FromH0, {.p C_2drop}, .src = "dd C_2drop"},		/* dd C_2drop 15400 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15408 */
-	{.type IHeader, {.hdr { 6, "abort\"", /* CI_abort_double_quote = 15424 */ colon }}}, /* CIENTRY "abort\"" abort_double_quote 6 h 15432 */
-	{.type FromH0, {.p C_sliteral}, .src = "dd C_sliteral"},		/* dd C_sliteral 15440 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 15448 */
-	{.type FromH0, {.p C_qabort_parens}, .src = "dd C_qabort_parens"},		/* dd C_qabort_parens 15456 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 15464 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15472 */
-	{.type Header, {.hdr { 1, "\"", /* C_double_quote = 15488 */ colon }}}, /* CENTRY "\"" double_quote 1 ; stores counted string in the dictionary and also leaves the address count of the string on the stack - used to use strings at the interpreter prompt h 15496 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 15504 */
-	{.type Absolute, {.p 34}},		/* dd 34 15512 */
-	{.type FromH0, {.p C_word}, .src = "dd C_word"},		/* dd C_word 15520 */
-	{.type FromH0, {.p C_count}, .src = "dd C_count"},		/* dd C_count 15528 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush"},		/* dd M_rpush 15536 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 15544 */
-	{.type FromH0, {.p M_rfetch}, .src = "dd M_rfetch"},		/* dd M_rfetch 15552 */
-	{.type FromH0, {.p M_cmove}, .src = "dd M_cmove"},		/* dd M_cmove 15560 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 15568 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop"},		/* dd M_rpop 15576 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 15584 */
-	{.type FromH0, {.p C_allot}, .src = "dd C_allot"},		/* dd C_allot 15592 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15600 */
-	{.type Header, {.hdr { 2, "c\"", /* C_cdouble_quote = 15616 */ colon }}}, /* CENTRY "c\"" cdouble_quote 2 ; stores counted string in the dictionary and also leaves the address of the counted string on the stack h 15624 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 15632 */
-	{.type Absolute, {.p 34}},		/* dd 34		; ( -- \" ) 15640 */
-	{.type FromH0, {.p C_word}, .src = "dd C_word	; ( \" -- a ) a = counted string address. a will be in Wordbuf"},		/* dd C_word	; ( \" -- a ) a = counted string address. a will be in Wordbuf 15648 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( a -- a a)"},		/* dd M_dup	; ( a -- a a) 15656 */
-	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch	; ( a a -- a n )"},		/* dd M_cfetch	; ( a a -- a n ) 15664 */
-	{.type FromH0, {.p C_1plus}, .src = "dd C_1plus	; ( a n -- a n+1 )"},		/* dd C_1plus	; ( a n -- a n+1 ) 15672 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a n -- a ) (R -- n+1)"},		/* dd M_rpush	; ( a n -- a ) (R -- n+1) 15680 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here	; ( a -- a here ) (R -- n+1)"},		/* dd C_here	; ( a -- a here ) (R -- n+1) 15688 */
-	{.type FromH0, {.p M_rfetch}, .src = "dd M_rfetch	; ( a here -- a here n+1) (R -- n+1)"},		/* dd M_rfetch	; ( a here -- a here n+1) (R -- n+1) 15696 */
-	{.type FromH0, {.p M_cmove}, .src = "dd M_cmove	; move counted string from a to here"},		/* dd M_cmove	; move counted string from a to here 15704 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here	; ( -- here )"},		/* dd C_here	; ( -- here ) 15712 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( here -- here n+1 )(R -- )"},		/* dd M_rpop	; ( here -- here n+1 )(R -- ) 15720 */
-	{.type FromH0, {.p C_allot}, .src = "dd C_allot	; ( here n+1 -- here) here += n+1"},		/* dd C_allot	; ( here n+1 -- here) here += n+1 15728 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15736 */
-	{.type IHeader, {.hdr { 2, "s\"", /* CI_sdouble_quote = 15752 */ colon }}}, /* CIENTRY "s\"" sdouble_quote 2 ; add the string from the input stream to the dictionary as (sliteral) count string - at run-time puts the ( -- addr n) of the counted string on the stack. h 15760 */
-	{.type FromH0, {.p C_sliteral}, .src = "dd C_sliteral"},		/* dd C_sliteral 15768 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15776 */
-	{.type IHeader, {.hdr { 2, ".\"", /* CI_dotstr = 15792 */ colon }}}, /* CIENTRY ".\"" dotstr 2 ; do what s" does and then add a type word to the dictionary to print that string h 15800 */
-	{.type FromH0, {.p C_sliteral}, .src = "dd C_sliteral"},		/* dd C_sliteral 15808 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 15816 */
-	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 15824 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 15832 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15840 */
-	{.type IHeader, {.hdr { 2, "if", /* CI_if = 15856 */ colon }}}, /* CIENTRY "if" if 2 h 15864 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 15872 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 15880 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 15888 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 15896 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 15904 */
-	{.type Absolute, {.p 0}},		/* dd 0 15912 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 15920 */
+	{.type IHeader, {.hdr { 1, ";", /* CI_semicolon = 14568 */ colon }}}, /* CIENTRY ";" semicolon 1 h 14576 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14584 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14592 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 14600 */
+	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 14608 */
+	{.type FromH0, {.p C_off}, .src = "dd C_off"},		/* dd C_off 14616 */
+	{.type FromH0, {.p C_reveal}, .src = "dd C_reveal"},		/* dd C_reveal 14624 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14632 */
+	{.type IHeader, {.hdr { 7, "recurse", /* CI_recurse = 14648 */ colon }}}, /* CIENTRY "recurse" recurse 7 h 14656 */
+	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp"},		/* dd M_Dp 14664 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 14672 */
+	{.type FromH0, {.p C_cellplus}, .src = "dd C_cellplus"},		/* dd C_cellplus 14680 */
+	{.type FromH0, {.p C_tocfa}, .src = "dd C_tocfa"},		/* dd C_tocfa 14688 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 14696 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14704 */
+	{.type Header, {.hdr { 4, "char", /* C_char = 14720 */ colon }}}, /* CENTRY "char" char 4 ; ( -- c ) fetch the first character of the next word from input h 14728 */
+	{.type FromH0, {.p C_bl}, .src = "dd C_bl"},		/* dd C_bl 14736 */
+	{.type FromH0, {.p C_word}, .src = "dd C_word	; ( c -- a ) puts the address of the counted string from the input on the stack"},		/* dd C_word	; ( c -- a ) puts the address of the counted string from the input on the stack 14744 */
+	{.type FromH0, {.p C_1plus}, .src = "dd C_1plus	; skip the count"},		/* dd C_1plus	; skip the count 14752 */
+	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch	; fetch the first character"},		/* dd M_cfetch	; fetch the first character 14760 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14768 */
+	{.type Header, {.hdr { 7, "literal", /* C_literal = 14784 */ colon }}}, /* CENTRY "literal" literal 7 ; ( n -- ) adds (literal) n to the dictionary h 14792 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14800 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14808 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 14816 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 14824 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 14832 */
+	{.type Header, {.hdr { 8, "sliteral", /* C_sliteral = 14856 */ colon }}}, /* CENTRY "sliteral" sliteral 8 ; ( -- ) adds (sliteral) a n to the dictionary h 14864 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14872 */
+	{.type FromH0, {.p M_sliteral}, .src = "dd M_sliteral"},		/* dd M_sliteral 14880 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma	; adds (sliteral) to the dictionary"},		/* dd C_comma	; adds (sliteral) to the dictionary 14888 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here	; ( -- here)"},		/* dd C_here	; ( -- here) 14896 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 14904 */
+	{.type Absolute, {.p 34}},		/* dd 34		; ascii value of " 14912 */
+	{.type FromH0, {.p C_parse}, .src = "dd C_parse	; ( here \" -- here a ) \" = word delimiter. a = address of counted string (in Wordbuf)."},		/* dd C_parse	; ( here \" -- here a ) \" = word delimiter. a = address of counted string (in Wordbuf). 14920 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( here a -- here a a )"},		/* dd M_dup	; ( here a -- here a a ) 14928 */
+	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch	; ( here a a -- here a n )"},		/* dd M_cfetch	; ( here a a -- here a n ) 14936 */
+	{.type FromH0, {.p C_1plus}, .src = "dd C_1plus	; ( here a n -- here a n+1 ) n+1 as 1 for the count and n for the length of the string"},		/* dd C_1plus	; ( here a n -- here a n+1 ) n+1 as 1 for the count and n for the length of the string 14944 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( here a n+1 -- here a ) (R -- n+1)"},		/* dd M_rpush	; ( here a n+1 -- here a ) (R -- n+1) 14952 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap	; ( here a -- a here ) (R -- n+1)"},		/* dd M_xswap	; ( here a -- a here ) (R -- n+1) 14960 */
+	{.type FromH0, {.p M_rfetch}, .src = "dd M_rfetch	; ( a here -- a here n+1 ) (R -- n+1 )"},		/* dd M_rfetch	; ( a here -- a here n+1 ) (R -- n+1 ) 14968 */
+	{.type FromH0, {.p M_cmove}, .src = "dd M_cmove	; ( a here n+1 -- ) moves n+1 from a to here"},		/* dd M_cmove	; ( a here n+1 -- ) moves n+1 from a to here 14976 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( -- n+1 ) (R -- )"},		/* dd M_rpop	; ( -- n+1 ) (R -- ) 14984 */
+	{.type FromH0, {.p C_allot}, .src = "dd C_allot	; ( n+1 -- ) here = here+n+1"},		/* dd C_allot	; ( n+1 -- ) here = here+n+1 14992 */
+	{.type FromH0, {.p C_align}, .src = "dd C_align	; align here"},		/* dd C_align	; align here 15000 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15008 */
+	{.type Header, {.hdr { 6, "string", /* C_string = 15024 */ colon }}}, /* CENTRY "string" string 6 ; ( c -- ) h 15032 */
+	{.type FromH0, {.p C_word}, .src = "dd C_word"},		/* dd C_word 15040 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 15048 */
+	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 15056 */
+	{.type FromH0, {.p C_1plus}, .src = "dd C_1plus"},		/* dd C_1plus 15064 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush"},		/* dd M_rpush 15072 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 15080 */
+	{.type FromH0, {.p M_rfetch}, .src = "dd M_rfetch"},		/* dd M_rfetch 15088 */
+	{.type FromH0, {.p M_cmove}, .src = "dd M_cmove"},		/* dd M_cmove 15096 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop"},		/* dd M_rpop 15104 */
+	{.type FromH0, {.p C_allot}, .src = "dd C_allot"},		/* dd C_allot 15112 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15120 */
+	{.type IHeader, {.hdr { 6, "[char]", /* CI_char_brackets = 15136 */ colon }}}, /* CIENTRY "[char]" char_brackets 6 ; take the next character from the input stream during compilation h 15144 */
+	{.type FromH0, {.p C_bl}, .src = "dd C_bl"},		/* dd C_bl 15152 */
+	{.type FromH0, {.p C_word}, .src = "dd C_word"},		/* dd C_word 15160 */
+	{.type FromH0, {.p C_1plus}, .src = "dd C_1plus"},		/* dd C_1plus 15168 */
+	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 15176 */
+	{.type FromH0, {.p C_literal}, .src = "dd C_literal"},		/* dd C_literal 15184 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15192 */
+	{.type IHeader, {.hdr { 3, "[']", /* CI_quote_brackets = 15208 */ colon }}}, /* CIENTRY "[']" quote_brackets 3 ; take the address of next token from the input stream during compilation h 15216 */
+	{.type FromH0, {.p C_single_quote}, .src = "dd C_single_quote"},		/* dd C_single_quote 15224 */
+	{.type FromH0, {.p C_literal}, .src = "dd C_literal"},		/* dd C_literal 15232 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15240 */
+	{.type IHeader, {.hdr { 1, "(", /* CI_openparen = 15256 */ colon }}}, /* CIENTRY "(" openparen 1 ; ignore until ) from the input stream during compilation h 15264 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 15272 */
+	{.type Absolute, {.p 41}},		/* dd 41 15280 */
+	{.type FromH0, {.p C_parse}, .src = "dd C_parse"},		/* dd C_parse 15288 */
+	{.type FromH0, {.p M_drop}, .src = "dd M_drop"},		/* dd M_drop 15296 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15304 */
+/* ; if the line is longer than Tib, then skipping this line is not good enough. hence, throwing an error when >Limit == Tib length */	{.type IHeader, {.hdr { 1, "\\", /* CI_backslash = 15320 */ colon }}}, /* CIENTRY "\\" backslash 1 ; when there is no Acceptvec, find a newline in the buffer and skip until that h 15328 */
+	{.type FromH0, {.p MV_Acceptvec}, .src = "dd MV_Acceptvec"},		/* dd MV_Acceptvec 15336 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 15344 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 15352 */
+	{.type FromH0, {.p L214}, .src = "dd L214		; there is no Acceptvec, we are processing a buffer"},		/* dd L214		; there is no Acceptvec, we are processing a buffer 15360 */
+	{.type FromH0, {.p MV_toLimit}, .src = "dd MV_toLimit	; there is an Acceptvec, skip the rest of this line"},		/* dd MV_toLimit	; there is an Acceptvec, skip the rest of this line 15368 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 15376 */
+	{.type FromH0, {.p MV_toIn}, .src = "dd MV_toIn"},		/* dd MV_toIn 15384 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 15392 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15400 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 15408 */
+	{.type Absolute, {.p 10}},		/* dd 10 15416 */
+	{.type FromH0, {.p C_parse}, .src = "dd C_parse	; find the next 10 = LF character"},		/* dd C_parse	; find the next 10 = LF character 15424 */
+	{.type FromH0, {.p M_drop}, .src = "dd M_drop	; skip all characters not equal to 10"},		/* dd M_drop	; skip all characters not equal to 10 15432 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15440 */
+	{.type Header, {.hdr { 8, "(?abort)", /* C_qabort_parens = 15464 */ colon }}}, /* CENTRY "(?abort)" qabort_parens 8 h 15472 */
+	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 15480 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 15488 */
+	{.type FromH0, {.p L217}, .src = "dd L217"},		/* dd L217 15496 */
+	{.type FromH0, {.p C_space}, .src = "dd C_space"},		/* dd C_space 15504 */
+	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 15512 */
+	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 15520 */
+	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 15528 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 15536 */
+	{.type FromH0, {.p L218}, .src = "dd L218"},		/* dd L218 15544 */
+	{.type FromH0, {.p C_2drop}, .src = "dd C_2drop"},		/* dd C_2drop 15552 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15560 */
+	{.type IHeader, {.hdr { 6, "abort\"", /* CI_abort_double_quote = 15576 */ colon }}}, /* CIENTRY "abort\"" abort_double_quote 6 h 15584 */
+	{.type FromH0, {.p C_sliteral}, .src = "dd C_sliteral"},		/* dd C_sliteral 15592 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 15600 */
+	{.type FromH0, {.p C_qabort_parens}, .src = "dd C_qabort_parens"},		/* dd C_qabort_parens 15608 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 15616 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15624 */
+	{.type Header, {.hdr { 1, "\"", /* C_double_quote = 15640 */ colon }}}, /* CENTRY "\"" double_quote 1 ; stores counted string in the dictionary and also leaves the address count of the string on the stack - used to use strings at the interpreter prompt h 15648 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 15656 */
+	{.type Absolute, {.p 34}},		/* dd 34 15664 */
+	{.type FromH0, {.p C_word}, .src = "dd C_word"},		/* dd C_word 15672 */
+	{.type FromH0, {.p C_count}, .src = "dd C_count"},		/* dd C_count 15680 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush"},		/* dd M_rpush 15688 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 15696 */
+	{.type FromH0, {.p M_rfetch}, .src = "dd M_rfetch"},		/* dd M_rfetch 15704 */
+	{.type FromH0, {.p M_cmove}, .src = "dd M_cmove"},		/* dd M_cmove 15712 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 15720 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop"},		/* dd M_rpop 15728 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 15736 */
+	{.type FromH0, {.p C_allot}, .src = "dd C_allot"},		/* dd C_allot 15744 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15752 */
+	{.type Header, {.hdr { 2, "c\"", /* C_cdouble_quote = 15768 */ colon }}}, /* CENTRY "c\"" cdouble_quote 2 ; stores counted string in the dictionary and also leaves the address of the counted string on the stack h 15776 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 15784 */
+	{.type Absolute, {.p 34}},		/* dd 34		; ( -- \" ) 15792 */
+	{.type FromH0, {.p C_word}, .src = "dd C_word	; ( \" -- a ) a = counted string address. a will be in Wordbuf"},		/* dd C_word	; ( \" -- a ) a = counted string address. a will be in Wordbuf 15800 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( a -- a a)"},		/* dd M_dup	; ( a -- a a) 15808 */
+	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch	; ( a a -- a n )"},		/* dd M_cfetch	; ( a a -- a n ) 15816 */
+	{.type FromH0, {.p C_1plus}, .src = "dd C_1plus	; ( a n -- a n+1 )"},		/* dd C_1plus	; ( a n -- a n+1 ) 15824 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a n -- a ) (R -- n+1)"},		/* dd M_rpush	; ( a n -- a ) (R -- n+1) 15832 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here	; ( a -- a here ) (R -- n+1)"},		/* dd C_here	; ( a -- a here ) (R -- n+1) 15840 */
+	{.type FromH0, {.p M_rfetch}, .src = "dd M_rfetch	; ( a here -- a here n+1) (R -- n+1)"},		/* dd M_rfetch	; ( a here -- a here n+1) (R -- n+1) 15848 */
+	{.type FromH0, {.p M_cmove}, .src = "dd M_cmove	; move counted string from a to here"},		/* dd M_cmove	; move counted string from a to here 15856 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here	; ( -- here )"},		/* dd C_here	; ( -- here ) 15864 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( here -- here n+1 )(R -- )"},		/* dd M_rpop	; ( here -- here n+1 )(R -- ) 15872 */
+	{.type FromH0, {.p C_allot}, .src = "dd C_allot	; ( here n+1 -- here) here += n+1"},		/* dd C_allot	; ( here n+1 -- here) here += n+1 15880 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15888 */
+	{.type IHeader, {.hdr { 2, "s\"", /* CI_sdouble_quote = 15904 */ colon }}}, /* CIENTRY "s\"" sdouble_quote 2 ; add the string from the input stream to the dictionary as (sliteral) count string - at run-time puts the ( -- addr n) of the counted string on the stack. h 15912 */
+	{.type FromH0, {.p C_sliteral}, .src = "dd C_sliteral"},		/* dd C_sliteral 15920 */
 	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15928 */
-	{.type IHeader, {.hdr { 4, "else", /* CI_else = 15944 */ colon }}}, /* CIENTRY "else" else 4 h 15952 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 15960 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 15968 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 15976 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 15984 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush"},		/* dd M_rpush 15992 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16000 */
-	{.type Absolute, {.p 0}},		/* dd 0 16008 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16016 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 16024 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 16032 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 16040 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop"},		/* dd M_rpop 16048 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16056 */
-	{.type IHeader, {.hdr { 4, "then", /* CI_then = 16072 */ colon }}}, /* CIENTRY "then" then 4 h 16080 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 16088 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 16096 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 16104 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16112 */
-	{.type IHeader, {.hdr { 5, "begin", /* CI_begin = 16128 */ colon }}}, /* CIENTRY "begin" begin 5 h 16136 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 16144 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16152 */
-	{.type IHeader, {.hdr { 5, "again", /* CI_again = 16168 */ colon }}}, /* CIENTRY "again" again 5 h 16176 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16184 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 16192 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16200 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16208 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16216 */
-	{.type IHeader, {.hdr { 5, "until", /* CI_until = 16232 */ colon }}}, /* CIENTRY "until" until 5 h 16240 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16248 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 16256 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16264 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16272 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16280 */
-	{.type IHeader, {.hdr { 5, "while", /* CI_while = 16296 */ colon }}}, /* CIENTRY "while" while 5 h 16304 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16312 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 16320 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16328 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 16336 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16344 */
-	{.type Absolute, {.p 0}},		/* dd 0 16352 */
+	{.type IHeader, {.hdr { 2, ".\"", /* CI_dotstr = 15944 */ colon }}}, /* CIENTRY ".\"" dotstr 2 ; do what s" does and then add a type word to the dictionary to print that string h 15952 */
+	{.type FromH0, {.p C_sliteral}, .src = "dd C_sliteral"},		/* dd C_sliteral 15960 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 15968 */
+	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 15976 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 15984 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 15992 */
+	{.type IHeader, {.hdr { 2, "if", /* CI_if = 16008 */ colon }}}, /* CIENTRY "if" if 2 h 16016 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16024 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 16032 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16040 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 16048 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16056 */
+	{.type Absolute, {.p 0}},		/* dd 0 16064 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16072 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16080 */
+	{.type IHeader, {.hdr { 4, "else", /* CI_else = 16096 */ colon }}}, /* CIENTRY "else" else 4 h 16104 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16112 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 16120 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16128 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 16136 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush"},		/* dd M_rpush 16144 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16152 */
+	{.type Absolute, {.p 0}},		/* dd 0 16160 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16168 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 16176 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 16184 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 16192 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop"},		/* dd M_rpop 16200 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16208 */
+	{.type IHeader, {.hdr { 4, "then", /* CI_then = 16224 */ colon }}}, /* CIENTRY "then" then 4 h 16232 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 16240 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 16248 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 16256 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16264 */
+	{.type IHeader, {.hdr { 5, "begin", /* CI_begin = 16280 */ colon }}}, /* CIENTRY "begin" begin 5 h 16288 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 16296 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16304 */
+	{.type IHeader, {.hdr { 5, "again", /* CI_again = 16320 */ colon }}}, /* CIENTRY "again" again 5 h 16328 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16336 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 16344 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16352 */
 	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16360 */
 	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16368 */
-	{.type IHeader, {.hdr { 6, "repeat", /* CI_repeat = 16384 */ colon }}}, /* CIENTRY "repeat" repeat 6 h 16392 */
+	{.type IHeader, {.hdr { 5, "until", /* CI_until = 16384 */ colon }}}, /* CIENTRY "until" until 5 h 16392 */
 	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16400 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 16408 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 16408 */
 	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16416 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 16424 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16432 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 16440 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 16448 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 16456 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16464 */
-	{.type IHeader, {.hdr { 2, "do", /* CI_do = 16480 */ colon }}}, /* CIENTRY "do" do 2 h 16488 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16424 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16432 */
+	{.type IHeader, {.hdr { 5, "while", /* CI_while = 16448 */ colon }}}, /* CIENTRY "while" while 5 h 16456 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16464 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 16472 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16480 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 16488 */
 	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16496 */
-	{.type FromH0, {.p M_doinit}, .src = "dd M_doinit		; compile this into the definition. Puts limit and index on the run stack at run time"},		/* dd M_doinit		; compile this into the definition. Puts limit and index on the run stack at run time 16504 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma		; puts (do) into the dictionary"},		/* dd C_comma		; puts (do) into the dictionary 16512 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16520 */
-	{.type Absolute, {.p 0}},		/* dd 0			; ( -- 0 ) 16528 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here		; ( 0 -- 0 here1 )"},		/* dd C_here		; ( 0 -- 0 here1 ) 16536 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16544 */
-	{.type IHeader, {.hdr { 4, "loop", /* CI_loop = 16560 */ colon }}}, /* CIENTRY "loop" loop 4 ; ( 0 here1 -- ) h 16568 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16576 */
-	{.type FromH0, {.p M_doloop}, .src = "dd M_doloop		; ( 0 here1 -- 0 here1 (loop) )"},		/* dd M_doloop		; ( 0 here1 -- 0 here1 (loop) ) 16584 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma		; dictionary has (do) ... (loop) ( 0 here1 (loop) -- 0 here1 )"},		/* dd C_comma		; dictionary has (do) ... (loop) ( 0 here1 (loop) -- 0 here1 ) 16592 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma		; dictionary has (do) ... (loop) here1 ( 0 here1 -- 0 )"},		/* dd C_comma		; dictionary has (do) ... (loop) here1 ( 0 here1 -- 0 ) 16600 */
-	{.type FromH0, {.p C_qdup}, .src = "dd C_qdup"},		/* dd C_qdup 16608 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 16616 */
-	{.type FromH0, {.p L234}, .src = "dd L234"},		/* dd L234 16624 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 16632 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 16640 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 16648 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16656 */
-	{.type IHeader, {.hdr { 5, "+loop", /* CI_ploop = 16672 */ colon }}}, /* CIENTRY "+loop" ploop 5 h 16680 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16688 */
-	{.type FromH0, {.p M_doploop}, .src = "dd M_doploop"},		/* dd M_doploop 16696 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16704 */
-	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16712 */
-	{.type FromH0, {.p C_qdup}, .src = "dd C_qdup"},		/* dd C_qdup 16720 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 16728 */
-	{.type FromH0, {.p L236}, .src = "dd L236"},		/* dd L236 16736 */
-	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 16744 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 16752 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 16760 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16768 */
-	{.type Header, {.hdr { 3, "w/o", /* C_wo = 16784 */ colon }}}, /* CENTRY "w/o" wo 3 h 16792 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16800 */
-	{.type Absolute, {.p 1}},		/* dd 1 16808 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16816 */
-	{.type Absolute, {.p 512}},		/* dd 512 16824 */
-	{.type FromH0, {.p M_binor}, .src = "dd M_binor"},		/* dd M_binor 16832 */
+	{.type Absolute, {.p 0}},		/* dd 0 16504 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16512 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16520 */
+	{.type IHeader, {.hdr { 6, "repeat", /* CI_repeat = 16536 */ colon }}}, /* CIENTRY "repeat" repeat 6 h 16544 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16552 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 16560 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16568 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 16576 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16584 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 16592 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 16600 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 16608 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16616 */
+	{.type IHeader, {.hdr { 2, "do", /* CI_do = 16632 */ colon }}}, /* CIENTRY "do" do 2 h 16640 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16648 */
+	{.type FromH0, {.p M_doinit}, .src = "dd M_doinit		; compile this into the definition. Puts limit and index on the run stack at run time"},		/* dd M_doinit		; compile this into the definition. Puts limit and index on the run stack at run time 16656 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma		; puts (do) into the dictionary"},		/* dd C_comma		; puts (do) into the dictionary 16664 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16672 */
+	{.type Absolute, {.p 0}},		/* dd 0			; ( -- 0 ) 16680 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here		; ( 0 -- 0 here1 )"},		/* dd C_here		; ( 0 -- 0 here1 ) 16688 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16696 */
+	{.type IHeader, {.hdr { 4, "loop", /* CI_loop = 16712 */ colon }}}, /* CIENTRY "loop" loop 4 ; ( 0 here1 -- ) h 16720 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16728 */
+	{.type FromH0, {.p M_doloop}, .src = "dd M_doloop		; ( 0 here1 -- 0 here1 (loop) )"},		/* dd M_doloop		; ( 0 here1 -- 0 here1 (loop) ) 16736 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma		; dictionary has (do) ... (loop) ( 0 here1 (loop) -- 0 here1 )"},		/* dd C_comma		; dictionary has (do) ... (loop) ( 0 here1 (loop) -- 0 here1 ) 16744 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma		; dictionary has (do) ... (loop) here1 ( 0 here1 -- 0 )"},		/* dd C_comma		; dictionary has (do) ... (loop) here1 ( 0 here1 -- 0 ) 16752 */
+	{.type FromH0, {.p C_qdup}, .src = "dd C_qdup"},		/* dd C_qdup 16760 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 16768 */
+	{.type FromH0, {.p L234}, .src = "dd L234"},		/* dd L234 16776 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 16784 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 16792 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 16800 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16808 */
+	{.type IHeader, {.hdr { 5, "+loop", /* CI_ploop = 16824 */ colon }}}, /* CIENTRY "+loop" ploop 5 h 16832 */
 	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16840 */
-	{.type Absolute, {.p 64}},		/* dd 64 16848 */
-	{.type FromH0, {.p M_binor}, .src = "dd M_binor"},		/* dd M_binor 16856 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16864 */
-	{.type Header, {.hdr { 3, "r/o", /* C_ro = 16880 */ colon }}}, /* CENTRY "r/o" ro 3 h 16888 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16896 */
-	{.type Absolute, {.p 0}},		/* dd 0 16904 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16912 */
-	{.type Header, {.hdr { 3, "r/w", /* C_rw = 16928 */ colon }}}, /* CENTRY "r/w" rw 3 h 16936 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16944 */
-	{.type Absolute, {.p 2}},		/* dd 2 16952 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16960 */
-	{.type Header, {.hdr { 9, "open-file", /* C_open_file = 16984 */ colon }}}, /* CENTRY "open-file" open_file 9 ; ( a n mode -- fd ioresult ) h 16992 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a n mode -- a n ) (R -- mode)"},		/* dd M_rpush	; ( a n mode -- a n ) (R -- mode) 17000 */
-	{.type FromH0, {.p C_pad}, .src = "dd C_pad	; ( a n -- a n padaddr)"},		/* dd C_pad	; ( a n -- a n padaddr) 17008 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17016 */
-	{.type Absolute, {.p 1024}},		/* dd 1024		; ( a n padaddr --  a n padaddr 1024 ) 17024 */
-	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( a n padaddr+1024 --  a n padaddr+1024 )"},		/* dd M_plus	; ( a n padaddr+1024 --  a n padaddr+1024 ) 17032 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap	; ( a n padaddr+1024 --  a padaddr+1024 n )"},		/* dd M_xswap	; ( a n padaddr+1024 --  a padaddr+1024 n ) 17040 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( a padaddr+1024 n --  a padaddr+1024 n n )"},		/* dd M_dup	; ( a padaddr+1024 n --  a padaddr+1024 n n ) 17048 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a padaddr+1024 n n --  a padaddr+1024 n ) (R mode -- mode n )"},		/* dd M_rpush	; ( a padaddr+1024 n n --  a padaddr+1024 n ) (R mode -- mode n ) 17056 */
-	{.type FromH0, {.p M_cmove}, .src = "dd M_cmove	; moves the filename from a to paddaddr+1024"},		/* dd M_cmove	; moves the filename from a to paddaddr+1024 17064 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17072 */
-	{.type Absolute, {.p 0}},		/* dd 0		; ( -- 0 ) 17080 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( 0 -- 0 n ) (R mode n -- mode)"},		/* dd M_rpop	; ( 0 -- 0 n ) (R mode n -- mode) 17088 */
-	{.type FromH0, {.p C_pad}, .src = "dd C_pad	; ( 0 n -- 0 n padaddr)"},		/* dd C_pad	; ( 0 n -- 0 n padaddr) 17096 */
-	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( 0 n padaddr -- 0 padaddr+n )"},		/* dd M_plus	; ( 0 n padaddr -- 0 padaddr+n ) 17104 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17112 */
-	{.type Absolute, {.p 1024}},		/* dd 1024		; ( 0 padaddr+n --  0 padaddr+n 1024 ) 17120 */
-	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( 0 padaddr+n 1024 --  0 padaddr+n+1024 )"},		/* dd M_plus	; ( 0 padaddr+n 1024 --  0 padaddr+n+1024 ) 17128 */
-	{.type FromH0, {.p M_cstore}, .src = "dd M_cstore	; ( 0 padaddr+n 1024 --   ) makes the filename to a null terminated string"},		/* dd M_cstore	; ( 0 padaddr+n 1024 --   ) makes the filename to a null terminated string 17136 */
-	{.type FromH0, {.p C_pad}, .src = "dd C_pad"},		/* dd C_pad 17144 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17152 */
-	{.type Absolute, {.p 1024}},		/* dd 1024		; ( -- padaddr 1024 ) 17160 */
-	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( padaddr 1024 -- padaddr+1024 )"},		/* dd M_plus	; ( padaddr 1024 -- padaddr+1024 ) 17168 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( padaddr+1024 -- padaddr+1024 mode) (R mode -- )"},		/* dd M_rpop	; ( padaddr+1024 -- padaddr+1024 mode) (R mode -- ) 17176 */
-	{.type FromH0, {.p M_sysopen}, .src = "dd M_sysopen"},		/* dd M_sysopen 17184 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 17192 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17200 */
-	{.type Absolute, {.p -1}},		/* dd -1 17208 */
-	{.type FromH0, {.p M_greater}, .src = "dd M_greater"},		/* dd M_greater 17216 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17224 */
-	{.type Header, {.hdr { 10, "close-file", /* C_close_file = 17248 */ colon }}}, /* CENTRY "close-file" close_file 10 ; ( fd -- ioresult ) h 17256 */
-	{.type FromH0, {.p M_sysclose}, .src = "dd M_sysclose"},		/* dd M_sysclose 17264 */
-	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq"},		/* dd C_0eq 17272 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17280 */
-	{.type Header, {.hdr { 9, "read-file", /* C_read_file = 17304 */ colon }}}, /* CENTRY "read-file" read_file 9 ; ( a n fd -- n2 ioresult ) h 17312 */
-	{.type FromH0, {.p C_rot}, .src = "dd C_rot	; ( n fd a )"},		/* dd C_rot	; ( n fd a ) 17320 */
-	{.type FromH0, {.p C_rot}, .src = "dd C_rot	; ( fd a n )"},		/* dd C_rot	; ( fd a n ) 17328 */
-	{.type FromH0, {.p M_sysread}, .src = "dd M_sysread"},		/* dd M_sysread 17336 */
+	{.type FromH0, {.p M_doploop}, .src = "dd M_doploop"},		/* dd M_doploop 16848 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16856 */
+	{.type FromH0, {.p C_comma}, .src = "dd C_comma"},		/* dd C_comma 16864 */
+	{.type FromH0, {.p C_qdup}, .src = "dd C_qdup"},		/* dd C_qdup 16872 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 16880 */
+	{.type FromH0, {.p L236}, .src = "dd L236"},		/* dd L236 16888 */
+	{.type FromH0, {.p C_here}, .src = "dd C_here"},		/* dd C_here 16896 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap"},		/* dd M_xswap 16904 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 16912 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 16920 */
+	{.type Header, {.hdr { 3, "w/o", /* C_wo = 16936 */ colon }}}, /* CENTRY "w/o" wo 3 h 16944 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16952 */
+	{.type Absolute, {.p 1}},		/* dd 1 16960 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16968 */
+	{.type Absolute, {.p 512}},		/* dd 512 16976 */
+	{.type FromH0, {.p M_binor}, .src = "dd M_binor"},		/* dd M_binor 16984 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 16992 */
+	{.type Absolute, {.p 64}},		/* dd 64 17000 */
+	{.type FromH0, {.p M_binor}, .src = "dd M_binor"},		/* dd M_binor 17008 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17016 */
+	{.type Header, {.hdr { 3, "r/o", /* C_ro = 17032 */ colon }}}, /* CENTRY "r/o" ro 3 h 17040 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17048 */
+	{.type Absolute, {.p 0}},		/* dd 0 17056 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17064 */
+	{.type Header, {.hdr { 3, "r/w", /* C_rw = 17080 */ colon }}}, /* CENTRY "r/w" rw 3 h 17088 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17096 */
+	{.type Absolute, {.p 2}},		/* dd 2 17104 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17112 */
+	{.type Header, {.hdr { 9, "open-file", /* C_open_file = 17136 */ colon }}}, /* CENTRY "open-file" open_file 9 ; ( a n mode -- fd ioresult ) h 17144 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a n mode -- a n ) (R -- mode)"},		/* dd M_rpush	; ( a n mode -- a n ) (R -- mode) 17152 */
+	{.type FromH0, {.p C_pad}, .src = "dd C_pad	; ( a n -- a n padaddr)"},		/* dd C_pad	; ( a n -- a n padaddr) 17160 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17168 */
+	{.type Absolute, {.p 1024}},		/* dd 1024		; ( a n padaddr --  a n padaddr 1024 ) 17176 */
+	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( a n padaddr+1024 --  a n padaddr+1024 )"},		/* dd M_plus	; ( a n padaddr+1024 --  a n padaddr+1024 ) 17184 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap	; ( a n padaddr+1024 --  a padaddr+1024 n )"},		/* dd M_xswap	; ( a n padaddr+1024 --  a padaddr+1024 n ) 17192 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( a padaddr+1024 n --  a padaddr+1024 n n )"},		/* dd M_dup	; ( a padaddr+1024 n --  a padaddr+1024 n n ) 17200 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a padaddr+1024 n n --  a padaddr+1024 n ) (R mode -- mode n )"},		/* dd M_rpush	; ( a padaddr+1024 n n --  a padaddr+1024 n ) (R mode -- mode n ) 17208 */
+	{.type FromH0, {.p M_cmove}, .src = "dd M_cmove	; moves the filename from a to paddaddr+1024"},		/* dd M_cmove	; moves the filename from a to paddaddr+1024 17216 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17224 */
+	{.type Absolute, {.p 0}},		/* dd 0		; ( -- 0 ) 17232 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( 0 -- 0 n ) (R mode n -- mode)"},		/* dd M_rpop	; ( 0 -- 0 n ) (R mode n -- mode) 17240 */
+	{.type FromH0, {.p C_pad}, .src = "dd C_pad	; ( 0 n -- 0 n padaddr)"},		/* dd C_pad	; ( 0 n -- 0 n padaddr) 17248 */
+	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( 0 n padaddr -- 0 padaddr+n )"},		/* dd M_plus	; ( 0 n padaddr -- 0 padaddr+n ) 17256 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17264 */
+	{.type Absolute, {.p 1024}},		/* dd 1024		; ( 0 padaddr+n --  0 padaddr+n 1024 ) 17272 */
+	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( 0 padaddr+n 1024 --  0 padaddr+n+1024 )"},		/* dd M_plus	; ( 0 padaddr+n 1024 --  0 padaddr+n+1024 ) 17280 */
+	{.type FromH0, {.p M_cstore}, .src = "dd M_cstore	; ( 0 padaddr+n 1024 --   ) makes the filename to a null terminated string"},		/* dd M_cstore	; ( 0 padaddr+n 1024 --   ) makes the filename to a null terminated string 17288 */
+	{.type FromH0, {.p C_pad}, .src = "dd C_pad"},		/* dd C_pad 17296 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17304 */
+	{.type Absolute, {.p 1024}},		/* dd 1024		; ( -- padaddr 1024 ) 17312 */
+	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( padaddr 1024 -- padaddr+1024 )"},		/* dd M_plus	; ( padaddr 1024 -- padaddr+1024 ) 17320 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( padaddr+1024 -- padaddr+1024 mode) (R mode -- )"},		/* dd M_rpop	; ( padaddr+1024 -- padaddr+1024 mode) (R mode -- ) 17328 */
+	{.type FromH0, {.p M_sysopen}, .src = "dd M_sysopen"},		/* dd M_sysopen 17336 */
 	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 17344 */
 	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17352 */
 	{.type Absolute, {.p -1}},		/* dd -1 17360 */
-	{.type FromH0, {.p C_neq}, .src = "dd C_neq"},		/* dd C_neq 17368 */
+	{.type FromH0, {.p M_greater}, .src = "dd M_greater"},		/* dd M_greater 17368 */
 	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17376 */
-	{.type Header, {.hdr { 10, "write-file", /* C_write_file = 17400 */ colon }}}, /* CENTRY "write-file" write_file 10 ; ( a n fd -- ioresult ) h 17408 */
-	{.type FromH0, {.p C_rot}, .src = "dd C_rot	; ( n fd a )"},		/* dd C_rot	; ( n fd a ) 17416 */
-	{.type FromH0, {.p C_rot}, .src = "dd C_rot	; ( fd a n )"},		/* dd C_rot	; ( fd a n ) 17424 */
-	{.type FromH0, {.p M_syswrite}, .src = "dd M_syswrite"},		/* dd M_syswrite 17432 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17440 */
-	{.type Absolute, {.p -1}},		/* dd -1 17448 */
-	{.type FromH0, {.p C_neq}, .src = "dd C_neq"},		/* dd C_neq 17456 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17464 */
-	{.type Header, {.hdr { 15, "reposition-file", /* C_reposition_file = 17488 */ colon }}}, /* CENTRY "reposition-file" reposition_file 15 ; ( type n fd -- ioresult ) h 17496 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap		; ( type fd n )"},		/* dd M_xswap		; ( type fd n ) 17504 */
-	{.type FromH0, {.p C_rot}, .src = "dd C_rot		; ( fd n type )"},		/* dd C_rot		; ( fd n type ) 17512 */
-	{.type FromH0, {.p M_sysseek}, .src = "dd M_sysseek"},		/* dd M_sysseek 17520 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17528 */
-	{.type Absolute, {.p -1}},		/* dd -1 17536 */
-	{.type FromH0, {.p C_neq}, .src = "dd C_neq"},		/* dd C_neq 17544 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17552 */
-	{.type Header, {.hdr { 7, "?fcheck", /* C_qfcheck = 17568 */ colon }}}, /* CENTRY "?fcheck" qfcheck 7 h 17576 */
-	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq"},		/* dd C_0eq 17584 */
-	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 17592 */
-	{.type FromH0, {.p L246}, .src = "dd L246"},		/* dd L246 17600 */
-	{.type FromH0, {.p C_space}, .src = "dd C_space"},		/* dd C_space 17608 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17616 */
-	{.type FromH0, {.p L247}, .src = "dd L247"},		/* dd L247 17624 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17632 */
-	{.type Absolute, {.p 9}},		/* dd 9 17640 */
-	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 17648 */
-	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 17656 */
-	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 17664 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17672 */
-	{.type Header, {.hdr { 11, "create-file", /* C_create_file = 17696 */ colon }}}, /* CENTRY "create-file" create_file 11 ; ( a n mode perm -- fd ioresult ) not part of the original ff. could move this to a forth file. h 17704 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a n mode ) (R perm)"},		/* dd M_rpush	; ( a n mode ) (R perm) 17712 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a n ) (R perm mode)"},		/* dd M_rpush	; ( a n ) (R perm mode) 17720 */
-	{.type FromH0, {.p C_pad}, .src = "dd C_pad	; ( a n padaddr)"},		/* dd C_pad	; ( a n padaddr) 17728 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17736 */
-	{.type Absolute, {.p 1024}},		/* dd 1024		; ( a n padaddr 1024 ) 17744 */
-	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( a n padaddr+1024 )"},		/* dd M_plus	; ( a n padaddr+1024 ) 17752 */
-	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap	; ( a padaddr+1024 n )"},		/* dd M_xswap	; ( a padaddr+1024 n ) 17760 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( a padaddr+1024 n n )"},		/* dd M_dup	; ( a padaddr+1024 n n ) 17768 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a padaddr+1024 n ) (R perm mode n )"},		/* dd M_rpush	; ( a padaddr+1024 n ) (R perm mode n ) 17776 */
-	{.type FromH0, {.p M_cmove}, .src = "dd M_cmove	; moves the filename from a to paddaddr+1024"},		/* dd M_cmove	; moves the filename from a to paddaddr+1024 17784 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17792 */
-	{.type Absolute, {.p 0}},		/* dd 0		; ( 0 ) 17800 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( 0 n ) (R perm mode)"},		/* dd M_rpop	; ( 0 n ) (R perm mode) 17808 */
-	{.type FromH0, {.p C_pad}, .src = "dd C_pad	; ( 0 n padaddr)"},		/* dd C_pad	; ( 0 n padaddr) 17816 */
-	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( 0 padaddr+n )"},		/* dd M_plus	; ( 0 padaddr+n ) 17824 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17832 */
-	{.type Absolute, {.p 1024}},		/* dd 1024		; ( 0 padaddr+n 1024 ) 17840 */
-	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( 0 padaddr+n+1024 )"},		/* dd M_plus	; ( 0 padaddr+n+1024 ) 17848 */
-	{.type FromH0, {.p M_cstore}, .src = "dd M_cstore	; ( ) makes the filename to a null terminated string"},		/* dd M_cstore	; ( ) makes the filename to a null terminated string 17856 */
-	{.type FromH0, {.p C_pad}, .src = "dd C_pad"},		/* dd C_pad 17864 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17872 */
-	{.type Absolute, {.p 1024}},		/* dd 1024		; ( padaddr 1024 ) 17880 */
-	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( padaddr+1024 )"},		/* dd M_plus	; ( padaddr+1024 ) 17888 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( padaddr+1024 mode) (R perm )"},		/* dd M_rpop	; ( padaddr+1024 mode) (R perm ) 17896 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( padaddr+1024 mode perm ) (R )"},		/* dd M_rpop	; ( padaddr+1024 mode perm ) (R ) 17904 */
-	{.type FromH0, {.p M_syscreate}, .src = "dd M_syscreate"},		/* dd M_syscreate 17912 */
-	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 17920 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17928 */
-	{.type Absolute, {.p -1}},		/* dd -1 17936 */
-	{.type FromH0, {.p M_greater}, .src = "dd M_greater"},		/* dd M_greater 17944 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17952 */
-	{.type Header, {.hdr { 3, "bye", /* C_bye = 17968 */ colon }}}, /* CENTRY "bye" bye 3 h 17976 */
+	{.type Header, {.hdr { 10, "close-file", /* C_close_file = 17400 */ colon }}}, /* CENTRY "close-file" close_file 10 ; ( fd -- ioresult ) h 17408 */
+	{.type FromH0, {.p M_sysclose}, .src = "dd M_sysclose"},		/* dd M_sysclose 17416 */
+	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq"},		/* dd C_0eq 17424 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17432 */
+	{.type Header, {.hdr { 9, "read-file", /* C_read_file = 17456 */ colon }}}, /* CENTRY "read-file" read_file 9 ; ( a n fd -- n2 ioresult ) h 17464 */
+	{.type FromH0, {.p C_rot}, .src = "dd C_rot	; ( n fd a )"},		/* dd C_rot	; ( n fd a ) 17472 */
+	{.type FromH0, {.p C_rot}, .src = "dd C_rot	; ( fd a n )"},		/* dd C_rot	; ( fd a n ) 17480 */
+	{.type FromH0, {.p M_sysread}, .src = "dd M_sysread"},		/* dd M_sysread 17488 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 17496 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17504 */
+	{.type Absolute, {.p -1}},		/* dd -1 17512 */
+	{.type FromH0, {.p C_neq}, .src = "dd C_neq"},		/* dd C_neq 17520 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17528 */
+	{.type Header, {.hdr { 10, "write-file", /* C_write_file = 17552 */ colon }}}, /* CENTRY "write-file" write_file 10 ; ( a n fd -- ioresult ) h 17560 */
+	{.type FromH0, {.p C_rot}, .src = "dd C_rot	; ( n fd a )"},		/* dd C_rot	; ( n fd a ) 17568 */
+	{.type FromH0, {.p C_rot}, .src = "dd C_rot	; ( fd a n )"},		/* dd C_rot	; ( fd a n ) 17576 */
+	{.type FromH0, {.p M_syswrite}, .src = "dd M_syswrite"},		/* dd M_syswrite 17584 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17592 */
+	{.type Absolute, {.p -1}},		/* dd -1 17600 */
+	{.type FromH0, {.p C_neq}, .src = "dd C_neq"},		/* dd C_neq 17608 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17616 */
+	{.type Header, {.hdr { 15, "reposition-file", /* C_reposition_file = 17640 */ colon }}}, /* CENTRY "reposition-file" reposition_file 15 ; ( type n fd -- ioresult ) h 17648 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap		; ( type fd n )"},		/* dd M_xswap		; ( type fd n ) 17656 */
+	{.type FromH0, {.p C_rot}, .src = "dd C_rot		; ( fd n type )"},		/* dd C_rot		; ( fd n type ) 17664 */
+	{.type FromH0, {.p M_sysseek}, .src = "dd M_sysseek"},		/* dd M_sysseek 17672 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17680 */
+	{.type Absolute, {.p -1}},		/* dd -1 17688 */
+	{.type FromH0, {.p C_neq}, .src = "dd C_neq"},		/* dd C_neq 17696 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17704 */
+	{.type Header, {.hdr { 7, "?fcheck", /* C_qfcheck = 17720 */ colon }}}, /* CENTRY "?fcheck" qfcheck 7 h 17728 */
+	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq"},		/* dd C_0eq 17736 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 17744 */
+	{.type FromH0, {.p L246}, .src = "dd L246"},		/* dd L246 17752 */
+	{.type FromH0, {.p C_space}, .src = "dd C_space"},		/* dd C_space 17760 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17768 */
+	{.type FromH0, {.p L247}, .src = "dd L247"},		/* dd L247 17776 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17784 */
+	{.type Absolute, {.p 9}},		/* dd 9 17792 */
+	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 17800 */
+	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 17808 */
+	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 17816 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17824 */
+	{.type Header, {.hdr { 11, "create-file", /* C_create_file = 17848 */ colon }}}, /* CENTRY "create-file" create_file 11 ; ( a n mode perm -- fd ioresult ) not part of the original ff. could move this to a forth file. h 17856 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a n mode ) (R perm)"},		/* dd M_rpush	; ( a n mode ) (R perm) 17864 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a n ) (R perm mode)"},		/* dd M_rpush	; ( a n ) (R perm mode) 17872 */
+	{.type FromH0, {.p C_pad}, .src = "dd C_pad	; ( a n padaddr)"},		/* dd C_pad	; ( a n padaddr) 17880 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17888 */
+	{.type Absolute, {.p 1024}},		/* dd 1024		; ( a n padaddr 1024 ) 17896 */
+	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( a n padaddr+1024 )"},		/* dd M_plus	; ( a n padaddr+1024 ) 17904 */
+	{.type FromH0, {.p M_xswap}, .src = "dd M_xswap	; ( a padaddr+1024 n )"},		/* dd M_xswap	; ( a padaddr+1024 n ) 17912 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup	; ( a padaddr+1024 n n )"},		/* dd M_dup	; ( a padaddr+1024 n n ) 17920 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush	; ( a padaddr+1024 n ) (R perm mode n )"},		/* dd M_rpush	; ( a padaddr+1024 n ) (R perm mode n ) 17928 */
+	{.type FromH0, {.p M_cmove}, .src = "dd M_cmove	; moves the filename from a to paddaddr+1024"},		/* dd M_cmove	; moves the filename from a to paddaddr+1024 17936 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17944 */
+	{.type Absolute, {.p 0}},		/* dd 0		; ( 0 ) 17952 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( 0 n ) (R perm mode)"},		/* dd M_rpop	; ( 0 n ) (R perm mode) 17960 */
+	{.type FromH0, {.p C_pad}, .src = "dd C_pad	; ( 0 n padaddr)"},		/* dd C_pad	; ( 0 n padaddr) 17968 */
+	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( 0 padaddr+n )"},		/* dd M_plus	; ( 0 padaddr+n ) 17976 */
 	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 17984 */
-	{.type Absolute, {.p 0}},		/* dd 0 17992 */
-	{.type FromH0, {.p M_terminate}, .src = "dd M_terminate"},		/* dd M_terminate 18000 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 18008 */
-	{.type Header, {.hdr { 7, "include", /* C_include = 18024 */ colon }}}, /* CENTRY "include" include 7 h 18032 */
-	{.type FromH0, {.p C_bl}, .src = "dd C_bl"},		/* dd C_bl 18040 */
-	{.type FromH0, {.p C_word}, .src = "dd C_word"},		/* dd C_word 18048 */
-	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush"},		/* dd M_rpush 18056 */
-	{.type FromH0, {.p MV_toLimit}, .src = "dd MV_toLimit"},		/* dd MV_toLimit 18064 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 18072 */
-	{.type FromH0, {.p MV_toIn}, .src = "dd MV_toIn"},		/* dd MV_toIn 18080 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18088 */
-	{.type FromH0, {.p C_save_input}, .src = "dd C_save_input"},		/* dd C_save_input 18096 */
-	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop"},		/* dd M_rpop 18104 */
-	{.type FromH0, {.p C_count}, .src = "dd C_count"},		/* dd C_count 18112 */
-	{.type FromH0, {.p C_ro}, .src = "dd C_ro"},		/* dd C_ro 18120 */
-	{.type FromH0, {.p C_open_file}, .src = "dd C_open_file"},		/* dd C_open_file 18128 */
-	{.type FromH0, {.p C_qfcheck}, .src = "dd C_qfcheck"},		/* dd C_qfcheck 18136 */
-	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 18144 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18152 */
+	{.type Absolute, {.p 1024}},		/* dd 1024		; ( 0 padaddr+n 1024 ) 17992 */
+	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( 0 padaddr+n+1024 )"},		/* dd M_plus	; ( 0 padaddr+n+1024 ) 18000 */
+	{.type FromH0, {.p M_cstore}, .src = "dd M_cstore	; ( ) makes the filename to a null terminated string"},		/* dd M_cstore	; ( ) makes the filename to a null terminated string 18008 */
+	{.type FromH0, {.p C_pad}, .src = "dd C_pad"},		/* dd C_pad 18016 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18024 */
+	{.type Absolute, {.p 1024}},		/* dd 1024		; ( padaddr 1024 ) 18032 */
+	{.type FromH0, {.p M_plus}, .src = "dd M_plus	; ( padaddr+1024 )"},		/* dd M_plus	; ( padaddr+1024 ) 18040 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( padaddr+1024 mode) (R perm )"},		/* dd M_rpop	; ( padaddr+1024 mode) (R perm ) 18048 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop	; ( padaddr+1024 mode perm ) (R )"},		/* dd M_rpop	; ( padaddr+1024 mode perm ) (R ) 18056 */
+	{.type FromH0, {.p M_syscreate}, .src = "dd M_syscreate"},		/* dd M_syscreate 18064 */
+	{.type FromH0, {.p M_dup}, .src = "dd M_dup"},		/* dd M_dup 18072 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18080 */
+	{.type Absolute, {.p -1}},		/* dd -1 18088 */
+	{.type FromH0, {.p M_greater}, .src = "dd M_greater"},		/* dd M_greater 18096 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 18104 */
+	{.type Header, {.hdr { 3, "bye", /* C_bye = 18120 */ colon }}}, /* CENTRY "bye" bye 3 h 18128 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18136 */
+	{.type Absolute, {.p 0}},		/* dd 0 18144 */
+	{.type FromH0, {.p M_terminate}, .src = "dd M_terminate"},		/* dd M_terminate 18152 */
 	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 18160 */
-	{.type Header, {.hdr { 5, "crash", /* C_crash = 18176 */ colon }}}, /* CENTRY "crash" crash 5 h 18184 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18192 */
-	{.type FromH0, {.p L251}, .src = "dd L251"},		/* dd L251 18200 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18208 */
-	{.type Absolute, {.p 30}},		/* dd 30 18216 */
-	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 18224 */
-	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 18232 */
-	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 18240 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 18248 */
-	{.type Header, {.hdr { 4, "quit", /* C_quit = 18264 */ colon }}}, /* CENTRY "quit" quit 4 ; interpreter loop h 18272 */
-	{.type FromH0, {.p M_reset}, .src = "dd M_reset ; initialize return stack"},		/* dd M_reset ; initialize return stack 18280 */
-	{.type FromH0, {.p M_clear}, .src = "dd M_clear	; SP = sstack_end initialize data stack"},		/* dd M_clear	; SP = sstack_end initialize data stack 18288 */
-	{.type FromH0, {.p C_query}, .src = "dd C_query"},		/* dd C_query 18296 */
-/* ; dd MV_toLimit	; show the line read, for debugging *//* ; dd M_fetch *//* ; dd M_Tib *//* ; dd MC_STDOUT *//* ; dd M_fswrite *//* ; dd M_drop		; drop the return value of write *//* ; dd C_cr *//* ; dd C_space */	{.type FromH0, {.p C_interpret}, .src = "dd C_interpret"},		/* dd C_interpret 18304 */
-	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 18312 */
-	{.type FromH0, {.p L253}, .src = "dd L253"},		/* dd L253 18320 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon	; why is this needed?"},		/* dd M_exitcolon	; why is this needed? 18328 */
-	{.type Header, {.hdr { 7, "(abort)", /* C_parenabort = 18344 */ colon }}}, /* CENTRY "(abort)" parenabort 7 ; TODO correct below stack notations h 18352 */
-	{.type FromH0, {.p MV_State}, .src = "dd MV_State	; ( mv_State -- )"},		/* dd MV_State	; ( mv_State -- ) 18360 */
-	{.type FromH0, {.p C_off}, .src = "dd C_off	; off sets variable state = 0"},		/* dd C_off	; off sets variable state = 0 18368 */
-	{.type FromH0, {.p M_Tib}, .src = "dd M_Tib	; constant puts address of tibuffer on the top of stack"},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 18376 */
-	{.type FromH0, {.p MV_Sourcebuf}, .src = "dd MV_Sourcebuf	; variable sourcebuf"},		/* dd MV_Sourcebuf	; variable sourcebuf 18384 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable sourcebuf = address of tibuffer"},		/* dd M_store	; variable sourcebuf = address of tibuffer 18392 */
-	{.type FromH0, {.p MV_Acceptvec}, .src = "dd MV_Acceptvec"},		/* dd MV_Acceptvec 18400 */
-	{.type FromH0, {.p C_off}, .src = "dd C_off	; variable Acceptvec = 0"},		/* dd C_off	; variable Acceptvec = 0 18408 */
-	{.type FromH0, {.p MC_STDIN}, .src = "dd MC_STDIN"},		/* dd MC_STDIN 18416 */
-	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 18424 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18432 */
-	{.type FromH0, {.p MC_STDOUT}, .src = "dd MC_STDOUT"},		/* dd MC_STDOUT 18440 */
-	{.type FromH0, {.p MV_Outfd}, .src = "dd MV_Outfd"},		/* dd MV_Outfd 18448 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18456 */
-	{.type FromH0, {.p MC_STDERR}, .src = "dd MC_STDERR"},		/* dd MC_STDERR 18464 */
-	{.type FromH0, {.p MV_Errfd}, .src = "dd MV_Errfd"},		/* dd MV_Errfd 18472 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18480 */
-	{.type FromH0, {.p C_quit}, .src = "dd C_quit	; quit resets stacks and is the interpreter loop"},		/* dd C_quit	; quit resets stacks and is the interpreter loop 18488 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon	; why is this needed? quit does not return unless it breaks"},		/* dd M_exitcolon	; why is this needed? quit does not return unless it breaks 18496 */
-	{.type Header, {.hdr { 7, "oldboot", /* C_oldboot = 18512 */ colon }}}, /* CENTRY "oldboot" oldboot 7 ; TODO correct below stack notations and this is obsolete. leaving it here for reference until it all works well h 18520 */
-	{.type FromH0, {.p M_reset}, .src = "dd M_reset"},		/* dd M_reset 18528 */
-	{.type FromH0, {.p M_clear}, .src = "dd M_clear	; SP = sstack_end"},		/* dd M_clear	; SP = sstack_end 18536 */
-	{.type FromH0, {.p M_stackptr}, .src = "dd M_stackptr	; (D -- FFEND)"},		/* dd M_stackptr	; (D -- FFEND) 18544 */
-	{.type FromH0, {.p M_S0}, .src = "dd M_S0"},		/* dd M_S0 18552 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; s0 = FFEND"},		/* dd M_store	; s0 = FFEND 18560 */
-	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp	; heaptop = heapend"},		/* dd M_Dp	; heaptop = heapend 18568 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; ( heapend -- )"},		/* dd M_fetch	; ( heapend -- ) 18576 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18584 */
-	{.type Absolute, {.p 1}},		/* dd 1		; ( heapend 1 -- ) 18592 */
-	{.type FromH0, {.p C_cells}, .src = "dd C_cells	; cells ( heapend 8 -- )"},		/* dd C_cells	; cells ( heapend 8 -- ) 18600 */
-	{.type FromH0, {.p M_minus}, .src = "dd M_minus	; ( heapend-8 -- )"},		/* dd M_minus	; ( heapend-8 -- ) 18608 */
-	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; ( contents_from_heapend-8 -- )"},		/* dd M_fetch	; ( contents_from_heapend-8 -- ) 18616 */
-	{.type FromH0, {.p M_Args}, .src = "dd M_Args	; variable args"},		/* dd M_Args	; variable args 18624 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; args = contents_from_heapend-8"},		/* dd M_store	; args = contents_from_heapend-8 18632 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18640 */
-	{.type FromH0, {.p C_parenabort}, .src = "dd C_parenabort ; ( (abort) -- )"},		/* dd C_parenabort ; ( (abort) -- ) 18648 */
-	{.type FromH0, {.p MV_Abortvec}, .src = "dd MV_Abortvec	; variable abortvec"},		/* dd MV_Abortvec	; variable abortvec 18656 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable abortvec = (abort) code address"},		/* dd M_store	; variable abortvec = (abort) code address 18664 */
-	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb	; constant puts address of wordbuffer on the top of stack"},		/* dd M_Wordb	; constant puts address of wordbuffer on the top of stack 18672 */
-	{.type FromH0, {.p MV_Wordbuf}, .src = "dd MV_Wordbuf	; variable wordbuf"},		/* dd MV_Wordbuf	; variable wordbuf 18680 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable wordbuf = address of wordbuffer"},		/* dd M_store	; variable wordbuf = address of wordbuffer 18688 */
-	{.type FromH0, {.p M_Tib}, .src = "dd M_Tib	; constant puts address of tibuffer on the top of stack"},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 18696 */
-	{.type FromH0, {.p MV_Sourcebuf}, .src = "dd MV_Sourcebuf	; variable sourcebuf"},		/* dd MV_Sourcebuf	; variable sourcebuf 18704 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable sourcebuf = address of tibuffer"},		/* dd M_store	; variable sourcebuf = address of tibuffer 18712 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18720 */
-	{.type Absolute, {.p 0}},		/* dd 0 18728 */
-	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 18736 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; stdin = 0"},		/* dd M_store	; stdin = 0 18744 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18752 */
-	{.type Absolute, {.p 1}},		/* dd 1 18760 */
-	{.type FromH0, {.p MV_Outfd}, .src = "dd MV_Outfd"},		/* dd MV_Outfd 18768 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; stdout = 1"},		/* dd M_store	; stdout = 1 18776 */
-	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 18784 */
-	{.type FromH0, {.p C_off}, .src = "dd C_off	; off stores 0 at state"},		/* dd C_off	; off stores 0 at state 18792 */
-	{.type FromH0, {.p C_decimal}, .src = "dd C_decimal	; decimal setting base = 0"},		/* dd C_decimal	; decimal setting base = 0 18800 */
-	{.type FromH0, {.p C_quit}, .src = "dd C_quit	; quit"},		/* dd C_quit	; quit 18808 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 18816 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal	; test code"},		/* dd M_literal	; test code 18824 */
-	{.type Absolute, {.p 66}},		/* dd 66 18832 */
-	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb"},		/* dd M_Wordb 18840 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18848 */
-	{.type FromH0, {.p MC_STDOUT}, .src = "dd MC_STDOUT"},		/* dd MC_STDOUT 18856 */
-	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb"},		/* dd M_Wordb 18864 */
+	{.type Header, {.hdr { 7, "include", /* C_include = 18176 */ colon }}}, /* CENTRY "include" include 7 h 18184 */
+	{.type FromH0, {.p C_bl}, .src = "dd C_bl"},		/* dd C_bl 18192 */
+	{.type FromH0, {.p C_word}, .src = "dd C_word"},		/* dd C_word 18200 */
+	{.type FromH0, {.p M_rpush}, .src = "dd M_rpush"},		/* dd M_rpush 18208 */
+	{.type FromH0, {.p MV_toLimit}, .src = "dd MV_toLimit"},		/* dd MV_toLimit 18216 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch"},		/* dd M_fetch 18224 */
+	{.type FromH0, {.p MV_toIn}, .src = "dd MV_toIn"},		/* dd MV_toIn 18232 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18240 */
+	{.type FromH0, {.p C_save_input}, .src = "dd C_save_input"},		/* dd C_save_input 18248 */
+	{.type FromH0, {.p M_rpop}, .src = "dd M_rpop"},		/* dd M_rpop 18256 */
+	{.type FromH0, {.p C_count}, .src = "dd C_count"},		/* dd C_count 18264 */
+	{.type FromH0, {.p C_ro}, .src = "dd C_ro"},		/* dd C_ro 18272 */
+	{.type FromH0, {.p C_open_file}, .src = "dd C_open_file"},		/* dd C_open_file 18280 */
+	{.type FromH0, {.p C_qfcheck}, .src = "dd C_qfcheck"},		/* dd C_qfcheck 18288 */
+	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 18296 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18304 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 18312 */
+	{.type Header, {.hdr { 5, "crash", /* C_crash = 18328 */ colon }}}, /* CENTRY "crash" crash 5 h 18336 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18344 */
+	{.type FromH0, {.p L251}, .src = "dd L251"},		/* dd L251 18352 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18360 */
+	{.type Absolute, {.p 30}},		/* dd 30 18368 */
+	{.type FromH0, {.p C_type}, .src = "dd C_type"},		/* dd C_type 18376 */
+	{.type FromH0, {.p C_cr}, .src = "dd C_cr"},		/* dd C_cr 18384 */
+	{.type FromH0, {.p C_abort}, .src = "dd C_abort"},		/* dd C_abort 18392 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 18400 */
+	{.type Header, {.hdr { 4, "quit", /* C_quit = 18416 */ colon }}}, /* CENTRY "quit" quit 4 ; interpreter loop h 18424 */
+	{.type FromH0, {.p M_reset}, .src = "dd M_reset ; initialize return stack"},		/* dd M_reset ; initialize return stack 18432 */
+	{.type FromH0, {.p M_clear}, .src = "dd M_clear	; SP = sstack_end initialize data stack"},		/* dd M_clear	; SP = sstack_end initialize data stack 18440 */
+	{.type FromH0, {.p C_query}, .src = "dd C_query"},		/* dd C_query 18448 */
+/* ; dd MV_toLimit	; show the line read, for debugging *//* ; dd M_fetch *//* ; dd M_Tib *//* ; dd MC_STDOUT *//* ; dd M_fswrite *//* ; dd M_drop		; drop the return value of write *//* ; dd C_cr *//* ; dd C_space */	{.type FromH0, {.p C_interpret}, .src = "dd C_interpret"},		/* dd C_interpret 18456 */
+	{.type FromH0, {.p M_jump}, .src = "dd M_jump"},		/* dd M_jump 18464 */
+	{.type FromH0, {.p L253}, .src = "dd L253"},		/* dd L253 18472 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon	; why is this needed?"},		/* dd M_exitcolon	; why is this needed? 18480 */
+	{.type Header, {.hdr { 7, "(abort)", /* C_parenabort = 18496 */ colon }}}, /* CENTRY "(abort)" parenabort 7 ; TODO correct below stack notations h 18504 */
+	{.type FromH0, {.p MV_State}, .src = "dd MV_State	; ( mv_State -- )"},		/* dd MV_State	; ( mv_State -- ) 18512 */
+	{.type FromH0, {.p C_off}, .src = "dd C_off	; off sets variable state = 0"},		/* dd C_off	; off sets variable state = 0 18520 */
+	{.type FromH0, {.p M_Tib}, .src = "dd M_Tib	; constant puts address of tibuffer on the top of stack"},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 18528 */
+	{.type FromH0, {.p MV_Sourcebuf}, .src = "dd MV_Sourcebuf	; variable sourcebuf"},		/* dd MV_Sourcebuf	; variable sourcebuf 18536 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable sourcebuf = address of tibuffer"},		/* dd M_store	; variable sourcebuf = address of tibuffer 18544 */
+	{.type FromH0, {.p MV_Acceptvec}, .src = "dd MV_Acceptvec"},		/* dd MV_Acceptvec 18552 */
+	{.type FromH0, {.p C_off}, .src = "dd C_off	; variable Acceptvec = 0"},		/* dd C_off	; variable Acceptvec = 0 18560 */
+	{.type FromH0, {.p MC_STDIN}, .src = "dd MC_STDIN"},		/* dd MC_STDIN 18568 */
+	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 18576 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18584 */
+	{.type FromH0, {.p MC_STDOUT}, .src = "dd MC_STDOUT"},		/* dd MC_STDOUT 18592 */
+	{.type FromH0, {.p MV_Outfd}, .src = "dd MV_Outfd"},		/* dd MV_Outfd 18600 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18608 */
+	{.type FromH0, {.p MC_STDERR}, .src = "dd MC_STDERR"},		/* dd MC_STDERR 18616 */
+	{.type FromH0, {.p MV_Errfd}, .src = "dd MV_Errfd"},		/* dd MV_Errfd 18624 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 18632 */
+	{.type FromH0, {.p C_quit}, .src = "dd C_quit	; quit resets stacks and is the interpreter loop"},		/* dd C_quit	; quit resets stacks and is the interpreter loop 18640 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon	; why is this needed? quit does not return unless it breaks"},		/* dd M_exitcolon	; why is this needed? quit does not return unless it breaks 18648 */
+	{.type Header, {.hdr { 7, "oldboot", /* C_oldboot = 18664 */ colon }}}, /* CENTRY "oldboot" oldboot 7 ; TODO correct below stack notations and this is obsolete. leaving it here for reference until it all works well h 18672 */
+	{.type FromH0, {.p M_reset}, .src = "dd M_reset"},		/* dd M_reset 18680 */
+	{.type FromH0, {.p M_clear}, .src = "dd M_clear	; SP = sstack_end"},		/* dd M_clear	; SP = sstack_end 18688 */
+	{.type FromH0, {.p M_stackptr}, .src = "dd M_stackptr	; (D -- FFEND)"},		/* dd M_stackptr	; (D -- FFEND) 18696 */
+	{.type FromH0, {.p M_S0}, .src = "dd M_S0"},		/* dd M_S0 18704 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; s0 = FFEND"},		/* dd M_store	; s0 = FFEND 18712 */
+	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp	; heaptop = heapend"},		/* dd M_Dp	; heaptop = heapend 18720 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; ( heapend -- )"},		/* dd M_fetch	; ( heapend -- ) 18728 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18736 */
+	{.type Absolute, {.p 1}},		/* dd 1		; ( heapend 1 -- ) 18744 */
+	{.type FromH0, {.p C_cells}, .src = "dd C_cells	; cells ( heapend 8 -- )"},		/* dd C_cells	; cells ( heapend 8 -- ) 18752 */
+	{.type FromH0, {.p M_minus}, .src = "dd M_minus	; ( heapend-8 -- )"},		/* dd M_minus	; ( heapend-8 -- ) 18760 */
+	{.type FromH0, {.p M_fetch}, .src = "dd M_fetch	; ( contents_from_heapend-8 -- )"},		/* dd M_fetch	; ( contents_from_heapend-8 -- ) 18768 */
+	{.type FromH0, {.p M_Args}, .src = "dd M_Args	; variable args"},		/* dd M_Args	; variable args 18776 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; args = contents_from_heapend-8"},		/* dd M_store	; args = contents_from_heapend-8 18784 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18792 */
+	{.type FromH0, {.p C_parenabort}, .src = "dd C_parenabort ; ( (abort) -- )"},		/* dd C_parenabort ; ( (abort) -- ) 18800 */
+	{.type FromH0, {.p MV_Abortvec}, .src = "dd MV_Abortvec	; variable abortvec"},		/* dd MV_Abortvec	; variable abortvec 18808 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable abortvec = (abort) code address"},		/* dd M_store	; variable abortvec = (abort) code address 18816 */
+	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb	; constant puts address of wordbuffer on the top of stack"},		/* dd M_Wordb	; constant puts address of wordbuffer on the top of stack 18824 */
+	{.type FromH0, {.p MV_Wordbuf}, .src = "dd MV_Wordbuf	; variable wordbuf"},		/* dd MV_Wordbuf	; variable wordbuf 18832 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable wordbuf = address of wordbuffer"},		/* dd M_store	; variable wordbuf = address of wordbuffer 18840 */
+	{.type FromH0, {.p M_Tib}, .src = "dd M_Tib	; constant puts address of tibuffer on the top of stack"},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 18848 */
+	{.type FromH0, {.p MV_Sourcebuf}, .src = "dd MV_Sourcebuf	; variable sourcebuf"},		/* dd MV_Sourcebuf	; variable sourcebuf 18856 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable sourcebuf = address of tibuffer"},		/* dd M_store	; variable sourcebuf = address of tibuffer 18864 */
 	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18872 */
-	{.type Absolute, {.p 1}},		/* dd 1 18880 */
-	{.type FromH0, {.p M_syswrite}, .src = "dd M_syswrite"},		/* dd M_syswrite 18888 */
-	{.type FromH0, {.p M_drop}, .src = "dd M_drop		; drop the return value of write"},		/* dd M_drop		; drop the return value of write 18896 */
-	{.type FromH0, {.p MC_STDIN}, .src = "dd MC_STDIN"},		/* dd MC_STDIN 18904 */
-	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb"},		/* dd M_Wordb 18912 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18920 */
-	{.type Absolute, {.p 1}},		/* dd 1 18928 */
-	{.type FromH0, {.p M_sysread}, .src = "dd M_sysread"},		/* dd M_sysread 18936 */
-	{.type FromH0, {.p M_drop}, .src = "dd M_drop		; drop the return value of read"},		/* dd M_drop		; drop the return value of read 18944 */
-	{.type Header, {.hdr { 4, "boot", /* C_boot = 18960 */ colon }}}, /* CENTRY "boot" boot 4 h 18968 */
-/* ; good here depth = 0 */	{.type FromH0, {.p M_reset}, .src = "dd M_reset ; initialize return stack"},		/* dd M_reset ; initialize return stack 18976 */
-	{.type FromH0, {.p M_clear}, .src = "dd M_clear	; SP = sstack_end initialize data stack"},		/* dd M_clear	; SP = sstack_end initialize data stack 18984 */
-	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18992 */
-	{.type FromH0, {.p C_parenabort}, .src = "dd C_parenabort ; ( (abort) -- )"},		/* dd C_parenabort ; ( (abort) -- ) 19000 */
-	{.type FromH0, {.p MV_Abortvec}, .src = "dd MV_Abortvec	; variable that puts (abort) code address on the stack"},		/* dd MV_Abortvec	; variable that puts (abort) code address on the stack 19008 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable abortvec = (abort) code address"},		/* dd M_store	; variable abortvec = (abort) code address 19016 */
-	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb	; variable puts address of wordbuffer on the top of stack"},		/* dd M_Wordb	; variable puts address of wordbuffer on the top of stack 19024 */
-	{.type FromH0, {.p MV_Wordbuf}, .src = "dd MV_Wordbuf ; variable wordbuf"},		/* dd MV_Wordbuf ; variable wordbuf 19032 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable wordbuf = address of wordbuffer"},		/* dd M_store	; variable wordbuf = address of wordbuffer 19040 */
-	{.type FromH0, {.p M_Tib}, .src = "dd M_Tib	; constant puts address of tibuffer on the top of stack"},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 19048 */
-	{.type FromH0, {.p MV_Sourcebuf}, .src = "dd MV_Sourcebuf	; variable sourcebuf"},		/* dd MV_Sourcebuf	; variable sourcebuf 19056 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable sourcebuf = address of tibuffer"},		/* dd M_store	; variable sourcebuf = address of tibuffer 19064 */
+	{.type Absolute, {.p 0}},		/* dd 0 18880 */
+	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 18888 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; stdin = 0"},		/* dd M_store	; stdin = 0 18896 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 18904 */
+	{.type Absolute, {.p 1}},		/* dd 1 18912 */
+	{.type FromH0, {.p MV_Outfd}, .src = "dd MV_Outfd"},		/* dd MV_Outfd 18920 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; stdout = 1"},		/* dd M_store	; stdout = 1 18928 */
+	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 18936 */
+	{.type FromH0, {.p C_off}, .src = "dd C_off	; off stores 0 at state"},		/* dd C_off	; off stores 0 at state 18944 */
+	{.type FromH0, {.p C_decimal}, .src = "dd C_decimal	; decimal setting base = 0"},		/* dd C_decimal	; decimal setting base = 0 18952 */
+	{.type FromH0, {.p C_quit}, .src = "dd C_quit	; quit"},		/* dd C_quit	; quit 18960 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 18968 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal	; test code"},		/* dd M_literal	; test code 18976 */
+	{.type Absolute, {.p 66}},		/* dd 66 18984 */
+	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb"},		/* dd M_Wordb 18992 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 19000 */
+	{.type FromH0, {.p MC_STDOUT}, .src = "dd MC_STDOUT"},		/* dd MC_STDOUT 19008 */
+	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb"},		/* dd M_Wordb 19016 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 19024 */
+	{.type Absolute, {.p 1}},		/* dd 1 19032 */
+	{.type FromH0, {.p M_syswrite}, .src = "dd M_syswrite"},		/* dd M_syswrite 19040 */
+	{.type FromH0, {.p M_drop}, .src = "dd M_drop		; drop the return value of write"},		/* dd M_drop		; drop the return value of write 19048 */
+	{.type FromH0, {.p MC_STDIN}, .src = "dd MC_STDIN"},		/* dd MC_STDIN 19056 */
+	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb"},		/* dd M_Wordb 19064 */
 	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 19072 */
-	{.type FromH0, {.p C_accept_line}, .src = "dd C_accept_line"},		/* dd C_accept_line 19080 */
-	{.type FromH0, {.p MV_Acceptvec}, .src = "dd MV_Acceptvec"},		/* dd MV_Acceptvec 19088 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store 	; C_off	; Acceptvec = 0, use accept-key until changed"},		/* dd M_store 	; C_off	; Acceptvec = 0, use accept-key until changed 19096 */
-	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp"},		/* dd M_Dp 19104 */
-	{.type FromH0, {.p MV_H0}, .src = "dd MV_H0	; H0 = here at startup"},		/* dd MV_H0	; H0 = here at startup 19112 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 19120 */
-	{.type FromH0, {.p MC_STDIN}, .src = "dd MC_STDIN"},		/* dd MC_STDIN 19128 */
-	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 19136 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store	; stdin = 0"},		/* dd M_store	; stdin = 0 19144 */
-	{.type FromH0, {.p MC_STDOUT}, .src = "dd MC_STDOUT"},		/* dd MC_STDOUT 19152 */
-	{.type FromH0, {.p MV_Outfd}, .src = "dd MV_Outfd"},		/* dd MV_Outfd 19160 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 19168 */
-	{.type FromH0, {.p MC_STDERR}, .src = "dd MC_STDERR"},		/* dd MC_STDERR 19176 */
-	{.type FromH0, {.p MV_Errfd}, .src = "dd MV_Errfd"},		/* dd MV_Errfd 19184 */
-	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 19192 */
-	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 19200 */
-	{.type FromH0, {.p C_off}, .src = "dd C_off	; off stores 0 at state"},		/* dd C_off	; off stores 0 at state 19208 */
-	{.type FromH0, {.p C_decimal}, .src = "dd C_decimal	; decimal sets base = 10"},		/* dd C_decimal	; decimal sets base = 10 19216 */
-	{.type FromH0, {.p C_quit}, .src = "dd C_quit	; quit"},		/* dd C_quit	; quit 19224 */
-	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 19232 */
-	{.type Chars, {.str "unable to restore input"}},		/* 19256 */
-	{.type Chars, {.str " Q?"}},		/* 19260 */
-	{.type Chars, {.str " stack underflow"}},		/* 19277 */
-	{.type Chars, {.str " I?"}},		/* 19281 */
-	{.type Chars, {.str " C?"}},		/* 19285 */
-	{.type Chars, {.str "I/O error"}},		/* 19295 */
-	{.type Chars, {.str "uninitialized execution vector"}},		/* 19326 */
-	{.type Chars, {.str " ok"}},		/* 19330 */
-	{.type Chars, {.str "input line is longer than 4096 bytes"}},		/* 19367 */
-	{.type Chars, {.str "read error"}},		/* 19378 */
+	{.type Absolute, {.p 1}},		/* dd 1 19080 */
+	{.type FromH0, {.p M_sysread}, .src = "dd M_sysread"},		/* dd M_sysread 19088 */
+	{.type FromH0, {.p M_drop}, .src = "dd M_drop		; drop the return value of read"},		/* dd M_drop		; drop the return value of read 19096 */
+	{.type Header, {.hdr { 7, "do-args", /* C_do_args = 19112 */ colon }}}, /* CENTRY "do-args" do_args 7 h 19120 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 19128 */
+	{.type Absolute, {.p 0}},		/* dd 0 19136 */
+	{.type FromH0, {.p MV_Acceptvec}, .src = "dd MV_Acceptvec	; no more refills"},		/* dd MV_Acceptvec	; no more refills 19144 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store 	; C_off	; Acceptvec == 0, reading from a buffer. no more refills."},		/* dd M_store 	; C_off	; Acceptvec == 0, reading from a buffer. no more refills. 19152 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 19160 */
+	{.type Absolute, {.p 0}},		/* dd 0 19168 */
+	{.type FromH0, {.p MV_toIn}, .src = "dd MV_toIn"},		/* dd MV_toIn 19176 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; >in = 0"},		/* dd M_store	; >in = 0 19184 */
+	{.type FromH0, {.p M_Args}, .src = "dd M_Args	; ( a )"},		/* dd M_Args	; ( a ) 19192 */
+	{.type FromH0, {.p C_count}, .src = "dd C_count	; ( a+1 n )"},		/* dd C_count	; ( a+1 n ) 19200 */
+	{.type FromH0, {.p MV_toLimit}, .src = "dd MV_toLimit"},		/* dd MV_toLimit 19208 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; ( a+1 ) >limit = n"},		/* dd M_store	; ( a+1 ) >limit = n 19216 */
+	{.type FromH0, {.p MV_Sourcebuf}, .src = "dd MV_Sourcebuf"},		/* dd MV_Sourcebuf 19224 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; sourcebuf = a+1"},		/* dd M_store	; sourcebuf = a+1 19232 */
+	{.type FromH0, {.p C_interpret}, .src = "dd C_interpret"},		/* dd C_interpret 19240 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 19248 */
+	{.type Header, {.hdr { 4, "boot", /* C_boot = 19264 */ colon }}}, /* CENTRY "boot" boot 4 h 19272 */
+	{.type FromH0, {.p M_reset}, .src = "dd M_reset ; initialize return stack"},		/* dd M_reset ; initialize return stack 19280 */
+	{.type FromH0, {.p M_clear}, .src = "dd M_clear	; SP = sstack_end initialize data stack"},		/* dd M_clear	; SP = sstack_end initialize data stack 19288 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 19296 */
+	{.type FromH0, {.p C_parenabort}, .src = "dd C_parenabort ; ( (abort) -- )"},		/* dd C_parenabort ; ( (abort) -- ) 19304 */
+	{.type FromH0, {.p MV_Abortvec}, .src = "dd MV_Abortvec	; variable that puts (abort) code address on the stack"},		/* dd MV_Abortvec	; variable that puts (abort) code address on the stack 19312 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable abortvec = (abort) code address"},		/* dd M_store	; variable abortvec = (abort) code address 19320 */
+	{.type FromH0, {.p M_Wordb}, .src = "dd M_Wordb	; variable puts address of wordbuffer on the top of stack"},		/* dd M_Wordb	; variable puts address of wordbuffer on the top of stack 19328 */
+	{.type FromH0, {.p MV_Wordbuf}, .src = "dd MV_Wordbuf ; variable wordbuf"},		/* dd MV_Wordbuf ; variable wordbuf 19336 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable wordbuf = address of wordbuffer"},		/* dd M_store	; variable wordbuf = address of wordbuffer 19344 */
+	{.type FromH0, {.p M_Tib}, .src = "dd M_Tib	; constant puts address of tibuffer on the top of stack"},		/* dd M_Tib	; constant puts address of tibuffer on the top of stack 19352 */
+	{.type FromH0, {.p MV_Sourcebuf}, .src = "dd MV_Sourcebuf	; variable sourcebuf"},		/* dd MV_Sourcebuf	; variable sourcebuf 19360 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; variable sourcebuf = address of tibuffer"},		/* dd M_store	; variable sourcebuf = address of tibuffer 19368 */
+	{.type FromH0, {.p M_literal}, .src = "dd M_literal"},		/* dd M_literal 19376 */
+	{.type FromH0, {.p C_accept_line}, .src = "dd C_accept_line	; could also use C_accept_key"},		/* dd C_accept_line	; could also use C_accept_key 19384 */
+	{.type FromH0, {.p MV_Acceptvec}, .src = "dd MV_Acceptvec"},		/* dd MV_Acceptvec 19392 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store 	; C_off	; Acceptvec = 0, use accept-key until changed"},		/* dd M_store 	; C_off	; Acceptvec = 0, use accept-key until changed 19400 */
+	{.type FromH0, {.p M_Dp}, .src = "dd M_Dp"},		/* dd M_Dp 19408 */
+	{.type FromH0, {.p MV_H0}, .src = "dd MV_H0	; H0 = here at startup"},		/* dd MV_H0	; H0 = here at startup 19416 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 19424 */
+	{.type FromH0, {.p MC_STDIN}, .src = "dd MC_STDIN"},		/* dd MC_STDIN 19432 */
+	{.type FromH0, {.p MV_Infd}, .src = "dd MV_Infd"},		/* dd MV_Infd 19440 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store	; stdin = 0"},		/* dd M_store	; stdin = 0 19448 */
+	{.type FromH0, {.p MC_STDOUT}, .src = "dd MC_STDOUT"},		/* dd MC_STDOUT 19456 */
+	{.type FromH0, {.p MV_Outfd}, .src = "dd MV_Outfd"},		/* dd MV_Outfd 19464 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 19472 */
+	{.type FromH0, {.p MC_STDERR}, .src = "dd MC_STDERR"},		/* dd MC_STDERR 19480 */
+	{.type FromH0, {.p MV_Errfd}, .src = "dd MV_Errfd"},		/* dd MV_Errfd 19488 */
+	{.type FromH0, {.p M_store}, .src = "dd M_store"},		/* dd M_store 19496 */
+	{.type FromH0, {.p MV_State}, .src = "dd MV_State"},		/* dd MV_State 19504 */
+	{.type FromH0, {.p C_off}, .src = "dd C_off	; off stores 0 at state"},		/* dd C_off	; off stores 0 at state 19512 */
+	{.type FromH0, {.p C_decimal}, .src = "dd C_decimal	; decimal sets base = 10"},		/* dd C_decimal	; decimal sets base = 10 19520 */
+	{.type FromH0, {.p M_Args}, .src = "dd M_Args"},		/* dd M_Args 19528 */
+	{.type FromH0, {.p M_cfetch}, .src = "dd M_cfetch"},		/* dd M_cfetch 19536 */
+	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq"},		/* dd C_0eq 19544 */
+	{.type FromH0, {.p M_cjump}, .src = "dd M_cjump"},		/* dd M_cjump 19552 */
+	{.type FromH0, {.p C_do_args}, .src = "dd C_do_args ; process args"},		/* dd C_do_args ; process args 19560 */
+	{.type FromH0, {.p C_quit}, .src = "dd C_quit	; interpreter loop when there are no args or fall through after processing args"},		/* dd C_quit	; interpreter loop when there are no args or fall through after processing args 19568 */
+	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 19576 */
+	{.type Chars, {.str "unable to restore input"}},		/* 19600 */
+	{.type Chars, {.str " Q?"}},		/* 19604 */
+	{.type Chars, {.str " stack underflow"}},		/* 19621 */
+	{.type Chars, {.str " I?"}},		/* 19625 */
+	{.type Chars, {.str " C?"}},		/* 19629 */
+	{.type Chars, {.str "I/O error"}},		/* 19639 */
+	{.type Chars, {.str "uninitialized execution vector"}},		/* 19670 */
+	{.type Chars, {.str " ok"}},		/* 19674 */
+	{.type Chars, {.str "input line is longer than 4096 bytes"}},		/* 19711 */
+	{.type Chars, {.str "read error"}},		/* 19722 */
 };
 
