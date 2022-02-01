@@ -795,7 +795,7 @@ dd MV_toLimit
 dd M_fetch
 dd MV_Sourcebuf
 dd M_fetch
-dd MV_Blk
+dd MV_Acceptvec
 dd M_fetch
 dd M_literal
 dd 5
@@ -803,6 +803,8 @@ dd M_exitcolon
 
 CENTRY "default-input" C_default_input 13 ; stream input from stdin into Text input buffer
 dd MC_STDIN
+dd MV_Infd
+dd M_store
 dd MV_toIn
 dd C_off
 dd MV_toLimit
@@ -810,7 +812,7 @@ dd C_off
 dd M_Tib
 dd MV_Sourcebuf
 dd M_store
-dd MV_Blk
+dd MV_Acceptvec
 dd C_off
 dd M_exitcolon
 
@@ -818,7 +820,7 @@ CENTRY "restore-input" C_restore_input 13 ; ( <input>|empty -- f )	; restore inp
 dd MV_Eof
 dd C_off			; reset Eof back to 0
 dd M_literal
-dd 5				; input stream is on the stack 
+dd 5				; input stream is on the stack
 dd C_neq
 dd M_cjump
 dd L133				; there is an input stream on the stack
@@ -826,8 +828,8 @@ dd C_default_input	; no input stream on the stack, using default input
 dd C_false
 dd M_jump			; ( false )
 dd L134
-L133:				; ( infd >in >limit sourcebuf blk 5 )
-dd MV_Blk
+L133:				; ( infd >in >limit sourcebuf 'accept 5 )
+dd MV_Acceptvec
 dd M_store
 dd MV_Sourcebuf
 dd M_store
@@ -879,6 +881,7 @@ dd C_false
 L140:
 dd M_exitcolon
 
+; replace current-input and next-input with an asm function that does cmove until it meets a certain character or limit?
 CENTRY "parse" C_parse 5	; ( c -- a ) Place the counted string in Wordbuf and return that address. c = word delimiter.
 dd M_rpush		; ( c -- ) (R -- c )
 dd MV_Wordbuf
@@ -939,7 +942,39 @@ dd M_rpop		; ( cinitial ) Sourcebuf+>In = location of first non-matching charact
 dd C_parse
 dd M_exitcolon
 
+; accept is the Brdline of bio
+; if Acceptvec == 0, accept_key, so the initial booting works fine
+;	else execute it
 CENTRY "accept" C_accept 6	; ( a n -- n ) get line or n chars or EOF from input and store at a
+dd MV_Acceptvec
+dd M_fetch
+dd M_dup
+dd M_cjump
+dd L300	; Acceptvec == 0, use accept-key
+dd M_execute
+dd M_exitcolon
+L300:
+dd M_drop
+dd C_accept_key
+dd M_exitcolon
+
+CENTRY "accept-line" C_accept_line 11 ; ( a n -- n ) get line or n chars or EOF from input and store at a using key
+dd MV_Infd
+dd M_fetch		; ( infd )
+dd MV_Sourcebuf	; variable Sourcebuf has the address where to store the character read
+dd M_fetch
+dd M_literal
+dd 4096			; ( infd Tib 4096 )
+dd M_sysread	; ( infd Tib 4096 -- n )
+dd C_0eq
+dd M_cjump
+dd L302
+dd MV_Eof	; n == 0, set Eof
+dd C_on		; EOF
+L302:		; n != 0
+dd M_exitcolon
+
+CENTRY "accept-key" C_accept_key 10	; ( a n -- n ) get line or n chars or EOF from input and store at a using key
 dd M_xswap	; ( n a -- )
 dd M_dup	; ( n a a -- )
 dd M_rpush
@@ -1007,17 +1042,8 @@ L153:
 dd M_exitcolon
 
 CENTRY "refill" C_refill 6
-dd MV_Blk
-dd M_fetch
-dd M_cjump
-dd L155
-dd C_false
-dd M_jump
-dd L156
-L155:
 dd C_query
 dd C_true
-L156:
 dd M_exitcolon
 
 CENTRY "findname" C_findname 8 ; ( a1 -- a2 f ) ; loop through the dictionary names
@@ -1123,6 +1149,7 @@ dd C_cr
 dd C_abort
 L169:
 dd M_exitcolon
+
 CENTRY "?stack" C_qstack 6
 dd M_stackptr
 dd M_S0
@@ -1444,41 +1471,27 @@ dd C_1plus
 dd M_cfetch
 dd C_literal
 dd M_exitcolon
+
 CIENTRY "[']" CI_quote_brackets 3	; take the address of next token from the input stream during compilation
 dd C_single_quote
 dd C_literal
 dd M_exitcolon
+
 CIENTRY "(" CI_openparen 1	; ignore until ) from the input stream during compilation
 dd M_literal
 dd 41
 dd C_parse
 dd M_drop
 dd M_exitcolon
+
+; if the line is longer than Tib, then skipping this line is not good enough. hence, throwing an error when >Limit == Tib length
 CIENTRY "\\" CI_backslash 1
-dd MV_Blk
-dd M_fetch
-dd M_cjump
-dd L214
-dd MV_toIn
-dd M_fetch
-dd M_literal
-dd 63
-dd M_plus
-dd M_literal
-dd 63
-dd C_invert
-dd M_binand
-dd MV_toIn
-dd M_store
-dd M_jump
-dd L215
-L214:
 dd MV_toLimit
 dd M_fetch
 dd MV_toIn
 dd M_store
-L215:
 dd M_exitcolon
+
 CENTRY "(?abort)" C_qabort_parens 8
 dd MV_State
 dd M_cjump
@@ -1794,7 +1807,6 @@ CENTRY "quit" C_quit 4 ; interpreter loop
 dd M_reset ; initialize return stack
 dd M_clear	; SP = sstack_end initialize data stack
 L253:
-
 dd C_query
 
 ; dd MV_toLimit	; show the line read, for debugging
@@ -1818,8 +1830,8 @@ dd C_off	; off sets variable state = 0
 dd M_Tib	; constant puts address of tibuffer on the top of stack
 dd MV_Sourcebuf	; variable sourcebuf
 dd M_store	; variable sourcebuf = address of tibuffer
-dd MV_Blk	; variable blk
-dd C_off	; off variable blk = 0
+dd MV_Acceptvec
+dd C_off	; variable Acceptvec = 0
 dd MC_STDIN
 dd MV_Infd
 dd M_store
@@ -1890,11 +1902,9 @@ dd M_sysread
 dd M_drop		; drop the return value of read
 
 CENTRY "boot" C_boot 4
-
+; good here depth = 0
 dd M_reset ; initialize return stack
 dd M_clear	; SP = sstack_end initialize data stack
-			; s0 puts FFEND on the stack
-			; no args
 
 dd M_literal
 dd C_parenabort ; ( (abort) -- )
@@ -1908,6 +1918,9 @@ dd M_store	; variable wordbuf = address of wordbuffer
 dd M_Tib	; constant puts address of tibuffer on the top of stack
 dd MV_Sourcebuf	; variable sourcebuf
 dd M_store	; variable sourcebuf = address of tibuffer
+
+dd MV_Acceptvec
+dd C_off	; Acceptvec = 0, use accept-key until changed
 
 dd M_Dp
 dd MV_H0	; H0 = here at startup
@@ -1926,7 +1939,6 @@ dd M_store
 dd MV_State
 dd C_off	; off stores 0 at state
 dd C_decimal	; decimal sets base = 10
-
 dd C_quit	; quit
 dd M_exitcolon
 
