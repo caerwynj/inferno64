@@ -948,31 +948,62 @@ dd M_exitcolon
 CENTRY "accept" C_accept 6	; ( a n -- n ) get line or n chars or EOF from input and store at a
 dd MV_Acceptvec
 dd M_fetch
-dd M_dup
+dd C_qdup
 dd M_cjump
 dd L300	; Acceptvec == 0, use accept-key
 dd M_execute
 dd M_exitcolon
 L300:
-dd M_drop
 dd C_accept_key
 dd M_exitcolon
 
-CENTRY "accept-line" C_accept_line 11 ; ( a n -- n ) get line or n chars or EOF from input and store at a using key
+CENTRY "accept-line" C_accept_line 11 ; ( a n -- n1 ) get line or n chars or EOF from input and store at a using key
 dd MV_Infd
-dd M_fetch		; ( infd )
-dd MV_Sourcebuf	; variable Sourcebuf has the address where to store the character read
-dd M_fetch
-dd M_literal
-dd 4096			; ( infd Tib 4096 )
-dd M_sysread	; ( infd Tib 4096 -- n )
-dd C_0eq
+dd M_fetch		; ( a n infd )
+dd C_read_file	; ( n ioresult )
 dd M_cjump
-dd L302
+dd L301			; ioresult == false as n = -1
+
+dd M_dup		; ( n n )
+dd M_cjump
+dd L302			; ( 0 )
+
+dd M_dup		; n > 0. if n == 4096, error out. ( n n )
+dd M_literal
+dd 4096			; ( n n 4096 )
+dd M_equal		; ( n n==4096 )
+dd M_cjump		; ( n )
+dd L303			; n < 4096 ( n )
+
+dd MV_Sourcebuf	; n == 4096 ( n )
+dd M_fetch		; ( n tib )
+dd M_xswap		; ( tib n )
+dd C_type		; show the long line and an error message
+dd M_literal
+dd L304
+dd M_literal
+dd 37
+dd C_type		; show the error message
+dd C_cr
+dd C_abort
+
+L303:			; n < 4096 ( n )
+dd C_1minus		; n-- to avoid parsing the newline character
+dd M_exitcolon	; ( n ) n = number of bytes read
+
+L301:			; ioresult == false as n = -1, read error, TODO show the errstr
+dd M_literal
+dd L305
+dd M_literal
+dd 12
+dd C_type		; show the error message
+dd C_cr
+dd C_abort
+
+L302:		; n == 0 ( 0 ) end of file
 dd MV_Eof	; n == 0, set Eof
 dd C_on		; EOF
-L302:		; n != 0
-dd M_exitcolon
+dd M_exitcolon	; ( 0 )
 
 CENTRY "accept-key" C_accept_key 10	; ( a n -- n ) get line or n chars or EOF from input and store at a using key
 dd M_xswap	; ( n a -- )
@@ -1919,8 +1950,10 @@ dd M_Tib	; constant puts address of tibuffer on the top of stack
 dd MV_Sourcebuf	; variable sourcebuf
 dd M_store	; variable sourcebuf = address of tibuffer
 
+dd M_literal
+dd C_accept_line
 dd MV_Acceptvec
-dd C_off	; Acceptvec = 0, use accept-key until changed
+dd M_store 	; C_off	; Acceptvec = 0, use accept-key until changed
 
 dd M_Dp
 dd MV_H0	; H0 = here at startup
@@ -1958,3 +1991,7 @@ L251:
 db "uninitialized execution vector"
 L255:
 db " ok"
+L304:
+db "input line is longer than 4096 bytes"
+L305:
+db "read error"
