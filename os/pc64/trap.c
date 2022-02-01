@@ -76,9 +76,10 @@ trapinit(void)
 	 */
 	/* 9front specific trapenable(VectorDE, debugexc, 0, "debugexc"); */
 	trapenable(VectorBPT, debugbpt, 0, "debugpt");
-	trapenable(VectorPF, faultamd64, 0, "faultamd64");
+/*	trapenable(VectorPF, faultamd64, 0, "faultamd64");
 	trapenable(Vector2F, doublefault, 0, "doublefault");
 	trapenable(Vector15, unexpected, 0, "unexpected");
+*/
 }
 
 static char* excname[32] = {
@@ -122,7 +123,7 @@ dumprstack(intptr h, intptr rsp, intptr he)
 	intptr i;
 	int l=0;
 
-	print("Forth return stack h 0x%zx rsp 0x%zx RSTACK 0x%zx he 0x%zx\n",
+	print("Forth return stack h 0x%zx R8 RSP 0x%zx RSTACK 0x%zx he 0x%zx\n",
 			h, rsp, h+RSTACK, he);
 	if(he == 0 || h == 0 || rsp < h || rsp >= he || h+RSTACK < h || h+RSTACK >= he)
 		return;
@@ -143,10 +144,11 @@ dumppstack(intptr h, intptr psp, intptr he)
 	intptr i;
 	int l=0;
 
-	print("Forth parameter stack h 0x%zx psp 0x%zx PSTACK 0x%zx he 0x%zx\n",
+	print("Forth parameter stack h 0x%zx DX PSP 0x%zx PSTACK 0x%zx he 0x%zx\n",
 			h, psp, h+PSTACK, he);
 	if(he == 0 || h == 0 || psp < h || psp >= he || h+PSTACK < h || h+PSTACK >= he)
 		return;
+	print("	depth %zd\n", (h+PSTACK - psp)/sizeof(intptr));
 	for(i = h + PSTACK-8; i >= psp; i-=8){
 		print("	0x%zx: 0x%zx", i, *(intptr*)i);
 		l++;
@@ -187,38 +189,16 @@ trap(Ureg *ureg)
 
 	user = kenter(ureg);
 	vno = ureg->type;
-	if(!irqhandled(ureg, vno) && (!user || !usertrap(vno))){
-		if(!user){
-			void (*pc)(void);
-
-			extern void _rdmsrinst(void);
-			extern void _wrmsrinst(void);
-			extern void _peekinst(void);
-
-			pc = (void*)ureg->pc;
-			if(pc == _rdmsrinst || pc == _wrmsrinst){
-				if(vno == VectorGPF){
-					ureg->bp = -1;
-					ureg->pc += 2;
-					return;
-				}
-			} else if(pc == _peekinst){
-				if(vno == VectorGPF || vno == VectorPF){
-					ureg->pc += 2;
-					return;
-				}
-			}
-
-			/* early fault before trapinit() */
-			if(vno == VectorPF)
-				faultamd64(ureg, 0);
-		}
-
+	if(irqhandled(ureg, vno) == 0 /* TODO && (!user || !usertrap(vno)) */){
 		dumpregs(ureg);
-		if(!user){
+		if(up->fmem != nil){
+			dumprstack(ureg->r11, ureg->r8, ureg->r12);
+			dumppstack(ureg->r11, ureg->dx, ureg->r12);
+		}
+/*		if(user == 0){ */
 			ureg->sp = (uintptr)&ureg->sp;
 			_dumpstack(ureg);
-		}
+/*		}*/
 		if(vno < nelem(excname))
 			panic("%s", excname[vno]);
 		panic("unknown trap/intr: %d", vno);

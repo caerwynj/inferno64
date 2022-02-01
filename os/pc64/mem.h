@@ -208,7 +208,7 @@
 
 #define USTKTOP		(up->kstack+KSTACK)
 
-/* forth locations */
+/* forth memory map */
 /*
  * user table at the start unlike in Starting Forth as it will be
  * easy to get to the variables with a known offset from C

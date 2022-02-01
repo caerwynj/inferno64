@@ -23,7 +23,7 @@ plan9 amd64 assembler puts the first argument in BP (RARG), return value in AX.
 
  TOP: BX top of stack register
  PSP: DX parameter stack pointer, grows towards lower memory (downwards)
- RSP: R8 return stack pointer, grows towards higher memory (upwards)
+ RSP: R8 return stack pointer, grows towards lower memory (downwards)
  IP:  R9 instruction pointer
  W:   R10 work register (holds CFA)
  UM:  R11 register holding the start of this process's heap memory
@@ -88,7 +88,7 @@ TODO Move variable space out of the dictionary from #forth
 
 #define TOP BX /* top of stack register */
 #define PSP DX /* parameter stack pointer, grows towards lower memory (downwards) */
-#define RSP R8 /* return stack pointer, grows towards higher memory (upwards) */
+#define RSP R8 /* return stack pointer, grows towards lower memory (downwards) */
 #define IP  R9 /* instruction pointer */
 #define W   R10/* work register (holds CFA) */
 #define UM	R11/* start of heap memory */

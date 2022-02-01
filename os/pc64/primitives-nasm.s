@@ -65,7 +65,7 @@ MVENTRY "Wordbuf" Wordbuf 0 7		; is there a need for this?
 MVENTRY ">In" toIn 0 3
 MVENTRY ">Limit" toLimit 0 6
 MVENTRY "Findadr" Findadr 0 7
-MVENTRY "Blk" Blk 0 3
+MVENTRY "Acceptvec" Acceptvec 0 9
 MVENTRY "Searchlen" Searchlen 0 9
 MVENTRY "Base" Base 0 4
 MVENTRY ">Num" toNum 0 4

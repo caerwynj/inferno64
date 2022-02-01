@@ -233,6 +233,7 @@ parseparams(char *params)
 	return p;
 }
 
+/* TODO simplify this: remove the absolute values? */
 void
 loadforthdictionary(u8 *fmem)
 {
