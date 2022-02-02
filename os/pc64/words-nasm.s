@@ -1846,15 +1846,26 @@ dd 0
 dd M_terminate
 dd M_exitcolon
 
-CENTRY "include" C_include 7
+CENTRY "include" C_include 7	; this does not work
 dd C_bl
 dd C_word
 dd M_rpush
-dd MV_toLimit
+
+dd MV_Acceptvec
+dd M_fetch
+dd M_cjump
+dd L248			; when Acceptvec == 0
+dd MV_toLimit	; include ends any further reading from the current input line
 dd M_fetch
 dd MV_toIn
 dd M_store
+L248:			; when Acceptvec == 0
 dd C_save_input
+dd C_default_input
+dd M_literal
+dd C_accept_key	; as C_accept_line will not get a line per read from non-cons files
+dd MV_Acceptvec
+dd M_store
 dd M_rpop
 dd C_count
 dd C_ro
