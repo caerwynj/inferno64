@@ -187,14 +187,15 @@ parseparams(char *params)
 					break;
 				s = e+1;
 			}
-		}else if(cistrncmp("ARGS", s, 4) == 0){ // until the end or Argslen
+		}else if(cistrncmp("ARGS", s, 4) == 0){ // until the end or Argslen = 256 bytes
 			s += 4;
-			for(i = 0; i < Argslen && *s != '\0'; i++){
+			for(i = 1; i < Argslen && *s != '\0'; i++){
 				p.args[i] = *s;
 				s++;
 			}
-			if(i == Argslen)
+			if(i >= Argslen)
 				error(Ebadctl);
+			p.args[0] = i-1;	/* storing the count */
 		}else if(*s == ' ' || *s == '	' || *s == '\r' || *s == '\n'){
 			/* would be nice to use isspace(*s) here */
 			s++;
@@ -211,10 +212,10 @@ parseparams(char *params)
 	if(1 == 1){
 		print("parseparams newenv %d newfd %d newns %d shmem %d nodevs %d\n"
 				"	redirfds %d %d %d\n"
-				"	args %s\n",
+				"	args %d: %s\n",
 				p.newenv, p.newfd, p.newns, p.shmem, p.nodevs,
 				p.stdinfd, p.stdoutfd, p.stderrfd,
-				p.args);
+				p.args[0], p.args[1]);
 		if(p.nclosefds > 0){
 			print("	closefds ");
 			for(i = 0; i < p.nclosefds; i++){
@@ -505,7 +506,7 @@ print("stdinfd devtab[c->type]->dc %c c 0x%p chanpath(c) %s c->aux 0x%p\n", devt
 	/* store the start address at that address too - magic check */
 	((intptr*)p->fmem)[0] = (intptr)p->fmem;	/* heap start */
 	((intptr*)p->fmem)[1] = (intptr)p->fmem+FORTHHEAPSIZE-1; /* heap end */
-	strncpy((s8*)p->fmem + ARGS, params->args, Argslen);
+	strncpy((s8*)p->fmem + FTHARGS, params->args, Argslen);
 
 /*	p->kpfun = func;
 	p->kparg = arg;

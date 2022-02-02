@@ -619,10 +619,10 @@ TEXT	Vp(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
 	ADDQ $VHERE, TOP
 	NEXT
 
-TEXT	Args(SB), 1, $-4
+TEXT	Fthargs(SB), 1, $-4
 	PUSH(TOP)
 	MOVQ UM, TOP
-	ADDQ $ARGS, TOP
+	ADDQ $FTHARGS, TOP
 	NEXT
 
 /*

@@ -87,4 +87,4 @@ MENTRY "S0" S0 2
 MENTRY "s@" stackptr 2	; puts PSP on stack. Not a variable hence lower case.
 MENTRY "Wordb" Wordb 5
 MENTRY "Tib" Tib 3
-MENTRY "Args" Args 4
+MENTRY "Fthargs" Fthargs 7

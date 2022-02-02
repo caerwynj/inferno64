@@ -46,6 +46,7 @@ dd 1
 dd C_cells
 dd M_plus
 dd M_exitcolon
+
 CENTRY "depth" C_depth 5
 dd M_S0
 dd M_stackptr
@@ -813,23 +814,32 @@ dd C_off
 dd M_Tib
 dd MV_Sourcebuf
 dd M_store
+dd M_literal
+dd C_accept_line	; could use C_accept_key too
 dd MV_Acceptvec
-dd C_off
+dd M_store
 dd M_exitcolon
 
 CENTRY "restore-input" C_restore_input 13 ; ( <input>|empty -- f )	; restore input stream from the stack or set the default-input as the input stream
 dd MV_Eof
-dd C_off			; reset Eof back to 0
+dd C_off		; reset Eof back to 0
+
+dd C_depth
 dd M_literal
-dd 5				; input stream is on the stack
-dd C_neq
+dd 6			; is the input stream on the stack, depth == 6?
+dd M_equal
 dd M_cjump
-dd L133				; there is an input stream on the stack
-dd C_default_input	; no input stream on the stack, using default input
-dd C_false
-dd M_jump			; ( false )
-dd L134
-L133:				; ( infd >in >limit sourcebuf 'accept 5 )
+dd L132			; depth <> 6, there is no input stream on the stack, get out
+
+dd M_dup		; depth == 6, now check if there is a 5 on the top of stack
+dd M_literal
+dd 5			; is 5 on the top of stack?
+dd M_equal
+dd M_cjump
+dd L132			; top of stack <> 5, there is no input stream on the stack, get out
+
+; ( infd >in >limit sourcebuf 'accept 5 )
+dd M_drop		; ( infd >in >limit sourcebuf 'accept )
 dd MV_Acceptvec
 dd M_store
 dd MV_Sourcebuf
@@ -841,14 +851,20 @@ dd M_store
 dd MV_Infd
 dd M_store
 dd C_true			; ( true )
-L134:
 dd M_exitcolon
 
-CENTRY "?restore-input" C_qrestore_input 14 ; ( <input> -- f ) ; use the input stream on the stack or abort
+L132:				; depth <> 6, there is no input stream on the stack, get out
+dd C_default_input	; no input stream on the stack, use default input from now
+dd C_false			; ( 0 )
+dd M_exitcolon
+
+CENTRY "?restore-input" C_qrestore_input 14 ; ( <input> -- ) ; use the input stream on the stack or abort
 dd C_restore_input
 dd C_0eq
 dd M_cjump
-dd L136
+dd L136		; input stream restored
+
+; no input stream on the stack to restore, show error and abort
 dd C_space
 dd M_literal
 dd L137
@@ -860,7 +876,7 @@ dd C_depth
 dd C_dot
 dd C_cr
 dd C_abort
-L136:
+L136:		; input stream restored, get out
 dd M_exitcolon
 
 ; next-input-char
@@ -1882,11 +1898,7 @@ dd M_exitcolon	; why is this needed?
 CENTRY "(abort)" C_parenabort 7 ; TODO correct below stack notations
 dd MV_State	; ( mv_State -- )
 dd C_off	; off sets variable state = 0
-dd M_Tib	; constant puts address of tibuffer on the top of stack
-dd MV_Sourcebuf	; variable sourcebuf
-dd M_store	; variable sourcebuf = address of tibuffer
-dd MV_Acceptvec
-dd C_off	; variable Acceptvec = 0
+
 dd MC_STDIN
 dd MV_Infd
 dd M_store
@@ -1896,6 +1908,8 @@ dd M_store
 dd MC_STDERR
 dd MV_Errfd
 dd M_store
+
+dd C_default_input
 dd C_quit	; quit resets stacks and is the interpreter loop
 dd M_exitcolon	; why is this needed? quit does not return unless it breaks
 
@@ -1912,7 +1926,7 @@ dd 1		; ( heapend 1 -- )
 dd C_cells	; cells ( heapend 8 -- )
 dd M_minus	; ( heapend-8 -- )
 dd M_fetch	; ( contents_from_heapend-8 -- )
-dd M_Args	; variable args
+dd M_Fthargs	; variable args
 dd M_store	; args = contents_from_heapend-8
 dd M_literal
 dd C_parenabort ; ( (abort) -- )
@@ -1967,7 +1981,7 @@ dd 0
 dd MV_toIn
 dd M_store	; >in = 0
 
-dd M_Args	; ( a )
+dd M_Fthargs	; ( a )
 dd C_count	; ( a+1 n )
 dd MV_toLimit
 dd M_store	; ( a+1 ) >limit = n
@@ -1990,15 +2004,6 @@ dd M_Wordb	; variable puts address of wordbuffer on the top of stack
 dd MV_Wordbuf ; variable wordbuf
 dd M_store	; variable wordbuf = address of wordbuffer
 
-dd M_Tib	; constant puts address of tibuffer on the top of stack
-dd MV_Sourcebuf	; variable sourcebuf
-dd M_store	; variable sourcebuf = address of tibuffer
-
-dd M_literal
-dd C_accept_line	; could also use C_accept_key
-dd MV_Acceptvec
-dd M_store 	; C_off	; Acceptvec = 0, use accept-key until changed
-
 dd M_Dp
 dd MV_H0	; H0 = here at startup
 dd M_store
@@ -2017,11 +2022,15 @@ dd MV_State
 dd C_off	; off stores 0 at state
 dd C_decimal	; decimal sets base = 10
 
-dd M_Args
+dd C_default_input	; read lines from stdin, if args do not set one up
+
+dd M_Fthargs
 dd M_cfetch
-dd C_0eq
 dd M_cjump
-dd C_do_args ; process args
+dd L260	; fetched 0, no args, go to the interpreter loop
+dd C_do_args	; process args
+L260:
+; dd C_default_input	; do not do this as it will override any input streams set up by the args
 dd C_quit	; interpreter loop when there are no args or fall through after processing args
 dd M_exitcolon
 

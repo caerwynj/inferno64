@@ -222,12 +222,13 @@
 #define TIB			(HEAPSTART+(17*BY2PG))	/* text input buffer */
 #define RSTACK		(HEAPSTART+(19*BY2PG))	/* upto (HEAPSTART+(18*BY2PG)), going down */
 
-#define ARGS		(RSTACK+(BY2WD*0))	/* args size = 32*8 = 256 bytes */
+										/* 256 allows these to be counted strings */
+#define FTHARGS		(RSTACK+(BY2WD*0))	/* args size = 32*8 = 256 bytes, counted string */
 #define WORDB		(RSTACK+(BY2WD*32))	/* word buffer = 32*8 = 256 */
 #define ERRSTR		(RSTACK+(BY2WD*64))	/* errstr size = 32*8 = 256 bytes */
 
 #define FORTHVARS	(RSTACK+(BY2WD*96))		/* magic word here? */
-/* storage for Forth registers when calling C */
+/* storage for saving Forth registers when calling C */
 #define FORTHTOP	(FORTHVARS+(BY2WD*0))
 #define FORTHPSP	(FORTHVARS+(BY2WD*1))
 #define FORTHRSP	(FORTHVARS+(BY2WD*2))
