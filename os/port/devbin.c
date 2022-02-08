@@ -5,7 +5,7 @@
 #include	"fns.h"
 #include	"../port/error.h"
 
-#define	SEARCHER(q) ((u32)(q).path)
+#define	SEARCHER(q) ((q).path)
 #define	SOURCEFD(q)	((q).vers)
 
 /*
@@ -21,7 +21,7 @@ struct Searcher
 {
 	u32 qidpath;
 	char name[KNAMELEN];
-	u8	*(*endfn)(u8 *startp, u8 *endp); /* function pointer that returns the number of bytes to send */
+	u8	*(*endfn)(u8 *startp, u8 *endp); /* function pointer returning a pointer to the location after the delimiter */
 };
 QLock lexlock;
 
@@ -72,9 +72,6 @@ Searcher	searchers[] =
 	Qbuffer,	"buffer", readuntil,	/* to read contents without a delimiter, such as the last non-delimited content */
 };
 
-/*
- *  create a bin, no streams are created until an open
- */
 static Chan*
 binattach(char *spec)
 {
@@ -104,16 +101,18 @@ bingen(Chan *c, char*, Dirtab *, int, int i, Dir *dp)
 		if(i > up->fgrp->maxfd)
 			return -1;
 		nsourcefds = 0;
+
 		for(nfd = 0; nfd < up->fgrp->maxfd; nfd++){
 			if(up->fgrp->fd[nfd] != nil &&
 				up->fgrp->fd[nfd]->type != bintype &&
-				(up->fgrp->fd[nfd]->mode == OREAD || up->fgrp->fd[nfd]->mode == ORDWR))
+				(up->fgrp->fd[nfd]->mode == OREAD || up->fgrp->fd[nfd]->mode == ORDWR)){
+				if(nsourcefds == i){
+					snprint(fdname,5,"%d",nfd);
+					mkqid(&q, Qfddir, nfd, QTDIR); /* source fd in qid.vers */
+					devdir(c, q, fdname, 0, eve, 0555, dp);
+					return 1;
+				}
 				nsourcefds++;
-			if(nsourcefds == i){
-				snprint(fdname,5,"%d",nfd);
-				mkqid(&q, Qfddir, nfd, QTDIR); /* source fd in qid.vers */
-				devdir(c, q, fdname, 0, eve, 0555, dp);
-				return 1;
 			}
 		}
 		return -1;
@@ -122,12 +121,12 @@ bingen(Chan *c, char*, Dirtab *, int, int i, Dir *dp)
 	/* within an fd's dir, show the list of searchers as files */
 	ns = 0;
 	for(l = searchers; l != nil; l++){
-		ns++;
 		if(i == ns){
 			mkqid(&q, l->qidpath, c->qid.vers, QTFILE);
 			devdir(c, q, l->name, 0, eve, 0400, dp);
 			return 1;
 		}
+		ns++;
 	}
 	return -1;
 }
@@ -137,12 +136,7 @@ binwalk(Chan *c, Chan *nc, char **name, int nname)
 {
 	Walkqid *wq;
 
-print("binwalk chanpath(c) %s chanpath %s nname %d\n", chanpath(c), chanpath(nc), nname);
 	wq = devwalk(c, nc, name, nname, nil, 0, bingen);
-	if(wq != nil && wq->clone != nil && wq->clone != c){
-		wq->clone->aux = nil;
-	}
-print("binwalk chanpath(wq->clone) %s\n", chanpath(wq->clone));
 	return wq;
 }
 
@@ -163,7 +157,8 @@ binopen(Chan *c, u32 omode)
 {
 	Bin *bin;
 	u32 sourcefd, nfd;
-	Binreader *l;
+	Binreader *br;
+	Searcher *s;
 
 	if(c->qid.type & QTDIR){
 		if(omode != OREAD)
@@ -185,7 +180,7 @@ binopen(Chan *c, u32 omode)
 	if(up->fgrp->fd[sourcefd] == nil ||
 		up->fgrp->fd[sourcefd]->type == bintype)
 		error(Ebadarg);
-	if(up->fgrp->fd[sourcefd]->mode != OREAD ||
+	if(up->fgrp->fd[sourcefd]->mode != OREAD &&
 		up->fgrp->fd[sourcefd]->mode != ORDWR)
 		error(Ebadarg);
 
@@ -201,17 +196,26 @@ binopen(Chan *c, u32 omode)
 			qunlock(bin);	
 		}
 	}
-	l = malloc(sizeof(Binreader));
-	if(l == nil)
+	br = malloc(sizeof(Binreader));
+	if(br == nil)
 		panic("exhausted memory");
 	if(bin == nil){
 		bin = malloc(sizeof(Bin));
 		if(bin == nil)
 			panic("exhausted memory");
-		l->bin = bin;
+		br->bin = bin;
+		bin->eof=0;
 		incref(bin);
 	} else
-		l->bin = bin;
+		br->bin = bin;
+	for(s = searchers; s != nil; s++){
+		if(SEARCHER(c->qid) == s->qidpath){
+			br->searcher = s;
+			break;
+		}
+	}
+	if(br->searcher == nil)
+		error(Ebadarg);
 
 	qlock(bin);
 	if(bin->buf == nil){
@@ -221,7 +225,7 @@ binopen(Chan *c, u32 omode)
 		bin->bufsize = conf.pipeqsize;
 	}
 	qunlock(bin);
-	c->aux = l;
+	c->aux = br;
 	c->mode = openmode(omode);
 	c->flag |= COPEN;
 	c->offset = 0;
@@ -235,7 +239,6 @@ binclose(Chan *c)
 	Bin *bin;
 	Binreader *l;
 
-print("binclose: c->path %s\n", chanpath(c));
 	l = c->aux;
 	if(l != nil){
 		bin = l->bin;
@@ -285,13 +288,14 @@ binread(Chan *c, void *va, s32 n, s64)
 {
 	Bin *bin;
 	Searcher *s;
-	u8 *p, *ep, *nextreadp;
+	u8 *ep, *nextreadp;
 	u32 rv, nremaining;
 
 	if(c->qid.type == QTDIR){
 		return devdirread(c, va, n, nil, 0, bingen);
 	}
 
+	rv = 0;
 	bin = ((Binreader*)c->aux)->bin;
 	s = ((Binreader*)c->aux)->searcher;
 	if(bin->buf == nil)
@@ -386,7 +390,7 @@ Dev bindevtab = {
 
 /* to read contents without a delimiter, such as the last non-delimited content */
 static u8 *
-readuntil(u8 *startp, u8 *endp)
+readuntil(u8 *, u8 *endp)
 {
 	return endp;
 }
