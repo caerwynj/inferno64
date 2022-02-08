@@ -1789,7 +1789,7 @@ CENTRY "close-file" C_close_file 10	; ( fd -- ioresult )
 dd M_sysclose
 dd C_0eq
 dd M_exitcolon
-CENTRY "read-file" C_read_file 9	; ( a n fd -- n2 ioresult )
+CENTRY "read-file" C_read_file 9	; ( 'text count fd -- count2 ioresult )
 dd C_rot	; ( n fd a )
 dd C_rot	; ( fd a n )
 dd M_sysread
@@ -1798,7 +1798,7 @@ dd M_literal
 dd -1
 dd C_neq
 dd M_exitcolon
-CENTRY "write-file" C_write_file 10	; ( a n fd -- ioresult )
+CENTRY "write-file" C_write_file 10	; ( 'text count fd -- ioresult )
 dd C_rot	; ( n fd a )
 dd C_rot	; ( fd a n )
 dd M_syswrite

@@ -175,7 +175,7 @@ procgen(Chan *c, char *name, Dirtab *tab, int, int s, Dir *dp)
 
 	if(s == DEVDOTDOT){
 		mkqid(&qid, Qdir, 0, QTDIR);
-		devdir(c, qid, "#o", 0, eve, 0555, dp);
+		devdir(c, qid, "#p", 0, eve, 0555, dp);
 		return 1;
 	}
 

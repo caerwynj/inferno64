@@ -2168,7 +2168,7 @@ Fentry fentries[] = {
 	{.type FromH0, {.p M_sysclose}, .src = "dd M_sysclose"},		/* dd M_sysclose 17688 */
 	{.type FromH0, {.p C_0eq}, .src = "dd C_0eq"},		/* dd C_0eq 17696 */
 	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17704 */
-	{.type Header, {.hdr { 9, "read-file", /* C_read_file = 17728 */ colon }}}, /* CENTRY "read-file" read_file 9 ; ( a n fd -- n2 ioresult ) h 17736 */
+	{.type Header, {.hdr { 9, "read-file", /* C_read_file = 17728 */ colon }}}, /* CENTRY "read-file" read_file 9 ; ( 'text count fd -- count2 ioresult ) h 17736 */
 	{.type FromH0, {.p C_rot}, .src = "dd C_rot	; ( n fd a )"},		/* dd C_rot	; ( n fd a ) 17744 */
 	{.type FromH0, {.p C_rot}, .src = "dd C_rot	; ( fd a n )"},		/* dd C_rot	; ( fd a n ) 17752 */
 	{.type FromH0, {.p M_sysread}, .src = "dd M_sysread"},		/* dd M_sysread 17760 */
@@ -2177,7 +2177,7 @@ Fentry fentries[] = {
 	{.type Absolute, {.p -1}},		/* dd -1 17784 */
 	{.type FromH0, {.p C_neq}, .src = "dd C_neq"},		/* dd C_neq 17792 */
 	{.type FromH0, {.p M_exitcolon}, .src = "dd M_exitcolon"},		/* dd M_exitcolon 17800 */
-	{.type Header, {.hdr { 10, "write-file", /* C_write_file = 17824 */ colon }}}, /* CENTRY "write-file" write_file 10 ; ( a n fd -- ioresult ) h 17832 */
+	{.type Header, {.hdr { 10, "write-file", /* C_write_file = 17824 */ colon }}}, /* CENTRY "write-file" write_file 10 ; ( 'text count fd -- ioresult ) h 17832 */
 	{.type FromH0, {.p C_rot}, .src = "dd C_rot	; ( n fd a )"},		/* dd C_rot	; ( n fd a ) 17840 */
 	{.type FromH0, {.p C_rot}, .src = "dd C_rot	; ( fd a n )"},		/* dd C_rot	; ( fd a n ) 17848 */
 	{.type FromH0, {.p M_syswrite}, .src = "dd M_syswrite"},		/* dd M_syswrite 17856 */

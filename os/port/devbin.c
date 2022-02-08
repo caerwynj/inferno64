@@ -9,6 +9,10 @@
 #define	SOURCEFD(q)	((q).vers)
 
 /*
+	An fd created here might be used by different processes at the same time
+	if the processes are sharing the Fgrp. Hence, the need for locks.
+ */
+/*
 	len is the space available in the reader's buffer
 	For now, assuming that the delimiter is 1 char.
  */
@@ -17,7 +21,7 @@ struct Searcher
 {
 	u32 qidpath;
 	char name[KNAMELEN];
-	u8	*(*searchfn)(u8 *startp, u8 *endp, u32 len); /* function pointer that returns the number of bytes to send */
+	u8	*(*endfn)(u8 *startp, u8 *endp); /* function pointer that returns the number of bytes to send */
 };
 QLock lexlock;
 
@@ -29,6 +33,7 @@ struct Bin
 	u32	sourcefd;
 	Chan *sourcechan;	/* for reading more data, instead of using fd2chan() for each read() */
 	u8 *buf, *readp, *writep;
+	s8 eof;
 	u32 bufsize;
 	u64 off;
 };
@@ -48,20 +53,23 @@ enum
 	Qline,
 	Qdoublequote,
 	Qcloseparen,
+	Qbuffer,
 };
 
-static u8 *findword(u8 *startp, u8 *endp, u32 len);
-static u8 *findnewline(u8 *startp, u8 *endp, u32 len);
-static u8 *finddoublequote(u8 *startp, u8 *endp, u32 len);
-static u8 *findcloseparen(u8 *startp, u8 *endp, u32 len);
+static u8 *endofword(u8 *startp, u8 *endp);
+static u8 *endofnewline(u8 *startp, u8 *endp);
+static u8 *endofdoublequote(u8 *startp, u8 *endp);
+static u8 *endofcloseparen(u8 *startp, u8 *endp);
+static u8 *readuntil(u8 *startp, u8 *endp);
 u16	bintype = 0;
 
 Searcher	searchers[] =
 {
-	Qword,	"word",	findword,
-	Qline,	"line",	findnewline,
-	Qdoublequote,	"doublequote",	finddoublequote,
-	Qcloseparen,	"closeparen",	findcloseparen,
+	Qword,	"word", endofword,
+	Qline,	"line", endofnewline,
+	Qdoublequote,	"doublequote", endofdoublequote,
+	Qcloseparen,	"closeparen", endofcloseparen,
+	Qbuffer,	"buffer", readuntil,	/* to read contents without a delimiter, such as the last non-delimited content */
 };
 
 /*
@@ -86,10 +94,10 @@ bingen(Chan *c, char*, Dirtab *, int, int i, Dir *dp)
 	Searcher *l;
 
 	/*
-	 * if I do .. from #o or #o/0
+	 * if I do .. from #n or #n/0
 	 */
 	if(i == DEVDOTDOT){
-		devdir(c, c->qid, "#o", 0, eve, 0555, dp);
+		devdir(c, c->qid, "#n", 0, eve, 0555, dp);
 		return 1;
 	}
 	if(SEARCHER(c->qid) == Qtopdir){
@@ -129,10 +137,12 @@ binwalk(Chan *c, Chan *nc, char **name, int nname)
 {
 	Walkqid *wq;
 
+print("binwalk chanpath(c) %s chanpath %s nname %d\n", chanpath(c), chanpath(nc), nname);
 	wq = devwalk(c, nc, name, nname, nil, 0, bingen);
 	if(wq != nil && wq->clone != nil && wq->clone != c){
 		wq->clone->aux = nil;
 	}
+print("binwalk chanpath(wq->clone) %s\n", chanpath(wq->clone));
 	return wq;
 }
 
@@ -225,15 +235,49 @@ binclose(Chan *c)
 	Bin *bin;
 	Binreader *l;
 
+print("binclose: c->path %s\n", chanpath(c));
 	l = c->aux;
-	bin = l->bin;
-	qlock(bin);
-	decref(bin);
-	if(bin->ref == 0){
-		free(bin->buf);
-		free(bin);
-	}else
-		qunlock(bin);	
+	if(l != nil){
+		bin = l->bin;
+		if(bin != nil){
+			qlock(bin);
+			decref(bin);
+			if(bin->ref == 0){
+				free(bin->buf);
+				free(bin);
+			}else
+				qunlock(bin);
+		}
+	}
+}
+
+s32
+refill(Bin *bin)
+{
+	s32 nr, n;
+
+	if(bin->eof == 1)
+		return 0;
+	if(bin->writep == nil)
+		bin->writep = bin->buf;
+	if(bin->readp == nil)
+		bin->readp = bin->buf;
+
+	if(bin->readp > bin->buf){
+		n = bin->writep-bin->readp;
+		memmove(bin->buf, bin->readp, n);
+		bin->writep -= n;
+		bin->readp = bin->buf;
+	}
+
+	nr = devtab[bin->sourcechan->type]->read(bin->sourcechan, bin->writep,
+												 bin->bufsize-(bin->writep-bin->readp),
+												 bin->sourcechan->offset);
+	if(nr == 0)
+		bin->eof = 1;
+
+	bin->writep += nr;
+	return nr;
 }
 
 static s32
@@ -241,9 +285,8 @@ binread(Chan *c, void *va, s32 n, s64)
 {
 	Bin *bin;
 	Searcher *s;
-	u32 nr;
-	u8 *p;
-	u32 rv;
+	u8 *p, *ep, *nextreadp;
+	u32 rv, nremaining;
 
 	if(c->qid.type == QTDIR){
 		return devdirread(c, va, n, nil, 0, bingen);
@@ -254,41 +297,55 @@ binread(Chan *c, void *va, s32 n, s64)
 	if(bin->buf == nil)
 		panic("should no be happening");
 
+	/* do not allow arbitrarily high read buffer sizes */
+	if(n > bin->bufsize)
+		error(Ebadarg);
+
 	qlock(bin);
+	if(s->qidpath == Qbuffer && bin->eof == 1){
+		nremaining = bin->writep-bin->readp;
+		if(nremaining == 0)
+			rv = 0;
+		else if(nremaining > 0){
+			rv = nremaining > n ? n : nremaining;
+			memmove(va, bin->readp, n);
+			bin->readp += rv;
+		}
+		goto Exit;
+	}
 	if(bin->readp == bin->writep){
-		nr = devtab[bin->sourcechan->type]->read(bin->sourcechan, bin->buf,
-												 bin->bufsize,
-												 bin->sourcechan->offset);
-		bin->readp = bin->buf;
-		bin->writep = bin->buf+nr;
+		if(bin->eof == 1){	/* nothing more to read */
+			rv = 0;
+			goto Exit;
+		}else
+			refill(bin);
 	}
 
 Search: /* doing this while holding a lock, not sure if it is smart */
-	p = s->searchfn(bin->readp, bin->writep, n);
-	if(p > bin->readp){
-		/* p+1 to skip the delimiter */
-		rv = p+1-bin->readp;
-		memmove(va, bin->readp, rv);
-		bin->readp = p+1;
-	}else{
-		/* there is no delimiter between readp and writep */
-		if(bin->writep -bin->readp > n){
-			/* if there is no delimiter in the read buffer size, just send that much out */
+	if(bin->writep-bin->readp > n)
+		ep = bin->readp+n;
+	else
+		ep = bin->writep;
+	nextreadp = s->endfn(bin->readp, ep);
+	if(nextreadp == nil){
+		if(bin->writep-bin->readp > n){
+			/* delimiter not found, send n bytes */
 			memmove(va, bin->readp, n);
 			bin->readp += n;
 			rv = n;
+			goto Exit;
 		}else{
-			/* move the contents to the start of the buffer and read more */
-			memmove(bin->buf, bin->readp, bin->writep-bin->readp);
-			bin->writep -= bin->readp-bin->buf;
-			bin->readp = bin->buf;
-			nr = devtab[bin->sourcechan->type]->read(bin->sourcechan, bin->writep,
-														bin->bufsize-(bin->writep-bin->buf),
-														bin->sourcechan->offset);
-			bin->writep += nr;
+			refill(bin);
 			goto Search;
-		}		
+		}
+	}else{
+		/* delimiter found within n bytes */
+		rv = nextreadp-bin->readp;
+		memmove(va, bin->readp, rv);
+		bin->readp = nextreadp;
+		goto Exit;
 	}
+Exit:
 	qunlock(bin);
 	return rv;
 }
@@ -327,67 +384,58 @@ Dev bindevtab = {
 	devwstat,
 };
 
+/* to read contents without a delimiter, such as the last non-delimited content */
 static u8 *
-findword(u8 *startp, u8 *endp, u32 len)
+readuntil(u8 *startp, u8 *endp)
 {
-	u8 *p, *ep;
+	return endp;
+}
 
-	if(endp - startp > len)
-		ep = startp+len;
-	else
-		ep = endp;
-	for(p = startp; p<ep; p++){
+static u8 *
+endofword(u8 *startp, u8 *endp)
+{
+	u8 *p;
+
+	for(p = startp; p<endp; p++){
 		if(*p == ' ' || *p == '	' || *p == '\n')
-			break;
+			return p+1;
 	}
-	return p;
+	return nil;
 }
 
 static u8 *
-findnewline(u8 *startp, u8 *endp, u32 len)
+endofnewline(u8 *startp, u8 *endp)
 {
-	u8 *p, *ep;
+	u8 *p;
 
-	if(endp - startp > len)
-		ep = startp+len;
-	else
-		ep = endp;
-	for(p = startp; p<ep; p++){
+	for(p = startp; p<endp; p++){
 		if(*p == '\n')
-			break;
+			return p+1;
 	}
-	return p;
+	return nil;
 }
 
 static u8 *
-finddoublequote(u8 *startp, u8 *endp, u32 len)
+endofdoublequote(u8 *startp, u8 *endp)
 {
-	u8 *p, *ep;
+	u8 *p;
 
-	if(endp - startp > len)
-		ep = startp+len;
-	else
-		ep = endp;
-	for(p = startp; p<ep; p++){
+	for(p = startp; p<endp; p++){
 		if(*p == 0x22) /* " = 0x22 = 34 */
-			break;
+			return p+1;
 	}
-	return p;
+	return nil;
 }
 
 static u8 *
-findcloseparen(u8 *startp, u8 *endp, u32 len)
+endofcloseparen(u8 *startp, u8 *endp)
 {
-	u8 *p, *ep;
+	u8 *p;
 
-	if(endp - startp > len)
-		ep = startp+len;
-	else
-		ep = endp;
-	for(p = startp; p<ep; p++){
+	for(p = startp; p<endp; p++){
 		if(*p == 0x29) /* ) = 0x29 = 41 */
-			break;
+			return p+1;
 	}
-	return p;
+	return nil;
 }
 
