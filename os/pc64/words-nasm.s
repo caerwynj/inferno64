@@ -333,7 +333,7 @@ dd C_bl
 dd M_xswap
 dd C_emits
 dd M_exitcolon
-CENTRY "count" C_count 5 ; ( a -- a+1 n ) a = address of counted string ( a - a+1 a[0])
+CENTRY "count" C_count 5 ; ( 'counted-string -- 'text count ) a = address of counted string ( a - a+1 a[0])
 dd C_1plus
 dd M_dup
 dd C_1minus
@@ -1583,7 +1583,8 @@ dd M_literal
 dd C_qabort_parens
 dd C_comma
 dd M_exitcolon
-CENTRY "\"" C_double_quote 1	; stores counted string in the dictionary and also leaves the address count of the string on the stack - used to use strings at the interpreter prompt
+
+CENTRY "\"" C_double_quote 1	; ( | .. " -- 'text count ) stores counted string in the dictionary and also leaves the address and count of the string on the stack - to use strings at the interpreter prompt
 dd M_literal
 dd 34
 dd C_word
@@ -1597,7 +1598,8 @@ dd M_rpop
 dd M_dup
 dd C_allot
 dd M_exitcolon
-CENTRY "c\"" C_cdouble_quote 2	; stores counted string in the dictionary and also leaves the address of the counted string on the stack
+
+CENTRY "c\"" C_cdouble_quote 2	; ( | ..." -- 'counted-string ) stores counted string in the dictionary and also leaves the address of the counted string on the stack. For use in interpretive mode. shouldn't this be using pad?
 dd M_literal
 dd 34		; ( -- \" )
 dd C_word	; ( \" -- a ) a = counted string address. a will be in Wordbuf
@@ -1612,15 +1614,18 @@ dd C_here	; ( -- here )
 dd M_rpop	; ( here -- here n+1 )(R -- )
 dd C_allot	; ( here n+1 -- here) here += n+1
 dd M_exitcolon
-CIENTRY "s\"" CI_sdouble_quote 2	; add the string from the input stream to the dictionary as (sliteral) count string - at run-time puts the ( -- addr n) of the counted string on the stack.
+
+CIENTRY "s\"" CI_sdouble_quote 2	; ( | ..." -- 'text count ) add the string from the input stream to the dictionary as (sliteral) count string - at run-time puts the ( -- addr n) of the counted string on the stack.
 dd C_sliteral
 dd M_exitcolon
-CIENTRY ".\"" CI_dotstr 2	; do what s" does and then add a type word to the dictionary to print that string
+
+CIENTRY ".\"" CI_dotstr 2	; ( | ..." -- ) do what s" does and then add a type word to the dictionary to print that string
 dd C_sliteral
 dd M_literal
 dd C_type
 dd C_comma
 dd M_exitcolon
+
 CIENTRY "if" CI_if 2
 dd M_literal
 dd M_cjump
@@ -1735,36 +1740,51 @@ CENTRY "r/w" C_rw 3
 dd M_literal
 dd 2
 dd M_exitcolon
-CENTRY "open-file" C_open_file 9 ; ( a n mode -- fd ioresult )
-dd M_rpush	; ( a n mode -- a n ) (R -- mode)
-dd C_pad	; ( a n -- a n padaddr)
+
+CENTRY "cstring" C_cstring 7 ; ( 'text count o -- o+'pad+1024 ) \ copy string to pad+o and add a null byte at the end
+dd C_pad	; ( 'text count o 'pad )
 dd M_literal
-dd 1024		; ( a n padaddr --  a n padaddr 1024 )
-dd M_plus	; ( a n padaddr+1024 --  a n padaddr+1024 )
-dd M_xswap	; ( a n padaddr+1024 --  a padaddr+1024 n )
-dd M_dup	; ( a padaddr+1024 n --  a padaddr+1024 n n )
-dd M_rpush	; ( a padaddr+1024 n n --  a padaddr+1024 n ) (R mode -- mode n )
-dd M_cmove	; moves the filename from a to paddaddr+1024
+dd 1024		; ( 'text count o 'pad 1024 )
+dd M_plus	; ( 'text count o 'pad+1024 )
+dd M_plus	; ( 'text count o+'pad+1024 ) o=padoffset
+dd M_dup
+dd M_rpush	; ( 'text count o+'pad+1024 ) (R o+'pad+1024 )
+dd M_xswap	; ( 'text o+'pad+1024 count ) (R o+'pad+1024 )
+dd M_dup	; ( 'text o+'pad+1024 count count ) (R o+'pad+1024 )
+dd M_rpush	; ( 'text o+'pad+1024 count ) (R o+'pad+1024  count )
+dd M_cmove	; moves the filename from 'text to o+'pad+1024
 dd M_literal
-dd 0		; ( -- 0 )
-dd M_rpop	; ( 0 -- 0 n ) (R mode n -- mode)
-dd C_pad	; ( 0 n -- 0 n padaddr)
-dd M_plus	; ( 0 n padaddr -- 0 padaddr+n )
+dd 0		; ( 0 ) (R o+'pad+1024  count )
+dd M_rpop	; ( 0 count ) (R o+'pad+1024 )
+dd M_rfetch	; ( 0 count o+'pad+1024 ) (R o+'pad+1024 )
+dd M_plus	; ( 0 count+o+'pad+1024 ) (R o+'pad+1024 )
+dd M_cstore	; makes the filename to a null terminated string
+dd M_rpop ;  ( o+'pad+1024 )
+dd M_exitcolon
+
+CENTRY "cstring0" C_cstring0 8 ; ( 'text count -- 'text ) \ copy string to pad+1024 and add a null byte at the end
 dd M_literal
-dd 1024		; ( 0 padaddr+n --  0 padaddr+n 1024 )
-dd M_plus	; ( 0 padaddr+n 1024 --  0 padaddr+n+1024 )
-dd M_cstore	; ( 0 padaddr+n 1024 --   ) makes the filename to a null terminated string
-dd C_pad
+dd 0
+dd C_cstring
+dd M_exitcolon
+
+CENTRY "cstring1" C_cstring1 8 ; ( 'text count -- 'text ) \ copy string to pad+1536 and add a null byte at the end
 dd M_literal
-dd 1024		; ( -- padaddr 1024 )
-dd M_plus	; ( padaddr 1024 -- padaddr+1024 )
-dd M_rpop	; ( padaddr+1024 -- padaddr+1024 mode) (R mode -- )
+dd 512
+dd C_cstring
+dd M_exitcolon
+
+CENTRY "open-file" C_open_file 9 ; ( 'text count mode -- fd ioresult )
+dd M_rpush	; ( 'text count ) (R mode)
+dd C_cstring0 ; ( 'padtext ) (R mode )
+dd M_rpop	; ( 'padtext mode ) (R )
 dd M_sysopen
 dd M_dup
 dd M_literal
 dd -1
 dd M_greater
 dd M_exitcolon
+
 CENTRY "close-file" C_close_file 10	; ( fd -- ioresult )
 dd M_sysclose
 dd C_0eq
@@ -1840,6 +1860,7 @@ dd M_literal
 dd -1
 dd M_greater
 dd M_exitcolon
+
 CENTRY "bye" C_bye 3
 dd M_literal
 dd 0

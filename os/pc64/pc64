@@ -1,4 +1,5 @@
 # pc64 - amd64 pc terminal with local disk
+# initialize devbin after devpipe as it uses conf.pipeqsize set by pipeinit
 dev
 	root
 	cons
@@ -7,6 +8,7 @@ dev
 	forth
 	mnt
 	pipe
+	bin
 	proc
 #	prog
 	rtc
@@ -179,6 +181,7 @@ root
 	/dis
 	/env	/
 	/fd	/
+	/forth
 	/n	/
 	/net	/
 	/net.alt	/
@@ -190,6 +193,8 @@ root
 	/dis/svc
 	/dis/wm
 	/osinit.dis
+	/init.f
+	/forth/helpers.f
 # for custom initialization and shutdown
 	/dis/init
 	/dis/shutdown

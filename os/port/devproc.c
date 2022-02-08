@@ -287,7 +287,7 @@ dprocinit(void)
 static Chan*
 procattach(char *spec)
 {
-	return devattach('o', spec);
+	return devattach('p', spec);
 }
 
 static Walkqid*

@@ -328,10 +328,10 @@ init0(void)
 	kopen("#c/cons", OWRITE);
 	kopen("#c/cons", OWRITE);
 
-	args = "1 2 + . ";
+	args = "include init.f ";
 	*((s8*)up->fmem + FTHARGS) = strlen(args);
 	strncpy((s8*)up->fmem + FTHARGS+1, args, strlen(args));
-	print("init0: args len %d: %s\n", strlen(args), args);
+	print("init0: args len %ld: %s\n", strlen(args), args);
 	goforth(up->fmem);
 	/* disinit("/osinit.dis"); */
 	/* disinit("/osinit.dis"); */

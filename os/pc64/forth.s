@@ -24,8 +24,8 @@ plan9 amd64 assembler puts the first argument in BP (RARG), return value in AX.
  TOP: BX top of stack register
  PSP: DX parameter stack pointer, grows towards lower memory (downwards)
  RSP: R8 return stack pointer, grows towards lower memory (downwards)
- IP:  R9 instruction pointer
- W:   R10 work register (holds CFA)
+ IP:  R9 interpretive pointer
+ W:   R10 current word pointer (holds CFA). F83 uses SI (lodsl in NEXT). As C uses AX, not bothering with lodsl.
  UM:  R11 register holding the start of this process's heap memory
  UME: R12 register holding the end of this process's heap memory -- TODO, use this
 	CX, SI, DI, R13 temporary registers
@@ -89,8 +89,8 @@ TODO Move variable space out of the dictionary from #forth
 #define TOP BX /* top of stack register */
 #define PSP DX /* parameter stack pointer, grows towards lower memory (downwards) */
 #define RSP R8 /* return stack pointer, grows towards lower memory (downwards) */
-#define IP  R9 /* instruction pointer */
-#define W   R10/* work register (holds CFA) */
+#define IP  R9 /* interpretive pointer */
+#define W   R10/* current word pointer (holds CFA). F83 uses SI (lodsl in NEXT). As C uses AX, not using lodsl */
 #define UM	R11/* start of heap memory */
 #define UME	R12/* end of heap memory */
 
@@ -107,6 +107,7 @@ TODO Move variable space out of the dictionary from #forth
 	CONSTANTS - capital letters
 	Variables - initial capital case
 	words - lower case
+	'name - puts a vector on the data stack
  */
 
 /* HEAPSTART, HEAPEND, HERE, DTOP, VHERE are loaded by the caller */

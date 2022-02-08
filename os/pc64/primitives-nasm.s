@@ -2,12 +2,6 @@ MENTRY "@" fetch 1
 MENTRY "!" store 1
 MENTRY "c@" cfetch 2
 MENTRY "c!" cstore 2
-MENTRY "sysread" sysread 7
-MENTRY "syswrite" syswrite 8
-MENTRY "sysseek" sysseek 7
-MENTRY "sysopen" sysopen 7
-MENTRY "sysclose" sysclose 8
-MENTRY "syscreate" syscreate 9
 MENTRY "mmap" mmap 4
 MENTRY "halt" terminate 4
 MENTRY "dump" fthdump 4
@@ -54,6 +48,15 @@ MENTRY "(:)" colon 3
 MENTRY "(does)" dodoes 6
 MENTRY "cas" cas 3
 MENTRY "(deferred)" deferred 10
+
+MENTRY "sysbind" sysbind 7
+MENTRY "sysclose" sysclose 8
+MENTRY "syscreate" syscreate 9
+MENTRY "sysmount" sysmount 8
+MENTRY "sysopen" sysopen 7
+MENTRY "sysread" sysread 7
+MENTRY "sysseek" sysseek 7
+MENTRY "syswrite" syswrite 8
 
 MCENTRY "STDIN" STDIN 0 5		; 3 constants from here CAPITALS
 MCENTRY "STDOUT" STDOUT 1 6
