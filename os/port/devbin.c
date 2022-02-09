@@ -5,7 +5,7 @@
 #include	"fns.h"
 #include	"../port/error.h"
 
-#define	SEARCHER(q) ((q).path)
+#define	WHICHFILE(q) ((q).path)
 #define	SOURCEFD(q)	((q).vers)
 
 /*
@@ -19,7 +19,7 @@
 typedef struct Searcher Searcher;
 struct Searcher
 {
-	u32 qidpath;
+	u32 whichfile;
 	char name[KNAMELEN];
 	u8	*(*endfn)(u8 *startp, u8 *endp); /* function pointer returning a pointer to the location after the delimiter */
 };
@@ -49,11 +49,12 @@ enum
 {
 	Qtopdir = 0,
 	Qfddir,
+	Qbufferlength,	/* show the remaining bytes in the buffer */
+	Qbuffer,
 	Qword,
 	Qline,
 	Qdoublequote,
 	Qcloseparen,
-	Qbuffer,
 };
 
 static u8 *endofword(u8 *startp, u8 *endp);
@@ -65,11 +66,12 @@ u16	bintype = 0;
 
 Searcher	searchers[] =
 {
-	Qword,	"word", endofword,
-	Qline,	"line", endofnewline,
-	Qdoublequote,	"doublequote", endofdoublequote,
-	Qcloseparen,	"closeparen", endofcloseparen,
-	Qbuffer,	"buffer", readuntil,	/* to read contents without a delimiter, such as the last non-delimited content */
+	Qbufferlength, "bufferlength", readuntil,
+	Qbuffer, "buffer", readuntil,	/* to read contents without a delimiter, such as the last non-delimited content */
+	Qword, "word", endofword,
+	Qline, "line", endofnewline,
+	Qdoublequote, "doublequote", endofdoublequote,
+	Qcloseparen, "closeparen", endofcloseparen,
 };
 
 static Chan*
@@ -97,7 +99,7 @@ bingen(Chan *c, char*, Dirtab *, int, int i, Dir *dp)
 		devdir(c, c->qid, "#n", 0, eve, 0555, dp);
 		return 1;
 	}
-	if(SEARCHER(c->qid) == Qtopdir){
+	if(WHICHFILE(c->qid) == Qtopdir){
 		if(i > up->fgrp->maxfd)
 			return -1;
 		nsourcefds = 0;
@@ -120,13 +122,12 @@ bingen(Chan *c, char*, Dirtab *, int, int i, Dir *dp)
 
 	/* within an fd's dir, show the list of searchers as files */
 	ns = 0;
-	for(l = searchers; l != nil; l++){
+	for(l = searchers; l != nil; l++, ns++){
 		if(i == ns){
-			mkqid(&q, l->qidpath, c->qid.vers, QTFILE);
+			mkqid(&q, l->whichfile, c->qid.vers, QTFILE);
 			devdir(c, q, l->name, 0, eve, 0400, dp);
 			return 1;
 		}
-		ns++;
 	}
 	return -1;
 }
@@ -159,6 +160,7 @@ binopen(Chan *c, u32 omode)
 	u32 sourcefd, nfd;
 	Binreader *br;
 	Searcher *s;
+	u64 whichfile;
 
 	if(c->qid.type & QTDIR){
 		if(omode != OREAD)
@@ -171,7 +173,7 @@ binopen(Chan *c, u32 omode)
 
 	if(omode != OREAD)
 		error(Ebadarg);
-	if(SEARCHER(c->qid) <= Qfddir)
+	if(WHICHFILE(c->qid) <= Qfddir)
 		error(Ebadarg);
 
 	sourcefd = SOURCEFD(c->qid);
@@ -208,8 +210,10 @@ binopen(Chan *c, u32 omode)
 		incref(bin);
 	} else
 		br->bin = bin;
+
+	whichfile = WHICHFILE(c->qid);
 	for(s = searchers; s != nil; s++){
-		if(SEARCHER(c->qid) == s->qidpath){
+		if(whichfile == s->whichfile){
 			br->searcher = s;
 			break;
 		}
@@ -290,6 +294,7 @@ binread(Chan *c, void *va, s32 n, s64)
 	Searcher *s;
 	u8 *ep, *nextreadp;
 	u32 rv, nremaining;
+	char nlenstr[10];
 
 	if(c->qid.type == QTDIR){
 		return devdirread(c, va, n, nil, 0, bingen);
@@ -306,7 +311,11 @@ binread(Chan *c, void *va, s32 n, s64)
 		error(Ebadarg);
 
 	qlock(bin);
-	if(s->qidpath == Qbuffer && bin->eof == 1){
+	if(s->whichfile == Qbufferlength){
+		rv = snprint(nlenstr, 10, "%lld\n", bin->writep-bin->readp);
+		goto Exit;
+	}
+	if(s->whichfile == Qbuffer && bin->eof == 1){
 		nremaining = bin->writep-bin->readp;
 		if(nremaining == 0)
 			rv = 0;
@@ -330,6 +339,7 @@ Search: /* doing this while holding a lock, not sure if it is smart */
 		ep = bin->readp+n;
 	else
 		ep = bin->writep;
+	/* s->endfn should not run for Qbufferlength, hence no nil check */
 	nextreadp = s->endfn(bin->readp, ep);
 	if(nextreadp == nil){
 		if(bin->writep-bin->readp > n){
@@ -339,7 +349,12 @@ Search: /* doing this while holding a lock, not sure if it is smart */
 			rv = n;
 			goto Exit;
 		}else{
-			refill(bin);
+			/* BUG: what if this returns an eof? */
+			if(bin->eof == 1){
+				rv = 0;
+				goto Exit;
+			}else
+				refill(bin);
 			goto Search;
 		}
 	}else{
@@ -395,6 +410,15 @@ readuntil(u8 *, u8 *endp)
 	return endp;
 }
 
+/*
+	without a blank line at the end, the last word without an ending
+	word delimiter gets skipped.
+	Hence, the application should read the buffer for the last word
+		no, leave it alone. not worth the complexity.
+	\<carriage return> will skip the next line
+ TODO
+	at some point, have to remove leading blanks
+ */
 static u8 *
 endofword(u8 *startp, u8 *endp)
 {
