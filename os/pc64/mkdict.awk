@@ -12,7 +12,7 @@ BEGIN{
 	vh=0 # vhere = variable space pointer
 	nlabels=0
 	literal = "^[+-]?[0-9]+$"
-	branchlabel = "^L[0-9]+:$"
+	branchlabel = "^L[0-9a-zA-Z_]+:$"
 	fentries = "Fentry fentries[] = {\n";
 }
 
@@ -37,16 +37,25 @@ $1 == "MENTRY" {
 }
 $1 == "MCENTRY" {
 	name = $2
-	header($5, name, "MC_", $3, "constant")
+	header($4, name, "MC_", $3, "constant")
 	h+=8;
-	fentries = fentries "	{.type Absolute, {.p " $4"}},		/* " h " */\n"
+	fentries = fentries "	{.type Absolute, {.p " $5"}},		/* " h " */\n"
+}
+$1 == "MVDENTRY" {
+	name = $2
+	header($4, name, "MV_", $3, "variable")
+	h+=8; # for pfa
+	fentries = fentries "	{.type FromH0, {.p " $5 " }},	/* " h " " vh " */\n"
 }
 $1 == "MVENTRY" {
 	name = $2
-	header($5, name, "MV_", $3, "variable")
+	header($4, name, "MV_", $3, "variable")
 	h+=8; # for pfa
 	fentries = fentries "	{.type FromV0, {.p " vh " }},	/* " h " " vh " */\n"
-	vh+=8;
+	if(NF >= 5 && $5 != ";")
+		vh+=$5*8;
+	else
+		vh+=8;
 }
 $1 == "CENTRY" {
 	name = $2
@@ -64,7 +73,7 @@ $1 == "dd" && $2 ~ literal {
 }
 $1 == "dd" && $2 ~ "^[M_|C_|CI_|(MC_)|(MV_)|L]" {
 	h+=8
-	fentries = fentries "	{.type FromH0, {.p " $2 "}, .src = \"" $0 "\"},		/* " $0 " " h " */\n"
+	fentries = fentries "	{.type FromDictionary, {.p " $2 "}, .src = \"" $0 "\"},		/* " $0 " " h " */\n"
 }
 $1 ~ branchlabel {
 	gsub(/:/,"", $1)

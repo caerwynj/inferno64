@@ -68,7 +68,8 @@ struct Params
 	s32 stdinfd, stdoutfd, stderrfd;
 	s32 *keepfds, *closefds;
 	s32 nkeepfds, nclosefds;
-	char args[Argslen];
+	char *args;
+	int nargs;	/* number of bytes in args */
 };
 
 int nforthprocs = 0;
@@ -189,13 +190,9 @@ parseparams(char *params)
 			}
 		}else if(cistrncmp("ARGS", s, 4) == 0){ // until the end or Argslen = 256 bytes
 			s += 4;
-			for(i = 1; i < Argslen && *s != '\0'; i++){
-				p.args[i] = *s;
-				s++;
-			}
-			if(i >= Argslen)
-				error(Ebadctl);
-			p.args[0] = i-1;	/* storing the count */
+			p.nargs = strlen(s);
+			p.args = malloc(p.nargs);
+			strncpy(p.args, s, p.nargs);
 		}else if(*s == ' ' || *s == '	' || *s == '\r' || *s == '\n'){
 			/* would be nice to use isspace(*s) here */
 			s++;
@@ -215,7 +212,7 @@ parseparams(char *params)
 				"	args %d: %s\n",
 				p.newenv, p.newfd, p.newns, p.shmem, p.nodevs,
 				p.stdinfd, p.stdoutfd, p.stderrfd,
-				p.args[0], p.args[1]);
+				p.nargs, p.args);
 		if(p.nclosefds > 0){
 			print("	closefds ");
 			for(i = 0; i < p.nclosefds; i++){
@@ -240,13 +237,13 @@ loadforthdictionary(u8 *fmem)
 {
 	intptr i;
 	Fentry *f;
-	u8 *h, *dtop, *vh;
+	u8 *h, *dtop, *vh, nbytes;
 	int n;
 	Bhdr *b;
 
 	h = fmem+DICTIONARY;
 	dtop = nil;
-	vh = fmem+VHERE+8;
+	vh = fmem+THERE+8;
 	DBG("loadforthdictionary fmem 0x%p h 0x%p dtop 0x%p vh 0x%p\n"
 			"	(intptr*)(fmem + DTOP) 0x%p *(intptr*)(fmem + DTOP) 0x%zx\n"
 			"	PSTACK 0x%p (intptr*)(fmem + PSTACK) 0x%p\n"
@@ -303,17 +300,21 @@ loadforthdictionary(u8 *fmem)
 			*(intptr*)h = f->p;
 			DBG("	0x%p: 0x%zx 0x%zx\n", h, *(intptr*)h, f->p);
 			h += sizeof(intptr);
-		}else if(f->type == FromH0){
+		}else if(f->type == FromDictionary){
 			*(intptr*)h = (intptr)fmem+DICTIONARY+f->p;
 			DBG("	0x%p: 0x%zx 0x%p src %s\n", h, *(intptr*)h, fmem+DICTIONARY+f->p, f->src);
 			h += sizeof(intptr);
+		}else if(f->type == FromH0){
+			*(intptr*)h = (intptr)fmem+f->p;
+			DBG("	0x%p: 0x%zx 0x%p src %s\n", h, *(intptr*)h, fmem+f->p, f->src);
+			h += sizeof(intptr);
 		}else if(f->type == FromV0){
-			*(intptr*)h = (intptr)fmem+VHERE+8+f->p; /* pfa with the address where the value is */
-			*(intptr*)vh = 0; /* actual value */
-			DBG("	0x%p: 0x%zx 0x%p\n", h, *(intptr*)h, (intptr)fmem+VHERE+8+f->p);
+			*(intptr*)h = (intptr)fmem+THERE+8+f->p; /* pfa with the address where the value is */
+			*(intptr*)vh = 0; /* actual value, not necessary as malloc zeroes it all */
+			DBG("	0x%p: 0x%zx 0x%p\n", h, *(intptr*)h, (intptr)fmem+THERE+8+f->p);
 			DBG("	0x%p: 0x%zx 0\n", vh, *(intptr*)vh);
 			h += sizeof(intptr);	/* space for pfa with the variable address */
-			vh += sizeof(intptr);	/* space for the actual value */
+			vh = fmem+THERE+8+f->p;	/* space for the actual value */
 		}else if(f->type == Chars){
 			strcpy((s8*)h, f->str);
 			h += strlen(f->str);
@@ -324,7 +325,13 @@ loadforthdictionary(u8 *fmem)
 	}
 	*(intptr*)(fmem + HERE) = (intptr)h;
 	*(intptr*)(fmem + DTOP) = (intptr)dtop;
-	*(intptr*)(fmem + VHERE) = (intptr)vh;
+	*(intptr*)(fmem + THERE) = (intptr)vh;
+	*(intptr*)(fmem + FTHPID) = up->pid;
+	*(intptr*)(fmem + FTHPARENTPID) = up->parentpid;
+
+	nbytes = snprint((char*)fmem + ARGSFILENAME+1, 32, "#p/%d/args", up->pid);
+	*(u8*)(fmem + ARGSFILENAME) = nbytes;
+
 	print("loadforthdictionary fmem 0x%p h 0x%p dtop 0x%p vh 0x%p\n"
 			"	(intptr*)(fmem + DTOP) 0x%p *(intptr*)(fmem + DTOP) 0x%zx\n"
 			"	PSTACK 0x%p (intptr*)(fmem + PSTACK) 0x%p\n"
@@ -499,6 +506,9 @@ print("stdinfd devtab[c->type]->dc %c c 0x%p chanpath(c) %s c->aux 0x%p\n", devt
 	p->hang = 0;
 	p->kp = 0;
 
+	p->args = params->args;
+	p->nargs = params->nargs;
+
 	p->fmem = mallocalign(FORTHHEAPSIZE, BY2PG, 0, 0);
 	if(p->fmem == nil)
 		panic("newforthproc p->fmem == nil\n");
@@ -506,7 +516,6 @@ print("stdinfd devtab[c->type]->dc %c c 0x%p chanpath(c) %s c->aux 0x%p\n", devt
 	/* store the start address at that address too - magic check */
 	((intptr*)p->fmem)[0] = (intptr)p->fmem;	/* heap start */
 	((intptr*)p->fmem)[1] = (intptr)p->fmem+FORTHHEAPSIZE-1; /* heap end */
-	strncpy((s8*)p->fmem + FTHARGS, params->args, Argslen);
 
 /*	p->kpfun = func;
 	p->kparg = arg;

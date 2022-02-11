@@ -223,23 +223,25 @@
 #define RSTACK		(HEAPSTART+(19*BY2PG))	/* upto (HEAPSTART+(18*BY2PG)), going down */
 
 										/* 256 allows these to be counted strings */
-#define FTHARGS		(RSTACK+(BY2WD*0))	/* args size = 32*8 = 256 bytes, counted string */
-#define WORDB		(RSTACK+(BY2WD*32))	/* word buffer = 32*8 = 256 */
-#define ERRSTR		(RSTACK+(BY2WD*64))	/* errstr size = 32*8 = 256 bytes */
+#define WORDB		(RSTACK+(BY2WD*0))	/* word buffer = 32*8 = 256 */
+#define ERRSTR		(RSTACK+(BY2WD*32))	/* errstr size = 32*8 = 256 bytes */
+#define FTHPID		(RSTACK+(BY2WD*64))
+#define FTHPARENTPID	(RSTACK+(BY2WD*65))
+#define ARGSFILENAME	(RSTACK+(BY2WD*66))	/* counted string, 18 bytes is enough, 64 bytes */
 
-#define FORTHVARS	(RSTACK+(BY2WD*96))		/* magic word here? */
+#define FORTHVARS	(RSTACK+(BY2WD*74))		/* magic word here? */
 /* storage for saving Forth registers when calling C */
 #define FORTHTOP	(FORTHVARS+(BY2WD*0))
 #define FORTHPSP	(FORTHVARS+(BY2WD*1))
 #define FORTHRSP	(FORTHVARS+(BY2WD*2))
 #define FORTHIP		(FORTHVARS+(BY2WD*3))
 #define FORTHW		(FORTHVARS+(BY2WD*4))
-#define FORTHUM		(FORTHVARS+(BY2WD*5))
-#define FORTHUME	(FORTHVARS+(BY2WD*6))
+#define FORTHUP		(FORTHVARS+(BY2WD*5))
+#define FORTHUPE	(FORTHVARS+(BY2WD*6))
 
 #define HERE		(FORTHVARS+(BY2WD*7))
 #define DTOP		(FORTHVARS+(BY2WD*8))
-#define VHERE		(FORTHVARS+(BY2WD*9))	/* store fmem+VHERE here at boot */
+#define THERE		(FORTHVARS+(BY2WD*9))	/* store fmem+THERE here at boot */
 
 #define FORTHEND	(HEAPSTART+(22*BY2PG))
 #define FORTHHEAPSIZE	FORTHEND

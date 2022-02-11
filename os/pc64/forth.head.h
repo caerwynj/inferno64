@@ -5,6 +5,7 @@ enum {
 	Header,
 	IHeader,	/* Immediate dictionary definition */
 	Absolute,
+	FromDictionary,
 	FromH0,
 	FromV0,
 	Chars,

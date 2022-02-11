@@ -26,8 +26,8 @@ plan9 amd64 assembler puts the first argument in BP (RARG), return value in AX.
  RSP: R8 return stack pointer, grows towards lower memory (downwards)
  IP:  R9 interpretive pointer
  W:   R10 current word pointer (holds CFA). F83 uses SI (lodsl in NEXT). As C uses AX, not bothering with lodsl.
- UM:  R11 register holding the start of this process's heap memory
- UME: R12 register holding the end of this process's heap memory -- TODO, use this
+ UP:  R11 register holding the start of the memory for this process
+ UPE: R12 register holding the end of the memory for this process
 	CX, SI, DI, R13 temporary registers
 
 coding standard
@@ -74,8 +74,8 @@ Pad is 256 bytes from here
 	|
 	|
 User dictionary	upto n pages from the start
-UME: heap end
-UM: heap start
+UPE: memory end
+UP: memory start
 	forth constants
 low memory
 
@@ -83,7 +83,6 @@ TODO Move variable space out of the dictionary from #forth
 11:31 < joe9> In x86 you want to keep the code in a different section than variables -- why?
 11:31 < joe9> in my port, I am keeping them together.
 11:32 < joe9> it gets messy with different sections.
-
 */
 
 #define TOP BX /* top of stack register */
@@ -91,8 +90,8 @@ TODO Move variable space out of the dictionary from #forth
 #define RSP R8 /* return stack pointer, grows towards lower memory (downwards) */
 #define IP  R9 /* interpretive pointer */
 #define W   R10/* current word pointer (holds CFA). F83 uses SI (lodsl in NEXT). As C uses AX, not using lodsl */
-#define UM	R11/* start of heap memory */
-#define UME	R12/* end of heap memory */
+#define UP	R11/* start of user proram memory */
+#define UPE	R12/* end of user program memory */
 
 #define PSTACK_SIZE BY2PG
 #define RSTACK_SIZE BY2PG
@@ -114,17 +113,17 @@ TODO Move variable space out of the dictionary from #forth
 TEXT	forthmain(SB), 1, $-4		/* no stack storage required */
 
 	/* Argument has the start of heap */
-	MOVQ RARG, UM		/* start of heap memory */
-	MOVQ 8(UM), UME		/* HEAPEND populated by the caller */
+	MOVQ RARG, UP		/* start of heap memory */
+	MOVQ 8(UP), UPE		/* HEAPEND populated by the caller */
 
-	MOVQ UM, RSP
+	MOVQ UP, RSP
 	ADDQ $RSTACK, RSP	/* return stack pointer, reset */
 
-	MOVQ UM, PSP
+	MOVQ UP, PSP
 	ADDQ $PSTACK, PSP	/* parameter stack pointer - stack setup, clear */
 
 	/* execute boot */
-	MOVQ UM, CX
+	MOVQ UP, CX
 	ADDQ $DTOP, CX	/* address of last defined word (c_boot) is at DTOP */
 	MOVQ (CX), IP	/* IP = address of c_boot */
 	ADDQ $24, IP	/* to get to the parameter field address of boot word */
@@ -158,12 +157,12 @@ Assume IP = 8
 	NEXT
 
 TEXT	reset(SB), 1, $-4
-	MOVQ UM, RSP
+	MOVQ UP, RSP
 	ADDQ $RSTACK, RSP
 	NEXT
 
 TEXT	clear(SB), 1, $-4
-	MOVQ UM, PSP
+	MOVQ UP, PSP
 	ADDQ $PSTACK, PSP
 	NEXT
 
@@ -208,10 +207,10 @@ TEXT	cjump(SB), 1, $-4	/* ( f -- ) */
 	NEXT
 
 #define CHECKADDRESS \
-	CMPQ TOP, UME; \
-	JGT aboveume;	/* a > UME */\
-	CMPQ TOP, UM;\
-	JLT belowum;	/* a < UM */
+	CMPQ TOP, UPE; \
+	JGT aboveume;	/* a > UPE */\
+	CMPQ TOP, UP;\
+	JLT belowum;	/* a < UP */
 
 TEXT	execute(SB), 1, $-4	/* ( ... a -- ... ) */
 	CHECKADDRESS
@@ -582,55 +581,11 @@ TEXT	cas(SB), 1, $-4	/* ( a old new -- f ) */
 	/* pause -- no equivalent in 6a ? */
 	NEXT
 
-/* static locations */
-TEXT	S0(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
-	PUSH(TOP)
-	MOVQ UM, TOP
-	ADDQ $PSTACK, TOP
-	NEXT
-
-TEXT	Wordb(SB), 1, $-4	/* WORDB location */
-	PUSH(TOP)
-	MOVQ UM, TOP
-	ADDQ $WORDB, TOP
-	NEXT
-
-TEXT	Tib(SB), 1, $-4		/* TIB location */
-	PUSH(TOP)
-	MOVQ UM, TOP
-	ADDQ $TIB, TOP
-	NEXT
-
-TEXT	Dp(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
-	PUSH(TOP)
-	MOVQ UM, TOP
-	ADDQ $HERE, TOP
-	NEXT
-
-TEXT	Dtop(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
-	PUSH(TOP)
-	MOVQ UM, TOP
-	ADDQ $DTOP, TOP
-	NEXT
-
-/* Dp for the variable space */
-TEXT	Vp(SB), 1, $-4	/* S0 needs a calculation to come up with the value */
-	PUSH(TOP)
-	MOVQ UM, TOP
-	ADDQ $VHERE, TOP
-	NEXT
-
-TEXT	Fthargs(SB), 1, $-4
-	PUSH(TOP)
-	MOVQ UM, TOP
-	ADDQ $FTHARGS, TOP
-	NEXT
-
 /*
  * variables used by the core words. Using variable code word instead of known locations.
 #define	VARIABLE(name, location)	TEXT	name(SB), 1, $-4 ;\
 	PUSH(TOP); \
-	MOVQ UM, TOP ;\
+	MOVQ UP, TOP ;\
 	ADDQ location, TOP ;\
 	NEXT;
 VARIABLE(Tib, $TIB)
@@ -646,18 +601,18 @@ callable by forth primitives to check address
 	argument 1 in TOP = address
 	return value in TOP
 	-1			0			1
-	if UM < address < UME
+	if UP < address < UPE
 		return 0	within range
-	else if address < UM
-		return -1	below UM
-	else if UME < address
-		return 1	above UM
+	else if address < UP
+		return -1	below UP
+	else if UPE < address
+		return 1	above UP
  */
 TEXT	inum(SB), 1, $-4
-	CMPQ TOP, UME
-	JGT aboveume	/* a > UME */
-	CMPQ TOP, UM
-	JLT belowum		/* a < UM */
+	CMPQ TOP, UPE
+	JGT aboveume	/* a > UPE */
+	CMPQ TOP, UP
+	JLT belowum		/* a < UP */
 	MOVQ $0, TOP	/* could use XORQ TOP, TOP to zero too */
 	RET
 belowum:
@@ -672,21 +627,21 @@ callable by forth primitives to check address
 	argument 2 = address
 	return value in TOP
 	-1			0			1
-	if UM < address && address+n < UME
+	if UP < address && address+n < UPE
 		return 0	within range
-	else if address < UM
-		return -1	below UM
-	else if UME < address+n
-		return 1	above UM
+	else if address < UP
+		return -1	below UP
+	else if UPE < address+n
+		return 1	above UP
  */
 TEXT	isbufinum(SB), 1, $-4 /* is buffer in user memory? ( a n -- -1|0|1 ) */
 	CMPQ TOP, $0 	/* negative n? */
 	JLT belowum		/* TODO have an appropriate error message */
 	ADDQ (PSP), TOP	/* TOP = a+n */
-	CMPQ TOP, UME	/* a+n, UME */
-	JGT aboveume	/* a+n > UME */
-	CMPQ (PSP), UM	/* a, UM */
-	JLT belowum		/* a < UM */
+	CMPQ TOP, UPE	/* a+n, UPE */
+	JGT aboveume	/* a+n > UPE */
+	CMPQ (PSP), UP	/* a, UP */
+	JLT belowum		/* a < UP */
 	ADDQ $8, PSP	/* get rid of a from the stack */
 	MOVQ $0, TOP
 	RET

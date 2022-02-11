@@ -48,6 +48,7 @@ MENTRY "(:)" colon 3
 MENTRY "(does)" dodoes 6
 MENTRY "cas" cas 3
 MENTRY "(deferred)" deferred 10
+MENTRY "s@" stackptr 2	; puts PSP on stack. Not a variable hence lower case.
 
 MENTRY "sysbind" sysbind 7
 MENTRY "sysclose" sysclose 8
@@ -58,36 +59,50 @@ MENTRY "sysread" sysread 7
 MENTRY "sysseek" sysseek 7
 MENTRY "syswrite" syswrite 8
 
-MCENTRY "STDIN" STDIN 0 5		; 3 constants from here CAPITALS
-MCENTRY "STDOUT" STDOUT 1 6
-MCENTRY "STDERR" STDERR 2 6
+MCENTRY "STDIN" STDIN 5	0 ; 3 constants from here CAPITALS
+MCENTRY "STDOUT" STDOUT 6 1
+MCENTRY "STDERR" STDERR 6 2
 
-MVENTRY "Iobuf" Iobuf 0 5			; the values are not being used from the definition. All are initialized to 0.
-MVENTRY "Sourcebuf" Sourcebuf 0 9	; is there a need for this?
-MVENTRY "Wordbuf" Wordbuf 0 7		; is there a need for this?
-MVENTRY ">In" toIn 0 3
-MVENTRY ">Limit" toLimit 0 6
-MVENTRY "Findadr" Findadr 0 7
-MVENTRY "Acceptvec" Acceptvec 0 9
-MVENTRY "Searchlen" Searchlen 0 9
-MVENTRY "Base" Base 0 4
-MVENTRY ">Num" toNum 0 4
-MVENTRY "State" State 0 5
-MVENTRY "Abortvec" Abortvec 0 8	; not sure if these 3 can be constants instead?
-MVENTRY "Infd" Infd 0 4
-MVENTRY "Outfd" Outfd 0 5
-MVENTRY "Errfd" Errfd 0 5
-MVENTRY "Eof" Eof 0 3
-MVENTRY "Ninputs" Ninputs 0 7
-MVENTRY "H0" H0 0 2		; here at startup
+MCENTRY	"WORD#" WORDNUM 5 0
+MCENTRY	"LINE#" LINENUM 5 1
+MCENTRY	"DOUBLEQUOTE#" DOUBLEQUOTENUM 12 2
+MCENTRY	"CLOSEPAREN#" CLOSEPARENNUM 11 3
+MCENTRY "#BUFFERS" NBUFFERS 8 16
 
+; put address of the defined location on the top of stack
 ; cannot use H as it is nil in inferno, address where here (next available dictionary cell location) is stored
 ; here = Dp @
-MENTRY "Dp" Dp 2		; here
-MENTRY "Dtop" Dtop 4	; last defined header
-MENTRY "Vp" Vp 2		; here of the variables space
-MENTRY "S0" S0 2
-MENTRY "s@" stackptr 2	; puts PSP on stack. Not a variable hence lower case.
-MENTRY "Wordb" Wordb 5
-MENTRY "Tib" Tib 3
-MENTRY "Fthargs" Fthargs 7
+; these memory locations (HERE, DTOP, etc.) are populated with values by the forth initializer
+MVDENTRY "Dp" Dp 2 HERE		; here
+MVDENTRY "Dtop" Dtop 4 DTOP	; last defined header
+MVDENTRY "Vp" Vp 2 THERE	; here of the variables space
+MVDENTRY "Pid" Pid 3 FTHPID
+MVDENTRY "Parentpid" Parentpid 4 FTHPARENTPID
+; the below memory locations are left alone as zeros by the initializer
+MVDENTRY "S0" S0 2 PSTACK
+MVDENTRY "Wordb" Wordb 5 WORDB
+MVDENTRY "Tib" Tib 3 TIB
+MVDENTRY "Argsfilename" Argsfilename 12 ARGSFILENAME ; counted string populated by forth starter from params
+
+MVENTRY "Iobuf" Iobuf 5		; the values are not being used from the definition. All are initialized to 0.
+MVENTRY "Sourcebuf" Sourcebuf 9	; is there a need for this?
+MVENTRY "Wordbuf" Wordbuf 7		; is there a need for this?
+MVENTRY ">In" toIn 3
+MVENTRY ">Limit" toLimit 6
+MVENTRY "Findadr" Findadr 7
+MVENTRY "Acceptvec" Acceptvec 9
+MVENTRY "Searchlen" Searchlen 9
+MVENTRY "Base" Base 4
+MVENTRY ">Num" toNum 4
+MVENTRY "State" State 5
+MVENTRY "Abortvec" Abortvec 8	; not sure if these 3 can be constants instead?
+MVENTRY "Infd" Infd 4
+MVENTRY "Outfd" Outfd 5
+MVENTRY "Errfd" Errfd 5
+MVENTRY "Eof" Eof 3
+MVENTRY "Ninputs" Ninputs 7
+MVENTRY "H0" H0 2		; here at startup
+
+MVENTRY "Bufferfds" Bufferfds 9 16
+MVENTRY "Bufferfilenames" Bufferfilenames 15 16 ; counted string labels of the searchers populated by boot
+

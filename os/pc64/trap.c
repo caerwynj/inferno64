@@ -121,19 +121,19 @@ void
 dumprstack(intptr h, intptr rsp, intptr he)
 {
 	intptr i;
-	int l=0;
+	/* int l=0; */
 
 	print("Forth return stack h 0x%zx R8 RSP 0x%zx RSTACK 0x%zx he 0x%zx\n",
 			h, rsp, h+RSTACK, he);
 	if(he == 0 || h == 0 || rsp < h || rsp >= he || h+RSTACK < h || h+RSTACK >= he)
 		return;
 	for(i = h + RSTACK-8; i >= rsp; i-=8){
-		print("	0x%zx: 0x%zx", i, *(intptr*)i);
-		l++;
+		print("	0x%zx: 0x%zx 0x%zx %zd\n", i, *(intptr*)i, *(intptr*)i-h, *(intptr*)i-h);
+	/*	l++;
 		if(l == 3){
 			l = 0;
 			print("\n");
-		}
+		} */
 	}
 	print("\n");
 }
@@ -181,6 +181,65 @@ usertrap(int vno)
 	return 0;
 }
 
+/*
+ *  dump registers
+ */
+void
+dumpforthregs(Ureg* ureg)
+{
+	if(up)
+		iprint("cpu%d: registers for %s %ud\n",
+			m->machno, up->text, up->pid);
+	else
+		iprint("cpu%d: registers for kernel\n", m->machno);
+
+	iprint("  AX %.16lluX  BX TOP %.16lluX  CX %.16lluX\n",
+		ureg->ax, ureg->bx, ureg->cx);
+	iprint("  DX PSP %.16lluX  SI %.16lluX  DI %.16lluX\n",
+		ureg->dx, ureg->si, ureg->di);
+	iprint("  BP %.16lluX  R8 RSP %.16lluX\n",
+		ureg->bp, ureg->r8);
+	iprint("  R9 IP %.16lluX %.16lluX %.16llud\n",
+		ureg->r9, ureg->r9-ureg->r11, ureg->r9-ureg->r11);
+	iprint(" R10 W %.16lluX %.16lluX %.16llud\n",
+		ureg->r10, ureg->r10-ureg->r11, ureg->r10-ureg->r11);
+	iprint(" R11 UP %.16lluX R12 UPE %.16lluX\n",
+		ureg->r10, ureg->r11, ureg->r12);
+	iprint(" R13 %.16lluX R14 up %.16lluX R15 m %.16lluX\n",
+		ureg->r13, ureg->r14, ureg->r15);
+	iprint("  CS %.4lluX   SS %.4lluX    PC %.16lluX  SP %.16lluX\n",
+		ureg->cs & 0xffff, ureg->ss & 0xffff, ureg->pc, ureg->sp);
+	iprint("TYPE %.2lluX  ERROR %.4lluX FLAGS %.8lluX\n",
+		ureg->type & 0xff, ureg->error & 0xffff, ureg->flags & 0xffffffff);
+
+	/*
+	 * Processor control registers.
+	 * If machine check exception, time stamp counter, page size extensions
+	 * or enhanced virtual 8086 mode extensions are supported, there is a
+	 * CR4. If there is a CR4 and machine check extensions, read the machine
+	 * check address and machine check type registers if RDMSR supported.
+	 */
+	iprint(" CR0 %8.8llux CR2 %16.16llux CR3 %16.16llux",
+		getcr0(), getcr2(), getcr3());
+	if(m->cpuiddx & (Mce|Tsc|Pse|Vmex)){
+		iprint(" CR4 %16.16llux\n", getcr4());
+		if(ureg->type == 18)
+			dumpmcregs();
+	}
+	iprint("  ur %#p up %#p\n", ureg, up);
+
+	/* my stuff, not in 9front */
+	print("\n  ur %lux up %lux ureg->bp & ~0xFFF %zx\n", ureg, up, ureg->bp & ~0xFFF);
+	if((ureg->bp & ~0xFFF) == FFSTART){
+		for(intptr *i = (intptr*)FFSTART; i<=(intptr*)ureg->bp; i++){
+			print("0x%p: 0x%zx\n", i, *i);
+		}
+		for(intptr *i = (intptr*)FFEND; i>=(intptr*)ureg->sp; i--){
+			print("0x%p: 0x%zx\n", i, *i);
+		}
+	}
+}
+
 /* go to user space */
 void
 trap(Ureg *ureg)
@@ -192,6 +251,7 @@ trap(Ureg *ureg)
 	if(irqhandled(ureg, vno) == 0 /* TODO && (!user || !usertrap(vno)) */){
 		dumpregs(ureg);
 		if(up->fmem != nil){
+			dumpforthregs(ureg);
 			dumprstack(ureg->r11, ureg->r8, ureg->r12);
 			dumppstack(ureg->r11, ureg->dx, ureg->r12);
 		}
@@ -230,7 +290,7 @@ dumpregs(Ureg* ureg)
 		ureg->dx, ureg->si, ureg->di);
 	iprint("  BP %.16lluX  R8 RSP %.16lluX  R9 IP %.16lluX\n",
 		ureg->bp, ureg->r8, ureg->r9);
-	iprint(" R10 W %.16lluX R11 UM %.16lluX R12 UME %.16lluX\n",
+	iprint(" R10 W %.16lluX R11 UP %.16lluX R12 UPE %.16lluX\n",
 		ureg->r10, ureg->r11, ureg->r12);
 	iprint(" R13 %.16lluX R14 up %.16lluX R15 m %.16lluX\n",
 		ureg->r13, ureg->r14, ureg->r15);
