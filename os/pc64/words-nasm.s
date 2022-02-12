@@ -517,6 +517,7 @@ dd M_fetch
 dd C_here
 dd M_minus
 dd M_exitcolon
+
 CENTRY "<#" C_fromhash 2
 dd C_pad
 dd M_literal
@@ -605,6 +606,17 @@ dd C_hold
 L_C_sign:
 dd M_exitcolon
 
+CENTRY "c(.)" C_counted_paren_dot_paren 4	; convert the top of stack to a counted string ( n1 -- 'cs )
+dd C_paren_dot_paren ; ( 'text n2 )
+dd M_xswap		; ( n2 'text )
+dd M_literal
+dd 1
+dd M_minus		; ( n2 'text-1 )
+dd M_xswap
+dd M_over		; ( 'text-1 n2 'text-1 )
+dd M_cstore		; ( 'text-1 )
+dd M_exitcolon
+
 CENTRY "(.)" C_paren_dot_paren 3	; convert the top of stack to a string ( n1 -- 'text n2 )
 dd M_dup		; ( n -- n n )
 dd C_abs		; ( n n -- n u )
@@ -639,6 +651,7 @@ dd C_max
 dd C_spaces
 dd C_type
 dd M_exitcolon
+
 CENTRY "hex" C_hex 3
 dd M_literal
 dd 16
@@ -784,6 +797,13 @@ CENTRY "abort" C_abort 5
 dd MV_Abortvec
 dd M_fetch
 dd M_execute
+dd M_exitcolon
+
+CENTRY "bufferfilename@" C_bufferfilename_fetch 15 ; ( index -- 'counted-string ) fetch label
+dd C_cells
+dd MV_Bufferfilenames
+dd M_plus
+dd M_fetch
 dd M_exitcolon
 
 CENTRY "bufferfilename!" C_bufferfilename_store 15 ; ( 'text index -- ) store label
@@ -1111,55 +1131,57 @@ dd C_abort
 L_restore_input:	; input stream restored, get out
 dd M_exitcolon
 
+CENTRY "concat" C_concat 6 ; ( 'cs1 'cs2 -- 'cs1+'cs2 ) concatenate counted string2 to counted-string1
+
+; move the contents of cs2 to cs1+1+count1. cs2+1 cs1+c1+1 c2 cmove
+dd C_2dup	; ( 'cs1 'cs2 'cs1 'cs2 )
+dd M_dup	; ( 'cs1 'cs2 'cs1 'cs2 'cs2 )
+dd M_cfetch	; ( 'cs1 'cs2 'cs1 'cs2 c2 )
+dd M_rpush	; ( 'cs1 'cs2 'cs1 'cs2 ) (R c2 )
+dd C_1plus	; ( 'cs1 'cs2 'cs1 'cs2+1 ) (R c2 )
+dd M_over	; ( 'cs1 'cs2 'cs1 'cs2+1 'cs1 ) (R c2 )
+dd M_dup	; ( 'cs1 'cs2 'cs1 'cs2+1 'cs1 'cs1 ) (R c2 )
+dd M_cfetch	; ( 'cs1 'cs2 'cs1 'cs2+1 'cs1 c1 ) (R c2 )
+dd M_plus	; ( 'cs1 'cs2 'cs1 'cs2+1 'cs1+c1 ) (R c2 )
+dd C_1plus	; ( 'cs1 'cs2 'cs1 'cs2+1 'cs1+c1+1 ) (R c2 )
+dd M_rpop	; ( 'cs1 'cs2 'cs1 'cs2+1 'cs1+c1+1 c2 ) (R )
+dd M_cmove	; ( 'cs1 'cs2 'cs1 )
+
+; update the count in cs1. c1 = c1+c2
+dd M_cfetch	; ( 'cs1 'cs2 c1 )
+dd M_xswap	; ( 'cs1 c1 'cs2 )
+dd M_cfetch	; ( 'cs1 c1 c2 )
+dd M_plus	; ( 'cs1 c1+c2 )
+dd M_over	; ( 'cs1 c1+c2 'cs1 )
+dd M_cstore	; ( 'cs1 )
+
+dd M_exitcolon
+
+; if (.) can return a counted string, this would be simpler
 CENTRY "buffername" C_buffername 10 ; ( index -- 'counted_string ) build the buffer fd's filename
-dd C_cells	; ( index*cellsize ) number of bytes
-dd MV_Bufferfilenames
-dd M_plus	; ( index*cellsize+'Bufferfilenames ) address of the filename's counted string
-dd M_fetch	; ( 'filename_counted_string )
+dd C_bufferfilename_fetch	; ( 'fcs ) fcs = filename counted string
 
 dd M_literal
-dd L120		; address of the counted string 3#n/
+dd L_bin_prefix	; address of the counted string 3#n/
 dd C_pad
 dd M_literal
 dd 4
 dd M_cmove	; pad has 3#n/
 
-dd C_pad
-dd M_literal
-dd 4
-dd M_plus	; ( 'filename_counted_string pad+4 )
-dd M_rpush	; ( 'filename_counted_string pad+4 ) (R pad+4 )
+dd C_pad	; ( 'fcs pad )
 dd MV_Infd
 dd M_fetch
-dd C_paren_dot_paren ; ( 'filename_counted_string pad+4 'text fd_text_count ) ( R pad+4 )
+dd C_counted_paren_dot_paren ; ( 'fcs pad 'cs )
+dd C_concat	; Now, pad has 4#n/0 ( 'fcs pad )
+
+dd M_xswap	; ( pad 'fcs )
+dd C_concat	; Now, pad has a proper counted string
 
 dd M_dup
-dd M_rpop
-dd M_plus
-dd M_rpush ; ( 'filename_counted_string pad+4 'text fd_text_count ) ( R pad+4+fd_text_count )
+dd C_count
+dd C_type
+dd C_cr
 
-dd M_cmove	; now, pad has #n/<infd> ( 'filename_counted_string ) ( R pad+4+fd_text_count )
-
-dd M_rpop	; ( 'filename_counted_string pad+4+fd_text_count )
-dd M_over	; ( 'filename_counted_string pad+4+fd_text_count 'filename_counted_string )
-dd M_cfetch	; ( 'filename_counted_string pad+4+fd_text_count filename_count )
-dd M_rpush	; ( 'filename_counted_string pad+4+fd_text_count ) (R filename_count )
-dd M_dup
-dd M_rpush	; ( 'filename_counted_string pad+4+fd_text_count ) (R filename_count pad+4+fd_text_count )
-
-dd M_xswap	; ( pad+4+fd_text_count 'filename_counted_string ) (R filename_count pad+4+fd_text_count )
-dd C_count	; ( pad+4+fd_text_count 'filename count ) (R filename_count pad+4+fd_text_count )
-dd M_cmove	; now, pad has the whole filename ( ) (R filename_count pad+4+fd_text_count )
-
-dd M_rpop
-dd M_rpop
-dd M_plus	; ( pad+4+fd_text_count+filename_count )
-
-dd C_pad
-dd C_1plus
-dd M_minus	; ( pad+4+fd_text_count+filename_count-pad-1 )
-dd C_pad
-dd M_store	; Now, pad has a proper counted string
 dd M_exitcolon
 
 ; max of a counted string is 256 bytes. Hence, cannot use it.
@@ -1185,9 +1207,9 @@ dd M_dup
 dd M_dup
 dd M_rpush	; ( index index ) (R index )
 dd C_buffername
-dd C_count	; ( index 'filename-counted-string -- 'text count )
+dd C_count	; ( index 'filename-counted-string -- 'text count ) (R index )
 dd C_ro
-dd C_open_file	; ( index fd ioresult )
+dd C_open_file	; ( index fd ioresult ) (R index )
 dd M_cjump
 dd L_C_get_store
 
@@ -1308,7 +1330,7 @@ dd MC_LINENUM
 dd C_get
 dd M_exitcolon
 
-CENTRY "doublequote" C_doublequote 11 ; ( -- count ) read from #n/Infd/doublequote into Tib and then parse to a counted string in Wordb
+CENTRY "doublequote" C_doublequote 11 ; ( -- count ) read from #n/Infd/doublequote into Tib
 dd MC_DOUBLEQUOTENUM
 dd C_get
 dd M_exitcolon
@@ -1796,7 +1818,7 @@ dd M_dup	; ( here count count )
 dd C_allot	; ( here count ) here = here+count
 dd M_exitcolon
 
-CENTRY "c\"" C_cdouble_quote 2	; ( | ..." -- 'counted-string ) stores counted string in the dictionary. For use in interpretive mode.
+CENTRY "c\"" C_counted_double_quote 2	; ( | ..." -- 'counted-string ) stores counted string in the dictionary. For use in interpretive mode.
 dd C_counted_doublequote	; ( 'Wordb )
 dd M_dup			; ( 'Wordb 'Wordb )
 dd M_cfetch			; ( 'Wordb count )
@@ -2242,7 +2264,7 @@ dd C_stdinput	; read lines from stdin, args can change it later
 dd C_quit	; interpreter loop when there are no args or fall through after processing args
 dd M_exitcolon
 
-L120:
+L_bin_prefix:
 db "#n/"
 L121:
 db "/word"

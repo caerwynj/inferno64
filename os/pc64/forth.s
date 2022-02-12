@@ -117,6 +117,11 @@ TODO Move variable space out of the dictionary from #forth
 		such as:
 			[char] a - does something with a. a's location is in IP
 			char - does something with the next input word
+
+	stack notations
+		cs counted-string
+		'text address of text
+		n number
  */
 
 /* HEAPSTART, HEAPEND, HERE, DTOP, VHERE are loaded by the caller */

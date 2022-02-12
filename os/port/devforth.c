@@ -240,7 +240,6 @@ loadforthdictionary(u8 *fmem)
 	int n;
 	Bhdr *b;
 
-debug = 1;
 	h = fmem+DICTIONARY;
 	dtop = nil;
 	vh = fmem+THERE+8;
@@ -335,7 +334,7 @@ debug = 1;
 	nbytes = snprint((char*)fmem + ARGSFILENAME+1, 32, "#p/%d/args", up->pid);
 	*(u8*)(fmem + ARGSFILENAME) = nbytes;
 
-	DBG("loadforthdictionary fmem 0x%p\n"
+	print("loadforthdictionary fmem 0x%p\n"
 			"	here 0x%p dtop 0x%p there 0x%p\n"
 			"	(intptr*)(fmem + DTOP) 0x%p *(intptr*)(fmem + DTOP) 0x%zX\n"
 			"	PSTACK 0x%p (intptr*)(fmem + PSTACK) 0x%p\n"
@@ -349,7 +348,6 @@ debug = 1;
 	D2B(b, fmem);
 	DBG("Bhdr b 0x%p b->magic 0x%x b->size %zd b->allocpc 0x%zX\n",
 			b, b->magic, b->size, b->allocpc);
-debug = 0;
 }
 
 /* also called by init0 for the init forth proc */
