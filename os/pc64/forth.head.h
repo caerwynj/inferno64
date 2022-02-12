@@ -8,7 +8,10 @@ enum {
 	FromDictionary,
 	FromH0,
 	FromV0,
+	Byte,	/* obsolete, all are counted strings now */
 	Chars,
+	Here,
+	There,
 };
 
 typedef struct Hdr Hdr;
@@ -24,6 +27,7 @@ struct Fentry
 	union {
 		Hdr hdr;
 		intptr p;
+		s8 b;
 		char str[128];
 	};
 	char src[128];

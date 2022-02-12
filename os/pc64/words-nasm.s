@@ -462,7 +462,7 @@ dd C_false
 dd M_exitcolon
 
 CENTRY "here" C_here 4
-dd MV_Dp
+dd MV_Dp		; the address on the top of stack is 0x583288, which is correct
 dd M_fetch
 dd M_exitcolon
 
@@ -785,40 +785,6 @@ dd MV_Abortvec
 dd M_fetch
 dd M_execute
 dd M_exitcolon
-CENTRY "source" C_source 6
-dd MV_Sourcebuf
-dd M_fetch
-dd M_exitcolon
-
-CENTRY "bufferfd!" C_bufferfd 8 ; ( n -- 'fd ) fd = Bufferfds n +
-dd MV_Bufferfds
-dd M_plus
-dd M_fetch
-dd M_exitcolon
-
-CENTRY "Wordfd" C_Wordfd 6 ; ( -- 'fd )
-dd M_literal
-dd 0
-dd C_bufferfd
-dd M_exitcolon
-
-CENTRY "Linefd" C_Linefd 6 ; ( -- 'fd )
-dd M_literal
-dd 1
-dd C_bufferfd
-dd M_exitcolon
-
-CENTRY "Doublequotefd" C_Doublequotefd 13 ; ( -- 'fd )
-dd M_literal
-dd 2
-dd C_bufferfd
-dd M_exitcolon
-
-CENTRY "Closeparenfd" C_Closeparenfd 12 ; ( -- 'fd )
-dd M_literal
-dd 3
-dd C_bufferfd
-dd M_exitcolon
 
 CENTRY "bufferfilename!" C_bufferfilename_store 15 ; ( 'text index -- ) store label
 dd C_cells
@@ -846,13 +812,13 @@ dd M_store
 dd M_exitcolon
 
 CENTRY "wordfilename@" C_wordfilename_fetch 13
-dd MV_Bufferfds
+dd MV_Bufferfilenames
 dd C_toword
 dd M_fetch
 dd M_exitcolon
 
 CENTRY "wordfilename!" C_wordfilename_store 13
-dd MV_Bufferfds
+dd MV_Bufferfilenames
 dd C_toword
 dd M_store
 dd M_exitcolon
@@ -876,13 +842,13 @@ dd M_store
 dd M_exitcolon
 
 CENTRY "linefilename@" C_linefilename_fetch 13
-dd MV_Bufferfds
+dd MV_Bufferfilenames
 dd C_toline
 dd M_fetch
 dd M_exitcolon
 
 CENTRY "linefilename!" C_linefilename_store 13
-dd MV_Bufferfds
+dd MV_Bufferfilenames
 dd C_toline
 dd M_store
 dd M_exitcolon
@@ -906,13 +872,13 @@ dd M_store
 dd M_exitcolon
 
 CENTRY "doublequotefilename@" C_doublequotefilename_fetch 20
-dd MV_Bufferfds
+dd MV_Bufferfilenames
 dd C_todoublequote
 dd M_fetch
 dd M_exitcolon
 
 CENTRY "doublequotefilename!" C_doublequotefilename_store 20
-dd MV_Bufferfds
+dd MV_Bufferfilenames
 dd C_todoublequote
 dd M_store
 dd M_exitcolon
@@ -936,13 +902,13 @@ dd M_store
 dd M_exitcolon
 
 CENTRY "closeparenfilename@" C_closeparenfilename_fetch 19
-dd MV_Bufferfds
+dd MV_Bufferfilenames
 dd C_tocloseparen
 dd M_fetch
 dd M_exitcolon
 
 CENTRY "closeparenfilename!" C_closeparenfilename_store 19
-dd MV_Bufferfds
+dd MV_Bufferfilenames
 dd C_tocloseparen
 dd M_store
 dd M_exitcolon
@@ -1004,7 +970,7 @@ dd M_store
 dd C_interpret
 dd M_exitcolon
 
-CENTRY "input@" C_input_fetch 4 ; ( -- Bufferfds Infd #Buffers+1 ) save input stream onto the stack and replace the buffer fd's with -1
+CENTRY "input@" C_input_fetch 6 ; ( -- Bufferfds Infd #Buffers+1 ) save input stream onto the stack and replace the buffer fd's with -1
 dd MV_Bufferfds
 dd MC_NBUFFERS
 dd M_literal
@@ -1039,7 +1005,7 @@ dd M_plus
 
 dd M_exitcolon
 
-CENTRY "input!" C_input_store 7 ; ( <input>|empty --  )	; restore input stream from the stack or stdinput
+CENTRY "input!" C_input_store 6 ; ( <input>|empty --  )	; restore input stream from the stack or stdinput
 dd M_dup		; check if there is #Buffers+1 on the top of stack
 
 dd MC_NBUFFERS
@@ -1082,7 +1048,7 @@ dd C_false		; ( 0 )
 dd M_exitcolon
 
 ; closefds: close all buffer fds and Infd, set buffer fds and Infd to -1
-CENTRY "-input" C_close_input 8 ; ( <input>|empty --  )	; restore input stream from the stack or stdinput
+CENTRY "-input" C_close_input 6 ; ( <input>|empty --  )	; restore input stream from the stack or stdinput
 dd MV_Bufferfds
 dd MC_NBUFFERS
 dd M_literal
@@ -1135,8 +1101,7 @@ dd L_restore_input	; input stream restored
 dd C_space
 dd M_literal
 dd L137
-dd M_literal
-dd 23
+dd C_count
 dd C_type
 dd C_space
 dd C_depth
@@ -1197,15 +1162,15 @@ dd C_pad
 dd M_store	; Now, pad has a proper counted string
 dd M_exitcolon
 
-CENTRY "get" C_get 3 ; ( index -- 'counted-string ) read from the indexed Fd in Bufferfds into Tib as a counted string
+; max of a counted string is 256 bytes. Hence, cannot use it.
+CENTRY "get" C_get 3 ; ( index -- read_count ) read from the indexed Fd in Bufferfds into Tib
 dd MV_Eof
 dd C_off	; clear EOF flag
 
 dd M_dup
-
 dd C_cells	; ( index index*cellsize ) number of bytes
 dd MV_Bufferfds
-dd M_plus	; ( index index*cellsize+'Bufferfds ) address of the filename's counted string
+dd M_plus	; ( index index*cellsize+'Bufferfds ) address of the fd
 dd M_fetch	; ( index fd )
 
 dd M_dup	; ( index fd fd )
@@ -1213,7 +1178,7 @@ dd M_literal
 dd -1
 dd M_equal
 dd M_cjump	; if fd == -1 ( index fd )
-dd L_C_get		; when not -1
+dd L_C_get	; when not -1
 
 dd M_drop	; when fd == -1 ( index )
 dd M_dup
@@ -1246,11 +1211,8 @@ dd M_store	; ( index fd )
 L_C_get:		; ( index fd ) when fd != -1
 dd MV_Tib
 dd M_literal
-dd 1
-dd M_plus	; Tib 1 +
-dd M_literal
-dd 4095		; ( index fd Tib+1 4095 )
-dd C_rot	; ( index Tib+1 4095 fd )
+dd 4096		; ( index fd Tib 4096 )
+dd C_rot	; ( index Tib 4096 fd )
 dd M_fetch
 dd read-file ; ( index read_count ioresult )
 
@@ -1284,28 +1246,80 @@ dd C_restore_input
 dd M_exitcolon
 
 L_C_get_2:		; read_count > 0 ( read_count )
-dd MV_Tib	; ( read_count 'Tib ) Tib has the counted string read
-dd M_store
+dd M_dup
+dd M_literal
+dd 4096
+dd M_equal
+dd M_cjump
+dd L_C_get_3
 
-dd MV_Tib	; ( 'Tib )
+dd M_literal
+dd L_C_get_too_long ; could not find a delimiter in 4096 bytes, reevaluate
+dd C_count
+dd C_type
+dd C_emit	; show the read_count
+dd C_cr
+dd C_abort	; abort on read error. How about terminate?
+
+L_C_get_3:	; ( read_count )
+dd M_exitcolon	; ( read_count )
+
+CENTRY "parse" C_parse 4 ; ( read_count -- 'Wordb ) Wordb has a counted string. read_count number of bytes read into Tib
+
+dd M_dup	; ( read_count read_count ) check if count > 255 bytes, then invalid word
+dd M_literal
+dd 256
+dd M_less
+dd M_cjump
+dd L_C_parse_1
+
+dd M_dup	; ( read_count read_count )
+dd MV_Wordb
+dd M_cstore	; ( store read_count at Wordb[0] )
+dd M_rpush
+dd MV_Tib
+dd MV_Wordb
+dd M_literal
+dd 1
+dd M_plus	; ( 'Tib 'Wordb+1 ) (R read_count )
+dd M_rpop	; ( 'Tib 'Wordb+1 read_count )
+dd M_cmove	; copy bytes from Tib to Wordb to make it a counted string at Wordb
+
+dd MV_Wordb
+dd M_exitcolon	; ( 'Wordb ) Wordb has the counted string
+
+L_C_parse_1:
+dd M_literal
+dd L_C_long_word
+dd C_count
+dd C_type
+dd C_cr
+dd C_abort
 dd M_exitcolon
 
-CENTRY "word" C_word 4 ; ( c -- a ) read from #n/Infd/word into Tib
+CENTRY "word" C_word 4 ; ( -- 'Wordb ) read from #n/Infd/word into Tib and then parse to a counted string in Wordb
 dd MC_WORDNUM
 dd C_get
+dd C_parse
 dd M_exitcolon
 
-CENTRY "line" C_line 4 ; ( c -- a ) read from #n/Infd/line
+CENTRY "line" C_line 4 ; ( -- count ) read from #n/Infd/line into Tib
 dd MC_LINENUM
 dd C_get
 dd M_exitcolon
 
-CENTRY "doublequote" C_doublequote 11 ; ( c -- a ) read from #n/Infd/doublequote
+CENTRY "doublequote" C_doublequote 11 ; ( -- count ) read from #n/Infd/doublequote into Tib and then parse to a counted string in Wordb
 dd MC_DOUBLEQUOTENUM
 dd C_get
 dd M_exitcolon
 
-CENTRY "closeparen" C_closeparen 10 ; ( c -- a ) read from #n/Infd/closeparen
+CENTRY "cdoublequote" C_counted_doublequote 11 ; ( -- 'Wordb ) read from #n/Infd/doublequote into Tib and then parse to a counted string in Wordb
+dd MC_DOUBLEQUOTENUM
+dd C_get
+dd C_parse
+dd M_exitcolon
+
+CENTRY "closeparen" C_closeparen 10 ; ( -- count ) read from #n/Infd/closeparen
 dd MC_CLOSEPARENNUM
 dd C_get
 dd M_exitcolon
@@ -1405,8 +1419,7 @@ dd C_count
 dd C_type
 dd M_literal
 dd L170
-dd M_literal
-dd 3
+dd C_count
 dd C_type
 dd C_cr
 dd C_abort
@@ -1421,8 +1434,7 @@ dd M_cjump
 dd L_C_qstack
 dd M_literal
 dd L173
-dd M_literal
-dd 16
+dd C_count
 dd C_type
 dd C_cr
 dd C_abort
@@ -1438,13 +1450,8 @@ dd M_drop		; drop the return value of write
 CENTRY "interpret" C_interpret 9 ; there is stuff in TIB to be interpreted >In and >Limit are set
 
 L_C_interpret:
-dd C_word	; ( bl -- a ) a = address of counted string
-dd M_dup
-dd M_cfetch
-dd C_0neq
-dd M_cjump
-dd L_C_interpret_1	; count at a = 0, drop a and exit
-dd C_find	; ( a -- a1 f ) a = address of counted string
+dd C_word	; ( -- 'Wordb ) Wordb has the counted string
+dd C_find	; ( 'Wordb -- a1 f )
 dd M_cjump
 dd L_C_interpret_2
 
@@ -1453,7 +1460,8 @@ dd M_execute	; found in dictionary, execute
 dd C_qstack
 dd M_jump
 dd L_C_interpret_3
-L_C_interpret_2:		; not found in the dictionary, check for number?
+
+L_C_interpret_2:	; ( 'Wordb ) not found in the dictionary, check for number?
 dd C_count
 dd C_number
 dd C_0eq
@@ -1463,17 +1471,15 @@ dd C_space	; the word is neither in the dictionary nor a number
 dd C_type	; show the word
 dd M_literal
 dd L180	; error I?
-dd M_literal
-dd 3
+dd C_count
 dd C_type
 dd C_cr
 dd C_abort
+
 L_C_interpret_4:		; is a number
 L_C_interpret_3:
 dd M_jump
 dd L_C_interpret
-L_C_interpret_1:
-dd M_drop	; count at a = 0 ( a -- )
 dd M_exitcolon
 
 CENTRY "create" C_create 6	; compiles dictionary header until the pfa (link, len, name, cfa)
@@ -1483,7 +1489,7 @@ dd M_rpush	; ( -- ) (R -- linkaddr )
 dd MV_Dtop	; ( -- Dtop ) (R -- linkaddr )
 dd M_fetch	; ( Dtop -- dtop ) (R -- linkaddr )
 dd C_comma	; ( dtop -- ) (R -- linkaddr )
-dd C_word	; get the word from the input stream ( c -- a ) skip any c. Placed the counted string in a (as in Wordbuf)
+dd C_word	; get the word from the input stream ( -- 'counted-string ) in Wordb
 dd M_dup	; ( a -- a a ) (R -- linkaddr )
 dd M_cfetch	; ( a a -- a len ) (R -- linkaddr )
 dd C_here	; ( a len -- a len here ) (R -- linkaddr )
@@ -1582,8 +1588,7 @@ dd C_space
 dd C_type
 dd M_literal
 dd L_C_compile_5
-dd M_literal
-dd 3
+dd C_count
 dd C_type
 dd C_cr
 dd C_abort
@@ -1687,7 +1692,7 @@ dd C_comma
 dd M_exitcolon
 
 CENTRY "char" C_char 4	; ( -- c ) fetch the first character of the next word from input
-dd C_word	; ( c -- a ) puts the address of the counted string from the input on the stack
+dd C_word	; ( -- a ) puts the address of the counted string from the input on the stack
 dd C_1plus	; skip the count
 dd M_cfetch	; fetch the first character
 dd M_exitcolon
@@ -1705,21 +1710,20 @@ dd M_sliteral
 dd C_comma	; adds (sliteral) to the dictionary
 dd C_here	; ( here )
 
-dd C_doublequote
-dd MV_Tib
-dd M_dup	; ( here a -- here a a )
-dd M_cfetch	; ( here a a -- here a n )
-dd C_1plus	; ( here a n -- here a n+1 ) n+1 as 1 for the count and n for the length of the string
-dd M_rpush	; ( here a n+1 -- here a ) (R -- n+1)
-dd M_xswap	; ( here a -- a here ) (R -- n+1)
-dd M_rfetch	; ( a here -- a here n+1 ) (R -- n+1 )
-dd M_cmove	; ( a here n+1 -- ) moves n+1 from a to here
-dd M_rpop	; ( -- n+1 ) (R -- )
-dd C_allot	; ( n+1 -- ) here = here+n+1
+dd C_counted_doublequote	; ( here 'Wordb ) Wordb has the counted string
+dd M_dup	; ( here 'Wordb 'Wordb )
+dd M_cfetch	; ( here 'Wordb count )
+dd C_1plus	; ( here 'Wordb count+1 )
+dd M_rpush	; ( here 'Wordb ) (R count+1 )
+dd M_xswap	; ( 'Wordb here ) (R count+1 )
+dd M_rfetch	; ( 'Wordb here count+1 ) (R count+1 )
+dd M_cmove	; ( ) (R count+1 )
+dd M_rpop
+dd C_allot	; here = here+count+1
 dd C_align	; align here
 dd M_exitcolon
 
-CENTRY "string" C_string 6 ; ( c -- ) 
+CENTRY "string" C_string 6 ; ( -- ) store the following word as a counted string onto the dictionary
 dd C_word
 dd M_dup
 dd M_cfetch
@@ -1731,14 +1735,15 @@ dd M_cmove
 dd M_rpop
 dd C_allot
 dd M_exitcolon
+
 CIENTRY "[char]" CI_char_brackets 6	; take the next character from the input stream during compilation
-dd C_word
+dd C_word	; assuming that the character is a 1-byte word
 dd C_1plus
 dd M_cfetch
 dd C_literal
 dd M_exitcolon
 
-CIENTRY "[']" CI_quote_brackets 3	; take the address of next token from the input stream during compilation
+CIENTRY "[']" CI_quote_brackets 3 ; take the address of next token from the input stream during compilation
 dd C_single_quote
 dd C_literal
 dd M_exitcolon
@@ -1748,8 +1753,7 @@ dd C_closeparen
 dd M_drop
 dd M_exitcolon
 
-; if the line is longer than Tib, then skipping this line is not good enough. hence, throwing an error when >Limit == Tib length
-CIENTRY "\\" CI_backslash 1 ; when there is no Acceptvec, find a newline in the buffer and skip until that
+CIENTRY "\\" CI_backslash 1 ; if the line is longer than 4096, C_get throws an error
 dd C_line
 dd M_exitcolon
 
@@ -1775,38 +1779,44 @@ dd C_qabort_parens
 dd C_comma
 dd M_exitcolon
 
-CENTRY "\"" C_double_quote 1	; ( | .. " -- 'text count ) stores counted string in the dictionary and also leaves the address and count of the string on the stack - to use strings at the interpreter prompt
-dd C_doublequote
-dd C_count
-dd M_rpush
-dd C_here
-dd M_rfetch
+; could make this work for strings longer than 256 bytes.
+; But, for now, strings longer than 256 bytes are not supported by " or c" or s" or ."
+; this does not store the count in the dictionary
+CENTRY "\"" C_double_quote 1	; ( | .. " -- 'text count ) stores string in the dictionary and also leaves the address and count of the string on the stack - to use strings at the interpreter prompt
+dd C_counted_doublequote	; ( 'Wordb )
+dd C_count			; ( 'Wordb+1 count )
+dd M_rpush			; ( 'Wordb+1 ) (R count )
+dd C_here			; ( 'Wordb+1 here ) (R count )
+dd M_rfetch			; ( 'Wordb+1 here count ) (R count )
 dd M_cmove
-dd C_here
-dd M_rpop
-dd M_dup
-dd C_allot
+
+dd C_here	; ( here )
+dd M_rpop	; ( here count )
+dd M_dup	; ( here count count )
+dd C_allot	; ( here count ) here = here+count
 dd M_exitcolon
 
-CENTRY "c\"" C_cdouble_quote 2	; ( | ..." -- 'counted-string ) stores counted string in the dictionary and also leaves the address of the counted string on the stack. For use in interpretive mode. shouldn't this be using pad?
-dd C_doublequote	; ( \" -- a ) a = counted string address. a will be in Wordbuf
-dd M_dup	; ( a -- a a)
-dd M_cfetch	; ( a a -- a n )
-dd C_1plus	; ( a n -- a n+1 )
-dd M_rpush	; ( a n -- a ) (R -- n+1)
-dd C_here	; ( a -- a here ) (R -- n+1)
-dd M_rfetch	; ( a here -- a here n+1) (R -- n+1)
-dd M_cmove	; move counted string from a to here
-dd C_here	; ( -- here )
-dd M_rpop	; ( here -- here n+1 )(R -- )
-dd C_allot	; ( here n+1 -- here) here += n+1
+CENTRY "c\"" C_cdouble_quote 2	; ( | ..." -- 'counted-string ) stores counted string in the dictionary. For use in interpretive mode.
+dd C_counted_doublequote	; ( 'Wordb )
+dd M_dup			; ( 'Wordb 'Wordb )
+dd M_cfetch			; ( 'Wordb count )
+dd C_1plus			; ( 'Wordb count+1 )
+dd M_rpush			; ( 'Wordb ) (R count+1 )
+dd C_here			; ( 'Wordb here ) (R count+1 )
+dd M_rfetch			; ( 'Wordb here count ) (R count+1 )
+dd M_cmove
+
+dd C_here	; ( here )
+dd M_rpop	; ( here count+1 )
+dd C_allot	; ( here ) here = here+count+1
 dd M_exitcolon
 
+; for compiling counted strings into the definition. Puts the ( 'text count ) on the stack at run time
 CIENTRY "s\"" CI_sdouble_quote 2	; ( | ..." -- 'text count ) add the string from the input stream to the dictionary as (sliteral) count string - at run-time puts the ( -- addr n) of the counted string on the stack.
 dd C_sliteral
 dd M_exitcolon
 
-CIENTRY ".\"" CI_dotstr 2	; ( | ..." -- ) do what s" does and then add a type word to the dictionary to print that string
+CIENTRY ".\"" CI_dotstr 2	; ( | ..." -- ) ." = s" type
 dd C_sliteral
 dd M_literal
 dd C_type
@@ -2008,8 +2018,7 @@ dd L246
 dd C_space
 dd M_literal
 dd L247
-dd M_literal
-dd 9
+dd C_count
 dd C_type
 dd C_cr
 dd C_abort
@@ -2073,8 +2082,7 @@ dd M_exitcolon
 CENTRY "crash" C_crash 5
 dd M_literal
 dd L251
-dd M_literal
-dd 30
+dd C_count
 dd C_type
 dd C_cr
 dd C_abort
@@ -2137,26 +2145,49 @@ dd 1
 dd M_sysread
 dd M_drop		; drop the return value of read
 
-CENTRY "initialize" C_initialize 10	; initialize buffer file names, why not hard code this?
-dd MV_Bufferfilenames
+CENTRY "initialize" C_initialize 10	; initialize buffer file names and buffer fds, why not hard code this?
+dd MV_Bufferfds
 dd MC_NBUFFERS
 dd M_literal
 dd 0
 dd M_doinit
-L150:
+L_C_initialize:
+
+dd M_dup
+dd M_literal
+dd -1
+dd M_xswap
+dd M_store
 
 dd M_literal
 dd 1
 dd C_cells
 dd M_plus
+
+dd M_doloop
+dd L_C_initialize
+dd M_drop
+
+dd MV_Bufferfilenames
+dd MC_NBUFFERS
+dd M_literal
+dd 0
+dd M_doinit
+L_C_initialize_1:
+
 dd M_dup
 dd M_literal
 dd 0
 dd M_xswap
 dd M_store
 
+dd M_literal
+dd 1
+dd C_cells
+dd M_plus
+
 dd M_doloop
-dd L150
+dd L_C_initialize_1
 dd M_drop
 
 dd M_literal
@@ -2185,13 +2216,11 @@ dd C_parenabort ; ( (abort) -- )
 dd MV_Abortvec	; variable that puts (abort) code address on the stack
 dd M_store	; variable abortvec = (abort) code address
 
-dd MV_Wordb	; variable puts address of wordbuffer on the top of stack
-dd MV_Wordbuf ; variable wordbuf
-dd M_store	; variable wordbuf = address of wordbuffer
-
 dd MV_Dp
 dd MV_H0	; H0 = here at startup
 dd M_store
+
+dd C_initialize	; sets up the buffer filenames and buffer fd's
 
 dd MC_STDIN
 dd MV_Infd	; might be overwritten by args below
@@ -2207,45 +2236,28 @@ dd MV_State
 dd C_off	; off stores 0 at state
 dd C_decimal	; decimal sets base = 10
 
-dd C_initialize	; sets up the buffer filenames
 dd C_args	; process args
 dd C_close_input ; if the args opened an input
 dd C_stdinput	; read lines from stdin, args can change it later
 dd C_quit	; interpreter loop when there are no args or fall through after processing args
 dd M_exitcolon
 
-L_pid_filename:
-db 6
-db "#c/pid"
-L_args_prefix:
-db 3
-db "#p/"
-L_args_suffix:
-db 5
-db "/args"
 L120:
-db 3
 db "#n/"
 L121:
-db 5
 db "/word"
 L122:
-db 5
 db "/line"
 L123:
-db 12
 db "/doublequote"
 L124:
-db 11
 db "/closeparen"
 
 L137:
-db "unable to restore input"
+db "unable to restore input" ; comments for testing the awk parser
 L140:
-db 17
 db "open file failed"
 L141:
-db 17
 db "read file failed"
 L170:
 db " Q?"
@@ -2261,7 +2273,9 @@ L251:
 db "uninitialized execution vector"
 L255:
 db " ok"
-L304:
-db "input line is longer than 4096 bytes"
+L_C_get_too_long:
+db "input is longer than 4096 bytes without a delimiter"
 L305:
 db "read error"
+L_C_long_word:
+db "word is too long to be interpreted"

@@ -330,7 +330,7 @@ init0(void)
 	/* the space at the end is needed to recognize init.f as a word */
 	up->args = "include init.f ";
 	up->nargs = strlen(up->args);
-	print("init0: args len %ld: %s\n", up->nargs, up->args);
+	print("init0: args len %d: %s\n", up->nargs, up->args);
 	goforth(up->fmem);
 	/* disinit("/osinit.dis"); */
 	/* disinit("/osinit.dis"); */

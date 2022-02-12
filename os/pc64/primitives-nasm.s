@@ -85,12 +85,7 @@ MVDENTRY "Tib" Tib 3 TIB
 MVDENTRY "Argsfilename" Argsfilename 12 ARGSFILENAME ; counted string populated by forth starter from params
 
 MVENTRY "Iobuf" Iobuf 5		; the values are not being used from the definition. All are initialized to 0.
-MVENTRY "Sourcebuf" Sourcebuf 9	; is there a need for this?
-MVENTRY "Wordbuf" Wordbuf 7		; is there a need for this?
-MVENTRY ">In" toIn 3
-MVENTRY ">Limit" toLimit 6
 MVENTRY "Findadr" Findadr 7
-MVENTRY "Acceptvec" Acceptvec 9
 MVENTRY "Searchlen" Searchlen 9
 MVENTRY "Base" Base 4
 MVENTRY ">Num" toNum 4

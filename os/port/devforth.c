@@ -231,7 +231,6 @@ parseparams(char *params)
 	return p;
 }
 
-/* TODO simplify this: remove the absolute values? */
 void
 loadforthdictionary(u8 *fmem)
 {
@@ -241,11 +240,13 @@ loadforthdictionary(u8 *fmem)
 	int n;
 	Bhdr *b;
 
+debug = 1;
 	h = fmem+DICTIONARY;
 	dtop = nil;
 	vh = fmem+THERE+8;
-	DBG("loadforthdictionary fmem 0x%p h 0x%p dtop 0x%p vh 0x%p\n"
-			"	(intptr*)(fmem + DTOP) 0x%p *(intptr*)(fmem + DTOP) 0x%zx\n"
+	DBG("loadforthdictionary fmem 0x%p\n"
+			"	here 0x%p dtop 0x%p there 0x%p\n"
+			"	(intptr*)(fmem + DTOP) 0x%p *(intptr*)(fmem + DTOP) 0x%zX\n"
 			"	PSTACK 0x%p (intptr*)(fmem + PSTACK) 0x%p\n"
 			"	RSTACK 0x%p (intptr*)(fmem + RSTACK) 0x%p\n"
 			"	FORTHEND 0x%p (intptr*)(fmem + FORTHEND) 0x%p\n",
@@ -258,7 +259,7 @@ loadforthdictionary(u8 *fmem)
 		f = &fentries[i];
 		if(f->type == Header){
 			*(intptr*)h = (intptr)dtop;
-			DBG("Header 0x%p: 0x%zx 0x%p ", h, *(intptr*)h, dtop);
+			DBG("Header 0x%p: 0x%zX 0x%p ", h, *(intptr*)h, dtop);
 			dtop = h;
 			h += sizeof(intptr);
 			*h = f->hdr.len;
@@ -274,11 +275,10 @@ loadforthdictionary(u8 *fmem)
 				h += 8-((f->hdr.len+1)%8);
 			}
 			*(intptr*)h = (intptr)f->hdr.cfa;
-			DBG(" cfa 0x%p: 0x%zx 0x%p\n", h, *(intptr*)h, f->hdr.cfa);
-			h += sizeof(intptr);
+			DBG(" cfa 0x%p: 0x%zX 0x%p\n", h, *(intptr*)h, f->hdr.cfa);
 		}else if(f->type == IHeader){
 			*(intptr*)h = (intptr)dtop;
-			DBG("IHeader 0x%p: 0x%zx 0x%p ", h, *(intptr*)h, dtop);
+			DBG("IHeader 0x%p: 0x%zX 0x%p ", h, *(intptr*)h, dtop);
 			dtop = h;
 			h += sizeof(intptr);
 			*h = f->hdr.len | (1<<7);
@@ -294,31 +294,34 @@ loadforthdictionary(u8 *fmem)
 				h += 8-((f->hdr.len+1)%8);
 			}
 			*(intptr*)h = (intptr)f->hdr.cfa;
-			DBG(" cfa 0x%p: 0x%zx 0x%p\n", h, *(intptr*)h, f->hdr.cfa);
-			h += sizeof(intptr);
+			DBG(" cfa 0x%p: 0x%zX 0x%p\n", h, *(intptr*)h, f->hdr.cfa);
 		}else if(f->type == Absolute){
 			*(intptr*)h = f->p;
-			DBG("	0x%p: 0x%zx 0x%zx\n", h, *(intptr*)h, f->p);
-			h += sizeof(intptr);
+			DBG("	0x%p: 0x%zX 0x%zX\n", h, *(intptr*)h, f->p);
 		}else if(f->type == FromDictionary){
 			*(intptr*)h = (intptr)fmem+DICTIONARY+f->p;
-			DBG("	0x%p: 0x%zx 0x%p src %s\n", h, *(intptr*)h, fmem+DICTIONARY+f->p, f->src);
-			h += sizeof(intptr);
+			DBG("	0x%p: 0x%zX 0x%p src %s\n", h, *(intptr*)h, fmem+DICTIONARY+f->p, f->src);
 		}else if(f->type == FromH0){
 			*(intptr*)h = (intptr)fmem+f->p;
-			DBG("	0x%p: 0x%zx 0x%p src %s\n", h, *(intptr*)h, fmem+f->p, f->src);
-			h += sizeof(intptr);
+			DBG("	0x%p: 0x%zX 0x%p src %s\n", h, *(intptr*)h, fmem+f->p, f->src);
 		}else if(f->type == FromV0){
 			*(intptr*)h = (intptr)fmem+THERE+8+f->p; /* pfa with the address where the value is */
 			*(intptr*)vh = 0; /* actual value, not necessary as malloc zeroes it all */
-			DBG("	0x%p: 0x%zx 0x%p\n", h, *(intptr*)h, (intptr)fmem+THERE+8+f->p);
-			DBG("	0x%p: 0x%zx 0\n", vh, *(intptr*)vh);
-			h += sizeof(intptr);	/* space for pfa with the variable address */
-			vh = fmem+THERE+8+f->p;	/* space for the actual value */
+			DBG("	0x%p: 0x%zX 0x%p\n", h, *(intptr*)h, (intptr)fmem+THERE+8+f->p);
+			DBG("	0x%p: 0x%zX 0\n", vh, *(intptr*)vh);
 		}else if(f->type == Chars){
-			strcpy((s8*)h, f->str);
-			h += strlen(f->str);
-			h++; /* leave the terminating null byte alone, though not required by forth */
+			*h = strlen(f->str);	/* making this a counted string */
+			strcpy((s8*)h+1, f->str);
+			DBG("	0x%p: %d %s\n", h, *h, (char*)h+1);
+		}else if(f->type == Byte){	/* obsolete, all are counted strings now */
+			*h = f->b;
+			DBG("	0x%p: 0x%ud 0x%ud\n", h, *h, f->b);
+		}else if(f->type == Here){
+			h = fmem+DICTIONARY+f->p;
+			DBG("	h 0x%p\n", h);
+		}else if(f->type == There){
+			vh = fmem+THERE+8+f->p;
+			DBG("	vh 0x%p\n", vh);
 		} else {
 			panic("loadforthdictionary unknown Fentry\n");
 		}
@@ -332,8 +335,9 @@ loadforthdictionary(u8 *fmem)
 	nbytes = snprint((char*)fmem + ARGSFILENAME+1, 32, "#p/%d/args", up->pid);
 	*(u8*)(fmem + ARGSFILENAME) = nbytes;
 
-	print("loadforthdictionary fmem 0x%p h 0x%p dtop 0x%p vh 0x%p\n"
-			"	(intptr*)(fmem + DTOP) 0x%p *(intptr*)(fmem + DTOP) 0x%zx\n"
+	DBG("loadforthdictionary fmem 0x%p\n"
+			"	here 0x%p dtop 0x%p there 0x%p\n"
+			"	(intptr*)(fmem + DTOP) 0x%p *(intptr*)(fmem + DTOP) 0x%zX\n"
 			"	PSTACK 0x%p (intptr*)(fmem + PSTACK) 0x%p\n"
 			"	RSTACK 0x%p (intptr*)(fmem + RSTACK) 0x%p\n"
 			"	FORTHEND 0x%p (intptr*)(fmem + FORTHEND) 0x%p\n",
@@ -343,8 +347,9 @@ loadforthdictionary(u8 *fmem)
 			RSTACK, (intptr*)(fmem + RSTACK),
 			FORTHEND, (intptr*)(fmem + FORTHEND));
 	D2B(b, fmem);
-	print("Bhdr b 0x%p b->magic 0x%x b->size %zd b->allocpc 0x%zx\n",
+	DBG("Bhdr b 0x%p b->magic 0x%x b->size %zd b->allocpc 0x%zX\n",
 			b, b->magic, b->size, b->allocpc);
+debug = 0;
 }
 
 /* also called by init0 for the init forth proc */

@@ -126,12 +126,12 @@ TEXT	sysclose(SB), 1, $16	/* ( fd -- n ) */
 #define CHECKBUFFER	\
 	MOVQ TOP, CX; \
 	CMPQ CX, $0;	/* negative n? */\
-	JLT belowum;	/* TODO have an appropriate error message */\
+	JLT belowup;	/* TODO have an appropriate error message */\
 	ADDQ (PSP), CX;	/* CX = a+n */\
 	CMPQ CX, UPE;	/* a+n, UPE */\
-	JGT aboveume;	/* a+n > UPE */\
+	JGT aboveupe;	/* a+n > UPE */\
 	CMPQ (PSP), UP;	/* a, UP */\
-	JLT belowum;	/* a < UP */
+	JLT belowup;	/* a < UP */
 
 TEXT	sysread(SB), 1, $40	/* ( fd a n -- n2 ) */
 

@@ -128,7 +128,10 @@ dumprstack(intptr h, intptr rsp, intptr he)
 	if(he == 0 || h == 0 || rsp < h || rsp >= he || h+RSTACK < h || h+RSTACK >= he)
 		return;
 	for(i = h + RSTACK-8; i >= rsp; i-=8){
-		print("	0x%zx: 0x%zx 0x%zx %zd\n", i, *(intptr*)i, *(intptr*)i-h, *(intptr*)i-h);
+		if(*(intptr*)i >=h && *(intptr*)i <=he)
+			print("	0x%zx: 0x%zx 0x%zx %zd\n", i, *(intptr*)i, *(intptr*)i-h, *(intptr*)i-h);
+		else
+			print("	0x%zx: 0x%zx\n", i, *(intptr*)i);
 	/*	l++;
 		if(l == 3){
 			l = 0;
@@ -204,7 +207,7 @@ dumpforthregs(Ureg* ureg)
 	iprint(" R10 W %.16lluX %.16lluX %.16llud\n",
 		ureg->r10, ureg->r10-ureg->r11, ureg->r10-ureg->r11);
 	iprint(" R11 UP %.16lluX R12 UPE %.16lluX\n",
-		ureg->r10, ureg->r11, ureg->r12);
+		ureg->r11, ureg->r12);
 	iprint(" R13 %.16lluX R14 up %.16lluX R15 m %.16lluX\n",
 		ureg->r13, ureg->r14, ureg->r15);
 	iprint("  CS %.4lluX   SS %.4lluX    PC %.16lluX  SP %.16lluX\n",

@@ -97,16 +97,26 @@ TODO Move variable space out of the dictionary from #forth
 #define RSTACK_SIZE BY2PG
 
 /* putting this above the asm code as the v_dp define is needed by _main */
-/*	m_ for primitive/macro word cfa
-	mc_ for primtive/macro word constants
-	c_ for colon word cfa
-	ci_ for colon immediate word cfa
-	v_ for colon variable word cfa
+/*
+	M_ for primitive/macro word cfa
+	MC_ for primtive/macro word constants
+	C_ for colon word cfa
+	CI_ for colon immediate word cfa
+	V_ for colon variable word cfa
 
 	CONSTANTS - capital letters
-	Variables - initial capital case
+	Variables - initial capital case, at runtime puts the address of the location on the data stack
 	words - lower case
-	'name - puts a vector on the data stack
+	'name - address of name
+
+	(word) - compiler or runtime helper words
+		(sliteral) puts the following counted string on the stack
+		(literal) puts the following cell on the stack
+		(constant), (:)
+	[word] - uses the next instruction as the parameter
+		such as:
+			[char] a - does something with a. a's location is in IP
+			char - does something with the next input word
  */
 
 /* HEAPSTART, HEAPEND, HERE, DTOP, VHERE are loaded by the caller */
@@ -208,9 +218,9 @@ TEXT	cjump(SB), 1, $-4	/* ( f -- ) */
 
 #define CHECKADDRESS \
 	CMPQ TOP, UPE; \
-	JGT aboveume;	/* a > UPE */\
+	JGT aboveupe;	/* a > UPE */\
 	CMPQ TOP, UP;\
-	JLT belowum;	/* a < UP */
+	JLT belowup;	/* a < UP */
 
 TEXT	execute(SB), 1, $-4	/* ( ... a -- ... ) */
 	CHECKADDRESS
@@ -610,15 +620,15 @@ callable by forth primitives to check address
  */
 TEXT	inum(SB), 1, $-4
 	CMPQ TOP, UPE
-	JGT aboveume	/* a > UPE */
+	JGT aboveupe	/* a > UPE */
 	CMPQ TOP, UP
-	JLT belowum		/* a < UP */
+	JLT belowup		/* a < UP */
 	MOVQ $0, TOP	/* could use XORQ TOP, TOP to zero too */
 	RET
-belowum:
+belowup:
 	MOVQ $-1, TOP
 	RET
-aboveume:
+aboveupe:
 	MOVQ $1, TOP
 	RET
 
@@ -636,12 +646,12 @@ callable by forth primitives to check address
  */
 TEXT	isbufinum(SB), 1, $-4 /* is buffer in user memory? ( a n -- -1|0|1 ) */
 	CMPQ TOP, $0 	/* negative n? */
-	JLT belowum		/* TODO have an appropriate error message */
+	JLT belowup		/* TODO have an appropriate error message */
 	ADDQ (PSP), TOP	/* TOP = a+n */
 	CMPQ TOP, UPE	/* a+n, UPE */
-	JGT aboveume	/* a+n > UPE */
+	JGT aboveupe	/* a+n > UPE */
 	CMPQ (PSP), UP	/* a, UP */
-	JLT belowum		/* a < UP */
+	JLT belowup		/* a < UP */
 	ADDQ $8, PSP	/* get rid of a from the stack */
 	MOVQ $0, TOP
 	RET
