@@ -953,19 +953,18 @@ dd M_doinit
 L_C_stdinput:
 
 dd M_literal
+dd -1
+dd M_over	; ( 'Bufferfd -1 'Bufferfd )
+dd M_store
+
+dd M_literal
 dd 1
 dd C_cells
 dd M_plus
-dd M_dup
-dd M_literal
-dd -1
-dd M_xswap
-dd M_store
 
 dd M_doloop
 dd L_C_stdinput
 dd M_drop
-
 dd M_exitcolon
 
 CENTRY "args" C_args 4 ; stream input from #p/<pid>/args into Text input buffer
@@ -991,6 +990,7 @@ dd C_interpret
 dd M_exitcolon
 
 CENTRY "input@" C_input_fetch 6 ; ( -- Bufferfds Infd #Buffers+1 ) save input stream onto the stack and replace the buffer fd's with -1
+
 dd MV_Bufferfds
 dd MC_NBUFFERS
 dd M_literal
@@ -998,34 +998,36 @@ dd 0
 dd M_doinit
 L_C_input_fetch:
 
+dd M_dup	; ( 'Bufferfd 'Bufferfd )
+dd M_fetch
+dd M_xswap	; ( fd 'Bufferfd )
+
+dd M_literal
+dd -1
+dd M_over	; ( fd 'Bufferfd -1 'Bufferfd )
+dd M_store	; ( fd 'Bufferfd )
+
 dd M_literal
 dd 1
 dd C_cells
 dd M_plus
-dd M_dup
-dd M_fetch
-
-dd M_dup	; ( 'Bufferfd 'Bufferfd )
-dd M_literal
-dd -1
-dd M_xswap	; ( 'Bufferfd -1 'Bufferfd )
-dd M_store	; ( 'Bufferfd )
 
 dd M_doloop
 dd L_C_input_fetch
-dd M_drop
+dd M_drop	; ( fd0 fd1 .. fdn )
 
 dd MV_Infd
-dd M_fetch
+dd M_fetch	; ( fd0 fd1 .. fdn infd )
 
 dd MC_NBUFFERS
 dd M_literal
 dd 1
-dd M_plus
+dd M_plus	; ( fd0 fd1 .. fdn infd n+1 )
 
 dd M_exitcolon
 
-CENTRY "input!" C_input_store 6 ; ( <input>|empty --  )	; restore input stream from the stack or stdinput
+Buggy
+CENTRY "input!" C_input_store 6 ; ( fd0 fd1 .. fdn infd n+1 | empty -- ) restore input stream from the stack or stdinput
 dd M_dup		; check if there is #Buffers+1 on the top of stack
 
 dd MC_NBUFFERS
@@ -1039,7 +1041,12 @@ dd L_C_input_store_1	; top of stack <> #Buffers+1, there is no input stream on t
 dd M_drop	; drop the #Buffers+1 on the top of stack
 
 dd MV_Infd
-dd M_store
+dd M_store	; ( fd0 fd1 .. fdn )
+
+dd MV_Bufferfds
+dd MC_NBUFFERS
+dd C_cells
+dd M_plus	; ( fd0 fd1 .. fdn 'Bufferfds+(NBUFFERS*cellsize) )
 
 dd MC_NBUFFERS
 dd M_literal
@@ -1047,11 +1054,15 @@ dd 0
 dd M_doinit
 L_C_input_store:
 
-dd MV_Bufferfds
-dd M_i
+dd M_literal
+dd 1
 dd C_cells
-dd M_plus
+dd M_minus	; ( fd0 fd1 .. fdn 'Bufferfds-(1*cellsize) )
+dd M_dup	; ( fd0 fd1 .. fdn 'Bufferfds-(1*cellsize) 'Bufferfds-(1*cellsize) )
+dd M_rpush	; ( fd0 fd1 .. fdn 'Bufferfds-(1*cellsize) ) (R 'Bufferfds-(1*cellsize) )
 dd M_store
+
+dd M_rpop	; ( fd0 fd1 .. fdn-1 'Bufferfds-(1*cellsize) )
 
 dd M_doloop
 dd L_C_input_store
@@ -1068,7 +1079,7 @@ dd C_false		; ( 0 )
 dd M_exitcolon
 
 ; closefds: close all buffer fds and Infd, set buffer fds and Infd to -1
-CENTRY "-input" C_close_input 6 ; ( <input>|empty --  )	; restore input stream from the stack or stdinput
+CENTRY "-input" C_close_input 6 ; (  )	; close the current input stream
 dd MV_Bufferfds
 dd MC_NBUFFERS
 dd M_literal
@@ -1076,10 +1087,14 @@ dd 0
 dd M_doinit
 L_C_close_input:
 
+dd M_dup	; ( 'Bufferfd 'Bufferfd )
+dd M_fetch
 dd M_literal
-dd 1
-dd C_cells
-dd M_plus
+dd -1
+dd C_neq
+dd M_cjump
+dd L_C_close_next	; == -1, check next fd
+
 dd M_dup	; ( 'Bufferfd 'Bufferfd )
 dd M_fetch	; ( 'Bufferfd fd )
 dd C_close_file	; ( 'Bufferfd ioresult )
@@ -1091,8 +1106,15 @@ dd -1
 dd M_xswap	; ( 'Bufferfd -1 'Bufferfd )
 dd M_store	; ( 'Bufferfd )
 
+L_C_close_next:
+dd M_literal
+dd 1
+dd C_cells
+dd M_plus
+
 dd M_doloop
 dd L_C_close_input
+
 dd M_drop
 
 dd M_literal
@@ -1210,19 +1232,20 @@ dd C_buffername
 dd C_count	; ( index 'filename-counted-string -- 'text count ) (R index )
 dd C_ro
 dd C_open_file	; ( index fd ioresult ) (R index )
+dd C_invert
 dd M_cjump
-dd L_C_get_store
+dd L_C_get_opened	; if open suceeded, go here
 
 dd M_drop	; ( index ) (R index ) returned false, could not open-file. write error message
 dd M_literal
-dd L140		; open error
+dd L_open_failed		; open error
 dd C_count
 dd C_type
 dd C_emit	; show the index
 dd C_cr
 dd C_abort	; abort on open error. How about terminate?
 
-L_C_get_store:	; ( index fd ) (R index ) store the opened fd
+L_C_get_opened:	; ( index fd ) (R index ) store the opened fd
 dd M_dup	; ( index fd fd )
 dd M_rpop	; ( index fd fd index )
 dd C_cells	; ( index fd fd index*cellsize ) number of bytes
@@ -1234,46 +1257,21 @@ L_C_get:		; ( index fd ) when fd != -1
 dd MV_Tib
 dd M_literal
 dd 4096		; ( index fd Tib 4096 )
-dd C_rot	; ( index Tib 4096 fd )
-dd M_fetch
-dd read-file ; ( index read_count ioresult )
-
-dd M_literal
-dd -1
-dd M_equal
+dd C_read_file ; ( index read_count ioresult )
 dd M_cjump
-dd L_C_get_1
+dd L_C_get_read_failed
 
-dd M_literal
-dd L141		; read error
-dd C_count
-dd C_type
-dd C_emit	; show the index
-dd C_cr
-dd C_abort	; abort on read error. How about terminate?
-
-L_C_get_1:
 dd C_nip	; ( read_count )
 dd M_dup	; ( read_count read_count )
-dd M_literal
-dd 0
-dd M_equal
 dd M_cjump
-dd L_C_get_2
+dd L_C_get_read_0
 
-dd M_drop	; ( ) read_count == 0
-dd MV_Eof
-dd C_on		; end of file, qrestore_input
-dd C_restore_input
-dd M_exitcolon
-
-L_C_get_2:		; read_count > 0 ( read_count )
-dd M_dup
+dd M_dup	; read_count > 0 ( read_count read_count )
 dd M_literal
 dd 4096
 dd M_equal
 dd M_cjump
-dd L_C_get_3
+dd M_exitcolon	; ( read_count ) successful read, get out
 
 dd M_literal
 dd L_C_get_too_long ; could not find a delimiter in 4096 bytes, reevaluate
@@ -1282,9 +1280,24 @@ dd C_type
 dd C_emit	; show the read_count
 dd C_cr
 dd C_abort	; abort on read error. How about terminate?
+dd M_exitcolon
 
-L_C_get_3:	; ( read_count )
-dd M_exitcolon	; ( read_count )
+L_C_get_read_failed:
+dd M_literal
+dd L_read_failed ; read error
+dd C_count
+dd C_type
+dd C_emit	; show the index
+dd C_cr
+dd C_abort	; abort on read error. How about terminate?
+dd M_exitcolon
+
+L_C_get_read_0:
+dd M_drop	; ( ) read_count == 0
+dd MV_Eof
+dd C_on		; end of file, qrestore_input
+dd C_restore_input
+dd M_exitcolon
 
 CENTRY "parse" C_parse 4 ; ( read_count -- 'Wordb ) Wordb has a counted string. read_count number of bytes read into Tib
 
@@ -2008,31 +2021,29 @@ CENTRY "close-file" C_close_file 10	; ( fd -- ioresult )
 dd M_sysclose
 dd C_0eq
 dd M_exitcolon
-CENTRY "read-file" C_read_file 9	; ( 'text count fd -- count2 ioresult )
-dd C_rot	; ( n fd a )
-dd C_rot	; ( fd a n )
+
+CENTRY "read-file" C_read_file 9	; ( fd 'text count -- count2 ioresult )
 dd M_sysread
 dd M_dup
 dd M_literal
 dd -1
 dd C_neq
 dd M_exitcolon
-CENTRY "write-file" C_write_file 10	; ( 'text count fd -- ioresult )
-dd C_rot	; ( n fd a )
-dd C_rot	; ( fd a n )
+
+CENTRY "write-file" C_write_file 10	; ( fd 'text count -- ioresult )
 dd M_syswrite
 dd M_literal
 dd -1
 dd C_neq
 dd M_exitcolon
-CENTRY "reposition-file" C_reposition_file 15	;	( type n fd -- ioresult )
-dd M_xswap		; ( type fd n )
-dd C_rot		; ( fd n type )
+
+CENTRY "reposition-file" C_reposition_file 15	;	( fd n type -- ioresult )
 dd M_sysseek
 dd M_literal
 dd -1
 dd C_neq
 dd M_exitcolon
+
 CENTRY "?fcheck" C_qfcheck 7
 dd C_0eq
 dd M_cjump
@@ -2277,9 +2288,9 @@ db "/closeparen"
 
 L137:
 db "unable to restore input" ; comments for testing the awk parser
-L140:
+L_open_failed:
 db "open file failed"
-L141:
+L_read_failed:
 db "read file failed"
 L170:
 db " Q?"
