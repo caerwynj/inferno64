@@ -242,7 +242,6 @@ loadforthdictionary(u8 *fmem)
 	h = fmem+DICTIONARY;
 	dtop = nil;
 	vh = fmem+FORTHVARS;
-debug = 1;
 	DBG("loadforthdictionary fmem 0x%p\n"
 			"	here 0x%p dtop 0x%p there 0x%p\n"
 			"	(intptr*)(fmem + DTOP) 0x%p *(intptr*)(fmem + DTOP) 0x%zX\n"
@@ -261,38 +260,38 @@ debug = 1;
 		}else if(f->what == Here && f->type == Absolute){
 			h = fmem+DICTIONARY+f->here;
 			*(intptr*)h = f->p;
-			DBG("	%s 0x%zX: 0x%zX %lld: %lld\n", f->desc, h, *(intptr*)h, h, *(intptr*)h);
+			DBG("	%s 0x%zX: 0x%zX %lld: %lld\n", f->desc, (intptr)h, *(intptr*)h, (intptr)h, *(intptr*)h);
 		}else if(f->what == Here && f->type == Absoluteptr){
 			h = fmem+DICTIONARY+f->here;
 			*(intptr*)h = (intptr)f->ptr;
-			DBG("	%s 0x%zX: 0x%zX %lld: %lld\n", f->desc, h, *(intptr*)h, h, *(intptr*)h);
+			DBG("	%s 0x%zX: 0x%zX %lld: %lld\n", f->desc, (intptr)h, *(intptr*)h, (intptr)h, *(intptr*)h);
 		}else if(f->what == Here && f->type == Byte){
 			h = fmem+DICTIONARY+f->here;
 			*(s8*)h = f->b;
-			DBG("	%s 0x%zX: 0x%d %lld: %d\n", f->desc, h, *(char*)h, h, *(char*)h);
+			DBG("	%s 0x%zX: 0x%d %lld: %d\n", f->desc, (intptr)h, *(char*)h, (intptr)h, *(char*)h);
 		}else if(f->what == Here && f->type == Chars){
 			h = fmem+DICTIONARY+f->here;
 			len = strlen(f->str);
 			strncpy((s8*)h, f->str, len);
-			DBG("	%s 0x%zX: %s %lld: %s\n", f->desc, h, (char*)h, h, (char*)h);
+			DBG("	%s 0x%zX: %s %lld: %s\n", f->desc, (intptr)h, (char*)h, (intptr)h, (char*)h);
 		}else if(f->what == Here && f->type == Relative){
 			h = fmem+DICTIONARY+f->here;
 			*(intptr*)h = (intptr)fmem+f->p;
-			DBG("	%s 0x%zX: 0x%zX %lld: %lld\n", f->desc, h, *(intptr*)h, h, *(intptr*)h);
+			DBG("	%s 0x%zX: 0x%zX %lld: %lld\n", f->desc, (intptr)h, *(intptr*)h, (intptr)h, *(intptr*)h);
 		}else if(f->what == Here && f->type == Relativedictionary){
 			h = fmem+DICTIONARY+f->here;
 			*(intptr*)h = (intptr)fmem+DICTIONARY+f->p;
-			DBG("	%s 0x%zX: 0x%zX %lld: %lld\n", f->desc, h, *(intptr*)h, h, *(intptr*)h);
+			DBG("	%s 0x%zX: 0x%zX %lld: %lld\n", f->desc, (intptr)h, *(intptr*)h, (intptr)h, *(intptr*)h);
 		}else if(f->what == Here && f->type == Relativevar){
 			h = fmem+DICTIONARY+f->here;
 			*(intptr*)h = (intptr)fmem+f->p;
-			DBG("	%s 0x%zX: 0x%zX %lld: %lld\n", f->desc, h, *(intptr*)h, h, *(intptr*)h);
+			DBG("	%s 0x%zX: 0x%zX %lld: %lld\n", f->desc, (intptr)h, *(intptr*)h, (intptr)h, *(intptr*)h);
 		}else if(f->what == Here && f->type == End){
 			h = fmem+DICTIONARY+f->here;
 			DBG("	%s 0x%zX %lld\n", f->desc, h, h);
 		}else if(f->what == There && f->type == End){
 			vh = fmem+FORTHVARS+f->there;
-			DBG("	%s 0x%zX %lld\n", f->desc, vh, vh);
+			DBG("	%s 0x%zX %lld\n", f->desc, (intptr)vh, (intptr)vh);
 		}else if(f->what == Dtop){
 			dtop = (u8*)fmem+DICTIONARY+f->p;
 			DBG("	%s 0x%zX %lld\n", f->desc, (intptr)dtop, (intptr)dtop);

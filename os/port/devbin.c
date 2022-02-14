@@ -7,6 +7,7 @@
 
 #define	WHICHFILE(q) ((q).path)
 #define	SOURCEFD(q)	((q).vers)
+int debug = 0;
 
 /*
 	An fd created here might be used by different processes at the same time
@@ -190,13 +191,17 @@ binopen(Chan *c, u32 omode)
 		up->fgrp->fd[sourcefd]->mode != ORDWR)
 		error(Ebadarg);
 
-	/* check if this fd has been opened for reading */
+	/* find any other buffering file that has opened
+		this source fd, so the Buffer is used
+		by both to keep the pointers in sync */
 	bin = nil;
-	for(nfd = 0; nfd < up->fgrp->maxfd; nfd++){
+	for(nfd = 0; nfd <= up->fgrp->maxfd; nfd++){
 		if(up->fgrp->fd[nfd] != nil &&
 			up->fgrp->fd[nfd]->type == bintype &&
+			up->fgrp->fd[nfd]->aux != nil &&
 			((Binreader*)up->fgrp->fd[nfd]->aux)->bin->sourcefd == sourcefd){
 			bin = ((Binreader*)up->fgrp->fd[nfd]->aux)->bin;
+			DBG("binopen found bin chanpath(c) %s br %p bin %p\n", chanpath(c), up->fgrp->fd[nfd]->aux, bin);
 			qlock(bin);
 			incref(bin);
 			qunlock(bin);	
@@ -211,10 +216,13 @@ binopen(Chan *c, u32 omode)
 			panic("exhausted memory");
 		br->bin = bin;
 		bin->eof=0;
+		bin->sourcefd = sourcefd;
 		incref(bin);
+		DBG("binopen new bin chanpath(c) %s br %p bin %p\n", chanpath(c), br, bin);
 	} else
 		br->bin = bin;
 
+	DBG("binopen chanpath(c) %s br %p bin %p\n", chanpath(c), br, bin);
 	whichfile = WHICHFILE(c->qid);
 	for(s = searchers; s != nil; s++){
 		if(whichfile == s->whichfile){
@@ -277,20 +285,36 @@ refill(Bin *bin)
 
 	if(bin->readp == bin->writep){
 		bin->readp = bin->writep = bin->buf;
+		DBG("refill: same readp 0x%p writep 0x%p\n",
+				bin->readp, bin->writep);
 	}else if(bin->readp > bin->buf){
 		n = bin->writep-bin->readp;
 		memmove(bin->buf, bin->readp, n);
 		bin->writep = bin->buf+n;
 		bin->readp = bin->buf;
+		DBG("refill: move readp 0x%p writep 0x%p\n",
+				bin->readp, bin->writep);
 	}
 
+	DBG("refill: read devtab[n].name %s devtab[n].dc %d"
+		"	bin->sourcechan->type %d bin->sourcechan->offset %lld\n",
+		devtab[bin->sourcechan->type]->name, devtab[bin->sourcechan->type]->dc,
+		bin->sourcechan->type, bin->sourcechan->offset);
 	nr = devtab[bin->sourcechan->type]->read(bin->sourcechan, bin->writep,
 												 bin->bufsize-(bin->writep-bin->readp),
 												 bin->sourcechan->offset);
+	DBG("refill: read nr %d bin->sourcechan->offset %lld\n", nr, bin->sourcechan->offset);
 	if(nr == 0)
 		bin->eof = 1;
 
 	bin->writep += nr;
+
+	/* check the notes of rread in os/port/sysfile.c for details */
+	lock(bin->sourcechan);
+	bin->sourcechan->devoffset += nr;
+	bin->sourcechan->offset += nr;
+	unlock(bin->sourcechan);
+
 	return nr;
 }
 
@@ -322,6 +346,8 @@ binread(Chan *c, void *va, s32 n, s64)
 	if(n > bin->bufsize)
 		error(Ebadarg);
 
+	DBG("binread: starting chanpath(c) %s %s readp 0x%p writep 0x%p maxn %d\n",
+		chanpath(c), s->name, bin->readp, bin->writep, n);
 	qlock(bin);
 	if(s->whichfile == Qbufferlength){
 		rv = snprint(nlenstr, 10, "%lld\n", bin->writep-bin->readp);
@@ -359,6 +385,8 @@ Search: /* doing this while holding a lock, not sure if it is smart */
 		bin->readp = nextreadp;
 		rv = nsend;
 Exit:
+	DBG("binread: ending chanpath(c) %s %s readp 0x%p writep 0x%p maxn %d\n",
+		chanpath(c), s->name, bin->readp, bin->writep, n);
 	qunlock(bin);
 	return rv;
 }
@@ -458,16 +486,18 @@ wordfn(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp)
 
 	/* find ending delimiter */
 	for(n=0; p<writep && n < maxn; p++){
-		*nextreadp = p;
 		if(*p == ' ' || *p == '	' || *p == '\n'){
+			*nextreadp = p+1; /* skip this for the next read */
 			return n;
 		}
 		n++;
 	}
 
 	/* no delimiter found in maxn bytes, send maxn */
-	if(n == maxn)
+	if(n == maxn){
+		*nextreadp += maxn;
 		return maxn;
+	}
 
 	/* no delimiter found before writep */
 	return 0;
@@ -502,15 +532,19 @@ linefn(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp)
 
 	/* find ending delimiter */
 	for(n=0; p<writep && n < maxn; p++){
-		*nextreadp = p;
-		if(*p == '\n')
+		DBG("linefn: read p 0x%p *p %d\n", p, *p);
+		if(*p == '\n'){
+			*nextreadp = p+1; /* skip this for the next read */
 			return n;
+		}
 		n++;
 	}
 
 	/* no delimiter found in maxn bytes, send maxn */
-	if(n == maxn)
+	if(n == maxn){
+		*nextreadp += maxn;
 		return maxn;
+	}
 
 	/* no delimiter found before writep */
 	return 0;
@@ -531,7 +565,6 @@ until(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp, u8 c)
 
 	/* find ending delimiter */
 	for(n=0; p<writep && n < maxn; p++){
-		*nextreadp = p;
 		if(*p == c){
 			*nextreadp = p+1; /* skip this for the next read */
 			return n;
@@ -540,8 +573,10 @@ until(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp, u8 c)
 	}
 
 	/* no delimiter found in maxn bytes, send maxn */
-	if(n == maxn)
+	if(n == maxn){
+		*nextreadp += maxn;
 		return maxn;
+	}
 
 	return 0;
 }

@@ -584,7 +584,7 @@ procclose(Chan *c)
 static int
 procargs(Proc *p, char *buf, int nbuf)
 {
-/*	int j, k, m;
+	/*int j, k, m;*/
 	char *a;
 	int n;
 
@@ -592,7 +592,9 @@ procargs(Proc *p, char *buf, int nbuf)
 	if(p->setargs)
 		return snprint(buf, nbuf, "%s [%s]", p->text, p->args);
 	n = p->nargs;
-	for(j = 0; j < nbuf - 1; j += m){
+	strncpy(buf, a, n); /* using varables to avoid warnings */
+	return n;
+/*	for(j = 0; j < nbuf - 1; j += m){
 		if(n <= 0)
 			break;
 		if(j != 0)
@@ -602,8 +604,7 @@ procargs(Proc *p, char *buf, int nbuf)
 		a += k;
 		n -= k;
 	}
-	return j; */
-	return 0;
+	return j;*/
 }
 
 static int
@@ -1204,13 +1205,13 @@ procwrite(Chan *c, void *va, s32 n, s64 off)
 
 	switch(QID(c->qid)){
 	case Qargs:
-/*		if(offset != 0 || n >= sizeof(buf))
+		if(offset != 0 || n >= sizeof(buf))
 			error(Etoobig);
 		memmove(buf, va, n);
 		buf[n] = 0;
 		kstrdup(&p->args, buf);
 		p->nargs = 0;
-		p->setargs = 1;*/
+		p->setargs = 1;
 		break;
 
 	case Qmem:
