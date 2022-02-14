@@ -843,7 +843,7 @@ dd C_toword
 dd M_store
 dd M_exitcolon
 
-CENTRY ">line" C_toline 7 ; ( 'Bufferfds -- 'Wordfd )
+CENTRY ">line" C_toline 5 ; ( 'Bufferfds -- 'Wordfd )
 dd MC_LINENUM
 dd C_cells
 dd M_plus
@@ -874,7 +874,7 @@ dd M_store
 dd M_exitcolon
 
 CENTRY ">doublequote" C_todoublequote 12 ; ( 'Bufferfds -- 'Doublequotefd )
-dd MC_LINENUM
+dd MC_DOUBLEQUOTENUM
 dd C_cells
 dd M_plus
 dd M_exitcolon
@@ -904,7 +904,7 @@ dd M_store
 dd M_exitcolon
 
 CENTRY ">closeparen" C_tocloseparen 11 ; ( 'Bufferfds -- 'Closeparenfd )
-dd MC_LINENUM
+dd MC_CLOSEPARENNUM
 dd C_cells
 dd M_plus
 dd M_exitcolon
@@ -1182,7 +1182,6 @@ dd M_exitcolon
 ; if (.) can return a counted string, this would be simpler
 CENTRY "buffername" C_buffername 10 ; ( index -- 'counted_string ) build the buffer fd's filename
 dd C_bufferfilename_fetch	; ( 'fcs ) fcs = filename counted string
-
 dd M_literal
 dd L_bin_prefix	; address of the counted string 3#n/
 dd C_pad
@@ -1241,7 +1240,7 @@ dd M_literal
 dd L_open_failed		; open error
 dd C_count
 dd C_type
-dd C_emit	; show the index
+dd C_dot	; show the index
 dd C_cr
 dd C_abort	; abort on open error. How about terminate?
 
@@ -1271,13 +1270,13 @@ dd M_literal
 dd 4096
 dd M_equal
 dd M_cjump
-dd M_exitcolon	; ( read_count ) successful read, get out
+dd L_C_get_read_successful
 
 dd M_literal
 dd L_C_get_too_long ; could not find a delimiter in 4096 bytes, reevaluate
 dd C_count
 dd C_type
-dd C_emit	; show the read_count
+dd C_dot	; show the read_count
 dd C_cr
 dd C_abort	; abort on read error. How about terminate?
 dd M_exitcolon
@@ -1287,7 +1286,7 @@ dd M_literal
 dd L_read_failed ; read error
 dd C_count
 dd C_type
-dd C_emit	; show the index
+dd C_dot	; show the index
 dd C_cr
 dd C_abort	; abort on read error. How about terminate?
 dd M_exitcolon
@@ -1299,7 +1298,10 @@ dd C_on		; end of file, qrestore_input
 dd C_restore_input
 dd M_exitcolon
 
-CENTRY "parse" C_parse 4 ; ( read_count -- 'Wordb ) Wordb has a counted string. read_count number of bytes read into Tib
+L_C_get_read_successful:
+dd M_exitcolon	; ( read_count ) successful read, get out
+
+CENTRY "parse" C_parse 5 ; ( read_count -- 'Wordb ) Wordb has a counted string. read_count bytes read into Tib
 
 dd M_dup	; ( read_count read_count ) check if count > 255 bytes, then invalid word
 dd M_literal
@@ -2224,19 +2226,19 @@ dd L_C_initialize_1
 dd M_drop
 
 dd M_literal
-dd L121
+dd L_line_filename
 dd C_wordfilename_store
 
 dd M_literal
-dd L122
+dd L_word_filename
 dd C_linefilename_store
 
 dd M_literal
-dd L123
+dd L_doublequote_filename
 dd C_doublequotefilename_store
 
 dd M_literal
-dd L124
+dd L_closeparen_filename
 dd C_closeparenfilename_store
 dd M_exitcolon
 
@@ -2275,15 +2277,16 @@ dd C_stdinput	; read lines from stdin, args can change it later
 dd C_quit	; interpreter loop when there are no args or fall through after processing args
 dd M_exitcolon
 
+; putting the strings at the bottom to not mess with cell alignment above
 L_bin_prefix:
 db "#n/"
-L121:
+L_line_filename:
 db "/word"
-L122:
+L_word_filename:
 db "/line"
-L123:
+L_doublequote_filename:
 db "/doublequote"
-L124:
+L_closeparen_filename:
 db "/closeparen"
 
 L137:

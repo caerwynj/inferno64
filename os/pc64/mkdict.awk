@@ -3,6 +3,7 @@
 # rc script to build amd64 9front forth words from words-nasm.s
 #	./mkdict.awk primitives-nasm.s words-nassm.s
 # watch -e 'mkdict.awk' 'cat primitives-nasm.s words-nasm.s | ./mkdict.awk'
+# watch -e 'mkdict.awk' 'echo start `{date}; ./mkdict.awk primitives-nasm.s words-nasm.s > forth.h && bell ; echo end `{date} '
 
 BEGIN{
 	last=""
@@ -14,6 +15,10 @@ BEGIN{
 	literal = "^[+-]?[0-9]+$"
 	branchlabel = "^L[0-9a-zA-Z_]+:$"
 	fentries = "Fentry fentries[] = {\n";
+	dtop = -1
+	t = "	"	# tab
+	t2 = t t	# 2 tabs
+	nl = ",\n"
 }
 
 function align(here){
@@ -22,22 +27,31 @@ function align(here){
 	here += 8- (here%8)
 	return here
 }
+function sourceline(){
+	gsub(/\\/,"backslash");
+	gsub(/\"/,"\\\"");
+	gsub(/\\\\\"/,"\\\"");
+	fentries = fentries t "{.what Sourceline, .desc \"" $0 "\"}" nl;
+}
 function header(len, name, prefix, label, cfa, immediate){
 	h = align(h);	# to align here if the string or byte un-aligned it
+
+	sourceline()
+	if(dtop == -1)
+		fentries = fentries t2 "{.what Here, .desc \"link\",.here " h ", .there " vh ",.type Absolute, .p 0 }" nl;
+	else
+		fentries = fentries t2 "{.what Here, .desc \"link\",.here " h ", .there " vh ",.type Relativedictionary, .p " dtop " }" nl;
+	dtop = h
 	h+=8; # for link
-	h+=len+1;
+
+	fentries = fentries t2 "{.what Here, .desc \"len\", .here " h ", .there " vh ",.type Byte, .b " (immediate*128) " + " len " }" nl;
+	h+=1;
+	fentries = fentries t2 "{.what Here, .desc \"name\",.here " h ", .there " vh ",.type Chars, .str " name " }" nl;
 	h = align(h);
+	fentries = fentries t2 "{.what Here, .desc \"cfa\", .here " h ", .there " vh ",.type Absoluteptr, .ptr " cfa " }" nl;
 	labels[nlabels++] = prefix label " = "  h;
 	h+=8; # for cfa
 	cfas[cfa] = 1
-	if(immediate == 1)
-		type = "IHeader"
-	else
-		type = "Header"
-	fentries = fentries "	{.type " type ", {.hdr { " len ", " name ", /* " labels[nlabels-1] " */ " cfa " }}}, /* " $0 " h " h " */\n";
-	# print(prefix label " @ " labels[nlabels-1]);
-	fentries = fentries "	{.type Here, {.p " h " }},	/* " h " " vh " */\n"
-	fentries = fentries "	{.type There, {.p " vh " }},	/* " h " " vh " */\n"
 }
 $1 == "MENTRY" {
 	name = $2
@@ -46,20 +60,20 @@ $1 == "MENTRY" {
 $1 == "MCENTRY" {
 	name = $2
 	header($4, name, "MC_", $3, "constant")
+	fentries = fentries t2 "{.what Here, .desc \"constant\", .here " h ", .there " vh ",.type Absolute, .p " $5 " }" nl;
 	h+=8;
-	fentries = fentries "	{.type Absolute, {.p " $5"}},		/* " h " */\n"
 }
-$1 == "MVDENTRY" {
+$1 == "MVDENTRY" { # defined memory locations in user memory
 	name = $2
 	header($4, name, "MV_", $3, "variable")
+	fentries = fentries t2 "{.what Here, .desc \"pfa\", .here " h ", .there " vh ",.type Relative, .p " $5 " }" nl;
 	h+=8; # for pfa
-	fentries = fentries "	{.type FromH0, {.p " $5 " }},	/* " h " " vh " */\n"
 }
 $1 == "MVENTRY" {
 	name = $2
 	header($4, name, "MV_", $3, "variable")
+	fentries = fentries t2 "{.what Here, .desc \"pfa\", .here " h ", .there " vh ",.type Relativevar, .p FORTHVARS + " vh " }" nl;
 	h+=8; # for pfa
-	fentries = fentries "	{.type FromV0, {.p " vh " }},	/* " h " " vh " */\n"
 	if(NF >= 5 && $5 != ";")
 		vh+=$5*8;
 	else
@@ -76,46 +90,48 @@ $1 == "CIENTRY" {
 	header($4, name, "CI_", $3, "colon", 1)
 }
 $1 == "dd" && $2 ~ literal {
+	sourceline()
 	h = align(h);	# to align here if the string or byte un-aligned it
+	fentries = fentries t2 "{.what Here, .desc \"value\", .here " h ", .there " vh ",.type Absolute, .p " $2 " }" nl;
 	h+=8
-	fentries = fentries "	{.type Absolute, {.p " $2 "}},		/* " $0 " " h " */\n"
 }
 $1 == "dd" && $2 ~ "^[M_|C_|CI_|(MC_)|(MV_)|L]" {
+	sourceline()
 	h = align(h);	# to align here if the string or byte un-aligned it
+	fentries = fentries t2 "{.what Here, .desc \"address\", .here " h ", .there " vh ",.type Relativedictionary, .p " $2 " }" nl;
 	h+=8
-	fentries = fentries "	{.type FromDictionary, {.p " $2 "}, .src = \"" $0 "\"},		/* " $0 " " h " */\n"
 }
 $1 ~ branchlabel {
-	h = align(h);	# to align here if the string or byte un-aligned it
+	sourceline()
 	gsub(/:/,"", $1)
 	labels[nlabels++] = $1 " = "  h;
 }
 $1 == "db" {	# will leave h unaligned.
+	sourceline()
 	if($2 ~ literal) { # obsolete, now all are counted strings
-		h += 1;
-		fentries = fentries "	{.type Byte, {.b " $2 "}},	/* " $0 " " h " */\n"
+		fentries = fentries t2 "{.what Here, .desc \"byte\", .here " h ", .there " vh ",.type Byte, .b " $2 " }" nl;
+		h+=1;
 	}else{
 		gsub(/^db /,"", $0)
 		gsub(/[ 	]*;.*/,"", $0)
-		h += length($0)-2+1; # -2 for the quotes, +1 for the count that will be added by devforth
-		fentries = fentries "	{.type Chars, {.str " $0 "}},	/* " $0 " " h " */\n"
+		gsub(/\\\"/,"\"");
+		fentries = fentries t2 "{.what Here, .desc \"len\", .here " h ", .there " vh ",.type Byte, .b " length($0)-2 " }" nl;
+		h+=1;
+		fentries = fentries t2 "{.what Here, .desc \"name\",.here " h ", .there " vh ",.type Chars, .str " $0 " }" nl;
+		h += length($0)-2; # -2 for the quotes
 	}
 }
 $0 ~ /^;/ || $1 == ";" {
-	fentries = fentries "/* " $0 " */"
+#	sourceline()
 }
 $0 ~ /^$/ {
-	fentries = fentries $0
-}
-{
-	fentries = fentries "	{.type Here, {.p " h " }},	/* " h " " vh " */\n"
-	fentries = fentries "	{.type There, {.p " vh " }},	/* " h " " vh " */\n"
 }
 END{
 	h = align(h);	# to align here if the string or byte un-aligned it
 	vh = align(vh);	# does not need to be aligned as we are not assigning variable bytes
-	fentries = fentries "	{.type Here, {.p " h " }},	/* " h " " vh " */\n"
-	fentries = fentries "	{.type There, {.p " vh " }},	/* " h " " vh " */\n"
+	fentries = fentries t "{.what Here,  .desc \"end here\", .here " h ", .there " vh ",.type End }" nl;
+	fentries = fentries t "{.what There, .desc \"end there\", .here " h ", .there " vh ",.type End }" nl;
+	fentries = fentries t "{.what Dtop, .desc \"end dtop\", .p " dtop " }" nl;
 	fentries= fentries "};\n"
 	# print("here " h);
 	print("enum {");

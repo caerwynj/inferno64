@@ -2,33 +2,32 @@
  * Forth dictionary
  */
 enum {
-	Header,
-	IHeader,	/* Immediate dictionary definition */
-	Absolute,
-	FromDictionary,
-	FromH0,
-	FromV0,
-	Byte,	/* obsolete, all are counted strings now */
-	Chars,
+	Sourceline,
 	Here,
 	There,
+	Byte,	/* obsolete, all are counted strings now */
+	Chars,
+	Absolute,
+	Absoluteptr,
+	Relative,		/* fmem+ value, for defined memory locations */
+	Relativevar,	/* fmem+FORTHVARS+ value */
+	Relativedictionary,	/* fmem+DICTIONARY+ value */
+	Dtop,
+	End
 };
 
-typedef struct Hdr Hdr;
-struct Hdr {
-	int len;
-	char name[64];
-	void *cfa;
-};
 typedef struct Fentry Fentry;
 struct Fentry
 {
-	int type;
-	union {
-		Hdr hdr;
-		intptr p;
-		s8 b;
+	int what;	/* Source line or Here or There or Dtop value */
+	char desc[1024];
+	int type;	/* Byte, Chars, Absolute, Relative, End */
+	intptr here;
+	intptr there;
+	/* union { */
+		intptr p;	/* for Absolute and Relative */
+		s8 b;		/* for immediates, write the value as immediate + length */
 		char str[128];
-	};
-	char src[128];
+		void *ptr;
+	/* }; */
 };

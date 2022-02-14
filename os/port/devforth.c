@@ -236,13 +236,13 @@ loadforthdictionary(u8 *fmem)
 {
 	intptr i;
 	Fentry *f;
-	u8 *h, *dtop, *vh, nbytes;
-	int n;
+	u8 *h, *dtop, *vh, nbytes, len;
 	Bhdr *b;
 
 	h = fmem+DICTIONARY;
 	dtop = nil;
-	vh = fmem+THERE+8;
+	vh = fmem+FORTHVARS;
+debug = 1;
 	DBG("loadforthdictionary fmem 0x%p\n"
 			"	here 0x%p dtop 0x%p there 0x%p\n"
 			"	(intptr*)(fmem + DTOP) 0x%p *(intptr*)(fmem + DTOP) 0x%zX\n"
@@ -256,73 +256,48 @@ loadforthdictionary(u8 *fmem)
 			FORTHEND, (intptr*)(fmem + FORTHEND));
 	for(i=0; i < nelem(fentries); i++){
 		f = &fentries[i];
-		if(f->type == Header){
-			*(intptr*)h = (intptr)dtop;
-			DBG("Header 0x%p: 0x%zX 0x%p ", h, *(intptr*)h, dtop);
-			dtop = h;
-			h += sizeof(intptr);
-			*h = f->hdr.len;
-			DBG("len 0x%p: 0x%d ", h, *h);
-			h++;
-			strncpy((s8*)h, f->hdr.name, f->hdr.len);
-			DBG("name 0x%p: ", h);
-			for(n = 0; n < f->hdr.len; n++){
-				DBG("%c", *(h+n));
-			}
-			h += f->hdr.len;
-			if((f->hdr.len+1)%8 > 0){
-				h += 8-((f->hdr.len+1)%8);
-			}
-			*(intptr*)h = (intptr)f->hdr.cfa;
-			DBG(" cfa 0x%p: 0x%zX 0x%p\n", h, *(intptr*)h, f->hdr.cfa);
-		}else if(f->type == IHeader){
-			*(intptr*)h = (intptr)dtop;
-			DBG("IHeader 0x%p: 0x%zX 0x%p ", h, *(intptr*)h, dtop);
-			dtop = h;
-			h += sizeof(intptr);
-			*h = f->hdr.len | (1<<7);
-			DBG("len 0x%p: 0x%d ", h, *h);
-			h++;
-			strncpy((s8*)h, f->hdr.name, f->hdr.len);
-			DBG("name 0x%p: ", h);
-			for(n = 0; n < f->hdr.len; n++){
-				DBG("%c", *(h+n));
-			}
-			h += f->hdr.len;
-			if((f->hdr.len+1)%8 > 0){
-				h += 8-((f->hdr.len+1)%8);
-			}
-			*(intptr*)h = (intptr)f->hdr.cfa;
-			DBG(" cfa 0x%p: 0x%zX 0x%p\n", h, *(intptr*)h, f->hdr.cfa);
-		}else if(f->type == Absolute){
+		if(f->what == Sourceline){
+			DBG("%s\n", f->desc);
+		}else if(f->what == Here && f->type == Absolute){
+			h = fmem+DICTIONARY+f->here;
 			*(intptr*)h = f->p;
-			DBG("	0x%p: 0x%zX 0x%zX\n", h, *(intptr*)h, f->p);
-		}else if(f->type == FromDictionary){
-			*(intptr*)h = (intptr)fmem+DICTIONARY+f->p;
-			DBG("	0x%p: 0x%zX 0x%p src %s\n", h, *(intptr*)h, fmem+DICTIONARY+f->p, f->src);
-		}else if(f->type == FromH0){
+			DBG("	%s 0x%zX: 0x%zX %lld: %lld\n", f->desc, h, *(intptr*)h, h, *(intptr*)h);
+		}else if(f->what == Here && f->type == Absoluteptr){
+			h = fmem+DICTIONARY+f->here;
+			*(intptr*)h = (intptr)f->ptr;
+			DBG("	%s 0x%zX: 0x%zX %lld: %lld\n", f->desc, h, *(intptr*)h, h, *(intptr*)h);
+		}else if(f->what == Here && f->type == Byte){
+			h = fmem+DICTIONARY+f->here;
+			*(s8*)h = f->b;
+			DBG("	%s 0x%zX: 0x%d %lld: %d\n", f->desc, h, *(char*)h, h, *(char*)h);
+		}else if(f->what == Here && f->type == Chars){
+			h = fmem+DICTIONARY+f->here;
+			len = strlen(f->str);
+			strncpy((s8*)h, f->str, len);
+			DBG("	%s 0x%zX: %s %lld: %s\n", f->desc, h, (char*)h, h, (char*)h);
+		}else if(f->what == Here && f->type == Relative){
+			h = fmem+DICTIONARY+f->here;
 			*(intptr*)h = (intptr)fmem+f->p;
-			DBG("	0x%p: 0x%zX 0x%p src %s\n", h, *(intptr*)h, fmem+f->p, f->src);
-		}else if(f->type == FromV0){
-			*(intptr*)h = (intptr)fmem+THERE+8+f->p; /* pfa with the address where the value is */
-			*(intptr*)vh = 0; /* actual value, not necessary as malloc zeroes it all */
-			DBG("	0x%p: 0x%zX 0x%p\n", h, *(intptr*)h, (intptr)fmem+THERE+8+f->p);
-			DBG("	0x%p: 0x%zX 0\n", vh, *(intptr*)vh);
-		}else if(f->type == Chars){
-			*h = strlen(f->str);	/* making this a counted string */
-			strcpy((s8*)h+1, f->str);
-			DBG("	0x%p: %d %s\n", h, *h, (char*)h+1);
-		}else if(f->type == Byte){	/* obsolete, all are counted strings now */
-			*h = f->b;
-			DBG("	0x%p: 0x%ud 0x%ud\n", h, *h, f->b);
-		}else if(f->type == Here){
-			h = fmem+DICTIONARY+f->p;
-			DBG("	h 0x%p\n", h);
-		}else if(f->type == There){
-			vh = fmem+THERE+8+f->p;
-			DBG("	vh 0x%p\n", vh);
+			DBG("	%s 0x%zX: 0x%zX %lld: %lld\n", f->desc, h, *(intptr*)h, h, *(intptr*)h);
+		}else if(f->what == Here && f->type == Relativedictionary){
+			h = fmem+DICTIONARY+f->here;
+			*(intptr*)h = (intptr)fmem+DICTIONARY+f->p;
+			DBG("	%s 0x%zX: 0x%zX %lld: %lld\n", f->desc, h, *(intptr*)h, h, *(intptr*)h);
+		}else if(f->what == Here && f->type == Relativevar){
+			h = fmem+DICTIONARY+f->here;
+			*(intptr*)h = (intptr)fmem+f->p;
+			DBG("	%s 0x%zX: 0x%zX %lld: %lld\n", f->desc, h, *(intptr*)h, h, *(intptr*)h);
+		}else if(f->what == Here && f->type == End){
+			h = fmem+DICTIONARY+f->here;
+			DBG("	%s 0x%zX %lld\n", f->desc, h, h);
+		}else if(f->what == There && f->type == End){
+			vh = fmem+FORTHVARS+f->there;
+			DBG("	%s 0x%zX %lld\n", f->desc, vh, vh);
+		}else if(f->what == Dtop){
+			dtop = (u8*)fmem+DICTIONARY+f->p;
+			DBG("	%s 0x%zX %lld\n", f->desc, (intptr)dtop, (intptr)dtop);
 		} else {
-			panic("loadforthdictionary unknown Fentry\n");
+			panic("loadforthdictionary unknown Fentry: %s\n", f->desc);
 		}
 	}
 	*(intptr*)(fmem + HERE) = (intptr)h;
@@ -358,8 +333,7 @@ goforth(void *fmem)
 	loadforthdictionary((u8*)fmem);
 	print("goforth pid %d forthmem 0x%zx end 0x%zx forthmem+RSTACK 0x%zx\n",
 		up->pid, (intptr)fmem, ((intptr*)fmem)[1], (intptr)fmem+RSTACK);
-	DBG("fentries[0].name %s\n", fentries[0].hdr.name);
-	DBG("fentries[1].name %s nfentries %d\n", fentries[1].hdr.name, nelem(fentries));
+	DBG("nfentries %d\n", nelem(fentries));
 	DBG("up->kstack 0x%p\n", up->kstack);
 	if(waserror()){
 		print("goforth error: %r\n");

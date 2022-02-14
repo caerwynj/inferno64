@@ -153,7 +153,7 @@ dumppstack(intptr h, intptr psp, intptr he)
 		return;
 	print("	depth %zd\n", (h+PSTACK - psp)/sizeof(intptr));
 	for(i = h + PSTACK-8; i >= psp; i-=8){
-		print("	0x%zx: 0x%zx", i, *(intptr*)i);
+		print("	0x%zX: 0x%zX", i, *(intptr*)i);
 		l++;
 		if(l == 3){
 			l = 0;

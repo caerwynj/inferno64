@@ -229,19 +229,19 @@
 #define FTHPARENTPID	(RSTACK+(BY2WD*65))
 #define ARGSFILENAME	(RSTACK+(BY2WD*66))	/* counted string, 18 bytes is enough, 64 bytes */
 
-#define FORTHVARS	(RSTACK+(BY2WD*74))		/* magic word here? */
 /* storage for saving Forth registers when calling C */
-#define FORTHTOP	(FORTHVARS+(BY2WD*0))
-#define FORTHPSP	(FORTHVARS+(BY2WD*1))
-#define FORTHRSP	(FORTHVARS+(BY2WD*2))
-#define FORTHIP		(FORTHVARS+(BY2WD*3))
-#define FORTHW		(FORTHVARS+(BY2WD*4))
-#define FORTHUP		(FORTHVARS+(BY2WD*5))
-#define FORTHUPE	(FORTHVARS+(BY2WD*6))
+#define FORTHTOP	(RSTACK+(BY2WD*74))
+#define FORTHPSP	(RSTACK+(BY2WD*75))
+#define FORTHRSP	(RSTACK+(BY2WD*76))
+#define FORTHIP		(RSTACK+(BY2WD*77))
+#define FORTHW		(RSTACK+(BY2WD*78))
+#define FORTHUP		(RSTACK+(BY2WD*79))
+#define FORTHUPE	(RSTACK+(BY2WD*80))
+#define HERE		(RSTACK+(BY2WD*81))
+#define DTOP		(RSTACK+(BY2WD*82))
+#define THERE		(RSTACK+(BY2WD*83))	/* store FORTHVARS here at boot */
 
-#define HERE		(FORTHVARS+(BY2WD*7))
-#define DTOP		(FORTHVARS+(BY2WD*8))
-#define THERE		(FORTHVARS+(BY2WD*9))	/* store fmem+THERE here at boot */
+#define FORTHVARS	(RSTACK+(BY2WD*84))
 
 #define FORTHEND	(HEAPSTART+(22*BY2PG))
 #define FORTHHEAPSIZE	FORTHEND
