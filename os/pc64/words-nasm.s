@@ -986,7 +986,6 @@ dd M_drop
 dd MV_Infd
 dd M_store
 
-dd C_interpret
 dd M_exitcolon
 
 CENTRY "input@" C_input_fetch 6 ; ( -- Bufferfds Infd #Buffers+1 ) save input stream onto the stack and replace the buffer fd's with -1
@@ -1052,7 +1051,7 @@ dd MC_NBUFFERS
 dd M_literal
 dd 0
 dd M_doinit
-L_C_input_store:
+L_C_input_store_loop:
 
 dd M_literal
 dd 1
@@ -1065,7 +1064,7 @@ dd M_store
 dd M_rpop	; ( fd0 fd1 .. fdn-1 'Bufferfds-(1*cellsize) )
 
 dd M_doloop
-dd L_C_input_store
+dd L_C_input_store_loop
 
 dd MV_Eof
 dd C_off	; reset Eof back to 0
@@ -1202,11 +1201,15 @@ dd M_dup
 dd C_count
 dd C_type
 dd C_cr
+dd C_depth
+dd C_dot
+dd C_cr
 
 dd M_exitcolon
 
 ; max of a counted string is 256 bytes. Hence, cannot use it.
-CENTRY "get" C_get 3 ; ( index -- read_count ) read from the indexed Fd in Bufferfds into Tib
+; reads into Tib and puts the read count on the stack. Could move the file reading into accept.
+CENTRY "query" C_query 5 ; ( index -- read_count ) read from the indexed Fd in Bufferfds into Tib
 dd MV_Eof
 dd C_off	; clear EOF flag
 
@@ -1221,7 +1224,7 @@ dd M_literal
 dd -1
 dd M_equal
 dd M_cjump	; if fd == -1 ( index fd )
-dd L_C_get	; when not -1
+dd L_C_query	; when not -1
 
 dd M_drop	; when fd == -1 ( index )
 dd M_dup
@@ -1233,7 +1236,7 @@ dd C_ro
 dd C_open_file	; ( index fd ioresult ) (R index )
 dd C_invert
 dd M_cjump
-dd L_C_get_opened	; if open suceeded, go here
+dd L_C_query_opened	; if open suceeded, go here
 
 dd M_drop	; ( index ) (R index ) returned false, could not open-file. write error message
 dd M_literal
@@ -1244,7 +1247,7 @@ dd C_dot	; show the index
 dd C_cr
 dd C_abort	; abort on open error. How about terminate?
 
-L_C_get_opened:	; ( index fd ) (R index ) store the opened fd
+L_C_query_opened:	; ( index fd ) (R index ) store the opened fd
 dd M_dup	; ( index fd fd )
 dd M_rpop	; ( index fd fd index )
 dd C_cells	; ( index fd fd index*cellsize ) number of bytes
@@ -1252,28 +1255,28 @@ dd MV_Bufferfds
 dd M_plus	; ( index fd fd index*cellsize+'Bufferfds ) address of the filename's counted string
 dd M_store	; ( index fd )
 
-L_C_get:		; ( index fd ) when fd != -1
+L_C_query:		; ( index fd ) when fd != -1
 dd MV_Tib
 dd M_literal
 dd 4096		; ( index fd Tib 4096 )
 dd C_read_file ; ( index read_count ioresult )
 dd M_cjump
-dd L_C_get_read_failed
+dd L_C_query_read_failed
 
 dd C_nip	; ( read_count )
 dd M_dup	; ( read_count read_count )
 dd M_cjump
-dd L_C_get_read_0
+dd L_C_query_read_0
 
 dd M_dup	; read_count > 0 ( read_count read_count )
 dd M_literal
 dd 4096
 dd M_equal
 dd M_cjump
-dd L_C_get_read_successful
+dd L_C_query_read_successful
 
 dd M_literal
-dd L_C_get_too_long ; could not find a delimiter in 4096 bytes, reevaluate
+dd L_C_query_too_long ; could not find a delimiter in 4096 bytes, reevaluate
 dd C_count
 dd C_type
 dd C_dot	; show the read_count
@@ -1281,24 +1284,24 @@ dd C_cr
 dd C_abort	; abort on read error. How about terminate?
 dd M_exitcolon
 
-L_C_get_read_failed:
+L_C_query_read_failed:
 dd M_literal
 dd L_read_failed ; read error
 dd C_count
 dd C_type
 dd C_dot	; show the index
 dd C_cr
-dd C_abort	; abort on read error. How about terminate?
+dd C_abort	; abort on read error. How about terminate without the fallback interpreter?
 dd M_exitcolon
 
-L_C_get_read_0:
+L_C_query_read_0:
 dd M_drop	; ( ) read_count == 0
 dd MV_Eof
 dd C_on		; end of file, qrestore_input
 dd C_restore_input
 dd M_exitcolon
 
-L_C_get_read_successful:
+L_C_query_read_successful:
 dd M_exitcolon	; ( read_count ) successful read, get out
 
 CENTRY "parse" C_parse 5 ; ( read_count -- 'Wordb ) Wordb has a counted string. read_count bytes read into Tib
@@ -1336,29 +1339,45 @@ dd M_exitcolon
 
 CENTRY "word" C_word 4 ; ( -- 'Wordb ) read from #n/Infd/word into Tib and then parse to a counted string in Wordb
 dd MC_WORDNUM
-dd C_get
+dd C_query
+
+dd M_literal
+dd 8
+dd C_debug
+dd M_dup
+dd C_dot
+dd C_cr
+
 dd C_parse
+
+dd M_literal
+dd 9
+dd C_debug
+dd M_dup
+dd C_dot
+dd C_cr
+
 dd M_exitcolon
 
 CENTRY "line" C_line 4 ; ( -- count ) read from #n/Infd/line into Tib
 dd MC_LINENUM
-dd C_get
+dd C_query
 dd M_exitcolon
 
 CENTRY "doublequote" C_doublequote 11 ; ( -- count ) read from #n/Infd/doublequote into Tib
 dd MC_DOUBLEQUOTENUM
-dd C_get
+dd C_query
 dd M_exitcolon
 
 CENTRY "cdoublequote" C_counted_doublequote 11 ; ( -- 'Wordb ) read from #n/Infd/doublequote into Tib and then parse to a counted string in Wordb
 dd MC_DOUBLEQUOTENUM
-dd C_get
+dd C_query
 dd C_parse
 dd M_exitcolon
 
 CENTRY "closeparen" C_closeparen 10 ; ( -- count ) read from #n/Infd/closeparen
 dd MC_CLOSEPARENNUM
-dd C_get
+dd C_query
 dd M_exitcolon
 
 CENTRY "findname" C_findname 8 ; ( a1 -- a2 f ) ; loop through the dictionary names
@@ -1484,39 +1503,36 @@ dd C_count 		; ( str 1 a n)
 dd M_syswrite
 dd M_drop		; drop the return value of write
 
-CENTRY "interpret" C_interpret 9 ; there is stuff in TIB to be interpreted >In and >Limit are set
+CENTRY "interpret" C_interpret 9 ; ( 'Wordb -- ) there is a counted string in the Wordb
 
-L_C_interpret:
-dd C_word	; ( -- 'Wordb ) Wordb has the counted string
+dd M_literal
+dd 7
+dd C_debug
+
 dd C_find	; ( 'Wordb -- a1 f )
 dd M_cjump
-dd L_C_interpret_2
+dd L_C_interpret_not_found
 
 dd M_execute	; found in dictionary, execute
+dd C_qstack		; check stack status
+dd M_exitcolon
 
-dd C_qstack
-dd M_jump
-dd L_C_interpret_3
-
-L_C_interpret_2:	; ( 'Wordb ) not found in the dictionary, check for number?
+L_C_interpret_not_found:	; ( 'Wordb ) not found in the dictionary, check for number?
 dd C_count
 dd C_number
 dd C_0eq
 dd M_cjump
-dd L_C_interpret_4
+dd L_C_interpret_exit
 dd C_space	; the word is neither in the dictionary nor a number
 dd C_type	; show the word
 dd M_literal
-dd L180	; error I?
+dd L_unknown_interpret_input	; error I?
 dd C_count
 dd C_type
 dd C_cr
 dd C_abort
 
-L_C_interpret_4:		; is a number
-L_C_interpret_3:
-dd M_jump
-dd L_C_interpret
+L_C_interpret_exit:		; is a number
 dd M_exitcolon
 
 CENTRY "create" C_create 6	; compiles dictionary header until the pfa (link, len, name, cfa)
@@ -1624,7 +1640,7 @@ dd L_C_compile_4
 dd C_space
 dd C_type
 dd M_literal
-dd L_C_compile_5
+dd L_unknown_compile_input
 dd C_count
 dd C_type
 dd C_cr
@@ -1790,7 +1806,7 @@ dd C_closeparen
 dd M_drop
 dd M_exitcolon
 
-CIENTRY "\\" CI_backslash 1 ; if the line is longer than 4096, C_get throws an error
+CIENTRY "\\" CI_backslash 1 ; if the line is longer than 4096, C_query throws an error
 dd C_line
 dd M_exitcolon
 
@@ -2052,7 +2068,7 @@ dd M_cjump
 dd L246
 dd C_space
 dd M_literal
-dd L247
+dd L_io_error
 dd C_count
 dd C_type
 dd C_cr
@@ -2126,8 +2142,17 @@ dd M_exitcolon
 CENTRY "quit" C_quit 4 ; interpreter loop
 dd M_reset ; initialize return stack
 dd M_clear	; SP = sstack_end initialize data stack
+
+dd M_literal
+dd 5
+dd C_debug
+
 L_C_quit:
 dd C_word
+
+dd M_literal
+dd 6
+dd C_debug
 
 ; dd MV_toLimit	; show the line read, for debugging
 ; dd M_fetch
@@ -2242,6 +2267,20 @@ dd L_closeparen_filename
 dd C_closeparenfilename_store
 dd M_exitcolon
 
+CENTRY "debug" C_debug 5 ; ( n -- ) show the n along with the debug message and depth
+dd M_literal
+dd L_C_debug_msg
+dd C_count
+dd C_type
+
+dd C_dot
+dd C_space
+
+dd C_depth
+dd C_dot
+dd C_cr
+dd M_exitcolon
+
 CENTRY "boot" C_boot 4
 dd M_reset ; initialize return stack
 dd M_clear	; SP = sstack_end initialize data stack
@@ -2254,8 +2293,6 @@ dd M_store	; variable abortvec = (abort) code address
 dd MV_Dp
 dd MV_H0	; H0 = here at startup
 dd M_store
-
-dd C_initialize	; sets up the buffer filenames and buffer fd's
 
 dd MC_STDIN
 dd MV_Infd	; might be overwritten by args below
@@ -2271,9 +2308,18 @@ dd MV_State
 dd C_off	; off stores 0 at state
 dd C_decimal	; decimal sets base = 10
 
+dd C_initialize	; sets up the buffer filenames and buffer fd's
+
+dd M_literal
+dd 1
+dd C_debug
+
 dd C_args	; process args
-dd C_close_input ; if the args opened an input
-dd C_stdinput	; read lines from stdin, args can change it later
+
+dd M_literal
+dd 2
+dd C_debug
+
 dd C_quit	; interpreter loop when there are no args or fall through after processing args
 dd M_exitcolon
 
@@ -2299,19 +2345,21 @@ L170:
 db " Q?"
 L173:
 db " stack underflow"
-L180:
+L_unknown_interpret_input:
 db " I?"
-L_C_compile_5:
+L_unknown_compile_input:
 db " C?"
-L247:
+L_io_error:
 db "I/O error"
 L251:
 db "uninitialized execution vector"
 L255:
 db " ok"
-L_C_get_too_long:
+L_C_query_too_long:
 db "input is longer than 4096 bytes without a delimiter"
 L305:
 db "read error"
 L_C_long_word:
 db "word is too long to be interpreted"
+L_C_debug_msg:
+db "debug message "
