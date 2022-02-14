@@ -1196,15 +1196,6 @@ dd C_concat	; Now, pad has 4#n/0 ( 'fcs pad )
 
 dd M_xswap	; ( pad 'fcs )
 dd C_concat	; Now, pad has a proper counted string
-
-dd M_dup
-dd C_count
-dd C_type
-dd C_cr
-dd C_depth
-dd C_dot
-dd C_cr
-
 dd M_exitcolon
 
 ; max of a counted string is 256 bytes. Hence, cannot use it.
@@ -1339,23 +1330,10 @@ dd M_exitcolon
 
 CENTRY "word" C_word 4 ; ( -- 'Wordb ) read from #n/Infd/word into Tib and then parse to a counted string in Wordb
 dd MC_WORDNUM
+
 dd C_query
 
-dd M_literal
-dd 8
-dd C_debug
-dd M_dup
-dd C_dot
-dd C_cr
-
 dd C_parse
-
-dd M_literal
-dd 9
-dd C_debug
-dd M_dup
-dd C_dot
-dd C_cr
 
 dd M_exitcolon
 
@@ -1505,16 +1483,14 @@ dd M_drop		; drop the return value of write
 
 CENTRY "interpret" C_interpret 9 ; ( 'Wordb -- ) there is a counted string in the Wordb
 
-dd M_literal
-dd 7
-dd C_debug
-
 dd C_find	; ( 'Wordb -- a1 f )
 dd M_cjump
 dd L_C_interpret_not_found
 
 dd M_execute	; found in dictionary, execute
+
 dd C_qstack		; check stack status
+
 dd M_exitcolon
 
 L_C_interpret_not_found:	; ( 'Wordb ) not found in the dictionary, check for number?
@@ -2143,16 +2119,8 @@ CENTRY "quit" C_quit 4 ; interpreter loop
 dd M_reset ; initialize return stack
 dd M_clear	; SP = sstack_end initialize data stack
 
-dd M_literal
-dd 5
-dd C_debug
-
 L_C_quit:
 dd C_word
-
-dd M_literal
-dd 6
-dd C_debug
 
 ; dd MV_toLimit	; show the line read, for debugging
 ; dd M_fetch
@@ -2310,15 +2278,7 @@ dd C_decimal	; decimal sets base = 10
 
 dd C_initialize	; sets up the buffer filenames and buffer fd's
 
-dd M_literal
-dd 1
-dd C_debug
-
 dd C_args	; process args
-
-dd M_literal
-dd 2
-dd C_debug
 
 dd C_quit	; interpreter loop when there are no args or fall through after processing args
 dd M_exitcolon
