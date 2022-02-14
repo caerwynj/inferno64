@@ -129,9 +129,9 @@ dumprstack(intptr h, intptr rsp, intptr he)
 		return;
 	for(i = h + RSTACK-8; i >= rsp; i-=8){
 		if(*(intptr*)i >=h && *(intptr*)i <=he)
-			print("	0x%zx: 0x%zx 0x%zx %zd\n", i, *(intptr*)i, *(intptr*)i-h, *(intptr*)i-h);
+			print("	0x%zX: 0x%zX 0x%zX %zd\n", i, *(intptr*)i, *(intptr*)i-h, *(intptr*)i-h);
 		else
-			print("	0x%zx: 0x%zx\n", i, *(intptr*)i);
+			print("	0x%zX: 0x%zX\n", i, *(intptr*)i);
 	/*	l++;
 		if(l == 3){
 			l = 0;

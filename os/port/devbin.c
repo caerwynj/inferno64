@@ -255,7 +255,7 @@ binclose(Chan *c)
 	Bin *bin;
 	Binreader *l;
 
-print("binclose: chanpath(c) %s\n", chanpath(c));
+	/* print("binclose: chanpath(c) %s\n", chanpath(c)); */
 	l = c->aux;
 	if(l != nil){
 		bin = l->bin;
