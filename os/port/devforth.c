@@ -288,7 +288,7 @@ loadforthdictionary(u8 *fmem)
 			DBG("	%s 0x%zX: 0x%zX %lld: %lld\n", f->desc, (intptr)h, *(intptr*)h, (intptr)h, *(intptr*)h);
 		}else if(f->what == Here && f->type == End){
 			h = fmem+DICTIONARY+f->here;
-			DBG("	%s 0x%zX %lld\n", f->desc, h, h);
+			DBG("	%s 0x%zX %lld\n", f->desc, (intptr)h, (intptr)h);
 		}else if(f->what == There && f->type == End){
 			vh = fmem+FORTHVARS+f->there;
 			DBG("	%s 0x%zX %lld\n", f->desc, (intptr)vh, (intptr)vh);
@@ -304,6 +304,8 @@ loadforthdictionary(u8 *fmem)
 	*(intptr*)(fmem + THERE) = (intptr)vh;
 	*(intptr*)(fmem + FTHPID) = up->pid;
 	*(intptr*)(fmem + FTHPARENTPID) = up->parentpid;
+	*(intptr*)(fmem + FORTHUP) = (intptr)fmem;	/* heap start */
+	*(intptr*)(fmem + FORTHUPE) = (intptr)fmem+FORTHHEAPSIZE-1; /* heap end, TODO make the size variable */
 
 	nbytes = snprint((char*)fmem + ARGSFILENAME+1, 32, "#p/%d/args", up->pid);
 	*(u8*)(fmem + ARGSFILENAME) = nbytes;
@@ -489,9 +491,8 @@ print("stdinfd devtab[c->type]->dc %c c 0x%p chanpath(c) %s c->aux 0x%p\n", devt
 	if(p->fmem == nil)
 		panic("newforthproc p->fmem == nil\n");
 
-	/* store the start address at that address too - magic check */
-	((intptr*)p->fmem)[0] = (intptr)p->fmem;	/* heap start */
-	((intptr*)p->fmem)[1] = (intptr)p->fmem+FORTHHEAPSIZE-1; /* heap end */
+	*(intptr*)((char*)p->fmem+FORTHUP) = (intptr)p->fmem;	/* heap start */
+	*(intptr*)((char*)p->fmem+FORTHUPE) = (intptr)p->fmem+FORTHHEAPSIZE-1; /* heap end */
 
 /*	p->kpfun = func;
 	p->kparg = arg;
@@ -1043,9 +1044,8 @@ forthinit(void)
 	if(p->fmem == nil)
 		panic("goforth p->fmem == nil\n");
 
-	/* store the start address at that address too - magic check */
-	((intptr*)p->fmem)[0] = (intptr)p->fmem;	/* heap start */
-	((intptr*)p->fmem)[1] = (intptr)p->fmem+FORTHHEAPSIZE-1; /* heap end */
+	*(intptr*)((char*)p->fmem+FORTHUP) = (intptr)p->fmem;	/* heap start */
+	*(intptr*)((char*)p->fmem+FORTHUPE) = (intptr)p->fmem+FORTHHEAPSIZE-1; /* heap end */
 
 	p->fisgo = 1;
 }

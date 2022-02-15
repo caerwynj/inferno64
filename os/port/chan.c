@@ -93,6 +93,8 @@ kstrcpy(char *s, char *t, int ns)
 {
 	int nt;
 
+	if(ns == 0)
+		print("kstrcpy ns == 0, fix the caller 0x%p\n", getcallerpc(&s));
 	nt = strlen(t);
 	if(nt < ns){
 		memmove(s, t, nt);

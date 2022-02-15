@@ -1363,53 +1363,56 @@ dd MV_Findadr
 dd M_store
 dd MV_Dtop
 dd M_fetch	; get latest dictionary link
-L_C_findname:
+
+L_C_findname_loop:	( 'link )	address of link dictionary item
 dd C_qdup
 dd M_cjump
-dd L_C_findname_1	; seached until the first dictionary entry get out
-dd M_dup	; ( a -- a a )
-dd C_cell_plus	; ( a a -- a a+8) lenth + initial name address
-dd M_cfetch	; ( a a+8 -- a immediate|hidden|len) length + initial name
+dd L_C_findname_not_found	; seached until the first dictionary entry, nil now. get out
+
+dd M_dup	; ( 'link 'link )
+dd C_cell_plus	; ( 'link 'len) lenth + initial name address
+dd M_cfetch	; ( 'link immediate|hidden|len) length + initial name
 dd M_literal
 dd 64		; check the reveal'ed flag 1=hidden, 0=reveal
-dd M_binand	; if hidden, goto L_C_findname_3 else L_C_findname_2
+dd M_binand	; if hidden, goto L_C_findname_previous else L_C_findname_revealed
 dd M_cjump
-dd L_C_findname_2
-dd M_fetch	; smudge'd dictionary entry, get the previous entry
-dd M_jump
-dd L_C_findname_3
-L_C_findname_2:		; reveal'ed dictionary entry
-dd M_dup	; ( a1 -- a1 a1)
-dd C_cell_plus	; ( a1 a1 -- a1 a1+8)
-dd C_count	; ( a1 a1+8 -- a1 a1+8+1 n )
+dd L_C_findname_revealed
+dd M_jump	; smudge'd dictionary entry, get the previous entry
+dd L_C_findname_previous
+
+L_C_findname_revealed:		; reveal'ed dictionary entry
+dd M_dup	; ( 'link 'link )
+dd C_cell_plus	; ( 'link 'len )
+dd C_count	; ( 'link 'name immediate|hidden|len )
 dd M_literal
 dd 63
-dd M_binand	; ( a1 a1+8+1 n 63 -- a1 a1+8+1 n&63=len )
+dd M_binand	; ( 'link 'name (immediate|hidden|len)&63=len )
 dd MV_Findadr
-dd M_fetch
-dd C_count	; ( a1 a1+8+1 len=n&63 a2 -- a1 a1+8+1 n&63 a2+1 n2 )
-dd C_compare	; ( a1 a1+8+1 len=n&63 a2+1 n2 -- a1 f ) compare dictionary entry with name
+dd M_fetch	; ( 'link 'name (immediate|hidden|len)&63=len 'find ) 'find = counted string to find
+dd C_count	; ( 'link 'name (immediate|hidden|len)&63=len 'find-name find-length )
+dd C_compare	; ( 'link f ) compare dictionary entry with name
 dd C_0eq	; found a match?
 dd M_cjump
-dd L_C_findname_4		; no match
+dd L_C_findname_previous	; not matched, try previous link
 dd C_cell_plus	; match found
 dd C_true
 dd M_exitcolon
-L_C_findname_4:
-dd M_fetch
-L_C_findname_3:
+
+L_C_findname_previous:
+dd M_fetch	; ( 'previous-link ) compare dictionary entry with name
 dd M_jump
-dd L_C_findname
-L_C_findname_1:
+dd L_C_findname_loop	; ( 'previous-link ) looping to check it
+
+L_C_findname_not_found:	; not found, getting out
 dd MV_Findadr
 dd M_fetch
 dd C_false
-dd M_exitcolon
+dd M_exitcolon	( 'find false ) 'find = address of the name not found
 
 CENTRY "find" C_find 4 ; ( a1 -- a2 f )?
 dd C_findname
 dd M_cjump
-dd L_C_find
+dd L_C_find_4
 dd M_dup
 dd M_cfetch
 dd M_xswap
@@ -1437,7 +1440,7 @@ L_C_find_2:
 dd M_exitcolon
 dd M_jump
 dd L_C_find_3
-L_C_find:
+L_C_find_4:
 dd C_false
 L_C_find_3:
 dd M_exitcolon
@@ -2051,6 +2054,7 @@ dd C_cr
 dd C_abort
 L246:
 dd M_exitcolon
+
 CENTRY "create-file" C_create_file 11 ; ( a n mode perm -- fd ioresult ) not part of the original ff. could move this to a forth file.
 dd M_rpush	; ( a n mode ) (R perm)
 dd M_rpush	; ( a n ) (R perm mode)

@@ -564,8 +564,10 @@ until(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp, u8 c)
 		return 0;
 
 	/* find ending delimiter */
-	for(n=0; p<writep && n < maxn; p++){
+	for(n=0, p=readp; p<writep && n < maxn; p++){
+		DBG("doublequotefn searching %c 0x%p: %c %d\n", c, p, *p, *p);
 		if(*p == c){
+			DBG("doublequotefn found %c 0x%p: %c %d\n", c, p, *p, *p);
 			*nextreadp = p+1; /* skip this for the next read */
 			return n;
 		}
@@ -586,6 +588,7 @@ static s32
 doublequotefn(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp)
 {
 	/* " = 0x22 = 34 */
+	DBG("doublequotefn searching for %c readp 0x%p writep 0x%p readp has -%s-\n", 0x22, readp, writep, readp);
 	return until(readp, writep, startp, maxn, nextreadp, 0x22);
 }
 

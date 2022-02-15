@@ -129,7 +129,10 @@ TEXT	forthmain(SB), 1, $-4		/* no stack storage required */
 
 	/* Argument has the start of heap */
 	MOVQ RARG, UP		/* start of heap memory */
-	MOVQ 8(UP), UPE		/* HEAPEND populated by the caller */
+
+	MOVQ RARG, UPE
+	ADDQ $FORTHUPE, UPE
+	MOVQ (UPE), UPE		/* HEAPEND populated by the caller in FORTHUPE */
 
 	MOVQ UP, RSP
 	ADDQ $RSTACK, RSP	/* return stack pointer, reset */

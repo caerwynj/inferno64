@@ -47,7 +47,7 @@ function header(len, name, prefix, label, cfa, immediate){
 	fentries = fentries t2 "{.what Here, .desc \"len\", .here " h ", .there " vh ",.type Byte, .b " (immediate*128) " + " len " }" nl;
 	h+=1;
 	fentries = fentries t2 "{.what Here, .desc \"name\",.here " h ", .there " vh ",.type Chars, .str " name " }" nl;
-	h = align(h);
+	h = align(h+len);
 	fentries = fentries t2 "{.what Here, .desc \"cfa\", .here " h ", .there " vh ",.type Absoluteptr, .ptr " cfa " }" nl;
 	labels[nlabels++] = prefix label " = "  h;
 	h+=8; # for cfa

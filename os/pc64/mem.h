@@ -214,10 +214,11 @@
  * easy to get to the variables with a known offset from C
  */
 #define HEAPSTART	(0ull)
-#define HEAPEND		(HEAPSTART+(BY2WD*1))
 
-/* TODO check stacks for over flow */
-#define DICTIONARY	(HEAPSTART+(BY2WD*2))	/* dictionary ends at (HEAPSTART+(16*BY2PG)) */
+/* keeping the dictionary at the start to ease debugging of
+	dictionary addresses in forth.h
+ */
+#define DICTIONARY	(HEAPSTART)				/* dictionary ends at (HEAPSTART+(16*BY2PG)) */
 #define PSTACK		(HEAPSTART+(17*BY2PG))	/* upto (HEAPSTART+(16*BY2PG)), going down */
 #define TIB			(HEAPSTART+(17*BY2PG))	/* text input buffer */
 #define RSTACK		(HEAPSTART+(19*BY2PG))	/* upto (HEAPSTART+(18*BY2PG)), going down */
@@ -244,4 +245,5 @@
 #define FORTHVARS	(RSTACK+(BY2WD*84))
 
 #define FORTHEND	(HEAPSTART+(22*BY2PG))
+#define HEAPEND		(FORTHEND)
 #define FORTHHEAPSIZE	FORTHEND
