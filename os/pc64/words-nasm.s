@@ -462,12 +462,12 @@ dd C_false
 dd M_exitcolon
 
 CENTRY "here" C_here 4
-dd MV_Dp		; the address on the top of stack is 0x583288, which is correct
+dd MV_Here		; the address on the top of stack is 0x583288, which is correct
 dd M_fetch
 dd M_exitcolon
 
 CENTRY "there" C_there 5	; variable here
-dd MV_Vp
+dd MV_There
 dd M_fetch
 dd M_exitcolon
 
@@ -476,7 +476,7 @@ dd C_here
 dd M_store
 dd M_literal
 dd 8
-dd MV_Dp
+dd MV_Here
 dd C_plusstore
 dd M_exitcolon
 
@@ -485,17 +485,17 @@ dd C_here
 dd M_cstore
 dd M_literal
 dd 1
-dd MV_Dp
+dd MV_Here
 dd C_plusstore
 dd M_exitcolon
 
 CENTRY "allot" C_allot 5 ; ( n -- ) here = here+n
-dd MV_Dp
+dd MV_Here
 dd C_plusstore
 dd M_exitcolon
 
 CENTRY "vallot" C_vallot 6 ; allot on the variable space ( n -- ) there = there+n
-dd MV_Vp
+dd MV_There
 dd C_plusstore
 dd M_exitcolon
 
@@ -508,11 +508,11 @@ dd M_exitcolon
 CENTRY "align" C_align 5	; ( -- ) align here to a cell boundary
 dd C_here		; Dp @
 dd C_aligned	; here is aligned to a multiple of 8
-dd MV_Dp			; store the aligned here at Dp
+dd MV_Here			; store the aligned here at Dp
 dd M_store		; Dp contains aligned_here
 dd M_exitcolon
 CENTRY "unused" C_unused 6
-dd MV_Dp
+dd MV_Here
 dd M_fetch
 dd C_here
 dd M_minus

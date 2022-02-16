@@ -73,9 +73,9 @@ MCENTRY "#BUFFERS" NBUFFERS 8 16
 ; cannot use H as it is nil in inferno, address where here (next available dictionary cell location) is stored
 ; here = Dp @
 ; these memory locations (HERE, DTOP, etc.) are populated with values by the forth initializer
-MVDENTRY "Dp" Dp 2 HERE		; here
-MVDENTRY "Dtop" Dtop 4 DTOP	; last defined header
-MVDENTRY "Vp" Vp 2 THERE	; here of the variables space
+MVDENTRY "Here" Here 4 HERE	; here
+MVDENTRY "Dtop" Dtop 4 DTOP	; last defined header link address
+MVDENTRY "There" There 5 THERE	; here of the variables space
 MVDENTRY "Pid" Pid 3 FTHPID
 MVDENTRY "Parentpid" Parentpid 4 FTHPARENTPID
 ; the below memory locations are left alone as zeros by the initializer
