@@ -950,7 +950,7 @@ dd MC_NBUFFERS
 dd M_literal
 dd 0
 dd M_doinit
-L_C_stdinput:
+L_C_stdinput_loop:
 
 dd M_literal
 dd -1
@@ -963,7 +963,7 @@ dd C_cells
 dd M_plus
 
 dd M_doloop
-dd L_C_stdinput
+dd L_C_stdinput_loop
 dd M_drop
 dd M_exitcolon
 
@@ -995,10 +995,11 @@ dd MC_NBUFFERS
 dd M_literal
 dd 0
 dd M_doinit
-L_C_input_fetch:
+L_C_input_fetch_loop:
 
 dd M_dup	; ( 'Bufferfd 'Bufferfd )
 dd M_fetch
+
 dd M_xswap	; ( fd 'Bufferfd )
 
 dd M_literal
@@ -1012,7 +1013,7 @@ dd C_cells
 dd M_plus
 
 dd M_doloop
-dd L_C_input_fetch
+dd L_C_input_fetch_loop
 dd M_drop	; ( fd0 fd1 .. fdn )
 
 dd MV_Infd
@@ -1025,7 +1026,6 @@ dd M_plus	; ( fd0 fd1 .. fdn infd n+1 )
 
 dd M_exitcolon
 
-Buggy
 CENTRY "input!" C_input_store 6 ; ( fd0 fd1 .. fdn infd n+1 | empty -- ) restore input stream from the stack or stdinput
 dd M_dup		; check if there is #Buffers+1 on the top of stack
 
@@ -1035,7 +1035,7 @@ dd 1
 dd M_plus
 dd M_equal	; is the top of stack == #Buffers+1
 dd M_cjump
-dd L_C_input_store_1	; top of stack <> #Buffers+1, there is no input stream on the stack, use the default input
+dd L_C_input_store_no_stream	; top of stack <> #Buffers+1, there is no input stream on the stack, use the default input
 
 dd M_drop	; drop the #Buffers+1 on the top of stack
 
@@ -1065,6 +1065,7 @@ dd M_rpop	; ( fd0 fd1 .. fdn-1 'Bufferfds-(1*cellsize) )
 
 dd M_doloop
 dd L_C_input_store_loop
+dd M_drop	; remove the 'Bufferfds on top
 
 dd MV_Eof
 dd C_off	; reset Eof back to 0
@@ -1072,7 +1073,7 @@ dd C_off	; reset Eof back to 0
 dd C_true	; ( true )
 dd M_exitcolon
 
-L_C_input_store_1:	; there is no input stream on the stack
+L_C_input_store_no_stream:	; there is no input stream on the stack
 dd C_stdinput	; no input stream on the stack, use default input from now
 dd C_false		; ( 0 )
 dd M_exitcolon
@@ -1136,20 +1137,21 @@ dd C_close_input
 dd C_input_store
 dd C_0eq
 dd M_cjump
-dd L_restore_input	; input stream restored
+dd L_C_restore_input_exit	; input stream restored
 
 ; no input stream on the stack to restore, show error and abort
 dd C_space
 dd M_literal
-dd L137
+dd L_C_restore_input_error_message
 dd C_count
 dd C_type
 dd C_space
 dd C_depth
 dd C_dot
 dd C_cr
+
 dd C_abort
-L_restore_input:	; input stream restored, get out
+L_C_restore_input_exit:	; input stream restored, get out
 dd M_exitcolon
 
 CENTRY "concat" C_concat 6 ; ( 'cs1 'cs2 -- 'cs1+'cs2 ) concatenate counted string2 to counted-string1
@@ -1201,6 +1203,8 @@ dd M_exitcolon
 ; max of a counted string is 256 bytes. Hence, cannot use it.
 ; reads into Tib and puts the read count on the stack. Could move the file reading into accept.
 CENTRY "query" C_query 5 ; ( index -- read_count ) read from the indexed Fd in Bufferfds into Tib
+
+L_C_query_again:
 dd MV_Eof
 dd C_off	; clear EOF flag
 
@@ -1254,15 +1258,16 @@ dd C_read_file ; ( index read_count ioresult )
 dd M_cjump
 dd L_C_query_read_failed
 
-dd C_nip	; ( read_count )
-dd M_dup	; ( read_count read_count )
+dd M_dup	; ( index read_count read_count )
+
 dd M_cjump
 dd L_C_query_read_0
 
-dd M_dup	; read_count > 0 ( read_count read_count )
+dd M_dup	; read_count > 0 ( index read_count read_count )
 dd M_literal
 dd 4096
 dd M_equal
+
 dd M_cjump
 dd L_C_query_read_successful
 
@@ -1286,13 +1291,19 @@ dd C_abort	; abort on read error. How about terminate without the fallback inter
 dd M_exitcolon
 
 L_C_query_read_0:
-dd M_drop	; ( ) read_count == 0
+
+dd M_drop	; ( index ) read_count == 0
+dd M_rpush	; ( ) (R index ) save index for use after restoring input
 dd MV_Eof
 dd C_on		; end of file, qrestore_input
 dd C_restore_input
-dd M_exitcolon
+
+dd M_rpop	; ( index ) (R )
+dd M_jump	; ( index )
+dd L_C_query_again
 
 L_C_query_read_successful:
+dd C_nip
 dd M_exitcolon	; ( read_count ) successful read, get out
 
 CENTRY "parse" C_parse 5 ; ( read_count -- 'Wordb ) Wordb has a counted string. read_count bytes read into Tib
@@ -1330,11 +1341,8 @@ dd M_exitcolon
 
 CENTRY "word" C_word 4 ; ( -- 'Wordb ) read from #n/Infd/word into Tib and then parse to a counted string in Wordb
 dd MC_WORDNUM
-
 dd C_query
-
 dd C_parse
-
 dd M_exitcolon
 
 CENTRY "line" C_line 4 ; ( -- count ) read from #n/Infd/line into Tib
@@ -1450,7 +1458,7 @@ dd C_word
 dd C_find
 dd C_0eq
 dd M_cjump
-dd L_C_single_quote
+dd L_C_single_quote_exit
 dd C_space
 dd C_count
 dd C_type
@@ -1460,7 +1468,7 @@ dd C_count
 dd C_type
 dd C_cr
 dd C_abort
-L_C_single_quote:
+L_C_single_quote_exit:
 dd M_exitcolon
 
 CENTRY "?stack" C_qstack 6
@@ -1468,14 +1476,14 @@ dd M_stackptr
 dd MV_S0
 dd M_greater
 dd M_cjump
-dd L_C_qstack
+dd L_C_qstack_exit
 dd M_literal
-dd L173
+dd L_C_stack_underflow_message
 dd C_count
 dd C_type
 dd C_cr
 dd C_abort
-L_C_qstack:
+L_C_qstack_exit:
 dd M_exitcolon
 
 dd MC_STDOUT	; ( str -- str 1) ; debug code to show the word found
@@ -1491,9 +1499,7 @@ dd M_cjump
 dd L_C_interpret_not_found
 
 dd M_execute	; found in dictionary, execute
-
 dd C_qstack		; check stack status
-
 dd M_exitcolon
 
 L_C_interpret_not_found:	; ( 'Wordb ) not found in the dictionary, check for number?
@@ -1787,6 +1793,7 @@ dd M_exitcolon
 
 CIENTRY "\\" CI_backslash 1 ; if the line is longer than 4096, C_query throws an error
 dd C_line
+dd M_drop
 dd M_exitcolon
 
 CENTRY "(?abort)" C_qabort_parens 8
@@ -2044,7 +2051,7 @@ dd M_exitcolon
 CENTRY "?fcheck" C_qfcheck 7
 dd C_0eq
 dd M_cjump
-dd L246
+dd L_C_qfcheck_exit
 dd C_space
 dd M_literal
 dd L_io_error
@@ -2052,7 +2059,7 @@ dd C_count
 dd C_type
 dd C_cr
 dd C_abort
-L246:
+L_C_qfcheck_exit:
 dd M_exitcolon
 
 CENTRY "create-file" C_create_file 11 ; ( a n mode perm -- fd ioresult ) not part of the original ff. could move this to a forth file.
@@ -2096,18 +2103,20 @@ dd M_exitcolon
 
 CENTRY "include" C_include 7	; this does not work
 dd C_word
+
 dd M_rpush
 
-dd C_input_fetch	; save the old input onto the stack
+dd C_input_fetch	; save the old input onto the stack and clears the input bufferfds
 
 dd M_rpop
 dd C_count
 dd C_ro
 dd C_open_file
+
 dd C_qfcheck
+
 dd MV_Infd		; open the new file
 dd M_store
-
 dd M_exitcolon
 
 CENTRY "crash" C_crash 5
@@ -2123,22 +2132,11 @@ CENTRY "quit" C_quit 4 ; interpreter loop
 dd M_reset ; initialize return stack
 dd M_clear	; SP = sstack_end initialize data stack
 
-L_C_quit:
+L_C_quit_interpreter_loop:
 dd C_word
-
-; dd MV_toLimit	; show the line read, for debugging
-; dd M_fetch
-; dd MV_Tib
-; dd MC_STDOUT
-; dd M_fswrite
-; dd M_drop		; drop the return value of write
-; dd C_cr
-; dd C_space
-
 dd C_interpret
-
 dd M_jump
-dd L_C_quit
+dd L_C_quit_interpreter_loop
 dd M_exitcolon	; why is this needed?
 
 CENTRY "(abort)" C_parenabort 7 ; TODO correct below stack notations
@@ -2183,7 +2181,7 @@ dd MC_NBUFFERS
 dd M_literal
 dd 0
 dd M_doinit
-L_C_initialize:
+L_C_initialize_fd_loop:
 
 dd M_dup
 dd M_literal
@@ -2197,7 +2195,7 @@ dd C_cells
 dd M_plus
 
 dd M_doloop
-dd L_C_initialize
+dd L_C_initialize_fd_loop
 dd M_drop
 
 dd MV_Bufferfilenames
@@ -2205,7 +2203,7 @@ dd MC_NBUFFERS
 dd M_literal
 dd 0
 dd M_doinit
-L_C_initialize_1:
+L_C_initialize_filename_loop:
 
 dd M_dup
 dd M_literal
@@ -2219,7 +2217,7 @@ dd C_cells
 dd M_plus
 
 dd M_doloop
-dd L_C_initialize_1
+dd L_C_initialize_filename_loop
 dd M_drop
 
 dd M_literal
@@ -2299,15 +2297,15 @@ db "/doublequote"
 L_closeparen_filename:
 db "/closeparen"
 
-L137:
-db "unable to restore input" ; comments for testing the awk parser
+L_C_restore_input_error_message:
+db "unable to restore input from the stack, aborting.." ; comments for testing the awk parser
 L_open_failed:
 db "open file failed"
 L_read_failed:
 db "read file failed"
 L170:
 db " Q?"
-L173:
+L_C_stack_underflow_message:
 db " stack underflow"
 L_unknown_interpret_input:
 db " I?"

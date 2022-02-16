@@ -36,7 +36,7 @@ init(nil: ref Draw->Context, nil: list of string)
 	sys->bind("#d", "/fd", Sys->MREPL);		# dup(3)
 	sys->bind("#e", "/env", sys->MREPL|sys->MCREATE);	# environment
 #	sys->bind("#i", "/dev", sys->MREPL);	# draw device
-	sys->bind("#l0", "/net", sys->MAFTER);	# Ehernet device
+	sys->bind("#l0", "/net", sys->MAFTER);	# Ethernet device
 	sys->bind("#m","/dev",sys->MAFTER);     # pointer/mouse
 	sys->bind("#p", "/prog", sys->MREPL);	# prog device
 	sys->bind("#r", "/dev", sys->MAFTER);	# rtc
