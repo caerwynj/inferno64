@@ -813,7 +813,7 @@ dd M_plus
 dd M_store
 dd M_exitcolon
 
-CENTRY ">word" C_toword 7 ; ( 'Bufferfds -- 'Wordfd )
+CENTRY ">word" C_toword 5 ; ( 'Bufferfds -- 'Wordfd )
 dd MC_WORDNUM
 dd C_cells
 dd M_plus
@@ -1355,7 +1355,7 @@ dd MC_DOUBLEQUOTENUM
 dd C_query
 dd M_exitcolon
 
-CENTRY "cdoublequote" C_counted_doublequote 11 ; ( -- 'Wordb ) read from #n/Infd/doublequote into Tib and then parse to a counted string in Wordb
+CENTRY "cdoublequote" C_counted_doublequote 12 ; ( -- 'Wordb ) read from #n/Infd/doublequote into Tib and then parse to a counted string in Wordb
 dd MC_DOUBLEQUOTENUM
 dd C_query
 dd C_parse

@@ -77,7 +77,7 @@ MVDENTRY "Here" Here 4 HERE	; here
 MVDENTRY "Dtop" Dtop 4 DTOP	; last defined header link address
 MVDENTRY "There" There 5 THERE	; here of the variables space
 MVDENTRY "Pid" Pid 3 FTHPID
-MVDENTRY "Parentpid" Parentpid 4 FTHPARENTPID
+MVDENTRY "Parentpid" Parentpid 9 FTHPARENTPID
 ; the below memory locations are left alone as zeros by the initializer
 MVDENTRY "S0" S0 2 PSTACK
 MVDENTRY "Wordb" Wordb 5 WORDB
