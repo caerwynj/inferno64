@@ -598,4 +598,3 @@ closeparenfn(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp)
 	/* ) = 0x29 = 41 */
 	return until(readp, writep, startp, maxn, nextreadp, 0x29);
 }
-

@@ -146,6 +146,9 @@ TEXT	forthmain(SB), 1, $-4		/* no stack storage required */
 	MOVQ (CX), IP	/* IP = address of c_boot */
 	ADDQ $24, IP	/* to get to the parameter field address of boot word */
 
+	/* clear TOP */
+	XORQ TOP, TOP
+
 /* lodsl could make this simpler. But, this is more comprehensible
 	why not JMP* (W)?
 

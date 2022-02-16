@@ -195,6 +195,7 @@ root
 	/osinit.dis
 	/init.f
 	/forth/helpers.f
+	/forth/ns.f
 # for custom initialization and shutdown
 	/dis/init
 	/dis/shutdown

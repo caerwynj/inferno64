@@ -1384,6 +1384,7 @@ namec(char *aname, int amode, int omode, ulong perm)
 	e.nelems = 0;
 	e.nerror = 0;
 	if(waserror()){
+		print("namec: waserror() before cclose pid %d %r\n", up->pid);
 		cclose(c);
 		free(e.name);
 		free(e.elems);
