@@ -1573,8 +1573,8 @@ dd M_store	; ( (constant) here-8 -- ) changed cfa from (variable) to (constant)
 dd C_comma	; store n into the dictionary
 dd M_exitcolon
 
-CENTRY "immediate" C_immediate 9
-dd MV_Dp
+CENTRY "immediate" C_immediate 9 ; set immediate flag on the latest defined dictionary entry
+dd MV_Dtop
 dd M_fetch
 dd C_cell_plus
 dd M_dup
@@ -1585,6 +1585,7 @@ dd M_binor
 dd M_xswap
 dd M_cstore
 dd M_exitcolon
+
 CENTRY ">cfa" C_tocfa 4
 dd C_count
 dd M_literal
@@ -1671,8 +1672,9 @@ CIENTRY "[" CI_open_bracket 1
 dd MV_State
 dd C_off
 dd M_exitcolon
+
 CENTRY "smudge" C_smudge 6
-dd MV_Dp
+dd MV_Dtop
 dd M_fetch
 dd C_cell_plus
 dd M_dup
@@ -1683,8 +1685,9 @@ dd M_binor
 dd M_xswap
 dd M_cstore
 dd M_exitcolon
+
 CENTRY "reveal" C_reveal 6
-dd MV_Dp
+dd MV_Dtop
 dd M_fetch
 dd C_cell_plus
 dd M_dup
@@ -1722,7 +1725,7 @@ dd C_reveal
 dd M_exitcolon
 
 CIENTRY "recurse" CI_recurse 7
-dd MV_Dp
+dd MV_Dtop
 dd M_fetch
 dd C_cell_plus
 dd C_tocfa
@@ -2259,10 +2262,6 @@ dd M_literal
 dd C_parenabort ; ( (abort) -- )
 dd MV_Abortvec	; variable that puts (abort) code address on the stack
 dd M_store	; variable abortvec = (abort) code address
-
-dd MV_Dp
-dd MV_H0	; H0 = here at startup
-dd M_store
 
 dd MC_STDIN
 dd MV_Infd	; might be overwritten by args below

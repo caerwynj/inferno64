@@ -26,7 +26,7 @@ decimal
    >r count cstring1 >r count cstring0 r> r> sysbind ;
 
 : sbind ( 'new nnew 'old nold flags -- )
-	>r >r >r	\ ( 'new nnew ) (R flags nold 'old )
-	cstring0 	\ ( 'padtext-new ) (R flags nold 'old )
-	r> r> cstring1	\ ( 'padtext_new 'padtext_old ) (R flags )
+	>r >r >r	( 'new nnew ) (R flags nold 'old )
+	cstring0 	( 'padtext-new ) (R flags nold 'old )
+	r> r> cstring1	( 'padtext_new 'padtext_old ) (R flags )
 	r> sysbind ;

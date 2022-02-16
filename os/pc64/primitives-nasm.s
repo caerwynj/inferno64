@@ -96,7 +96,6 @@ MVENTRY "Outfd" Outfd 5
 MVENTRY "Errfd" Errfd 5
 MVENTRY "Eof" Eof 3
 MVENTRY "Ninputs" Ninputs 7
-MVENTRY "H0" H0 2		; here at startup
 
 MVENTRY "Bufferfds" Bufferfds 9 16
 MVENTRY "Bufferfilenames" Bufferfilenames 15 16 ; counted string labels of the searchers populated by boot
