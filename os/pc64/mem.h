@@ -228,7 +228,7 @@
 #define ERRSTR		(RSTACK+(BY2WD*32))	/* errstr size = 32*8 = 256 bytes */
 #define FTHPID		(RSTACK+(BY2WD*64))
 #define FTHPARENTPID	(RSTACK+(BY2WD*65))
-#define ARGSFILENAME	(RSTACK+(BY2WD*66))	/* counted string, 18 bytes is enough, 64 bytes */
+#define ARGSFILENAME	(RSTACK+(BY2WD*66))	/* counted string, 18 bytes is enough, 64 bytes #p/<pid>args */
 
 /* storage for saving Forth registers when calling C */
 #define FORTHTOP	(RSTACK+(BY2WD*74))
@@ -244,6 +244,6 @@
 
 #define FORTHVARS	(RSTACK+(BY2WD*84))
 
-#define FORTHEND	(HEAPSTART+(22*BY2PG))
+#define FORTHEND	(HEAPSTART+(24*BY2PG))
 #define HEAPEND		(FORTHEND)
 #define FORTHHEAPSIZE	FORTHEND

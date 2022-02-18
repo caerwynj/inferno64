@@ -61,11 +61,11 @@ dd M_literal
 dd 1
 dd M_minus
 dd M_exitcolon
-CENTRY "nip" C_nip 3
+CENTRY "nip" C_nip 3 ; ( n1 n2 -- n2 )
 dd M_xswap
 dd M_drop
 dd M_exitcolon
-CENTRY "rot" C_rot 3
+CENTRY "rot" C_rot 3 ; ( n1 n2 n3 -- n2 n3 n1 )
 dd M_rpush
 dd M_xswap
 dd M_rpop
@@ -96,15 +96,15 @@ dd M_literal
 dd 0		; ( n n n -- n n n 0 )
 dd M_equal	; ( n n n 0 -- n n f )
 dd M_cjump	; ( n n f -- n n )
-dd L_C_qdup	; when n != 0, go to L20
+dd L_qdup	; when n != 0, go to L20
 dd M_drop	; when n == 0 ( n n -- n)
-L_C_qdup:		; when n != 0 ( n n )
+L_qdup:		; when n != 0 ( n n )
 dd M_exitcolon
 
 CENTRY "pick" C_pick 4
 dd C_qdup
 dd M_cjump
-dd L_C_pick
+dd L_pick
 dd M_literal
 dd 1
 dd M_plus
@@ -113,13 +113,13 @@ dd M_stackptr
 dd M_plus
 dd M_fetch
 dd M_jump
-dd L_C_pick_1
-L_C_pick:
+dd L_pick_1
+L_pick:
 dd M_dup
-L_C_pick_1:
+L_pick_1:
 dd M_exitcolon
 
-CENTRY "tuck" C_tuck 4
+CENTRY "tuck" C_tuck 4 ; ( n1 n2 -- n2 n1 n2 )
 dd M_dup
 dd M_rpush
 dd M_xswap
@@ -203,51 +203,51 @@ CENTRY "max" C_max 3
 dd C_2dup
 dd M_greater
 dd M_cjump
-dd L_C_max
+dd L_max
 dd M_drop
 dd M_jump
-dd L_C_max_1
-L_C_max:
+dd L_max_1
+L_max:
 dd C_nip
-L_C_max_1:
+L_max_1:
 dd M_exitcolon
 
 CENTRY "min" C_min 3
 dd C_2dup
 dd M_less
 dd M_cjump
-dd L_C_min
+dd L_min
 dd M_drop
 dd M_jump
-dd L_C_min_1
-L_C_min:
+dd L_min_1
+L_min:
 dd C_nip
-L_C_min_1:
+L_min_1:
 dd M_exitcolon
 
 CENTRY "signum" C_signum 6
 dd M_dup
 dd C_0gt
 dd M_cjump
-dd L_C_signum
+dd L_signum
 dd M_drop
 dd M_literal
 dd 1
 dd M_jump
-dd L_C_signum_1
-L_C_signum:
+dd L_signum_1
+L_signum:
 dd C_0lt
 dd M_cjump
-dd L_C_signum_2
+dd L_signum_2
 dd M_literal
 dd -1
 dd M_jump
-dd L_C_signum_3
-L_C_signum_2:
+dd L_signum_3
+L_signum_2:
 dd M_literal
 dd 0
-L_C_signum_3:
-L_C_signum_1:
+L_signum_3:
+L_signum_1:
 dd M_exitcolon
 
 CENTRY "within" C_within 6
@@ -265,9 +265,9 @@ CENTRY "abs" C_abs 3
 dd M_dup
 dd C_0lt
 dd M_cjump
-dd L_C_abs
+dd L_abs
 dd C_negate
-L_C_abs:
+L_abs:
 dd M_exitcolon
 
 CENTRY "emit" C_emit 4	; ( character -- )
@@ -305,16 +305,16 @@ dd C_emit
 dd M_exitcolon
 
 CENTRY "emits" C_emits 5
-L_C_emits:
+L_emits:
 dd C_qdup
 dd M_cjump
-dd L_C_emits_1
+dd L_emits_1
 dd M_over
 dd C_emit
 dd C_1minus
 dd M_jump
-dd L_C_emits
-L_C_emits_1:
+dd L_emits
+L_emits_1:
 dd M_drop
 dd M_exitcolon
 
@@ -352,7 +352,7 @@ dd C_min	; ( -- a1 a2 nmin ) (R n1 n2 -- )
 dd M_literal
 dd 0		; ( -- a1 a2 nmin 0 ) (R n1 n2 -- )
 dd M_doinit	; ( -- a1 a2 ) (R n1 n2 0 nmin -- )
-L_C_compare:
+L_compare:
 dd M_over
 dd M_i
 dd M_plus
@@ -365,14 +365,14 @@ dd M_minus
 dd C_signum
 dd C_qdup
 dd M_cjump
-dd L_C_compare_1		; matches
+dd L_compare_1		; matches
 dd C_2nip	; does not match ( a1 a2 f -- f ) (R n1 n2 0 nmin -- )
 dd M_unloop	; ( f -- f ) (R n1 n2 0 nmin -- n1 n2)
 dd M_unloop	; ( f -- f ) (R n1 n2 -- )
 dd M_exitcolon
-L_C_compare_1:
+L_compare_1:
 dd M_doloop
-dd L_C_compare
+dd L_compare
 dd C_2drop	; ( a1 a2 -- ) (R n1 n2 -- )
 dd M_rpop
 dd M_rpop	; ( n2 n1 -- ) (R -- )
@@ -380,34 +380,34 @@ dd M_minus	; ( -- n1-n2 )
 dd C_signum
 dd M_exitcolon
 
-CENTRY "erase" C_erase 5
+CENTRY "erase" C_erase 5	; ( a n -- ) put 0 at a for n characters
 dd M_literal
 dd 0
 dd M_doinit
-L_C_erase:
+L_erase_loop:
 dd M_literal
 dd 0
 dd M_over
 dd M_cstore
 dd C_1plus
 dd M_doloop
-dd L_C_erase
+dd L_erase_loop
 dd M_drop
 dd M_exitcolon
 
-CENTRY "fill" C_fill 4
+CENTRY "fill" C_fill 4	; ( a n c -- ) fill c at a for n characters
 dd M_xswap
 dd M_literal
 dd 0
 dd M_doinit
-L_C_fill:
+L_fill_loop:
 dd C_2dup
 dd M_xswap
 dd M_i
 dd M_plus
 dd M_cstore
 dd M_doloop
-dd L_C_fill
+dd L_fill_loop
 dd C_2drop
 dd M_exitcolon
 
@@ -429,7 +429,7 @@ dd C_1plus
 dd M_literal
 dd 0
 dd M_doinit
-L_C_search:
+L_search:
 dd M_over
 dd M_i
 dd M_plus
@@ -442,7 +442,7 @@ dd M_fetch
 dd C_compare
 dd C_0eq
 dd M_cjump
-dd L_C_search_1
+dd L_search_1
 dd M_drop
 dd M_i
 dd M_plus
@@ -453,9 +453,9 @@ dd M_xswap
 dd M_minus
 dd C_true
 dd M_exitcolon
-L_C_search_1:
+L_search_1:
 dd M_doloop
-dd L_C_search
+dd L_search
 dd M_drop
 dd M_rpop
 dd C_false
@@ -537,7 +537,7 @@ dd M_literal
 dd 9
 dd M_greater
 dd M_cjump
-dd L_C_hash
+dd L_hash
 dd M_literal
 dd 97
 dd M_plus
@@ -545,12 +545,12 @@ dd M_literal
 dd 10
 dd M_minus
 dd M_jump
-dd L_C_hash_1
-L_C_hash:
+dd L_hash_1
+L_hash:
 dd M_literal
 dd 48
 dd M_plus
-L_C_hash_1:
+L_hash_1:
 dd MV_toNum
 dd M_fetch
 dd C_1minus
@@ -561,14 +561,14 @@ dd M_cstore
 dd M_exitcolon
 
 CENTRY "#s" C_hashs 2
-L_C_hashs:
+L_hashs:
 dd C_hash
 dd M_dup
 dd M_cjump
-dd L_C_hashs_1
+dd L_hashs_1
 dd M_jump
-dd L_C_hashs
-L_C_hashs_1:
+dd L_hashs
+L_hashs_1:
 dd M_exitcolon
 
 CENTRY "#>" C_hashfrom 2
@@ -599,11 +599,11 @@ dd M_exitcolon
 CENTRY "sign" C_sign 4
 dd C_0lt
 dd M_cjump
-dd L_C_sign
+dd L_sign
 dd M_literal
 dd 45
 dd C_hold
-L_C_sign:
+L_sign:
 dd M_exitcolon
 
 CENTRY "c(.)" C_counted_paren_dot_paren 4	; convert the top of stack to a counted string ( n1 -- 'cs )
@@ -673,13 +673,13 @@ dd M_literal
 dd 91
 dd C_within
 dd M_cjump
-dd L_C_digit
+dd L_digit
 dd M_literal
 dd 55
 dd M_minus
 dd M_jump
-dd L_C_digit_1
-L_C_digit:
+dd L_digit_1
+L_digit:
 dd M_dup
 dd M_literal
 dd 97
@@ -687,13 +687,13 @@ dd M_literal
 dd 123
 dd C_within
 dd M_cjump
-dd L_C_digit_2
+dd L_digit_2
 dd M_literal
 dd 87
 dd M_minus
 dd M_jump
-dd L_C_digit_3
-L_C_digit_2:
+dd L_digit_3
+L_digit_2:
 dd M_dup
 dd M_literal
 dd 48
@@ -701,32 +701,32 @@ dd M_literal
 dd 58
 dd C_within
 dd M_cjump
-dd L_C_digit_4
+dd L_digit_4
 dd M_literal
 dd 48
 dd M_minus
 dd M_jump
-dd L_C_digit_5
-L_C_digit_4:
+dd L_digit_5
+L_digit_4:
 dd M_drop
 dd C_false
 dd M_exitcolon
-L_C_digit_5:
-L_C_digit_3:
-L_C_digit_1:
+L_digit_5:
+L_digit_3:
+L_digit_1:
 dd M_dup
 dd MV_Base
 dd M_fetch
 dd M_less
 dd M_cjump
-dd L_C_digit_6
+dd L_digit_6
 dd C_true
 dd M_jump
-dd L_C_digit_7
-L_C_digit_6:
+dd L_digit_7
+L_digit_6:
 dd M_drop
 dd C_false
-L_C_digit_7:
+L_digit_7:
 dd M_exitcolon
 
 CENTRY "number" C_number 6 ; ( a n1 -- n2 -1 | a n1 0 )
@@ -737,7 +737,8 @@ dd M_literal
 dd 45		; ( n1 a c -- n1 a c - )
 dd M_equal	; ( n1 a c -- n1 a f )
 dd M_cjump	; ( n1 a c -- n1 a )
-dd L_C_number		; c != -
+dd L_number_no_minus	; c != -
+
 dd C_1plus	; c == - ( n1 a -- n1 a+1 )
 dd M_xswap
 dd C_1minus	; c == - ( a+1 n1 -- a+1 n1-1 )
@@ -745,36 +746,40 @@ dd M_literal
 dd -1		; ( a+1 n1-1 -- a+1 n1-1 -1 )
 dd M_rpush	; ( a+1 n1-1 -- a+1 n1-1 ) (R -- -1)
 dd M_jump
-dd L_C_number_1
-L_C_number:		; c != -
+dd L_number_digits
+
+L_number_no_minus:		; c != -
 dd M_xswap	; ( n1 a -- a n1)
 dd M_literal
 dd 1
 dd M_rpush	; ( a n1 1 -- a n1 ) (R -- 1)
-L_C_number_1:		; ( a n1 ) (R nr)
-dd M_dup	; ( a n1 -- a n1 n1 ) (R nr)
-dd M_rpush	; ( a n1 n1 -- a n1 ) (R nr -- nr n1)
+
+L_number_digits:	; ( a n1 ) (R sign )
+dd M_dup	; ( a n1 n1 ) (R sign)
+dd M_rpush	; ( a n1 ) (R sign n1)
 dd M_literal
-dd 0		; ( a n1 -- a n1 0) (R nr n1)
-dd M_xswap	; ( a n1 0 -- a 0 n1) (R nr n1)
+dd 0		; ( a n1 0) (R sign n1)
+dd M_xswap	; ( a 0 n1) (R sign n1)
 dd M_literal
-dd 0		; ( a 0 n1 -- a 0 n1 0) (R nr n1)
-dd M_doinit	; ( a 0 n1 0 -- a 0 ) (R nr n1 -- nr n1 0 n1)
-L_C_number_2:
-dd MV_Base
-dd M_fetch	; ( a 0 Base -- a 0 10 ) (R nr n1 -- nr n1 0 n1)
-dd M_multiply	; ( a 0 10 -- a 0 ) (R nr n1 -- nr n1 0 n1)
-dd M_over	; ( a 0 -- a 0 a) (R nr n1 -- nr n1 0 n1)
-dd M_i		; ( a 0 a -- a 0 a n1) (R nr n1 -- nr n1 0 n1)
-dd M_plus	; ( a 0 a n1 -- a 0 a+n1) (R nr n1 -- nr n1 0 n1)
-dd M_cfetch	; ( a 0 a+n1 -- a 0 c) (R nr n1 -- nr n1 0 n1)
-dd C_digit
+dd 0		; ( a 0 n1 0) (R sign n1)
+dd M_doinit	; ( a num=0 ) (R sign n1 nindex nlimit ) num = 0
+
+L_number_loop:
+dd MV_Base	; ( a num Base )	(R sign n1 nindex nlimit )
+dd M_fetch	; ( a num base )	(R sign n1 nindex nlimit)
+dd M_multiply	; ( a num*base )	(R sign nindex nlimit)
+dd M_over	; ( a num*base a)		(R sign nindex nlimit)
+dd M_i		; ( a num*base a nindex)	(R sign nindex nlimit)
+dd M_plus	; ( a num*base a+nindex)	(R sign nindex nlimit)
+dd M_cfetch	; ( a num*base c)		(R sign nindex nlimit)
+dd C_digit	; ( a num*base d 0|-1 )		(R sign nindex nlimit)
 dd M_cjump
-dd L_C_number_3
-dd M_plus
+dd L_number_not_a_digit ; not a digit
+dd M_plus	; ( a num*base+d )		(R sign nindex nlimit)
 dd M_jump
-dd L_C_number_4
-L_C_number_3:
+dd L_number_next
+
+L_number_not_a_digit:	; ( a num*base d )		(R sign nindex nlimit)
 dd M_drop
 dd M_unloop
 dd M_rpop
@@ -782,9 +787,11 @@ dd M_rpop
 dd M_drop
 dd C_false
 dd M_exitcolon
-L_C_number_4:
+
+L_number_next:
 dd M_doloop
-dd L_C_number_2
+dd L_number_loop
+
 dd M_rpop
 dd M_drop
 dd C_nip
@@ -815,8 +822,7 @@ dd M_exitcolon
 
 CENTRY ">word" C_toword 5 ; ( 'Bufferfds -- 'Wordfd )
 dd MC_WORDNUM
-dd C_cells
-dd M_plus
+dd C_cells_plus
 dd M_exitcolon
 
 CENTRY "wordfd@" C_wordfd_fetch 7
@@ -845,8 +851,7 @@ dd M_exitcolon
 
 CENTRY ">line" C_toline 5 ; ( 'Bufferfds -- 'Wordfd )
 dd MC_LINENUM
-dd C_cells
-dd M_plus
+dd C_cells_plus
 dd M_exitcolon
 
 CENTRY "linefd@" C_linefd_fetch 7
@@ -875,8 +880,7 @@ dd M_exitcolon
 
 CENTRY ">doublequote" C_todoublequote 12 ; ( 'Bufferfds -- 'Doublequotefd )
 dd MC_DOUBLEQUOTENUM
-dd C_cells
-dd M_plus
+dd C_cells_plus
 dd M_exitcolon
 
 CENTRY "doublequotefd@" C_doublequotefd_fetch 14
@@ -905,8 +909,7 @@ dd M_exitcolon
 
 CENTRY ">closeparen" C_tocloseparen 11 ; ( 'Bufferfds -- 'Closeparenfd )
 dd MC_CLOSEPARENNUM
-dd C_cells
-dd M_plus
+dd C_cells_plus
 dd M_exitcolon
 
 CENTRY "closeparenfd@" C_closeparenfd_fetch 13
@@ -950,7 +953,7 @@ dd MC_NBUFFERS
 dd M_literal
 dd 0
 dd M_doinit
-L_C_stdinput_loop:
+L_stdinput_loop:
 
 dd M_literal
 dd -1
@@ -963,7 +966,7 @@ dd C_cells
 dd M_plus
 
 dd M_doloop
-dd L_C_stdinput_loop
+dd L_stdinput_loop
 dd M_drop
 dd M_exitcolon
 
@@ -974,10 +977,10 @@ dd M_literal
 dd 0
 dd M_equal
 dd M_cjump
-dd L_C_args_read
+dd L_args_read
 dd M_exitcolon
 
-L_C_args_read:
+L_args_read:
 dd MV_Argsfilename
 dd C_count
 dd C_ro
@@ -995,7 +998,7 @@ dd MC_NBUFFERS
 dd M_literal
 dd 0
 dd M_doinit
-L_C_input_fetch_loop:
+L_input_fetch_loop:
 
 dd M_dup	; ( 'Bufferfd 'Bufferfd )
 dd M_fetch
@@ -1013,7 +1016,7 @@ dd C_cells
 dd M_plus
 
 dd M_doloop
-dd L_C_input_fetch_loop
+dd L_input_fetch_loop
 dd M_drop	; ( fd0 fd1 .. fdn )
 
 dd MV_Infd
@@ -1035,7 +1038,7 @@ dd 1
 dd M_plus
 dd M_equal	; is the top of stack == #Buffers+1
 dd M_cjump
-dd L_C_input_store_no_stream	; top of stack <> #Buffers+1, there is no input stream on the stack, use the default input
+dd L_input_store_no_stream	; top of stack <> #Buffers+1, there is no input stream on the stack, use the default input
 
 dd M_drop	; drop the #Buffers+1 on the top of stack
 
@@ -1051,7 +1054,7 @@ dd MC_NBUFFERS
 dd M_literal
 dd 0
 dd M_doinit
-L_C_input_store_loop:
+L_input_store_loop:
 
 dd M_literal
 dd 1
@@ -1064,7 +1067,7 @@ dd M_store
 dd M_rpop	; ( fd0 fd1 .. fdn-1 'Bufferfds-(1*cellsize) )
 
 dd M_doloop
-dd L_C_input_store_loop
+dd L_input_store_loop
 dd M_drop	; remove the 'Bufferfds on top
 
 dd MV_Eof
@@ -1073,7 +1076,7 @@ dd C_off	; reset Eof back to 0
 dd C_true	; ( true )
 dd M_exitcolon
 
-L_C_input_store_no_stream:	; there is no input stream on the stack
+L_input_store_no_stream:	; there is no input stream on the stack
 dd C_stdinput	; no input stream on the stack, use default input from now
 dd C_false		; ( 0 )
 dd M_exitcolon
@@ -1085,7 +1088,7 @@ dd MC_NBUFFERS
 dd M_literal
 dd 0
 dd M_doinit
-L_C_close_input:
+L_close_input:
 
 dd M_dup	; ( 'Bufferfd 'Bufferfd )
 dd M_fetch
@@ -1093,7 +1096,7 @@ dd M_literal
 dd -1
 dd C_neq
 dd M_cjump
-dd L_C_close_next	; == -1, check next fd
+dd L_close_next	; == -1, check next fd
 
 dd M_dup	; ( 'Bufferfd 'Bufferfd )
 dd M_fetch	; ( 'Bufferfd fd )
@@ -1106,14 +1109,14 @@ dd -1
 dd M_xswap	; ( 'Bufferfd -1 'Bufferfd )
 dd M_store	; ( 'Bufferfd )
 
-L_C_close_next:
+L_close_next:
 dd M_literal
 dd 1
 dd C_cells
 dd M_plus
 
 dd M_doloop
-dd L_C_close_input
+dd L_close_input
 
 dd M_drop
 
@@ -1137,12 +1140,12 @@ dd C_close_input
 dd C_input_store
 dd C_0eq
 dd M_cjump
-dd L_C_restore_input_exit	; input stream restored
+dd L_restore_input_exit	; input stream restored
 
 ; no input stream on the stack to restore, show error and abort
 dd C_space
 dd M_literal
-dd L_C_restore_input_error_message
+dd L_restore_input_error_message
 dd C_count
 dd C_type
 dd C_space
@@ -1151,7 +1154,7 @@ dd C_dot
 dd C_cr
 
 dd C_abort
-L_C_restore_input_exit:	; input stream restored, get out
+L_restore_input_exit:	; input stream restored, get out
 dd M_exitcolon
 
 CENTRY "concat" C_concat 6 ; ( 'cs1 'cs2 -- 'cs1+'cs2 ) concatenate counted string2 to counted-string1
@@ -1204,7 +1207,7 @@ dd M_exitcolon
 ; reads into Tib and puts the read count on the stack. Could move the file reading into accept.
 CENTRY "query" C_query 5 ; ( index -- read_count ) read from the indexed Fd in Bufferfds into Tib
 
-L_C_query_again:
+L_query_again:
 dd MV_Eof
 dd C_off	; clear EOF flag
 
@@ -1219,7 +1222,7 @@ dd M_literal
 dd -1
 dd M_equal
 dd M_cjump	; if fd == -1 ( index fd )
-dd L_C_query	; when not -1
+dd L_query	; when not -1
 
 dd M_drop	; when fd == -1 ( index )
 dd M_dup
@@ -1231,7 +1234,7 @@ dd C_ro
 dd C_open_file	; ( index fd ioresult ) (R index )
 dd C_invert
 dd M_cjump
-dd L_C_query_opened	; if open suceeded, go here
+dd L_query_opened	; if open suceeded, go here
 
 dd M_drop	; ( index ) (R index ) returned false, could not open-file. write error message
 dd M_literal
@@ -1242,7 +1245,7 @@ dd C_dot	; show the index
 dd C_cr
 dd C_abort	; abort on open error. How about terminate?
 
-L_C_query_opened:	; ( index fd ) (R index ) store the opened fd
+L_query_opened:	; ( index fd ) (R index ) store the opened fd
 dd M_dup	; ( index fd fd )
 dd M_rpop	; ( index fd fd index )
 dd C_cells	; ( index fd fd index*cellsize ) number of bytes
@@ -1250,18 +1253,18 @@ dd MV_Bufferfds
 dd M_plus	; ( index fd fd index*cellsize+'Bufferfds ) address of the filename's counted string
 dd M_store	; ( index fd )
 
-L_C_query:		; ( index fd ) when fd != -1
+L_query:		; ( index fd ) when fd != -1
 dd MV_Tib
 dd M_literal
 dd 4096		; ( index fd Tib 4096 )
 dd C_read_file ; ( index read_count ioresult )
 dd M_cjump
-dd L_C_query_read_failed
+dd L_query_read_failed
 
 dd M_dup	; ( index read_count read_count )
 
 dd M_cjump
-dd L_C_query_read_0
+dd L_query_read_0
 
 dd M_dup	; read_count > 0 ( index read_count read_count )
 dd M_literal
@@ -1269,10 +1272,10 @@ dd 4096
 dd M_equal
 
 dd M_cjump
-dd L_C_query_read_successful
+dd L_query_read_successful
 
 dd M_literal
-dd L_C_query_too_long ; could not find a delimiter in 4096 bytes, reevaluate
+dd L_query_too_long ; could not find a delimiter in 4096 bytes, reevaluate
 dd C_count
 dd C_type
 dd C_dot	; show the read_count
@@ -1280,7 +1283,7 @@ dd C_cr
 dd C_abort	; abort on read error. How about terminate?
 dd M_exitcolon
 
-L_C_query_read_failed:
+L_query_read_failed:
 dd M_literal
 dd L_read_failed ; read error
 dd C_count
@@ -1290,7 +1293,7 @@ dd C_cr
 dd C_abort	; abort on read error. How about terminate without the fallback interpreter?
 dd M_exitcolon
 
-L_C_query_read_0:
+L_query_read_0:
 
 dd M_drop	; ( index ) read_count == 0
 dd M_rpush	; ( ) (R index ) save index for use after restoring input
@@ -1300,9 +1303,9 @@ dd C_restore_input
 
 dd M_rpop	; ( index ) (R )
 dd M_jump	; ( index )
-dd L_C_query_again
+dd L_query_again
 
-L_C_query_read_successful:
+L_query_read_successful:
 dd C_nip
 dd M_exitcolon	; ( read_count ) successful read, get out
 
@@ -1313,7 +1316,7 @@ dd M_literal
 dd 256
 dd M_less
 dd M_cjump
-dd L_C_parse_1
+dd L_parse_1
 
 dd M_dup	; ( read_count read_count )
 dd MV_Wordb
@@ -1330,9 +1333,9 @@ dd M_cmove	; copy bytes from Tib to Wordb to make it a counted string at Wordb
 dd MV_Wordb
 dd M_exitcolon	; ( 'Wordb ) Wordb has the counted string
 
-L_C_parse_1:
+L_parse_1:
 dd M_literal
-dd L_C_long_word
+dd L_long_word
 dd C_count
 dd C_type
 dd C_cr
@@ -1353,11 +1356,13 @@ dd M_exitcolon
 CENTRY "doublequote" C_doublequote 11 ; ( -- count ) read from #n/Infd/doublequote into Tib
 dd MC_DOUBLEQUOTENUM
 dd C_query
+dd M_literal
+dd 1
+dd M_minus	; to remove the trailing double quote character from the count
 dd M_exitcolon
 
 CENTRY "cdoublequote" C_counted_doublequote 12 ; ( -- 'Wordb ) read from #n/Infd/doublequote into Tib and then parse to a counted string in Wordb
-dd MC_DOUBLEQUOTENUM
-dd C_query
+dd C_doublequote
 dd C_parse
 dd M_exitcolon
 
@@ -1372,23 +1377,23 @@ dd M_store
 dd MV_Dtop
 dd M_fetch	; get latest dictionary link
 
-L_C_findname_loop:	( 'link )	address of link dictionary item
+L_findname_loop:	( 'link )	address of link dictionary item
 dd C_qdup
 dd M_cjump
-dd L_C_findname_not_found	; seached until the first dictionary entry, nil now. get out
+dd L_findname_not_found	; seached until the first dictionary entry, nil now. get out
 
 dd M_dup	; ( 'link 'link )
 dd C_cell_plus	; ( 'link 'len) lenth + initial name address
 dd M_cfetch	; ( 'link immediate|hidden|len) length + initial name
 dd M_literal
 dd 64		; check the reveal'ed flag 1=hidden, 0=reveal
-dd M_binand	; if hidden, goto L_C_findname_previous else L_C_findname_revealed
+dd M_binand	; if hidden, goto L_findname_previous else L_findname_revealed
 dd M_cjump
-dd L_C_findname_revealed
+dd L_findname_revealed
 dd M_jump	; smudge'd dictionary entry, get the previous entry
-dd L_C_findname_previous
+dd L_findname_previous
 
-L_C_findname_revealed:		; reveal'ed dictionary entry
+L_findname_revealed:		; reveal'ed dictionary entry
 dd M_dup	; ( 'link 'link )
 dd C_cell_plus	; ( 'link 'len )
 dd C_count	; ( 'link 'name immediate|hidden|len )
@@ -1401,17 +1406,17 @@ dd C_count	; ( 'link 'name (immediate|hidden|len)&63=len 'find-name find-length 
 dd C_compare	; ( 'link f ) compare dictionary entry with name
 dd C_0eq	; found a match?
 dd M_cjump
-dd L_C_findname_previous	; not matched, try previous link
+dd L_findname_previous	; not matched, try previous link
 dd C_cell_plus	; match found
 dd C_true
 dd M_exitcolon
 
-L_C_findname_previous:
+L_findname_previous:
 dd M_fetch	; ( 'previous-link ) compare dictionary entry with name
 dd M_jump
-dd L_C_findname_loop	; ( 'previous-link ) looping to check it
+dd L_findname_loop	; ( 'previous-link ) looping to check it
 
-L_C_findname_not_found:	; not found, getting out
+L_findname_not_found:	; not found, getting out
 dd MV_Findadr
 dd M_fetch
 dd C_false
@@ -1420,7 +1425,7 @@ dd M_exitcolon	( 'find false ) 'find = address of the name not found
 CENTRY "find" C_find 4 ; ( a1 -- a2 f )?
 dd C_findname
 dd M_cjump
-dd L_C_find_4
+dd L_find_4
 dd M_dup
 dd M_cfetch
 dd M_xswap
@@ -1436,21 +1441,21 @@ dd M_literal
 dd 128
 dd M_binand
 dd M_cjump
-dd L_C_find_1
+dd L_find_1
 dd M_literal
 dd 1
 dd M_jump
-dd L_C_find_2
-L_C_find_1:
+dd L_find_2
+L_find_1:
 dd M_literal
 dd -1
-L_C_find_2:
+L_find_2:
 dd M_exitcolon
 dd M_jump
-dd L_C_find_3
-L_C_find_4:
+dd L_find_3
+L_find_4:
 dd C_false
-L_C_find_3:
+L_find_3:
 dd M_exitcolon
 
 CENTRY "'" C_single_quote 1
@@ -1458,7 +1463,7 @@ dd C_word
 dd C_find
 dd C_0eq
 dd M_cjump
-dd L_C_single_quote_exit
+dd L_single_quote_exit
 dd C_space
 dd C_count
 dd C_type
@@ -1468,7 +1473,7 @@ dd C_count
 dd C_type
 dd C_cr
 dd C_abort
-L_C_single_quote_exit:
+L_single_quote_exit:
 dd M_exitcolon
 
 CENTRY "?stack" C_qstack 6
@@ -1476,14 +1481,14 @@ dd M_stackptr
 dd MV_S0
 dd M_greater
 dd M_cjump
-dd L_C_qstack_exit
+dd L_qstack_exit
 dd M_literal
-dd L_C_stack_underflow_message
+dd L_stack_underflow_message
 dd C_count
 dd C_type
 dd C_cr
 dd C_abort
-L_C_qstack_exit:
+L_qstack_exit:
 dd M_exitcolon
 
 dd MC_STDOUT	; ( str -- str 1) ; debug code to show the word found
@@ -1496,18 +1501,18 @@ CENTRY "interpret" C_interpret 9 ; ( 'Wordb -- ) there is a counted string in th
 
 dd C_find	; ( 'Wordb -- a1 f )
 dd M_cjump
-dd L_C_interpret_not_found
+dd L_interpret_not_found
 
 dd M_execute	; found in dictionary, execute
 dd C_qstack		; check stack status
 dd M_exitcolon
 
-L_C_interpret_not_found:	; ( 'Wordb ) not found in the dictionary, check for number?
+L_interpret_not_found:	; ( 'Wordb ) not found in the dictionary, check for number?
 dd C_count
-dd C_number
+dd C_number ; ( a n1 -- n2 -1 | a n1 0 )
 dd C_0eq
 dd M_cjump
-dd L_C_interpret_exit
+dd L_interpret_exit
 dd C_space	; the word is neither in the dictionary nor a number
 dd C_type	; show the word
 dd M_literal
@@ -1517,7 +1522,7 @@ dd C_type
 dd C_cr
 dd C_abort
 
-L_C_interpret_exit:		; is a number
+L_interpret_exit:		; is a number
 dd M_exitcolon
 
 CENTRY "create" C_create 6	; compiles dictionary header until the pfa (link, len, name, cfa)
@@ -1597,32 +1602,37 @@ dd M_exitcolon
 
 CENTRY "compile" C_compile 7
 dd C_findname
+
 dd M_cjump
-dd L_C_compile
-dd M_dup
-dd M_cfetch
+dd L_compile_not_found	; not found in the dictionary
+
+dd M_dup	; found in the dictionary
+dd M_cfetch	; get the immediate|hidden|len byte
 dd M_literal
 dd 128
 dd M_binand
 dd M_cjump
-dd L_C_compile_1
+dd L_compile_1	; not immediate
 dd C_tocfa	; immediate
 dd M_execute
 dd C_qstack
 dd M_jump
-dd L_C_compile_2
-L_C_compile_1:
-dd C_tocfa
+dd L_compile_done
+
+L_compile_1:	; not immediate
+dd C_tocfa	; store cfa into the dictionary
 dd C_comma
-L_C_compile_2:
+
+L_compile_done:
 dd M_jump
-dd L_C_compile_3
-L_C_compile:
+dd L_compile_exit
+
+L_compile_not_found:
 dd C_count
-dd C_number
+dd C_number	; ( a n1 -- n2 -1 | a n1 0 )
 dd C_0eq
 dd M_cjump
-dd L_C_compile_4
+dd L_compile_parsed_number
 dd C_space
 dd C_type
 dd M_literal
@@ -1632,40 +1642,41 @@ dd C_type
 dd C_cr
 dd C_abort
 dd M_jump
-dd L_C_compile_6
-L_C_compile_4:
+dd L_compile_exit
+
+L_compile_parsed_number:
 dd M_literal
 dd M_literal
 dd C_comma
 dd C_comma
-L_C_compile_6:
-L_C_compile_3:
+
+L_compile_exit:
 dd M_exitcolon
 
 CENTRY "]" C_close_bracket 1
 dd MV_State
 dd C_on
-L_C_close_bracket:
+L_close_bracket:
 dd C_word
 dd M_dup
 dd M_cfetch
 dd C_0eq
 dd M_cjump
-dd L_C_close_bracket_1
+dd L_close_bracket_1
 dd M_drop
 dd C_word
 dd M_jump
-dd L_C_close_bracket_2
-L_C_close_bracket_1:
+dd L_close_bracket_2
+L_close_bracket_1:
 dd C_compile
 dd MV_State
 dd M_fetch
-L_C_close_bracket_2:
+L_close_bracket_2:
 dd M_cjump
-dd L_C_close_bracket_3
+dd L_close_bracket_3
 dd M_jump
-dd L_C_close_bracket
-L_C_close_bracket_3:
+dd L_close_bracket
+L_close_bracket_3:
 dd M_exitcolon
 
 CIENTRY "[" CI_open_bracket 1
@@ -1802,16 +1813,16 @@ dd M_exitcolon
 CENTRY "(?abort)" C_qabort_parens 8
 dd MV_State
 dd M_cjump
-dd L_C_qabort_parens
+dd L_qabort_parens
 dd C_space
 dd C_type
 dd C_cr
 dd C_abort
 dd M_jump
-dd L_C_qabort_parens_1
-L_C_qabort_parens:
+dd L_qabort_parens_1
+L_qabort_parens:
 dd C_2drop
-L_C_qabort_parens_1:
+L_qabort_parens_1:
 dd M_exitcolon
 
 CIENTRY "abort\"" CI_abort_double_quote 6
@@ -1961,19 +1972,13 @@ dd M_xswap
 dd M_store
 L236:
 dd M_exitcolon
-CENTRY "w/o" C_wo 3
-dd M_literal
-dd 1
-dd M_literal
-dd 512
-dd M_binor
-dd M_literal
-dd 64
-dd M_binor
-dd M_exitcolon
 CENTRY "r/o" C_ro 3
 dd M_literal
 dd 0
+dd M_exitcolon
+CENTRY "w/o" C_wo 3
+dd M_literal
+dd 1
 dd M_exitcolon
 CENTRY "r/w" C_rw 3
 dd M_literal
@@ -2054,7 +2059,7 @@ dd M_exitcolon
 CENTRY "?fcheck" C_qfcheck 7
 dd C_0eq
 dd M_cjump
-dd L_C_qfcheck_exit
+dd L_qfcheck_exit
 dd C_space
 dd M_literal
 dd L_io_error
@@ -2062,7 +2067,7 @@ dd C_count
 dd C_type
 dd C_cr
 dd C_abort
-L_C_qfcheck_exit:
+L_qfcheck_exit:
 dd M_exitcolon
 
 CENTRY "create-file" C_create_file 11 ; ( a n mode perm -- fd ioresult ) not part of the original ff. could move this to a forth file.
@@ -2135,11 +2140,11 @@ CENTRY "quit" C_quit 4 ; interpreter loop
 dd M_reset ; initialize return stack
 dd M_clear	; SP = sstack_end initialize data stack
 
-L_C_quit_interpreter_loop:
+L_quit_interpreter_loop:
 dd C_word
 dd C_interpret
 dd M_jump
-dd L_C_quit_interpreter_loop
+dd L_quit_interpreter_loop
 dd M_exitcolon	; why is this needed?
 
 CENTRY "(abort)" C_parenabort 7 ; TODO correct below stack notations
@@ -2184,7 +2189,7 @@ dd MC_NBUFFERS
 dd M_literal
 dd 0
 dd M_doinit
-L_C_initialize_fd_loop:
+L_initialize_fd_loop:
 
 dd M_dup
 dd M_literal
@@ -2198,7 +2203,7 @@ dd C_cells
 dd M_plus
 
 dd M_doloop
-dd L_C_initialize_fd_loop
+dd L_initialize_fd_loop
 dd M_drop
 
 dd MV_Bufferfilenames
@@ -2206,7 +2211,7 @@ dd MC_NBUFFERS
 dd M_literal
 dd 0
 dd M_doinit
-L_C_initialize_filename_loop:
+L_initialize_filename_loop:
 
 dd M_dup
 dd M_literal
@@ -2220,7 +2225,7 @@ dd C_cells
 dd M_plus
 
 dd M_doloop
-dd L_C_initialize_filename_loop
+dd L_initialize_filename_loop
 dd M_drop
 
 dd M_literal
@@ -2242,7 +2247,7 @@ dd M_exitcolon
 
 CENTRY "debug" C_debug 5 ; ( n -- ) show the n along with the debug message and depth
 dd M_literal
-dd L_C_debug_msg
+dd L_debug_msg
 dd C_count
 dd C_type
 
@@ -2296,7 +2301,7 @@ db "/doublequote"
 L_closeparen_filename:
 db "/closeparen"
 
-L_C_restore_input_error_message:
+L_restore_input_error_message:
 db "unable to restore input from the stack, aborting.." ; comments for testing the awk parser
 L_open_failed:
 db "open file failed"
@@ -2304,7 +2309,7 @@ L_read_failed:
 db "read file failed"
 L170:
 db " Q?"
-L_C_stack_underflow_message:
+L_stack_underflow_message:
 db " stack underflow"
 L_unknown_interpret_input:
 db " I?"
@@ -2316,11 +2321,11 @@ L251:
 db "uninitialized execution vector"
 L255:
 db " ok"
-L_C_query_too_long:
+L_query_too_long:
 db "input is longer than 4096 bytes without a delimiter"
 L305:
 db "read error"
-L_C_long_word:
+L_long_word:
 db "word is too long to be interpreted"
-L_C_debug_msg:
+L_debug_msg:
 db "debug message "

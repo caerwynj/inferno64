@@ -42,6 +42,7 @@ MENTRY "execute" execute 7
 MENTRY "unloop" unloop 6
 MENTRY "cmove" cmove 5
 MENTRY "cmove>" cmoveb 6
+MENTRY "move" move 4
 MENTRY "(variable)" variable 10
 MENTRY "(constant)" constant 10
 MENTRY "(:)" colon 3

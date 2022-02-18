@@ -469,9 +469,9 @@ wordfn(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp)
 	if(readp == writep)
 		return 0;
 
-	/* skip starting delimiters */
+	/* skip starting spaces */
 	for(p = readp; p<writep; p++){
-		if(*p == ' ' || *p == '	' || *p == '\n')
+		if(*p == ' ' || *p == '\t' || *p == '\n')
 			continue;
 		else
 			break;
@@ -479,14 +479,14 @@ wordfn(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp)
 
 	*startp = *nextreadp = p; /* disregard until p */
 
-	/* all content is delimiters */
+	/* all content is spaces */
 	if(p == writep){
 		return 0;
 	}
 
 	/* find ending delimiter */
 	for(n=0; p<writep && n < maxn; p++){
-		if(*p == ' ' || *p == '	' || *p == '\n'){
+		if(*p == ' ' || *p == '\t' || *p == '\n'){
 			*nextreadp = p+1; /* skip this for the next read */
 			return n;
 		}
@@ -503,8 +503,14 @@ wordfn(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp)
 	return 0;
 }
 
+/*
+	read to c. includes c in the read string. skip c for the next read.
+	It is upto the caller to remove the trailing c from the content.
+	We cannot remove the trailing c because if the next character is a c,
+	we woud be returning 0 characters and 0 is considered as an end of file.
+ */
 static s32
-linefn(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp)
+onto(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp, u8 c)
 {
 	u8 *p;
 	s32 n;
@@ -515,72 +521,23 @@ linefn(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp)
 	if(readp == writep)
 		return 0;
 
-	/* skip starting delimiters */
-	for(p = readp; p<writep; p++){
-		if(*p == '\n')
-			continue;
-		else
-			break;
-	}
+	DBG("onto readp %p writep %p maxn %d c %c\n", readp, writep, maxn, c);
+	n = writep-readp > maxn ? maxn : writep-readp;
+	p = memchr(readp, c, n);
 
-	*startp = *nextreadp = p; /* disregard until p */
-
-	/* all content is delimiters */
-	if(p == writep){
-		return 0;
-	}
-
-	/* find ending delimiter */
-	for(n=0; p<writep && n < maxn; p++){
-		DBG("linefn: read p 0x%p *p %d\n", p, *p);
-		if(*p == '\n'){
-			*nextreadp = p+1; /* skip this for the next read */
-			return n;
+	if(p == nil){
+		/* no delimiter found in maxn bytes, send maxn */
+		if(n == maxn){
+			*nextreadp += maxn;
+			return maxn;
 		}
-		n++;
+		return 0; /* kicks off a refill */
+	}else{
+		DBG("onto found %c 0x%p: %c %d returning nextreadp 0x%p n %d\n",
+				c, p, *p, *p, p+1, p+1-readp);
+		*nextreadp = p+1;
+		return *nextreadp-readp;
 	}
-
-	/* no delimiter found in maxn bytes, send maxn */
-	if(n == maxn){
-		*nextreadp += maxn;
-		return maxn;
-	}
-
-	/* no delimiter found before writep */
-	return 0;
-}
-
-/* read until c and skip c for the next read */
-static s32
-until(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp, u8 c)
-{
-	u8 *p;
-	s32 n;
-
-	*startp = *nextreadp = readp;
-
-	/* nothing to send */
-	if(readp == writep)
-		return 0;
-
-	/* find ending delimiter */
-	for(n=0, p=readp; p<writep && n < maxn; p++){
-		DBG("doublequotefn searching %c 0x%p: %c %d\n", c, p, *p, *p);
-		if(*p == c){
-			DBG("doublequotefn found %c 0x%p: %c %d\n", c, p, *p, *p);
-			*nextreadp = p+1; /* skip this for the next read */
-			return n;
-		}
-		n++;
-	}
-
-	/* no delimiter found in maxn bytes, send maxn */
-	if(n == maxn){
-		*nextreadp += maxn;
-		return maxn;
-	}
-
-	return 0;
 }
 
 /* find a double quote */
@@ -589,12 +546,19 @@ doublequotefn(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp)
 {
 	/* " = 0x22 = 34 */
 	DBG("doublequotefn searching for %c readp 0x%p writep 0x%p readp has -%s-\n", 0x22, readp, writep, readp);
-	return until(readp, writep, startp, maxn, nextreadp, 0x22);
+	return onto(readp, writep, startp, maxn, nextreadp, 0x22);
 }
 
 static s32
 closeparenfn(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp)
 {
 	/* ) = 0x29 = 41 */
-	return until(readp, writep, startp, maxn, nextreadp, 0x29);
+	return onto(readp, writep, startp, maxn, nextreadp, 0x29);
+}
+
+static s32
+linefn(u8 *readp, u8 *writep, u8 **startp, s32 maxn, u8 **nextreadp)
+{
+	/* ) = 0xA = 10 */
+	return onto(readp, writep, startp, maxn, nextreadp, 0xA);
 }

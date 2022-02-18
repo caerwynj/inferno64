@@ -1,5 +1,6 @@
 include /forth/helpers.f
 
+include /forth/cat.f
 include /forth/ns.f
 " ns before" type cr
 ns

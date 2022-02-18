@@ -549,17 +549,18 @@ TEXT	rshifta(SB), 1, $-4	/* ( n1 n2 -- n ) */
 	SARQ CL, TOP
 	NEXT
 
+/* TODO check a1+n and a2+n are within bounds too */
 /* moves n bytes from a1 to a2 */
 TEXT	cmove(SB), 1, $-4	/* ( a1 a2 n -- ) */
-	PUSH(TOP)
-	MOVQ 8(PSP), CX		/* a2 */
-	MOVQ CX, TOP
-	CALL validateaddress(SB)	/* a1 a2 n a2 -- a1 a2 n */
+	PUSH(TOP)			/* ( a1 a2 n n ) */
+	MOVQ 16(PSP), CX	/* ( a1 a2 n n ) */
+	PUSH(CX)			/* ( a1 a2 n a1 n ) */
+	CALL validatebuffer(SB)	/* ( a1 a2 n a1 n -- a1 a2 n ) */
 
-	PUSH(TOP)
-	MOVQ 16(PSP), CX	/* a1 */
-	MOVQ CX, TOP
-	CALL validateaddress(SB)	/* a1 a2 n a1 -- a1 a2 n */
+	PUSH(TOP)			/* ( a1 a2 n n ) */
+	MOVQ 8(PSP), CX		/* ( a1 a2 n n ) */
+	PUSH(CX)			/* ( a1 a2 n a2 n ) */
+	CALL validatebuffer(SB)	/* ( a1 a2 n a2 n -- a1 a2 n ) */
 
 	POP(DI)
 	POP(SI)
@@ -568,17 +569,18 @@ TEXT	cmove(SB), 1, $-4	/* ( a1 a2 n -- ) */
 	REP; MOVSB
 	NEXT
 
+/* TODO check a1+n and a2+n are within bounds too */
 /* moves n bytes from a1+n-1 to a2+n-1 until n = 0 */
 TEXT	cmoveb(SB), 1, $-4	/* ( a1 a2 n -- ) */
-	PUSH(TOP)
-	MOVQ 8(PSP), CX		/* a2 */
-	MOVQ CX, TOP
-	CALL validateaddress(SB)	/* a1 a2 n a2 -- a1 a2 n */
+	PUSH(TOP)			/* ( a1 a2 n n ) */
+	MOVQ 16(PSP), CX	/* ( a1 a2 n n ) */
+	PUSH(CX)			/* ( a1 a2 n a1 n ) */
+	CALL validatebuffer(SB)	/* ( a1 a2 n a1 n -- a1 a2 n ) */
 
-	PUSH(TOP)
-	MOVQ 16(PSP), CX	/* a1 */
-	MOVQ CX, TOP
-	CALL validateaddress(SB)	/* a1 a2 n a1 -- a1 a2 n */
+	PUSH(TOP)			/* ( a1 a2 n n ) */
+	MOVQ 8(PSP), CX		/* ( a1 a2 n n ) */
+	PUSH(CX)			/* ( a1 a2 n a2 n ) */
+	CALL validatebuffer(SB)	/* ( a1 a2 n a2 n -- a1 a2 n ) */
 
 	MOVQ TOP, CX
 	DECQ TOP		/* TOP = n-1, CX = n */
@@ -590,6 +592,26 @@ TEXT	cmoveb(SB), 1, $-4	/* ( a1 a2 n -- ) */
 	STD
 	REP; MOVSB
 	CLD
+	NEXT
+
+/* TODO check a1+n and a2+n are within bounds too */
+/* moves n cells from a1 to a2. cell = 8 bytes on amd64 */
+TEXT	move(SB), 1, $-4	/* ( a1 a2 n -- ) */
+	PUSH(TOP)			/* ( a1 a2 n n ) */
+	MOVQ 16(PSP), CX	/* ( a1 a2 n n ) */
+	PUSH(CX)			/* ( a1 a2 n a1 n ) */
+	CALL validatebuffer(SB)	/* ( a1 a2 n a1 n -- a1 a2 n ) */
+
+	PUSH(TOP)			/* ( a1 a2 n n ) */
+	MOVQ 8(PSP), CX		/* ( a1 a2 n n ) */
+	PUSH(CX)			/* ( a1 a2 n a2 n ) */
+	CALL validatebuffer(SB)	/* ( a1 a2 n a2 n -- a1 a2 n ) */
+
+	POP(DI)
+	POP(SI)
+	MOVQ TOP, CX
+	POP(TOP)			/* SI = a1, DI = a2, CX = n */
+	REP; MOVSQ
 	NEXT
 
 TEXT	cas(SB), 1, $-4	/* ( a old new -- f ) */
