@@ -86,7 +86,7 @@ FPrestore:
 	.type	getcallerpc,@function
 	.global	getcallerpc
 getcallerpc:
-	movq	8(%rbp), %rax
+	movq	8(%rdi), %rax /* rdi has the first argument to a function */
 	ret
 
 	.type	_tas,@function
