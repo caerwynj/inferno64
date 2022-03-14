@@ -157,8 +157,10 @@ init(ctxt: ref Draw->Context, argv: list of string)
 		snarfIO = ref Sys->FileIO(chan of (big, int, int, Sys->Rread), chan of (big, array of byte, int, Sys->Rwrite));
 	sync := chan of string;
 	spawn consoleproc(ctxt, sync);
-	if ((err := <-sync) != nil)
+	if ((err := <-sync) != nil){
+sys->print("error: %s\n", err);
 		fatal(err);
+	}
 
 	setupfinished := chan of int;
 	donesetup := 0;
@@ -179,8 +181,8 @@ init(ctxt: ref Draw->Context, argv: list of string)
 		if (donesetup){
 			{
  				shctxt.run(ref Listnode(nil, s) :: nil, 0);
-			} exception {
-			"fail:*" =>	;
+			} exception e {
+			"fail:*" =>	sys->print("wm/toolbar: exec %s failed: %s\n", s, e);
 			}
 		}
 	detask := <-task =>
