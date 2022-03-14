@@ -43,7 +43,7 @@ rbnotempty(void *v)
 /*
  *  spin counting up
  */
-static void
+void
 genrandom(void *v)
 {
 	USED(v);

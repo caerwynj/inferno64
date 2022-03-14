@@ -1,3 +1,6 @@
+
+# until this https://reviews.llvm.org/D3853 is done, have to use gcc for -fplan9-extensions
+
 TARGMODEL=	Posix
 TARGSHTYPE=	sh
 CPUS=		amd64
@@ -8,20 +11,21 @@ OS=		o
 AR=		ar
 ARFLAGS=	ruvs
 
-AS=		cc -c
+AS=		egcc -c
 ASFLAGS=
 
-CC=		cc -c
+CC=		egcc -c
 CFLAGS=	-g\
 		-O\
 		-Wno-deprecated-declarations -Wuninitialized -Wunused -Wreturn-type -Wimplicit\
 		-I$ROOT/OpenBSD/amd64/include\
 		-I$ROOT/include\
  		-I/usr/X11R6/include\
-		-DOPENBSD_amd64 -fno-stack-protector
+		-DOPENBSD_amd64 -fno-stack-protector \
+		 -fplan9-extensions 
 
 ANSICPP=
-LD=		cc
+LD=		egcc
 LDFLAGS=	-L/usr/X11R6/lib
 
 SYSLIBS=

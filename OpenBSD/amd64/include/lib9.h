@@ -510,3 +510,14 @@ extern  void    setfcr(u32);
 extern  void    setfsr(u32);
 extern  u32   getfcr(void);
 extern  u32   getfsr(void);
+
+typedef union FPdbleword FPdbleword;
+union FPdbleword
+{
+        double  x;
+        struct {        /* little endian */
+                uint lo;
+                uint hi;
+        };
+};
+
