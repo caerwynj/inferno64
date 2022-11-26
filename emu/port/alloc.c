@@ -3,6 +3,10 @@
 #include "interp.h"
 #include "error.h"
 
+#if defined(LINUX_AMD64)
+#include "sys/mman.h"
+#endif
+
 enum
 {
 	MAXPOOL		= 4
@@ -366,7 +370,11 @@ dopoolalloc(Pool *p, uintptr asize, uintptr pc)
 	}
 
 	p->nbrk++;
+#if defined(LINUX_AMD64)
+	t = (Bhdr *) mmap(0, alloc, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+#else
 	t = (Bhdr *)sbrk(alloc);
+#endif
 	if(t == (void*)-1) {
 		p->nbrk--;
 		unlock(&p->l);

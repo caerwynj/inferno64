@@ -1,5 +1,5 @@
 #include "os.h"
-#include "../include/mp.h"
+#include <mp.h>
 #include "dat.h"
 
 // sum = abs(b1) + abs(b2), i.e., add the magnitudes

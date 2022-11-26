@@ -1,5 +1,5 @@
 #include "os.h"
-#include "../include/mp.h"
+#include <mp.h>
 #include "dat.h"
 
 // prereq: a >= b, alen >= blen, diff has at least alen digits

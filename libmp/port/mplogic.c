@@ -25,7 +25,7 @@ mplogic(mpint *b1, mpint *b2, mpint *sum, int fl)
 	int c1, c2, co;
 	int i;
 
-	assert(((b1->flags | b2->flags | sum->flags) & MPtimesafe) == 0);
+	assert(((b1->flags | b2->flags | sum->flags) ) == 0);
 	if(b1->sign < 0) fl ^= 0x03;
 	if(b2->sign < 0) fl ^= 0x0c;
 	sum->sign = (int)(((fl|fl>>2)^fl>>4)<<30)>>31|1;
@@ -99,7 +99,7 @@ mpxor(mpint *b1, mpint *b2, mpint *sum)
 	int c1, c2, co;
 	int i, fl;
 
-	assert(((b1->flags | b2->flags | sum->flags) & MPtimesafe) == 0);
+	assert(((b1->flags | b2->flags | sum->flags) ) == 0);
 	if(b2->top > b1->top){
 		t = b1;
 		b1 = b2;
@@ -138,7 +138,7 @@ mptrunc(mpint *b, int n, mpint *r)
 {
 	int d, m, i, c;
 
-	assert(((b->flags | r->flags) & MPtimesafe) == 0);
+	assert(((b->flags | r->flags) ) == 0);
 	mpbits(r, n);
 	r->top = DIGITS(n);
 	d = n / Dbits;

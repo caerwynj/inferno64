@@ -153,12 +153,12 @@ extern	int	isupperrune(Rune);
 /*
  * malloc
  */
-extern	void*	malloc(usize);
-extern	void*	mallocz(usize, int);
+extern	void*	malloc(size_t);
+extern	void*	mallocz(size_t, int);
 extern	void	free(void*);
 extern	usize	msize(void*);
-extern	void*	calloc(usize, usize);
-extern	void*	realloc(void*, usize);
+extern	void*	calloc(size_t,size_t);
+extern	void*	realloc(void*, size_t);
 extern	void	setmalloctag(void*, uintptr);
 extern	void	setrealloctag(void*, uintptr);
 extern	uintptr	getmalloctag(void*);

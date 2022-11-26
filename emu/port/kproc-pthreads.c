@@ -14,9 +14,12 @@
 #include	<errno.h>
 #include	<semaphore.h>
 
-#ifdef __NetBSD__
+#if defined(__NetBSD__) || defined(LINUX_AMD64) || defined(LINUX_ARM)
 #include	<sched.h>
 #define pthread_yield() (sched_yield())
+#endif
+
+#ifdef __NetBSD__
 #define PTHREAD_STACK_MIN ((size_t)sysconf(_SC_THREAD_STACK_MIN))
 #endif
 

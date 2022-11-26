@@ -11,7 +11,6 @@
 #include "ipint.h"
 
 #define	MPX(x)	checkIPint((void*)(x))
-#define DP if(1){}else print
 
 static Type*	TDigestState;
 static Type*	TAESstate;
@@ -191,7 +190,7 @@ DigestState_copy(void *fp)
 }
 
 static Crypt_DigestState*
-crypt_digest_x(Array *buf, u32 n, Array *digest, int dlen, Crypt_DigestState *state, DigestState* (*fn)(uchar*, u32, uchar*, DigestState*))
+crypt_digest_x(Array *buf, int n, Array *digest, int dlen, Crypt_DigestState *state, DigestState* (*fn)(uchar*, ulong, uchar*, DigestState*))
 {
 	Heap *h;
 	XDigestState *ds;
@@ -251,7 +250,7 @@ Crypt_sha224(void *fp)
 	*f->ret = H;
 	destroy(r);
 
-	*f->ret = crypt_digest_x(f->buf, f->n, f->digest, SHA2_224dlen, f->state, sha2_224);
+	*f->ret = crypt_digest_x(f->buf, f->n, f->digest, SHA224dlen, f->state, sha224);
 }
 
 void
@@ -265,7 +264,7 @@ Crypt_sha256(void *fp)
 	*f->ret = H;
 	destroy(r);
 
-	*f->ret = crypt_digest_x(f->buf, f->n, f->digest, SHA2_256dlen, f->state, sha2_256);
+	*f->ret = crypt_digest_x(f->buf, f->n, f->digest, SHA256dlen, f->state, sha256);
 }
 
 void
@@ -279,7 +278,7 @@ Crypt_sha384(void *fp)
 	*f->ret = H;
 	destroy(r);
 
-	*f->ret = crypt_digest_x(f->buf, f->n, f->digest, SHA2_384dlen, f->state, sha2_384);
+	*f->ret = crypt_digest_x(f->buf, f->n, f->digest, SHA384dlen, f->state, sha384);
 }
 
 void
@@ -293,7 +292,7 @@ Crypt_sha512(void *fp)
 	*f->ret = H;
 	destroy(r);
 
-	*f->ret = crypt_digest_x(f->buf, f->n, f->digest, SHA2_512dlen, f->state, sha2_512);
+	*f->ret = crypt_digest_x(f->buf, f->n, f->digest, SHA512dlen, f->state, sha512);
 }
 
 void
@@ -325,7 +324,7 @@ Crypt_md4(void *fp)
 }
 
 static Crypt_DigestState*
-crypt_hmac_x(Array *data, u32 n, Array *key, Array *digest, int dlen, Crypt_DigestState *state, DigestState* (*fn)(uchar*, u32, uchar*, u32, uchar*, DigestState*))
+crypt_hmac_x(Array *data, int n, Array *key, Array *digest, int dlen, Crypt_DigestState *state, DigestState* (*fn)(uchar*, ulong, uchar*, ulong, uchar*, DigestState*))
 {
 	Heap *h;
 	XDigestState *ds;
@@ -404,26 +403,14 @@ Crypt_dhparams(void *fp)
 	f->ret->t1 = H;
 	destroy(v);
 
-	DP("Crypt_dhparams\n");
 	p = mpnew(0);
 	alpha = mpnew(0);
-	DP("Crypt_dhparams p 0x%p sign %d size %d top %d p 0x%p flags 0x%x\n"
-		"	alpha 0x%p sign %d size %d top %d p 0x%p flags 0x%x\n",
-			p, p->sign, p->size, p->top, p->p, p->flags,
-			alpha, alpha->sign, alpha->size, alpha->top, alpha->p, alpha->flags);
 	release();
-	if(f->nbits == 1024){
-		DP("DSAprimes\n");
+	if(f->nbits == 1024)
 		DSAprimes(alpha, p, nil);
-	}else{
-		DP("gensafeprime\n");
+	else
 		gensafeprime(p, alpha, f->nbits, 0);
-	}
 	acquire();
-	DP("Crypt_dhparams p 0x%p sign %d size %d top %d p 0x%p flags 0x%x\n"
-		"	alpha 0x%p sign %d size %d top %d p 0x%p flags 0x%x\n",
-			p, p->sign, p->size, p->top, p->p, p->flags,
-			alpha, alpha->sign, alpha->size, alpha->top, alpha->p, alpha->flags);
 	f->ret->t0 = newIPint(alpha);
 	f->ret->t1 = newIPint(p);
 }
