@@ -22,7 +22,7 @@ ANSICPP=
 LD=		gcc 
 LDFLAGS=	
 
-SYSLIBS=
+SYSLIBS=-lm
 
 YACC=		iyacc
 YFLAGS=		-d

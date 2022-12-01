@@ -10,8 +10,8 @@ _tas:
 	mov	w3, #1
 	mov	x1, x0
 loop:
-	ldxr	x0, [x1]
-	stxr	w2, w3, [x1]
+	ldaxr	x0, [x1]
+	stlxr	w2, w3, [x1]
 	cbnz	w2, loop
 	ret	
 	.size	_tas, .-_tas
