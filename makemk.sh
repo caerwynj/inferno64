@@ -8,9 +8,9 @@
 
 # change these defines as appropriate here or in mkconfig
 # ROOT should be the root of the Inferno tree
-ROOT=$HOME/Github/9ferno
+ROOT=$HOME/github/9ferno
 SYSTARG=Linux
-OBJTYPE=386
+OBJTYPE=arm64
 SYSTYPE=posix
 
 # if you have already changed mkconfig from the distribution, we'll use the definitions from that
