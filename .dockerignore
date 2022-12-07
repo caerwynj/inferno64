@@ -63,7 +63,7 @@ tmp/*
 #arm/*
 **/power
 **/spim
-#**/386
+**/386
 MacOSX
 Nt
 DragonFly

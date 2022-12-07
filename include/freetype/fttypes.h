@@ -25,8 +25,9 @@
 #include FT_SYSTEM_H
 #include FT_IMAGE_H
 
-#include <stddef.h>
-
+/*
+ * #include <stddef.h>
+ */
 
 FT_BEGIN_HEADER
 

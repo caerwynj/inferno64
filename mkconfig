@@ -4,7 +4,7 @@
 #	They are almost always the same.
 
 #	On Nt systems, the ROOT path MUST be of the form `drive:/path'
-ROOT=/home/caerwyn/Github/9ferno
+ROOT=/home/caerwyn/github/9ferno
 
 #
 #	Specify the flavour of Tk (std for standard builds)
