@@ -3,7 +3,7 @@
 #include "interp.h"
 #include "error.h"
 
-#if defined(LINUX_AMD64)
+#if defined(LINUX_AMD64) || defined(LINUX_ARM64)
 #include "sys/mman.h"
 #endif
 
@@ -370,7 +370,7 @@ dopoolalloc(Pool *p, uintptr asize, uintptr pc)
 	}
 
 	p->nbrk++;
-#if defined(LINUX_AMD64)
+#if defined(LINUX_AMD64)  || defined(LINUX_ARM64)
 	t = (Bhdr *) mmap(0, alloc, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
 #else
 	t = (Bhdr *)sbrk(alloc);

@@ -14,7 +14,7 @@
 #include	<errno.h>
 #include	<semaphore.h>
 
-#if defined(__NetBSD__) || defined(LINUX_AMD64) || defined(LINUX_ARM)
+#if defined(__NetBSD__) || defined(LINUX_AMD64) || defined(LINUX_ARM) || defined(LINUX_ARM64)
 #include	<sched.h>
 #define pthread_yield() (sched_yield())
 #endif
