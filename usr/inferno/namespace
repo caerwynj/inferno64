@@ -1,6 +1,5 @@
+bind -ia #C /
 
 # /chan/foo is more natural than '#s'/foo
 bind -b '#s' /chan
 
-#bind -b /usr/inferno/dis /dis
-#bind -b /usr/inferno/module /module
