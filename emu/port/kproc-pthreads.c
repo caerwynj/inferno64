@@ -172,7 +172,7 @@ kproc(char *name, void (*func)(void*), void *arg, int flags)
 		pthread_attr_setstacksize(&attr, 512*1024);	/* could be a parameter */
 	else if(KSTACK > 0)
 		pthread_attr_setstacksize(&attr, (KSTACK < PTHREAD_STACK_MIN? PTHREAD_STACK_MIN: KSTACK)+1024);
-	pthread_attr_setinheritsched(&attr, PTHREAD_INHERIT_SCHED);
+	//pthread_attr_setinheritsched(&attr, PTHREAD_INHERIT_SCHED);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 	if(pthread_create(&thread, &attr, tramp, p))
 		panic("thr_create failed\n");

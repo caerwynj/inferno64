@@ -66,6 +66,10 @@ void	mpmul(mpint *b1, mpint *b2, mpint *prod);	/* prod = b1*b2 */
 void	mpexp(mpint *b, mpint *e, mpint *m, mpint *res);	/* res = b**e mod m */
 void	mpmod(mpint *b, mpint *m, mpint *remainder);	/* remainder = b mod m */
 
+void mpand(mpint*,mpint*,mpint*);
+void mpor(mpint*,mpint*,mpint*);
+void mpxor(mpint*,mpint*,mpint*);
+void mpnot(mpint*,mpint*);
 /* quotient = dividend/divisor, remainder = dividend % divisor */
 void	mpdiv(mpint *dividend, mpint *divisor,  mpint *quotient, mpint *remainder);
 

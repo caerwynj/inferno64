@@ -105,7 +105,7 @@ argncompat(Node *n, Decl *f, Node *a)
 }
 
 static void
-rewind(Node *n)
+irewind(Node *n)
 {
 	Node *r, *nn;
 
@@ -1697,7 +1697,7 @@ n->ty->decl->refs++;
 		}
 		if(0 && right->op == Oseq){	/* a[e1, e2, ...] */
 			/* array creation to do before we allow this */
-			rewind(n);
+			irewind(n);
 			return echeck(n, typeok, isglobal, par);
 		}
 		t = left->ty;

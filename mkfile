@@ -9,7 +9,7 @@
 EMUDIRS=\
 	lib9\
 	libbio\
-	libmp\
+#	libmp\
 	libsec\
 	libmath\
 	utils/iyacc\

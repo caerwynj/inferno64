@@ -8,8 +8,8 @@
 
 # change these defines as appropriate here or in mkconfig
 # ROOT should be the root of the Inferno tree
-ROOT=$HOME/github/9ferno
 SYSTARG=Linux
+ROOT=/data/data/com.termux/files/home/9ferno
 OBJTYPE=arm64
 SYSTYPE=posix
 
