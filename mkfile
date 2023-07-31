@@ -19,7 +19,7 @@ EMUDIRS=\
 	libdraw\
 	libprefab\
 	libtk\
-	libfreetype\
+#	libfreetype\
 	libmemdraw\
 	libmemlayer\
 	libdynld\

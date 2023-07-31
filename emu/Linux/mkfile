@@ -1,4 +1,4 @@
-CONF=emu			#default configuration
+CONF=emu-g			#default configuration
 CONFLIST=emu
 CLEANCONFLIST=
 

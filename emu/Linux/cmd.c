@@ -41,7 +41,8 @@ childproc(Targ *t)
 	if(Debug)
 		print("devcmd: '%s'", t->args[0]);
 
-	nfd = getdtablesize();
+//	nfd = getdtablesize();
+	nfd = sysconf(_SC_OPEN_MAX);
 	for(i = 0; i < nfd; i++)
 		if(i != t->fd[0] && i != t->fd[1] && i != t->fd[2] && i != t->wfd)
 			close(i);
