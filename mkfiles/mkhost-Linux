@@ -2,7 +2,7 @@
 #	Variables for host system type = Linux
 
 SHELLTYPE=	sh
-SHELLNAME=	/bin/sh
+SHELLNAME=	/bin/bash
 HOSTMODEL=	Posix
 OSTARG=		os
 
