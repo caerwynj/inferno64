@@ -639,7 +639,7 @@ kmalloc(uintptr size)
 
 /* this function signature is tied to the system's libc.h */
 void*
-malloc(ulong size)
+__wrap_malloc(ulong size)
 {
 	void *v;
 

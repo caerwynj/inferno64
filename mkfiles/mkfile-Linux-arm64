@@ -9,10 +9,11 @@ AR=		ar
 ARFLAGS=	ruvs
 
 AS=		gcc -c 
-ASFLAGS=
+ASFLAGS=	-g
 
 CC=		gcc -c 
 CFLAGS=		-O\
+		-g\
 		-Wuninitialized -Wunused-variable -Wreturn-type -Wimplicit\
 		-I$ROOT/Linux/arm64/include\
 		-I$ROOT/include\
@@ -20,7 +21,7 @@ CFLAGS=		-O\
 
 ANSICPP=
 LD=		gcc 
-LDFLAGS=	
+LDFLAGS=	-Wl,--wrap=malloc	
 
 SYSLIBS=-lm
 

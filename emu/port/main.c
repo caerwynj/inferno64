@@ -14,8 +14,8 @@ char**		rebootargv;
 char	gkscanid[32] = "";
 static	char	*imod = "/dis/emuinit.dis";
 extern	char*	hosttype;
-extern	char*	tkfont;	/* for libtk/utils.c */
-extern int	tkstylus;	/* libinterp/tk.c */
+char*	tkfont;	/* for libtk/utils.c */
+int	tkstylus;	/* libinterp/tk.c */
 extern	int	mflag;
 	int	dflag;
 	int	vflag;
