@@ -307,18 +307,18 @@ emuinit(void *imod)
 	/* the setid cannot precede the bind of #U */
 	kbind("#U", "/", MAFTER|MCREATE);
 	setid(eve, 0);
-	kbind("#^", "/dev", MBEFORE);	/* snarf */
-	kbind("#^", "/chan", MBEFORE);
-	kbind("#m", "/dev", MBEFORE);	/* pointer */
+	//kbind("#^", "/dev", MBEFORE);	/* snarf */
+	//kbind("#^", "/chan", MBEFORE);
+	//kbind("#m", "/dev", MBEFORE);	/* pointer */
 	kbind("#c", "/dev", MBEFORE);
 	kbind("#p", "/prog", MREPL);
 	kbind("#d", "/fd", MREPL);
 	kbind("#I", "/net", MAFTER);	/* will fail on Plan 9 */
 
 	/* BUG: we actually only need to do these on Plan 9 */
-	kbind("#U/dev", "/dev", MAFTER);
-	kbind("#U/net", "/net", MAFTER);
-	kbind("#U/net.alt", "/net.alt", MAFTER);
+	//kbind("#U/dev", "/dev", MAFTER);
+	//kbind("#U/net", "/net", MAFTER);
+	//kbind("#U/net.alt", "/net.alt", MAFTER);
 
 	if(cputype != nil)
 		ksetenv("cputype", cputype, 1);

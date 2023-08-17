@@ -675,7 +675,7 @@ mallocz(ulong size, int clr)
 }
 
 void
-free(void *v)
+__wrap_free(void *v)
 {
 	Bhdr *b;
 
@@ -689,7 +689,7 @@ free(void *v)
 
 /* this function signature is tied to the system's libc.h */
 void*
-realloc(void *v, ulong size)
+__wrap_realloc(void *v, ulong size)
 {
 	void *nv;
 
@@ -761,7 +761,7 @@ msize(void *v)
 
 /* this function signature is tied to the system's libc.h */
 void*
-calloc(ulong n, ulong szelem)
+__wrap_calloc(ulong n, ulong szelem)
 {
 	return malloc(n*szelem);
 }

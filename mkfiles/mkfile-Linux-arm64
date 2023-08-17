@@ -13,6 +13,7 @@ ASFLAGS=	-g
 
 CC=		gcc -c 
 CFLAGS=		-O\
+		-fno-builtin\
 		-g\
 		-Wuninitialized -Wunused-variable -Wreturn-type -Wimplicit\
 		-I$ROOT/Linux/arm64/include\
@@ -21,7 +22,7 @@ CFLAGS=		-O\
 
 ANSICPP=
 LD=		gcc 
-LDFLAGS=	-Wl,--wrap=malloc	
+LDFLAGS=	
 
 SYSLIBS=-lm
 

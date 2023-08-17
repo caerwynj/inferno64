@@ -61,6 +61,7 @@ struct User
 };
 
 char	rootdir[MAXROOT] = ROOT;
+static	Lock fslock;
 
 static	User*	uidmap[NID];
 static	User*	gidmap[NID];
@@ -109,7 +110,7 @@ fsattach(char *spec)
 	Chan *c;
 	struct stat st;
 	static int devno;
-	static Lock l;
+	//static Lock l;
 
 	if(!emptystr(spec) && strcmp(spec, "*") != 0)
 		error(Ebadspec);
@@ -128,9 +129,9 @@ fsattach(char *spec)
 	FS(c)->gid = st.st_gid;
 	FS(c)->uid = st.st_uid;
 	FS(c)->mode = st.st_mode;
-	lock(&l);
+	//lock(&fslock);
 	c->dev = devno++;
-	unlock(&l);
+	//unlock(&fslock);
 	if(!emptystr(spec)){
 		FS(c)->spec = "/";
 		FS(c)->name = newcname(FS(c)->spec);
