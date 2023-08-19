@@ -8,14 +8,19 @@ OS=		o
 AR=		ar
 ARFLAGS=	ruvs
 
-AS=		gcc -c 
+AS=		cc -c 
 ASFLAGS=	-g
 
-CC=		gcc -c 
+CC=		cc -c 
 CFLAGS=		-O\
+		-ansi\
+		-w\
 		-fno-builtin\
 		-g\
-		-Wuninitialized -Wunused-variable -Wreturn-type -Wimplicit\
+		-Wuninitialized\
+		-Wunused-variable\
+		-Wreturn-type\
+		-Wimplicit\
 		-I$ROOT/Linux/arm64/include\
 		-I$ROOT/include\
 		-DLINUX_ARM64

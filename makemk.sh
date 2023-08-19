@@ -19,7 +19,7 @@ grep -s 'SYSTARG=Plan9' mkconfig || . ./mkconfig
 PLAT=$ROOT/$SYSTARG/$OBJTYPE
 
 # you might need to adjust the CC, LD, AR, and RANLIB definitions after this point
-CC="p cc -c -I$PLAT/include -I$ROOT/include -I$ROOT/utils/include"
+CC="p cc -ansi -c -w -I$PLAT/include -I$ROOT/include -I$ROOT/utils/include"
 LD="p cc "
 AR="p ar crvs"
 RANLIB=":"	# some systems still require `ranlib'

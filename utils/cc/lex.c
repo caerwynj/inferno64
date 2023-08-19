@@ -33,7 +33,7 @@
  *	-.		Inhibit search for includes in source directory
  */
 
-void
+int
 main(int argc, char *argv[])
 {
 	char *defs[50], *p;
@@ -146,7 +146,7 @@ main(int argc, char *argv[])
 
 	if(c)
 		errorexit();
-	exits(0);
+	return 0;
 }
 
 int

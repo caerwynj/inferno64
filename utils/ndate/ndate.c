@@ -1,11 +1,11 @@
 #include	<lib9.h>
 
-void
+int
 main(void)
 {
 	ulong t;
 
 	t = time(0);
 	print("%lud\n", t);
-	exits(0);
+	return 0;
 }

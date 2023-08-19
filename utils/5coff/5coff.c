@@ -22,7 +22,7 @@ static void	readsyms(void);
 
 char	*fail	= "error";
 
-void
+int
 main(int argc, char	*argv[])
 {
 	char *a, *ifile, *ofile;
@@ -79,7 +79,7 @@ main(int argc, char	*argv[])
 
 	get_file(ifile);
 	put_file(ofile);
-	exits(0);
+	return 0;
 }
 
 char usagemsg[] =

@@ -6,6 +6,8 @@
 #define EXTERN	extern
 #endif
 
+#define getc p9getc
+
 typedef	struct	Node	Node;
 typedef	struct	Sym	Sym;
 typedef	struct	Type	Type;
@@ -556,7 +558,7 @@ int	getc(void);
 long	getr(void);
 int	getnsc(void);
 Sym*	lookup(void);
-void	main(int, char*[]);
+int	main(int, char*[]);
 void	newfile(char*, int);
 void	newio(void);
 void	pushio(void);

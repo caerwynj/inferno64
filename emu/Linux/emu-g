@@ -10,14 +10,14 @@ dev
 	prof
 	srv
 	dup
-	ssl
+#	ssl
 	cap
 	fs
 	cmd	cmd
 	indir
 
-	ip	ipif6-posix ipaux
-	eia
+	ip	ipif-posix ipaux
+#	eia
 #	audio	audio
 	mem
 
@@ -35,7 +35,7 @@ link
 mod
 	sys
 	math
-	srv	srv
+#	srv	srv
 	keyring
 	crypt
 	ipints

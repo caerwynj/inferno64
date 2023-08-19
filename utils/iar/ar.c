@@ -137,7 +137,7 @@ void	mcmd(char*, int, char**);
 void	qcmd(char*, int, char**);
 void	(*comfun)(char*, int, char**);
 
-void
+int
 main(int argc, char *argv[])
 {
 	char *cp;
@@ -204,6 +204,7 @@ main(int argc, char *argv[])
 	if(allobj && dupfound)
 		exits("dup found");
 	exits(cp);
+	return 0;
 }
 /*
  *	select a command

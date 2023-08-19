@@ -7,6 +7,8 @@
 #define	EXTERN	extern
 #endif
 
+#define getc p9getc
+
 typedef	struct	Sym	Sym;
 typedef	struct	Gen	Gen;
 typedef	struct	Io	Io;

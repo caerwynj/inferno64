@@ -323,7 +323,7 @@ struct
 
 	/* define functions */
 
-void	main(int, char**);
+int	main(int, char**);
 void	others(void);
 char*	chcopy(char*, char*);
 char*	writem(int*);
@@ -374,7 +374,7 @@ void	aoutput(void);
 void	arout(char*, int*, int);
 int	gtnm(void);
 
-void
+int
 main(int argc, char *argv[])
 {
 
@@ -391,6 +391,7 @@ main(int argc, char *argv[])
 	callopt();
 	others();
 	exits(0);
+	return 0;
 }
 
 /*
