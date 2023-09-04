@@ -26,7 +26,7 @@ OFILES=\
 	runt.$O\
 	sign.$O\
 	stack.$O\
-#	tk.$O\
+	tk.$O\
 	validstk.$O\
 	xec.$O\
 	das-$OBJTYPE.$O\
@@ -45,7 +45,7 @@ MODULES=\
 	../module/draw.m\
 #	../module/prefab.m\
 	../module/math.m\
-#	../module/tk.m\
+	../module/tk.m\
 	../module/keyring.m\
 	../module/loader.m\
 	../module/freetype.m\

@@ -13,7 +13,7 @@ ASFLAGS=	-g
 
 CC=		cc -c 
 CFLAGS=		-O\
-		-ansi\
+		#-ansi\
 		-w\
 		-fno-builtin\
 		-g\
