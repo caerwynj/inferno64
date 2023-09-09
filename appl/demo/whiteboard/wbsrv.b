@@ -79,7 +79,7 @@ srv(wb: ref Image, bit, strokes: ref Sys->FileIO)
 			wb.readpixels(wb.r, data[len bithdr:]);
 			c.bitdata = data;
 		}
-		if (offset >= big len c.bitdata) {
+		if (offset >= len c.bitdata) {
 			rreply(r, (nil, nil));
 			continue;
 		}

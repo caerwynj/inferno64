@@ -52,7 +52,7 @@ ptr2bytes(p: ref Pointer): array of byte
 srv(c: chan of ref Pointer, f: ref Sys->FileIO)
 {
 	ptrq := ref Ptrqueue;
-	dummy := chan of (big, int, int, Sys->Rread);
+	dummy := chan of (int, int, int, Sys->Rread);
 	sys = load Sys Sys->PATH;
 
 	for(;;){

@@ -64,8 +64,8 @@ Sys: module
 	Rwrite:	type chan of (int, string);
 	FileIO: adt
 	{
-		read:	chan of (big, int, int, Rread);
-		write:	chan of (big, array of byte, int, Rwrite);
+		read:	chan of (int, int, int, Rread);
+		write:	chan of (int, array of byte, int, Rwrite);
 	};
 
 	# Maximum read which will be completed atomically;

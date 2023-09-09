@@ -104,7 +104,7 @@ srvlink(f2c : ref Sys->FileIO)
 	(offset, count, fid, rc) := <- f2c.read =>
 		if (rc == nil)
 			continue;
-		if (offset != big 0) {
+		if (offset != 0) {
 			rc <-= (nil, nil);
 			continue;
 		}
@@ -113,7 +113,7 @@ srvlink(f2c : ref Sys->FileIO)
 	(offset, data, fid, wc) := <- f2c.write =>
 		if (wc == nil)
 			continue;
-		if (offset != big 0) {
+		if (offset != 0) {
 			wc <-= (0, "bad offset");
 			continue;
 		}

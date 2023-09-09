@@ -154,7 +154,7 @@ init(ctxt: ref Draw->Context, argv: list of string)
 		if(snarfIO == nil)
 			fatal(sys->sprint("cannot make /chan/snarf: %r"));
 	}else
-		snarfIO = ref Sys->FileIO(chan of (big, int, int, Sys->Rread), chan of (big, array of byte, int, Sys->Rwrite));
+		snarfIO = ref Sys->FileIO(chan of (int, int, int, Sys->Rread), chan of (int, array of byte, int, Sys->Rwrite));
 	sync := chan of string;
 	spawn consoleproc(ctxt, sync);
 	if ((err := <-sync) != nil){
@@ -190,28 +190,28 @@ sys->print("error: %s\n", err);
 	(off, data, nil, wc) := <-snarfIO.write =>
 		if(wc == nil)
 			break;
-		if (off == big 0)			# write at zero truncates
+		if (off == 0)			# write at zero truncates
 			snarf = data;
 		else {
-			if (off + big len data > big len snarf) {
-				nsnarf := array[int off + len data] of byte; # TODO potential bug truncating big to int
+			if (off + len data > len snarf) {
+				nsnarf := array[off + len data] of byte; # TODO potential bug truncating big to int
 				nsnarf[0:] = snarf;
 				snarf = nsnarf;
 			}
-			snarf[int off:] = data; # TODO potential bug truncating big to int
+			snarf[off:] = data; # TODO potential bug truncating big to int
 		}
 		wc <-= (len data, "");
 	(off, nbytes, nil, rc) := <-snarfIO.read =>
 		if(rc == nil)
 			break;
-		if (off >= big len snarf) {
+		if (off >= len snarf) {
 			rc <-= (nil, "");		# XXX alt
 			break;
 		}
-		e := off + big nbytes;
-		if (e > big len snarf)
-			e = big len snarf;
-		rc <-= (snarf[int off:int e], "");	# XXX alt # TODO potential bug truncating big to int
+		e := off + nbytes;
+		if (e > len snarf)
+			e = len snarf;
+		rc <-= (snarf[off:e], "");	# XXX alt # TODO potential bug truncating big to int
 	donesetup = <-setupfinished =>
 		;	
 	}

@@ -71,11 +71,11 @@ wbsrv(fd : ref Sys->FD, wb: ref Image)
 			wb.readpixels(wb.r, data[len bithdr:]);
 			c.bitdata = data;
 		}
-		if (offset >= big len c.bitdata) {
+		if (offset >= len c.bitdata) {
 			rreply(r, (nil, nil));
 			continue;
 		}
-		rreply(r, (c.bitdata[int offset:], nil)); # TODO potential bug truncating big to int
+		rreply(r, (c.bitdata[offset:], nil)); # TODO potential bug truncating big to int
 
 	(offset, data, fid, w) := <-bit.write =>
 		if (w != nil)
