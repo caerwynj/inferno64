@@ -8,10 +8,10 @@ OS=		o
 AR=		ar
 ARFLAGS=	ruvs
 
-AS=		arm-gcc -c 
+AS=		gcc -c 
 ASFLAGS=
 
-CC=		arm-gcc -c 
+CC=		gcc -c 
 CFLAGS=		-O\
 		-Wuninitialized -Wunused-variable -Wreturn-type -Wimplicit\
 		-I$ROOT/Linux/arm/include\
@@ -19,10 +19,10 @@ CFLAGS=		-O\
 		-DLINUX_ARM
 
 ANSICPP=
-LD=		arm-gcc 
+LD=		gcc 
 LDFLAGS=	
 
-SYSLIBS=
+SYSLIBS=-lm
 
 YACC=		iyacc
 YFLAGS=		-d

@@ -639,7 +639,7 @@ kmalloc(uintptr size)
 
 /* this function signature is tied to the system's libc.h */
 void*
-malloc(ulong size)
+malloc(size_t size)
 {
 	void *v;
 
@@ -657,7 +657,7 @@ malloc(ulong size)
 
 /* this function signature is tied to the system's libc.h */
 void*
-mallocz(ulong size, int clr)
+mallocz(size_t size, int clr)
 {
 	void *v;
 
@@ -689,7 +689,7 @@ free(void *v)
 
 /* this function signature is tied to the system's libc.h */
 void*
-realloc(void *v, ulong size)
+realloc(void *v, size_t size)
 {
 	void *nv;
 
@@ -761,7 +761,7 @@ msize(void *v)
 
 /* this function signature is tied to the system's libc.h */
 void*
-calloc(ulong n, ulong szelem)
+calloc(size_t n, size_t szelem)
 {
 	return malloc(n*szelem);
 }

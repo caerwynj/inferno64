@@ -27,6 +27,7 @@
 #include <fcntl.h>
 #include <setjmp.h>
 #include <float.h>
+#include <time.h>
 #include <endian.h>
 
 #define	getwd	infgetwd
@@ -45,15 +46,35 @@ typedef struct Proc Proc;
 typedef unsigned char	uchar;
 typedef signed char	schar;
 typedef unsigned int Rune;
-typedef long long int	vlong;
-typedef unsigned long long int	uvlong;
-typedef unsigned int u32;
-typedef uvlong u64int;
 
 typedef unsigned int	mpdigit;	/* for /sys/include/mp.h */
-typedef unsigned short u16int;
-typedef unsigned char u8int;
 typedef unsigned long uintptr;
+typedef int intptr;
+typedef intptr WORD;
+typedef uintptr UWORD;
+
+typedef long long int	vlong;
+typedef unsigned long long int	uvlong;
+typedef uvlong u64int;
+typedef unsigned long long u64;
+typedef signed long long s64;
+typedef signed long long s64int;
+
+typedef unsigned int u32int;
+typedef unsigned int u32;
+typedef signed int s32int;
+typedef signed int s32;
+
+typedef unsigned short u16int;
+typedef signed short s16int;
+typedef unsigned short u16;
+typedef signed short s16;
+
+typedef unsigned char u8int;
+typedef unsigned char u8;
+typedef signed char s8int;
+typedef signed char s8;
+
 
 #define	USED(x)		if(x){}else{}
 #define	SET(x)
@@ -127,13 +148,13 @@ extern	int	isupperrune(Rune);
  * malloc
  */
 extern	void*	malloc(size_t);
-extern	void*	mallocz(ulong, int);
+extern	void*	mallocz(size_t, int);
 extern	void	free(void*);
 extern	ulong	msize(void*);
 extern	void*	calloc(size_t, size_t);
 extern	void*	realloc(void*, size_t);
-extern	void		setmalloctag(void*, ulong);
-extern	void		setrealloctag(void*, ulong);
+extern	void	setmalloctag(void*, ulong);
+extern	void	setrealloctag(void*, ulong);
 extern	ulong	getmalloctag(void*);
 extern	ulong	getrealloctag(void*);
 extern	void*	malloctopoolblock(void*);
