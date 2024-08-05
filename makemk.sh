@@ -8,7 +8,7 @@
 
 # change these defines as appropriate here or in mkconfig
 # ROOT should be the root of the Inferno tree
-ROOT=$HOME/github/9ferno
+ROOT=$HOME/9ferno
 SYSTARG=Linux
 OBJTYPE=amd64
 SYSTYPE=posix

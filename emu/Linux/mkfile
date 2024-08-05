@@ -34,12 +34,13 @@ HFILES=\
 CFLAGS='-DROOT="'$ROOT'"' -DEMU -I. -I../port -I$ROOT/$SYSTARG/$OBJTYPE/include -I$ROOT/include -I$ROOT/libinterp $CTHREADFLAGS $CFLAGS $EMUOPTIONS
 SYSLIBS= $X11LIBS -lm -lpthread
 KERNDATE=`{$NDATE}
+WRAP='-Wl,--wrap=malloc' '-Wl,--wrap=mallocz' '-Wl,--wrap=free' '-Wl,--wrap=realloc' '-Wl,--wrap=calloc'
 
 default:V:	$O.$CONF
 
 $O.$CONF:	$OBJ $CONF.c $CONF.root.h $LIBNAMES
 	$CC $CFLAGS '-DKERNDATE='$KERNDATE $CONF.c
-	$LD $LDFLAGS -o $target $OBJ $CONF.$O $LIBFILES $SYSLIBS
+	$LD $LDFLAGS $WRAP -o $target $OBJ $CONF.$O $LIBFILES $SYSLIBS
 
 install:V: $O.$CONF
 	cp $O.$CONF $INSTALLDIR/$CONF
