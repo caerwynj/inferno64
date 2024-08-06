@@ -12,7 +12,7 @@ ROOT=/home/caerwynj/9ferno
 TKSTYLE=std
 
 # emu target, emu-g is a headless variant. Linux/BSD only (emu, emu-g)
-CONF=emu
+CONF=emu-g
 
 #	binary will be placed at $SYSTARG/$OBJTYPE/bin/$CONF
 
