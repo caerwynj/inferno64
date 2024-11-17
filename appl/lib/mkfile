@@ -10,7 +10,7 @@ DIRS=\
 	spki\
 	strokes\
 	styxconv\
-	usb\
+	#usb\
 	w3c\
 
 TARG=\

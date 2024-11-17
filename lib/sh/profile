@@ -3,23 +3,12 @@ load std
 
 user = `{cat /dev/user}
 home = /usr/^$user
-pubgridreg = tcp!registry.9p.zone!registry
-cd $home
+bind -c '#U*'^$emuwdir /n/local
+cd /n/local
+#cd $home
 
 # build the user's namespace in $home/
-and {ftest -e namespace}	{nsbuild}
-
-if{~ $#emuhost 0 && ~ $#emuwdir 0}{
-	# running native
-
-	# load a heap based filesystem on /tmp
-	memfs
-}{
-	# running hosted
-
-	# dis/init has set this up already for native booting
-	mount {mntgen} /n
-}
+#and {ftest -e namespace}	{nsbuild}
 
 # Run the user's profile
-and {ftest -e lib/profile}	{run ./lib/profile}
+#and {ftest -e lib/profile}	{run ./lib/profile}

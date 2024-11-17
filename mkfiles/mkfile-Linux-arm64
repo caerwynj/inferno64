@@ -12,7 +12,8 @@ AS=		gcc -c
 ASFLAGS=
 
 CC=		gcc -c 
-CFLAGS=		-O\
+CFLAGS=		-g\
+		-O\
 		-Wuninitialized -Wunused-variable -Wreturn-type -Wimplicit\
 		-I$ROOT/Linux/arm64/include\
 		-I$ROOT/include\

@@ -4,7 +4,7 @@
 #	They are almost always the same.
 
 #	On Nt systems, the ROOT path MUST be of the form `drive:/path'
-ROOT=/home/pi/github/9ferno
+ROOT=/home/caerwyn/9ferno
 
 #
 #	Specify the flavour of Tk (std for standard builds)
@@ -12,7 +12,7 @@ ROOT=/home/pi/github/9ferno
 TKSTYLE=std
 
 # emu target, emu-g is a headless variant. Linux/BSD only (emu, emu-g)
-CONF=emu
+CONF=emu-g
 
 #	binary will be placed at $SYSTARG/$OBJTYPE/bin/$CONF
 

@@ -7,6 +7,8 @@ obj.out
 obj.map
 vc*.pdb
 *.a
+emu/Linux/o.emu-g
+utils/mk/mk
 
 # yacc artifacts
 y.output

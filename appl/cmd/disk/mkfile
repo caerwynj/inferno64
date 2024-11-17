@@ -1,7 +1,7 @@
 <../../../mkconfig
 
 DIRS=\
-	prep\
+	#prep\
 
 TARG=\
 	kfs64.dis\

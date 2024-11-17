@@ -3,7 +3,7 @@
 #include "interp.h"
 #include "error.h"
 
-#if defined(LINUX_AMD64) || defined(LINUX_ARM64)
+#if defined(LINUX_AMD64)
 #include "sys/mman.h"
 #endif
 
@@ -370,7 +370,7 @@ dopoolalloc(Pool *p, uintptr asize, uintptr pc)
 	}
 
 	p->nbrk++;
-#if defined(LINUX_AMD64)  || defined(LINUX_ARM64)
+#if defined(LINUX_AMD64)
 	t = (Bhdr *) mmap(0, alloc, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
 #else
 	t = (Bhdr *)sbrk(alloc);
@@ -639,7 +639,7 @@ kmalloc(uintptr size)
 
 /* this function signature is tied to the system's libc.h */
 void*
-__wrap_malloc(ulong size)
+malloc(ulong size)
 {
 	void *v;
 
@@ -657,7 +657,7 @@ __wrap_malloc(ulong size)
 
 /* this function signature is tied to the system's libc.h */
 void*
-__wrap_mallocz(ulong size, int clr)
+mallocz(ulong size, int clr)
 {
 	void *v;
 
@@ -675,7 +675,7 @@ __wrap_mallocz(ulong size, int clr)
 }
 
 void
-__wrap_free(void *v)
+free(void *v)
 {
 	Bhdr *b;
 
@@ -689,7 +689,7 @@ __wrap_free(void *v)
 
 /* this function signature is tied to the system's libc.h */
 void*
-__wrap_realloc(void *v, ulong size)
+realloc(void *v, ulong size)
 {
 	void *nv;
 
@@ -761,7 +761,7 @@ msize(void *v)
 
 /* this function signature is tied to the system's libc.h */
 void*
-__wrap_calloc(ulong n, ulong szelem)
+calloc(ulong n, ulong szelem)
 {
 	return malloc(n*szelem);
 }
