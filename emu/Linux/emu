@@ -27,7 +27,7 @@ dev
 lib
 	interp
 	tk
-	freetype
+#	freetype
 	math
 	draw
 
@@ -52,7 +52,7 @@ mod
 	crypt
 	ipints
 	loader
-	freetype
+#	freetype
 
 port
 	alloc

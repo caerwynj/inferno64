@@ -10,7 +10,7 @@ OFILES=\
 	dec.$O\
 	dlm-$TARGMODEL.$O\
 	draw.$O\
-	freetype.$O\
+#	freetype.$O\
 	gc.$O\
 	geom.$O\
 	heap.$O\
