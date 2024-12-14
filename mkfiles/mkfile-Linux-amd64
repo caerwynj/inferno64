@@ -25,7 +25,7 @@ ANSICPP=
 LD=		cc 
 LDFLAGS=
 
-SYSLIBS=
+SYSLIBS= -lm
 
 YACC=		iyacc
 YFLAGS=		-d

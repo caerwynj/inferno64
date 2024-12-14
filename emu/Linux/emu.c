@@ -74,7 +74,6 @@ extern void keyringmodinit(void);
 extern void cryptmodinit(void);
 extern void ipintsmodinit(void);
 extern void loadermodinit(void);
-extern void freetypemodinit(void);
 void modinit(void){
 	sysmodinit();
 	drawmodinit();
@@ -85,7 +84,6 @@ void modinit(void){
 	cryptmodinit();
 	ipintsmodinit();
 	loadermodinit();
-	freetypemodinit();
 }
 
 char* conffile = "emu";
