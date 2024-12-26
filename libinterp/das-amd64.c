@@ -48,6 +48,7 @@ struct	Instr
 	char	*curr;		/* fill level in output buffer */
 	char	*end;		/* end of output buffer */
 	char	*err;		/* error message */
+	char	rex;		/* rex prefix code set */
 };
 
 	/* 386 register (ha!) set */
@@ -817,22 +818,22 @@ static Optable optable[256] =
 	Iwd,0,		"CMP%S	%i,%OAX",
 	SEG,0,		"DS:",
 	0,0,		"AAS",
-	0,0,		"INC%S	%OAX",
-	0,0,		"INC%S	%OCX",
-	0,0,		"INC%S	%ODX",
-	0,0,		"INC%S	%OBX",
-	0,0,		"INC%S	%OSP",
-	0,0,		"INC%S	%OBP",
-	0,0,		"INC%S	%OSI",
-	0,0,		"INC%S	%ODI",
-	0,0,		"DEC%S	%OAX",
-	0,0,		"DEC%S	%OCX",
-	0,0,		"DEC%S	%ODX",
-	0,0,		"DEC%S	%OBX",
-	0,0,		"DEC%S	%OSP",
-	0,0,		"DEC%S	%OBP",
-	0,0,		"DEC%S	%OSI",
-	0,0,		"DEC%S	%ODI",
+	PRE,0,		"REX",
+	PRE,0,		"REX",
+	PRE,0,		"REX",
+	PRE,0,		"REX",
+	PRE,0,		"REX",
+	PRE,0,		"REX",
+	PRE,0,		"REX",
+	PRE,0,		"REX",
+	PRE,0,		"REX",
+	PRE,0,		"REX",
+	PRE,0,		"REX",
+	PRE,0,		"REX",
+	PRE,0,		"REX",
+	PRE,0,		"REX",
+	PRE,0,		"REX",
+	PRE,0,		"REX",
 	0,0,		"PUSH%S	%OAX",
 	0,0,		"PUSH%S	%OCX",
 	0,0,		"PUSH%S	%ODX",
@@ -1064,6 +1065,25 @@ igetl(Instr *ip, ulong *lp)
 	return 1;
 }
 
+/*
+ *  get 8 bytes of the instruction
+ */
+static int
+igetll(Instr *ip, ulong *lp)
+{
+	long	l;
+	long long ll;
+
+	if (igetl(ip, &l) < 0)
+		return -1;
+	ll = l;
+	if (igetl(ip, &l) < 0)
+		return -1;
+	ll |= (l<<32);
+	*lp = ll;
+	return 1;
+}
+
 static int
 getdisp(Instr *ip, int mod, int rm, int code)
 {
@@ -1223,7 +1243,10 @@ badop:
 			ip->imm2 = s&0xffff;
 			break;
 		case Iwd:	/* Operand-sized immediate (no sign extension)*/
-			if (ip->osize == 'L') {
+			if (ip->rex) {
+				if(igetll(ip, &ip->imm) < 0)
+					return 0;
+			} else if (ip->osize == 'L') {
 				if (igetl(ip, &ip->imm) < 0)
 					return 0;
 			} else {
@@ -1233,7 +1256,10 @@ badop:
 			}
 			break;
 		case Awd:	/* Address-sized immediate (no sign extension)*/
-			if (ip->asize == 'E') {
+			if (ip->rex) {
+				if (igetll(ip, &ip->imm) < 0)
+					return 0;
+			} else if (ip->asize == 'E') {
 				if (igetl(ip, &ip->imm) < 0)
 					return 0;
 			} else {
@@ -1243,7 +1269,10 @@ badop:
 			}
 			break;
 		case Iwds:	/* Operand-sized immediate (sign extended) */
-			if (ip->osize == 'L') {
+			if (ip->reg) {
+				if (igetll(ip, &ip->imm) < 0)
+					return 0;
+			} else if (ip->osize == 'L') {
 				if (igetl(ip, &ip->imm) < 0)
 					return 0;
 			} else {
@@ -1362,6 +1391,8 @@ badop:
 			goto newop;
 		case PRE:	/* Instr Prefix */
 			ip->prefix = (char*)op->proto;
+			if (c & 0x40)
+				ip->rex = 1;
 			if (igetc(ip, &c) < 0)
 				return 0;
 			goto newop;

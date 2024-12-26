@@ -244,17 +244,37 @@ gen2(uchar o1, uchar o2)
 	code += 2;
 }
 
+static void
+gen4(uintptr o)
+{
+	*(uintptr*)code = o;
+	code += 4;
+}
+
+static void
+gen8(uintptr o)
+{
+	*(uintptr*)code = o;
+	code += 8;
+}
+
 /* TODO only handles 4 bytes, the old WORD size */
 static void
 genw(uintptr o)
 {
-	*(uintptr*)code = o;
-	code += IBY2WD/*4*/;
+	gen4(o);
+}
+
+static void
+rex()
+{
+	*code++ = 0x48;
 }
 
 static void
 modrm(int inst, uintptr disp, int rm, int r)
 {
+	rex();  /* 64bit addressing */
 	*code++ = inst;
 	if(disp == 0) {
 		*code++ = (0<<6)|(r<<3)|rm;
@@ -263,12 +283,12 @@ modrm(int inst, uintptr disp, int rm, int r)
 	if(bc(disp)) {
 		code[0] = (1<<6)|(r<<3)|rm;
 		code[1] = disp;
-		code += IBY2WD-2;
+		code += 2 /* was IBY2WD-2*/;
 		return;
 	}
 	*code++ = (2<<6)|(r<<3)|rm;
 	*(uintptr*)code = disp;
-	code += IBY2WD/*4*/;
+	code += 4;  /* In 64bit addressing displacement can only be 32bit */
 }
 
 static void
@@ -278,8 +298,9 @@ con(uintptr o, int r)
 		gen2(Oxor, (3<<6)|(r<<3)|r);
 		return;
 	}
+	rex();
 	genb(Omovimm+r);
-	genw(o);
+	gen8(o);
 }
 
 static void
@@ -368,8 +389,9 @@ literal(uintptr imm, int roff)
 {
 	nlit++;
 
+	rex();
 	genb(Omovimm+RAX);
-	genw((uintptr)litpool);
+	gen8((uintptr)litpool);
 	modrm(Ostw, roff, RTMP, RAX);
 
 	if(pass == 0)
@@ -430,7 +452,9 @@ punt(Inst *i, int m, void (*fn)(void))
 	}
 	modrm(Ostw, O(REG, FP), RTMP, RFP);
 
-	bra((uintptr)fn, Ocall);
+	//bra((uintptr)fn, Ocall);
+	con((uintptr)fn, RAX);
+	gen2(Ocallrm, (3<<6)|(2<<3)|RAX);	// CALL* AX
 
 	con((uintptr)&R, RTMP);
 	if(m & TCHECK) {
@@ -1536,6 +1560,7 @@ preamble(void)
 	modrm(Oldw, O(REG, FP), RTMP, RFP);
 	modrm(Oldw, O(REG, MP), RTMP, RMP);
 	modrm(Ojmprm, O(REG, PC), RTMP, 4);
+	//gen2(Ojmprm, (3<<6)|(4<<3)|RTMP);	// JMP*L RTMP
 
 	segflush(comvec, 32);
 }
@@ -1628,7 +1653,10 @@ macret(void)
 	con(0, RBX);				// MOVL  $0, RBX
 	modrm(Oldw, O(Frame, t), RFP, RAX);	// MOVL  t(FP), RAX
 	gen2(Ocmpw, (3<<6)|(RAX<<3)|RBX);	// CMPL  RAX, RBX
-	gen2(Ojeqb, lpunt-(code-s));		// JEQ	 lpunt
+	genb(0x0f);
+	genb(Ojeql);
+	genw(lpunt-(code-s)-2);
+	//gen2(Ojeqb, lpunt-(code-s));		// JEQ	 lpunt
 	modrm(Oldw, O(Type, destroy), RAX, RAX);// MOVL  destroy(RAX), RAX
 	gen2(Ocmpw, (3<<6)|(RAX<<3)|RBX);	// CMPL	 RAX, RBX
 	gen2(Ojeqb, lpunt-(code-s));		// JEQ	 lpunt
@@ -1684,15 +1712,17 @@ static void
 maccolr(void)
 {
 	modrm(Oincrm, O(Heap, ref)-sizeof(Heap), RBX, 0);
+	rex();
 	gen2(Oldw, (0<<6)|(RAX<<3)|5);		// INCL	ref(BX)
-	genw((uintptr)&mutator);			// MOVL	mutator, RAX
+	gen8((uintptr)&mutator);			// MOVL	mutator, RAX
 	modrm(Ocmpw, O(Heap, color)-sizeof(Heap), RBX, RAX);
 	gen2(Ojneb, 0x01);			// CMPL	color(BX), RAX
 	genb(Oret);				// MOVL $propagator,RTMP
 	con(propagator, RAX);			// MOVL	RTMP, color(BX)
 	modrm(Ostw, O(Heap, color)-sizeof(Heap), RBX, RAX);
+	rex();
 	gen2(Ostw, (0<<6)|(RAX<<3)|5);		// can be any !0 value
-	genw((uintptr)&nprop);			// MOVL	RBX, nprop
+	gen8((uintptr)&nprop);			// MOVL	RBX, nprop
 	genb(Oret);
 }
 
@@ -1936,7 +1966,7 @@ compile(Module *m, int size, Modlink *ml)
 		goto bad;
 
 	if(cflag > 3)
-		print("dis=%5d %5d 386=%5d asm=%.8zx lit=%d: %s\n",
+		print("dis=%5d %5d amd64=%5d asm=%.8zx lit=%d: %s\n",
 			size, size*sizeof(Inst), n, (uintptr)base, nlit, m->name);
 
 	pass++;
