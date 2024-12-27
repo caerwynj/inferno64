@@ -370,9 +370,14 @@ opwst(Inst *i, int mi, int r)
 static void
 bra(uintptr dst, int op)
 {
-	dst -= (DOT+5);
-	genb(op);
-	genw(dst);
+	//dst -= (DOT+5);
+	//genb(op);
+	//genw(dst);
+	genb(Opushl+RBP);			// Push something on the stack to align to 16 bytes
+	op=Ocallrm;
+	con((uintptr)dst, RAX);
+	gen2(op, (3<<6)|(2<<3)|RAX);	// CALL* AX
+	genb(Opopl+RBP);
 }
 
 static void
@@ -452,9 +457,9 @@ punt(Inst *i, int m, void (*fn)(void))
 	}
 	modrm(Ostw, O(REG, FP), RTMP, RFP);
 
-	//bra((uintptr)fn, Ocall);
-	con((uintptr)fn, RAX);
-	gen2(Ocallrm, (3<<6)|(2<<3)|RAX);	// CALL* AX
+	bra((uintptr)fn, Ocall);
+	//con((uintptr)fn, RAX);
+	//gen2(Ocallrm, (3<<6)|(2<<3)|RAX);	// CALL* AX
 
 	con((uintptr)&R, RTMP);
 	if(m & TCHECK) {
@@ -769,6 +774,7 @@ commframe(Inst *i)
 		o = OA(Modlink, links)+i->reg*sizeof(Modl)+O(Modl, frame);
 		modrm(Oldw, o, RAX, RTA);
 	} else {
+		rex();
 		gen2(Oldw, (3<<6)|(RTMP<<3)|RAX);	// MOVL	AX, RTMP
 		mid(i, Oldw, RCX);			// index
 		gen2(Olea, (0<<6)|(0<<3)|4);		// lea	(AX)(RCX*8)
@@ -885,6 +891,7 @@ shrl(Inst *i)
 	label1 = code-1;
 	*label = code-label-1;
 	modrm(Oldw, 4, RTA, RBX);
+	rex();
 	gen2(Oldw, (3<<6)|(RAX<<3)|RBX);
 	gen2(Osarimm, (3<<6)|(7<<3)|RBX);
 	genb(0x1f);
@@ -1154,7 +1161,7 @@ comp(Inst *i)
 		cmpl(RBX, (ulong)H);
 		gen2(Ojeqb, 0x05);
 		modrm(Oldw, O(List, tail), RBX, RBX);
-		genb(Oincr+RAX);
+		genb(Oincr+RAX);  // TODO Oincr not valid in 64 bit mode
 		gen2(Ojmpb, 0xf6);
 		opwst(i, Ostw, RAX);
 		break;
@@ -1298,6 +1305,7 @@ comp(Inst *i)
 		modrm(Omov, O(Frame, lr), RAX, 0);	// MOVL $.+1, lr(AX)
 		genw((uintptr)base+patch[i-mod->prog+1]);
 		modrm(Ostw, O(Frame, fp), RAX, RFP); 	// MOVL RFP, fp(AX)
+		rex();
 		gen2(Oldw, (3<<6)|(RFP<<3)|RAX);	// MOVL AX,RFP
 		if(UXDST(i->add) != DST(AIMM)){
 			gen2(Ojmprm, (3<<6)|(4<<3)|RTA);
@@ -1711,18 +1719,22 @@ macret(void)
 static void
 maccolr(void)
 {
-	modrm(Oincrm, O(Heap, ref)-sizeof(Heap), RBX, 0);
-	rex();
-	gen2(Oldw, (0<<6)|(RAX<<3)|5);		// INCL	ref(BX)
-	gen8((uintptr)&mutator);			// MOVL	mutator, RAX
+	modrm(Oincrm, O(Heap, ref)-sizeof(Heap), RBX, 0);  // INCL	ref(BX)
+	con((uintptr)&mutator, RAX);
+	modrm(Oldw, 0, RAX, RAX);
+	//gen2(Oldw, (3<<6)|(RAX<<3)|RAX);
+	//gen2(Oldw, (0<<6)|(RAX<<3)|5);		
+	//gen4(code - (uintptr)&mutator);			// MOVL	mutator, RAX
 	modrm(Ocmpw, O(Heap, color)-sizeof(Heap), RBX, RAX);
 	gen2(Ojneb, 0x01);			// CMPL	color(BX), RAX
 	genb(Oret);				// MOVL $propagator,RTMP
 	con(propagator, RAX);			// MOVL	RTMP, color(BX)
 	modrm(Ostw, O(Heap, color)-sizeof(Heap), RBX, RAX);
-	rex();
-	gen2(Ostw, (0<<6)|(RAX<<3)|5);		// can be any !0 value
-	gen8((uintptr)&nprop);			// MOVL	RBX, nprop
+	//gen2(Ostw, (0<<6)|(RAX<<3)|5);		// can be any !0 value
+	//gen8((uintptr)&nprop);			// MOVL	RBX, nprop
+	con((uintptr)&nprop, RAX);
+	modrm(Ostw, 0, RAX, RBX);
+	
 	genb(Oret);
 }
 
@@ -1747,6 +1759,7 @@ macmcal(void)
 	modrm(Oldw, O(REG, MP), RTMP, RMP);
 	genb(Oret);				// RET
 	*label = code-label-1;			// patch:
+	rex();
 	gen2(Oldw, (3<<6)|(RFP<<3)|RCX);	// MOVL CX, RFP		R.FP = f
 	modrm(Ostw, O(REG, M), RTMP, RTA);	// MOVL RTA, R.M
 	modrm(Oincrm, O(Heap, ref)-sizeof(Heap), RTA, 0);
