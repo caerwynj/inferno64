@@ -777,16 +777,19 @@ commframe(Inst *i)
 		rex();
 		gen2(Oldw, (3<<6)|(RTMP<<3)|RAX);	// MOVL	AX, RTMP
 		mid(i, Oldw, RCX);			// index
+		rex();
 		gen2(Olea, (0<<6)|(0<<3)|4);		// lea	(AX)(RCX*8)
 		genb((3<<6)|(RCX<<3)|RAX);		// assumes sizeof(Modl) == 8 hence 3
 		o = OA(Modlink, links)+O(Modl, frame);
 		modrm(Oldw, o, RAX, RTA);		// frame
+		rex();
 		genb(OxchgAX+RTMP);			// get old AX back
 	}
 	modrm(0x83, O(Type, initialize), RTA, 7);
 	genb(0);
 	gen2(Ojneb, 0);
 	punt = code - 1;
+	rex();
 	genb(OxchgAX+RTA);
 	opwst(i, Olea, RTA);
 	*mlnil = code-mlnil-1;
@@ -819,6 +822,7 @@ commcall(Inst *i)
 	else {
 		genb(Opushl+RCX);
 		mid(i, Oldw, RCX);		// index
+		rex();
 		gen2(Olea, (0<<6)|(0<<3)|4);	// lea	(RTA)(RCX*8)
 		genb((3<<6)|(RCX<<3)|RTA);	// assumes sizeof(Modl) == 8 hence 3
 		modrm(Oldw, OA(Modlink, links)+O(Modl, u.pc), RAX, RAX);
@@ -1074,11 +1078,15 @@ comp(Inst *i)
 	movm:
 		opwst(i, Olea, RBX);
 		mid(i, Oldw, RCX);
+		rex();
 		genb(OxchgAX+RSI);
+		rex();
 		gen2(Oxchg, (3<<6)|(RDI<<3)|RBX);
 		genb(Ocld);
 		gen2(Orep, Omovsb);
+		rex();
 		genb(OxchgAX+RSI);
+		rex();
 		gen2(Oxchg, (3<<6)|(RDI<<3)|RBX);
 		break;
 	case IRET:
@@ -1096,9 +1104,9 @@ comp(Inst *i)
 		break;
 	case ILEA:
 		if(UXSRC(i->add) == SRC(AIMM)) {
-			gen2(Ojmpb, IBY2WD/*4*/);
+			gen2(Ojmpb, 4);
 			genw(i->s.imm);
-			con((uintptr)(code-IBY2WD/*4*/), RAX);
+			con((uintptr)(code-4), RAX);
 		}
 		else
 			opwld(i, Olea, RAX);
@@ -1140,7 +1148,7 @@ comp(Inst *i)
 		opwld(i, Oldw, RBX);
 		con(0, RAX);
 		cmpl(RBX, (ulong)H);
-		gen2(Ojeqb, 0x02);
+		gen2(Ojeqb, 0x03);
 		modrm(Oldw, O(Array, len), RBX, RAX);
 		opwst(i, Ostw, RAX);
 		break;
@@ -1148,7 +1156,7 @@ comp(Inst *i)
 		opwld(i, Oldw, RBX);
 		con(0, RAX);
 		cmpl(RBX, (ulong)H);
-		gen2(Ojeqb, 0x09);
+		gen2(Ojeqb, 0x0a);
 		modrm(Oldw, O(String, len), RBX, RAX);
 		cmpl(RAX, 0);
 		gen2(Ojgeb, 0x02);
@@ -1159,10 +1167,12 @@ comp(Inst *i)
 		con(0, RAX);
 		opwld(i, Oldw, RBX);
 		cmpl(RBX, (ulong)H);
-		gen2(Ojeqb, 0x05);
+		gen2(Ojeqb, 0x08);
 		modrm(Oldw, O(List, tail), RBX, RBX);
-		genb(Oincr+RAX);  // TODO Oincr not valid in 64 bit mode
-		gen2(Ojmpb, 0xf6);
+		//genb(Oincr+RAX);  // TODO Oincr not valid in 64 bit mode
+		rex();
+		gen2(Oincrm, (3<<6)|(0<<3)|RAX);	
+		gen2(Ojmpb, 0xf3);
 		opwst(i, Ostw, RAX);
 		break;
 	case IBEQF:
@@ -1303,7 +1313,7 @@ comp(Inst *i)
 			opwst(i, Oldw, RTA);
 		opwld(i, Oldw, RAX);
 		modrm(Omov, O(Frame, lr), RAX, 0);	// MOVL $.+1, lr(AX)
-		genw((uintptr)base+patch[i-mod->prog+1]);
+		genw((uintptr)base+patch[i-mod->prog+1]);  // TODO
 		modrm(Ostw, O(Frame, fp), RAX, RFP); 	// MOVL RFP, fp(AX)
 		rex();
 		gen2(Oldw, (3<<6)|(RFP<<3)|RAX);	// MOVL AX,RFP
@@ -1416,10 +1426,11 @@ comp(Inst *i)
 		opwst(i, Oldw, RTMP);
 		if(bflag){
 			modrm(0x3b, O(Array, len), RAX, RTMP);	/* CMP index, len */
-			gen2(0x72, 5);		/* JB */
+			gen2(0x72, 0x0e);		/* JB .+14*/
 			bra((uintptr)bounds, Ocall);
 		}
 		modrm(Oldw, O(Array, data), RAX, RAX);
+		rex();
 		gen2(Olea, (0<<6)|(0<<3)|4);		/* lea	(AX)(RTMP*r) */
 		genb((r<<6)|(RTMP<<3)|RAX);
 		r = RMP;
@@ -1435,7 +1446,7 @@ comp(Inst *i)
 			cmpl(RTA, 0);
 			gen2(Ojltb, 16);
 			gen2(0x3b, (3<<6)|(RBX<<3)|RTA);	/* cmp index, len */
-			gen2(0x72, 5);		/* JB */
+			gen2(0x72, 0x0e);		/* JB */
 			bra((uintptr)bounds, Ocall);
 			genb(0x0f);
 			gen2(Omovzxb, (1<<6)|(0<<3)|4);
@@ -1605,6 +1616,7 @@ maccase(void)
 	gen2((2<<6)|(RBX<<3)|RSI, 4);		// CMPL AX, 4(SI)(BX*4)
 	gen2(Ojltb, 0);
 	lab1 = code-1;
+	rex();
 	gen2(Olea, (1<<6)|(RSI<<3)|4);
 	gen2((2<<6)|(RBX<<3)|RSI, 12);		// LEA	12(SI)(RBX*4), RSI
 	gen2(0x2b, (3<<6)|(RDX<<3)|RCX);	// SUBL	CX, DX		n -= n2
