@@ -34,7 +34,8 @@ HFILES=\
 CFLAGS='-DROOT="'$ROOT'"' -DEMU -I. -I../port -I$ROOT/$SYSTARG/$OBJTYPE/include -I$ROOT/include -I$ROOT/libinterp $CTHREADFLAGS $CFLAGS $EMUOPTIONS
 SYSLIBS= $X11LIBS -lm -lpthread
 KERNDATE=`{$NDATE}
-WRAP='-Wl,--wrap=malloc' '-Wl,--wrap=mallocz' '-Wl,--wrap=free' '-Wl,--wrap=realloc' '-Wl,--wrap=calloc'
+#WRAP='-Wl,--wrap=malloc' '-Wl,--wrap=mallocz' '-Wl,--wrap=free' '-Wl,--wrap=realloc' '-Wl,--wrap=calloc'
+WRAP=
 
 default:V:	$O.$CONF
 
