@@ -6,7 +6,7 @@ OFILES=	yacc.$O\
 
 HFILES= ../../include/bio.h\
 
-LIBS=bio 9		# libbio.a uses lib9.a so order matters.
+LIBS=bio 9 alloc		# libbio.a uses lib9.a so order matters.
 
 BIN=$ROOT/$OBJDIR/bin
 
