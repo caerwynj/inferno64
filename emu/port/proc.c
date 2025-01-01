@@ -135,18 +135,20 @@ void
 osleave(void)
 {
 	int r;
+	Proc* p;
+	p = up;
 
-	lock(&up->rlock);
-	r = up->swipend;
-	up->swipend = 0;
-	unlock(&up->rlock);
+	lock(&p->rlock);
+	r = p->swipend;
+	p->swipend = 0;
+	unlock(&p->rlock);
 
-	lock(&up->sysio);
-	up->syscall = 0;
-	unlock(&up->sysio);
+	lock(&p->sysio);
+	p->syscall = 0;
+	unlock(&p->sysio);
 
 	/* Cleared by the signal/note/exception handler */
-	while(up->intwait)
+	while(p->intwait)
 		osyield();
 
 	if(r != 0)
