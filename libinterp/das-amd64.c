@@ -76,7 +76,7 @@ enum{
 %e	-	effective address - Mod R/M value
 %f	-	floating point register F0-F7 - from Mod R/M register
 %g	-	segment register
-%i	-	immediate operand 8-32 bits
+%i	-	immediate operand 8-64 bits
 %p	-	PC-relative - signed displacement in immediate field
 %r	-	Reg from Mod R/M
 %x	-	Weird opcode: OSIZE == 'W' => "CWD"; else => "CDQ"
@@ -1076,7 +1076,7 @@ igetll(Instr *ip, ulong *lp)
 
 	if (igetl(ip, &l) < 0)
 		return -1;
-	ll = l;
+	ll = l&(0x00000000<<32);
 	if (igetl(ip, &l) < 0)
 		return -1;
 	ll |= (l<<32);

@@ -373,11 +373,11 @@ bra(uintptr dst, int op)
 	//dst -= (DOT+5);
 	//genb(op);
 	//genw(dst);
-	genb(Opushl+RBP);			// Push something on the stack to align to 16 bytes
+	//genb(Opushl+RBP);			// Push something on the stack to align to 16 bytes
 	op=Ocallrm;
 	con((uintptr)dst, RAX);
 	gen2(op, (3<<6)|(2<<3)|RAX);	// CALL* AX
-	genb(Opopl+RBP);
+	//genb(Opopl+RBP);
 }
 
 static void
@@ -1312,8 +1312,8 @@ comp(Inst *i)
 		if(UXDST(i->add) != DST(AIMM))
 			opwst(i, Oldw, RTA);
 		opwld(i, Oldw, RAX);
-		modrm(Omov, O(Frame, lr), RAX, 0);	// MOVL $.+1, lr(AX)
-		genw((uintptr)base+patch[i-mod->prog+1]);  // TODO
+		con((uintptr)base+patch[i-mod->prog+1], RBX);  
+		modrm(Ostw, O(Frame, lr), RAX, RBX);	// MOVL $.+1, lr(AX)
 		modrm(Ostw, O(Frame, fp), RAX, RFP); 	// MOVL RFP, fp(AX)
 		rex();
 		gen2(Oldw, (3<<6)|(RFP<<3)|RAX);	// MOVL AX,RFP
@@ -1763,12 +1763,14 @@ macmcal(void)
 	gen2(Ojneb, 0);				// JNE	patch
 	label = code-1;
 	*mlnil = code-mlnil-1;
+	genb(Opushl+RBP);			// Push something on the stack to align to 16 bytes
 	modrm(Ostw, O(REG, FP), RTMP, RCX);
 	modrm(Ostw, O(REG, dt), RTMP, RAX);
 	bra((uintptr)rmcall, Ocall);		// CALL rmcall
 	con((uintptr)&R, RTMP);			// MOVL	$R, RTMP
 	modrm(Oldw, O(REG, FP), RTMP, RFP);
 	modrm(Oldw, O(REG, MP), RTMP, RMP);
+	genb(Opopl+RBP);
 	genb(Oret);				// RET
 	*label = code-label-1;			// patch:
 	rex();
