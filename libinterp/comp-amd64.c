@@ -244,17 +244,37 @@ gen2(uchar o1, uchar o2)
 	code += 2;
 }
 
+static void
+gen4(uintptr o)
+{
+	*(uintptr*)code = o;
+	code += 4;
+}
+
+static void
+gen8(uintptr o)
+{
+	*(uintptr*)code = o;
+	code += 8;
+}
+
 /* TODO only handles 4 bytes, the old WORD size */
 static void
 genw(uintptr o)
 {
-	*(uintptr*)code = o;
-	code += IBY2WD/*4*/;
+	gen4(o);
+}
+
+static void
+rex()
+{
+	*code++ = 0x48;
 }
 
 static void
 modrm(int inst, uintptr disp, int rm, int r)
 {
+	rex();  /* 64bit addressing */
 	*code++ = inst;
 	if(disp == 0) {
 		*code++ = (0<<6)|(r<<3)|rm;
@@ -263,12 +283,12 @@ modrm(int inst, uintptr disp, int rm, int r)
 	if(bc(disp)) {
 		code[0] = (1<<6)|(r<<3)|rm;
 		code[1] = disp;
-		code += IBY2WD-2;
+		code += 2 /* was IBY2WD-2*/;
 		return;
 	}
 	*code++ = (2<<6)|(r<<3)|rm;
 	*(uintptr*)code = disp;
-	code += IBY2WD/*4*/;
+	code += 4;  /* In 64bit addressing displacement can only be 32bit */
 }
 
 static void
@@ -278,8 +298,9 @@ con(uintptr o, int r)
 		gen2(Oxor, (3<<6)|(r<<3)|r);
 		return;
 	}
+	rex();
 	genb(Omovimm+r);
-	genw(o);
+	gen8(o);
 }
 
 static void
@@ -349,9 +370,14 @@ opwst(Inst *i, int mi, int r)
 static void
 bra(uintptr dst, int op)
 {
-	dst -= (DOT+5);
-	genb(op);
-	genw(dst);
+	//dst -= (DOT+5);
+	//genb(op);
+	//genw(dst);
+	//genb(Opushl+RBP);			// Push something on the stack to align to 16 bytes
+	op=Ocallrm;
+	con((uintptr)dst, RAX);
+	gen2(op, (3<<6)|(2<<3)|RAX);	// CALL* AX
+	//genb(Opopl+RBP);
 }
 
 static void
@@ -368,8 +394,9 @@ literal(uintptr imm, int roff)
 {
 	nlit++;
 
+	rex();
 	genb(Omovimm+RAX);
-	genw((uintptr)litpool);
+	gen8((uintptr)litpool);
 	modrm(Ostw, roff, RTMP, RAX);
 
 	if(pass == 0)
@@ -431,6 +458,8 @@ punt(Inst *i, int m, void (*fn)(void))
 	modrm(Ostw, O(REG, FP), RTMP, RFP);
 
 	bra((uintptr)fn, Ocall);
+	//con((uintptr)fn, RAX);
+	//gen2(Ocallrm, (3<<6)|(2<<3)|RAX);	// CALL* AX
 
 	con((uintptr)&R, RTMP);
 	if(m & TCHECK) {
@@ -745,18 +774,22 @@ commframe(Inst *i)
 		o = OA(Modlink, links)+i->reg*sizeof(Modl)+O(Modl, frame);
 		modrm(Oldw, o, RAX, RTA);
 	} else {
+		rex();
 		gen2(Oldw, (3<<6)|(RTMP<<3)|RAX);	// MOVL	AX, RTMP
 		mid(i, Oldw, RCX);			// index
+		rex();
 		gen2(Olea, (0<<6)|(0<<3)|4);		// lea	(AX)(RCX*8)
 		genb((3<<6)|(RCX<<3)|RAX);		// assumes sizeof(Modl) == 8 hence 3
 		o = OA(Modlink, links)+O(Modl, frame);
 		modrm(Oldw, o, RAX, RTA);		// frame
+		rex();
 		genb(OxchgAX+RTMP);			// get old AX back
 	}
 	modrm(0x83, O(Type, initialize), RTA, 7);
 	genb(0);
 	gen2(Ojneb, 0);
 	punt = code - 1;
+	rex();
 	genb(OxchgAX+RTA);
 	opwst(i, Olea, RTA);
 	*mlnil = code-mlnil-1;
@@ -789,6 +822,7 @@ commcall(Inst *i)
 	else {
 		genb(Opushl+RCX);
 		mid(i, Oldw, RCX);		// index
+		rex();
 		gen2(Olea, (0<<6)|(0<<3)|4);	// lea	(RTA)(RCX*8)
 		genb((3<<6)|(RCX<<3)|RTA);	// assumes sizeof(Modl) == 8 hence 3
 		modrm(Oldw, OA(Modlink, links)+O(Modl, u.pc), RAX, RAX);
@@ -861,6 +895,7 @@ shrl(Inst *i)
 	label1 = code-1;
 	*label = code-label-1;
 	modrm(Oldw, 4, RTA, RBX);
+	rex();
 	gen2(Oldw, (3<<6)|(RAX<<3)|RBX);
 	gen2(Osarimm, (3<<6)|(7<<3)|RBX);
 	genb(0x1f);
@@ -1043,11 +1078,15 @@ comp(Inst *i)
 	movm:
 		opwst(i, Olea, RBX);
 		mid(i, Oldw, RCX);
+		rex();
 		genb(OxchgAX+RSI);
+		rex();
 		gen2(Oxchg, (3<<6)|(RDI<<3)|RBX);
 		genb(Ocld);
 		gen2(Orep, Omovsb);
+		rex();
 		genb(OxchgAX+RSI);
+		rex();
 		gen2(Oxchg, (3<<6)|(RDI<<3)|RBX);
 		break;
 	case IRET:
@@ -1065,9 +1104,9 @@ comp(Inst *i)
 		break;
 	case ILEA:
 		if(UXSRC(i->add) == SRC(AIMM)) {
-			gen2(Ojmpb, IBY2WD/*4*/);
+			gen2(Ojmpb, 4);
 			genw(i->s.imm);
-			con((uintptr)(code-IBY2WD/*4*/), RAX);
+			con((uintptr)(code-4), RAX);
 		}
 		else
 			opwld(i, Olea, RAX);
@@ -1109,7 +1148,7 @@ comp(Inst *i)
 		opwld(i, Oldw, RBX);
 		con(0, RAX);
 		cmpl(RBX, (ulong)H);
-		gen2(Ojeqb, 0x02);
+		gen2(Ojeqb, 0x03);
 		modrm(Oldw, O(Array, len), RBX, RAX);
 		opwst(i, Ostw, RAX);
 		break;
@@ -1117,7 +1156,7 @@ comp(Inst *i)
 		opwld(i, Oldw, RBX);
 		con(0, RAX);
 		cmpl(RBX, (ulong)H);
-		gen2(Ojeqb, 0x09);
+		gen2(Ojeqb, 0x0a);
 		modrm(Oldw, O(String, len), RBX, RAX);
 		cmpl(RAX, 0);
 		gen2(Ojgeb, 0x02);
@@ -1128,10 +1167,12 @@ comp(Inst *i)
 		con(0, RAX);
 		opwld(i, Oldw, RBX);
 		cmpl(RBX, (ulong)H);
-		gen2(Ojeqb, 0x05);
+		gen2(Ojeqb, 0x08);
 		modrm(Oldw, O(List, tail), RBX, RBX);
-		genb(Oincr+RAX);
-		gen2(Ojmpb, 0xf6);
+		//genb(Oincr+RAX);  // TODO Oincr not valid in 64 bit mode
+		rex();
+		gen2(Oincrm, (3<<6)|(0<<3)|RAX);	
+		gen2(Ojmpb, 0xf3);
 		opwst(i, Ostw, RAX);
 		break;
 	case IBEQF:
@@ -1271,9 +1312,10 @@ comp(Inst *i)
 		if(UXDST(i->add) != DST(AIMM))
 			opwst(i, Oldw, RTA);
 		opwld(i, Oldw, RAX);
-		modrm(Omov, O(Frame, lr), RAX, 0);	// MOVL $.+1, lr(AX)
-		genw((uintptr)base+patch[i-mod->prog+1]);
+		con((uintptr)base+patch[i-mod->prog+1], RBX);  
+		modrm(Ostw, O(Frame, lr), RAX, RBX);	// MOVL $.+1, lr(AX)
 		modrm(Ostw, O(Frame, fp), RAX, RFP); 	// MOVL RFP, fp(AX)
+		rex();
 		gen2(Oldw, (3<<6)|(RFP<<3)|RAX);	// MOVL AX,RFP
 		if(UXDST(i->add) != DST(AIMM)){
 			gen2(Ojmprm, (3<<6)|(4<<3)|RTA);
@@ -1384,10 +1426,11 @@ comp(Inst *i)
 		opwst(i, Oldw, RTMP);
 		if(bflag){
 			modrm(0x3b, O(Array, len), RAX, RTMP);	/* CMP index, len */
-			gen2(0x72, 5);		/* JB */
+			gen2(0x72, 0x0e);		/* JB .+14*/
 			bra((uintptr)bounds, Ocall);
 		}
 		modrm(Oldw, O(Array, data), RAX, RAX);
+		rex();
 		gen2(Olea, (0<<6)|(0<<3)|4);		/* lea	(AX)(RTMP*r) */
 		genb((r<<6)|(RTMP<<3)|RAX);
 		r = RMP;
@@ -1403,7 +1446,7 @@ comp(Inst *i)
 			cmpl(RTA, 0);
 			gen2(Ojltb, 16);
 			gen2(0x3b, (3<<6)|(RBX<<3)|RTA);	/* cmp index, len */
-			gen2(0x72, 5);		/* JB */
+			gen2(0x72, 0x0e);		/* JB */
 			bra((uintptr)bounds, Ocall);
 			genb(0x0f);
 			gen2(Omovzxb, (1<<6)|(0<<3)|4);
@@ -1536,6 +1579,7 @@ preamble(void)
 	modrm(Oldw, O(REG, FP), RTMP, RFP);
 	modrm(Oldw, O(REG, MP), RTMP, RMP);
 	modrm(Ojmprm, O(REG, PC), RTMP, 4);
+	//gen2(Ojmprm, (3<<6)|(4<<3)|RTMP);	// JMP*L RTMP
 
 	segflush(comvec, 32);
 }
@@ -1572,6 +1616,7 @@ maccase(void)
 	gen2((2<<6)|(RBX<<3)|RSI, 4);		// CMPL AX, 4(SI)(BX*4)
 	gen2(Ojltb, 0);
 	lab1 = code-1;
+	rex();
 	gen2(Olea, (1<<6)|(RSI<<3)|4);
 	gen2((2<<6)|(RBX<<3)|RSI, 12);		// LEA	12(SI)(RBX*4), RSI
 	gen2(0x2b, (3<<6)|(RDX<<3)|RCX);	// SUBL	CX, DX		n -= n2
@@ -1628,7 +1673,10 @@ macret(void)
 	con(0, RBX);				// MOVL  $0, RBX
 	modrm(Oldw, O(Frame, t), RFP, RAX);	// MOVL  t(FP), RAX
 	gen2(Ocmpw, (3<<6)|(RAX<<3)|RBX);	// CMPL  RAX, RBX
-	gen2(Ojeqb, lpunt-(code-s));		// JEQ	 lpunt
+	genb(0x0f);
+	genb(Ojeql);
+	genw(lpunt-(code-s)-2);
+	//gen2(Ojeqb, lpunt-(code-s));		// JEQ	 lpunt
 	modrm(Oldw, O(Type, destroy), RAX, RAX);// MOVL  destroy(RAX), RAX
 	gen2(Ocmpw, (3<<6)|(RAX<<3)|RBX);	// CMPL	 RAX, RBX
 	gen2(Ojeqb, lpunt-(code-s));		// JEQ	 lpunt
@@ -1683,16 +1731,22 @@ macret(void)
 static void
 maccolr(void)
 {
-	modrm(Oincrm, O(Heap, ref)-sizeof(Heap), RBX, 0);
-	gen2(Oldw, (0<<6)|(RAX<<3)|5);		// INCL	ref(BX)
-	genw((uintptr)&mutator);			// MOVL	mutator, RAX
+	modrm(Oincrm, O(Heap, ref)-sizeof(Heap), RBX, 0);  // INCL	ref(BX)
+	con((uintptr)&mutator, RAX);
+	modrm(Oldw, 0, RAX, RAX);
+	//gen2(Oldw, (3<<6)|(RAX<<3)|RAX);
+	//gen2(Oldw, (0<<6)|(RAX<<3)|5);		
+	//gen4(code - (uintptr)&mutator);			// MOVL	mutator, RAX
 	modrm(Ocmpw, O(Heap, color)-sizeof(Heap), RBX, RAX);
 	gen2(Ojneb, 0x01);			// CMPL	color(BX), RAX
 	genb(Oret);				// MOVL $propagator,RTMP
 	con(propagator, RAX);			// MOVL	RTMP, color(BX)
 	modrm(Ostw, O(Heap, color)-sizeof(Heap), RBX, RAX);
-	gen2(Ostw, (0<<6)|(RAX<<3)|5);		// can be any !0 value
-	genw((uintptr)&nprop);			// MOVL	RBX, nprop
+	//gen2(Ostw, (0<<6)|(RAX<<3)|5);		// can be any !0 value
+	//gen8((uintptr)&nprop);			// MOVL	RBX, nprop
+	con((uintptr)&nprop, RAX);
+	modrm(Ostw, 0, RAX, RBX);
+	
 	genb(Oret);
 }
 
@@ -1709,14 +1763,17 @@ macmcal(void)
 	gen2(Ojneb, 0);				// JNE	patch
 	label = code-1;
 	*mlnil = code-mlnil-1;
+	genb(Opushl+RBP);			// Push something on the stack to align to 16 bytes
 	modrm(Ostw, O(REG, FP), RTMP, RCX);
 	modrm(Ostw, O(REG, dt), RTMP, RAX);
 	bra((uintptr)rmcall, Ocall);		// CALL rmcall
 	con((uintptr)&R, RTMP);			// MOVL	$R, RTMP
 	modrm(Oldw, O(REG, FP), RTMP, RFP);
 	modrm(Oldw, O(REG, MP), RTMP, RMP);
+	genb(Opopl+RBP);
 	genb(Oret);				// RET
 	*label = code-label-1;			// patch:
+	rex();
 	gen2(Oldw, (3<<6)|(RFP<<3)|RCX);	// MOVL CX, RFP		R.FP = f
 	modrm(Ostw, O(REG, M), RTMP, RTA);	// MOVL RTA, R.M
 	modrm(Oincrm, O(Heap, ref)-sizeof(Heap), RTA, 0);
@@ -1936,7 +1993,7 @@ compile(Module *m, int size, Modlink *ml)
 		goto bad;
 
 	if(cflag > 3)
-		print("dis=%5d %5d 386=%5d asm=%.8zx lit=%d: %s\n",
+		print("dis=%5d %5d amd64=%5d asm=%.8zx lit=%d: %s\n",
 			size, size*sizeof(Inst), n, (uintptr)base, nlit, m->name);
 
 	pass++;

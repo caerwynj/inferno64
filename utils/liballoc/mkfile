@@ -1,0 +1,15 @@
+<$ROOT/mkconfig
+
+#XXX
+<$ROOT/mkfiles/mkhost-$SYSHOST		# variables appropriate for host system
+<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE	# variables used to build target object type
+
+LIB=liballoc.a
+CFLAGS= $CFLAGS -I../include
+
+OFILES=\
+	alloc.$O\
+
+HFILES=	
+
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE

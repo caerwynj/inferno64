@@ -8,6 +8,7 @@
 ALWAYS=\
 #	libmach\
 	libregexp\
+	liballoc\
 	iyacc\
 #	iar\
 #	cc\

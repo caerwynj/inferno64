@@ -165,6 +165,15 @@ extern	uintptr	getmalloctag(void*);
 extern	uintptr	getrealloctag(void*);
 extern	void*	malloctopoolblock(void*);
 
+#define malloc kmalloc
+#define free kfree
+#define realloc krealloc
+#define calloc kcalloc
+
+extern	void*	kmalloc(size_t);
+extern	void	kfree(void*);
+extern	void*	kcalloc(size_t,size_t);
+extern	void*	krealloc(void*, size_t);
 /*
  * print routines
  */

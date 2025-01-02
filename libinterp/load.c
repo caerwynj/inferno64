@@ -9,7 +9,7 @@
 #define	A(r)	*((Array**)(r))
 
 Module*	modules;
-int	dontcompile = 1; /* TODO compiler is broken on amd64 atleast */
+int	dontcompile = 0; /* TODO compiler is broken on amd64 atleast */
 
 static s32
 operand(uchar **p)
