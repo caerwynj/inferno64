@@ -1,0 +1,31 @@
+TARGMODEL=	Nt
+TARGSHTYPE=	sh
+CPUS=		386
+
+O=		o
+OS=		o
+
+AR=		ar
+ARFLAGS=	ruvs
+
+AS=		cc -c 
+ASFLAGS=
+
+CC=		cc -c 
+CFLAGS=		-g\
+		-O\
+		-fno-builtin\
+		-fno-strict-aliasing\
+		-fno-aggressive-loop-optimizations\
+		-Wuninitialized -Wunused-variable -Wreturn-type -Wimplicit\
+		-I$ROOT/MinGW/amd64/include\
+		-I$ROOT/include
+
+ANSICPP=
+LD=		cc 
+LDFLAGS=
+
+SYSLIBS= -lm
+
+YACC=		iyacc
+YFLAGS=		-d

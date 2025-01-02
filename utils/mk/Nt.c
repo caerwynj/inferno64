@@ -13,7 +13,8 @@ enum {
 };
 
 char *rootdir =		ROOT;
-char *shell =		"Nt/386/bin/rcsh.exe";	/* Path relative to root */
+/*char *shell =		"Nt/386/bin/rcsh.exe";*/	/* Path relative to root */
+char *shell =		"C:/msys64/usr/bin/bash.exe";	/* Shell for MinGW */
 
 typedef struct Child	Child;
 
@@ -277,7 +278,7 @@ execsh(char *args, char *cmd, Bufblock *buf, Envy *e)
 	return pid;
 }
 
-static DWORD WINAPI
+DWORD WINAPI
 writecmd(LPVOID a)
 {
 	struct {char *cmd; HANDLE handle;} *arg;

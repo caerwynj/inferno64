@@ -8,10 +8,10 @@
 
 # change these defines as appropriate here or in mkconfig
 # ROOT should be the root of the Inferno tree
-ROOT=${ROOT:-~/github/9ferno}
-SYSTARG=Linux
+ROOT=${ROOT:-~/inferno64}
+SYSTARG=MinGW
 OBJTYPE=${objtype:-arm64}
-SYSTYPE=posix
+SYSTYPE=Nt
 
 # if you have already changed mkconfig from the distribution, we'll use the definitions from that
 grep -s 'SYSTARG=Plan9' mkconfig || . ./mkconfig
@@ -19,7 +19,7 @@ grep -s 'SYSTARG=Plan9' mkconfig || . ./mkconfig
 PLAT=$ROOT/$SYSTARG/$OBJTYPE
 
 # you might need to adjust the CC, LD, AR, and RANLIB definitions after this point
-CC="p cc -c -I$PLAT/include -I$ROOT/include -I$ROOT/utils/include"
+CC="p cc -c -I$PLAT/include -I$ROOT/include -I$ROOT/utils/include -DROOT=\"\""
 LD="p cc "
 AR="p ar crvs"
 RANLIB=":"	# some systems still require `ranlib'
@@ -61,15 +61,15 @@ $RANLIB $PLAT/lib/libbio.a || error libbio ranlib failed
 
 # lib9
 cd $ROOT/lib9 || error cannot find lib9 directory
-CFILES="dirstat-$SYSTYPE.c rerrstr.c errstr-$SYSTYPE.c getuser-$SYSTYPE.c"	# system specific
-CFILES="$CFILES charstod.c cleanname.c create.c dirwstat.c *print*.c *fmt*.c exits.c getfields.c  pow10.c print.c qsort.c rune.c runestrlen.c seek.c strdup.c strtoll.c utflen.c utfrrune.c utfrune.c utf*.c *str*cpy*.c"
+CFILES="dirstat-$SYSTYPE.c rerrstr.c errstr-$SYSTYPE.c getuser-$SYSTYPE.c create-$SYSTYPE.c"	# system specific
+CFILES="$CFILES charstod.c cleanname.c dirwstat.c *print*.c *fmt*.c exits.c getfields.c  pow10.c print.c qsort.c rune.c runestrlen.c seek.c strdup.c strtoll.c utflen.c utfrrune.c utfrune.c utf*.c *str*cpy*.c"
 $CC $CFILES || error lib9 compilation failed
 $AR $PLAT/lib/lib9.a `ofiles $CFILES` || error lib9 ar failed
 $RANLIB $PLAT/lib/lib9.a || error lib9 ranlib failed
 
 # mk itself
 cd $ROOT/utils/mk
-CFILES="Posix.c sh.c"	# system specific
+CFILES="Nt.c sh.c"	# system specific
 CFILES="$CFILES arc.c archive.c bufblock.c env.c file.c graph.c job.c lex.c main.c match.c mk.c parse.c recipe.c rule.c run.c shprint.c symtab.c var.c varsub.c word.c"
 $CC $CFILES || error mk compilation failed
 $LD -o mk `ofiles $CFILES` $PLAT/lib/libregexp.a $PLAT/lib/libbio.a $PLAT/lib/lib9.a || error mk link failed

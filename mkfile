@@ -63,6 +63,13 @@ nukedist:V: nuke
 		(cd $j; mk $MKFLAGS $stem) || exit 1
 	done
 
+&-Nt:QV:
+	for j in $DIRS utils tools
+	do
+		echo "(cd $j; mk $MKFLAGS $stem)"
+		(cd $j; mk $MKFLAGS $stem) || exit 1
+	done
+
 &-Inferno:QV:
 	for (j in $DIRS utils)
 	{

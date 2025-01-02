@@ -13,8 +13,8 @@ LIBFILES=${LIBS:%=$ROOT/$SYSTARG/$OBJTYPE/lib/lib%.a}
 
 $ROOT/$SYSTARG/$OBJTYPE/lib/lib%.a:N:	lib%.a
 
-%.$O:	%.s
-	$AS $ASFLAGS $stem.s
+#%.$O:	%.s
+#	$AS $ASFLAGS $stem.s
 
 %.$O:	%.S$MACOSINF
 	$AS $ASFLAGS $stem.S

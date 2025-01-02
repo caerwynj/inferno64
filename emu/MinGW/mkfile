@@ -1,0 +1,53 @@
+SYSTARG=Nt
+OBJTYPE=386
+#uncomment following line for full Microsoft debug symbols
+#LDEBUG=-debug -debugtype:cv -pdb:none
+<../../mkconfig
+SYSTARG=MinGW
+OBJTYPE=amd64
+
+#Configurable parameters
+
+CONF=emu			#default configuration
+CONFLIST=emu ie
+CLEANCONFLIST=
+
+INSTALLDIR=$ROOT/$SYSTARG/$OBJTYPE/bin	#path of directory where kernel is installed
+
+#end configurable parameters
+
+OSX=os
+
+<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE	#set vars based on target system
+
+<| $SHELLNAME ../port/mkdevlist $CONF	#sets $IP, $DEVS, $PORT, $LIBS
+
+OBJ=\
+	$OSX.$O\
+	$CONF.root.$O\
+	lock.$O\
+	fp.$O\
+	r16.$O\
+	vlrt.$O\
+	$DEVS\
+	$PORT\
+	asm-$OBJTYPE.$O\
+
+HFILES=\
+	r16.h\
+
+CFLAGS='-DROOT="'$ROOT'"' -DEMU -I. -I../port -I$ROOT/$SYSTARG/$OBJTYPE/include -I$ROOT/include -I$ROOT/libinterp $CTHREADFLAGS $CFLAGS $EMUOPTIONS
+SYSLIBS=	$SYSLIBS -lnetapi32 -lwsock32 -luser32 -lgdi32 -ladvapi32 -lwinmm -lmpr
+KERNDATE=`{$NDATE}
+WRAP='-Wl,--wrap=malloc' '-Wl,--wrap=mallocz' '-Wl,--wrap=free' '-Wl,--wrap=realloc' '-Wl,--wrap=calloc'
+
+default:V:	i$CONF.exe
+
+<../port/portmkfile
+
+i$CONF.exe:	$OBJ $CONF.c $CONF.root.h $LIBFILES
+	$CC $CFLAGS '-DKERNDATE='$KERNDATE $CONF.c
+	$LD $LDFLAGS -o $target $OBJ $CONF.$O $LIBFILES $SYSLIBS
+
+install:V: i$CONF.exe
+	cp i$CONF.exe $INSTALLDIR/$CONF.exe
