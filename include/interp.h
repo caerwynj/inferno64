@@ -538,7 +538,7 @@ extern	int		runeslen(Rune*, int);
 extern	String*		c2string(char*, int);
 extern	char*		string2c(String*);
 extern	List*		cons(ulong, List**);
-extern	String*		slicer(ulong, ulong, String*);
+extern	String*		slicer(u32, u32, String*);
 extern	String*		addstring(String*, String*, int);
 extern	int		brpatch(Inst*, Module*);
 extern	void		readimagemodinit(void);

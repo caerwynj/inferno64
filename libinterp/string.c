@@ -48,7 +48,7 @@ e:			error(exBounds);
 
 OP(insc)
 {
-	ulong v;
+	u32 v;
 	int l, r, expand;
 	String *ss, *ns, **sp;
 
@@ -120,7 +120,7 @@ r:
 }
 
 String*
-slicer(ulong start, ulong v, String *ds)
+slicer(u32 start, u32 v, String *ds)
 {
 	String *ns;
 	int l, nc;

@@ -247,7 +247,7 @@ gen2(uchar o1, uchar o2)
 static void
 gen4(uintptr o)
 {
-	*(uintptr*)code = o;
+	*(u32*)code = (u32)o;
 	code += 4;
 }
 
@@ -287,7 +287,7 @@ modrm(int inst, uintptr disp, int rm, int r)
 		return;
 	}
 	*code++ = (2<<6)|(r<<3)|rm;
-	*(uintptr*)code = disp;
+	*(u32*)code = (u32)disp;
 	code += 4;  /* In 64bit addressing displacement can only be 32bit */
 }
 
@@ -298,6 +298,14 @@ con(uintptr o, int r)
 		gen2(Oxor, (3<<6)|(r<<3)|r);
 		return;
 	}
+	rex();
+	genb(Omovimm+r);
+	gen8(o);
+}
+
+static void
+conw(uintptr o, int r)
+{
 	rex();
 	genb(Omovimm+r);
 	gen8(o);
@@ -373,11 +381,9 @@ bra(uintptr dst, int op)
 	//dst -= (DOT+5);
 	//genb(op);
 	//genw(dst);
-	//genb(Opushl+RBP);			// Push something on the stack to align to 16 bytes
 	op=Ocallrm;
-	con((uintptr)dst, RAX);
+	conw((uintptr)dst, RAX);
 	gen2(op, (3<<6)|(2<<3)|RAX);	// CALL* AX
-	//genb(Opopl+RBP);
 }
 
 static void
@@ -427,9 +433,11 @@ punt(Inst *i, int m, void (*fn)(void))
 		modrm(Ostw, O(REG, d), RTMP, RAX);
 	}
 	if(m & WRTPC) {
-		modrm(Omov, O(REG, PC), RTMP, 0);
+		//modrm(Omov, O(REG, PC), RTMP, 0);
 		pc = patch[i-mod->prog+1];
-		genw((uintptr)base + pc);
+		//genw((uintptr)base + pc);
+		conw((uintptr)base + pc, RAX);
+		modrm(Ostw, O(REG, PC), RTMP, RAX);
 	}
 	if(m & DBRAN) {
 		pc = patch[(Inst*)i->d.imm-mod->prog];
@@ -808,8 +816,10 @@ commcall(Inst *i)
 
 	con((uintptr)&R, RTMP);			// MOVL	$R, RTMP
 	opwld(i, Oldw, RCX);
-	modrm(Omov, O(Frame, lr), RCX, 0);	// MOVL $.+1, lr(CX)	f->lr = R.PC
-	genw((uintptr)base+patch[i-mod->prog+1]);
+	//modrm(Omov, O(Frame, lr), RCX, 0);	// MOVL $.+1, lr(CX)	f->lr = R.PC
+	//genw((uintptr)base+patch[i-mod->prog+1]);
+	conw((uintptr)base+patch[i-mod->prog+1], RAX);
+	modrm(Ostw, O(Frame, lr), RCX, RAX);
 	modrm(Ostw, O(Frame, fp), RCX, RFP); 	// MOVL RFP, fp(CX)	f->fp = R.FP
 	modrm(Oldw, O(REG, M), RTMP, RTA);	// MOVL R.M, RTA
 	modrm(Ostw, O(Frame, mr), RCX, RTA);	// MOVL RTA, mr(CX) 	f->mr = R.M
@@ -1312,7 +1322,7 @@ comp(Inst *i)
 		if(UXDST(i->add) != DST(AIMM))
 			opwst(i, Oldw, RTA);
 		opwld(i, Oldw, RAX);
-		con((uintptr)base+patch[i-mod->prog+1], RBX);  
+		conw((uintptr)base+patch[i-mod->prog+1], RBX);  
 		modrm(Ostw, O(Frame, lr), RAX, RBX);	// MOVL $.+1, lr(AX)
 		modrm(Ostw, O(Frame, fp), RAX, RFP); 	// MOVL RFP, fp(AX)
 		rex();
@@ -1329,7 +1339,7 @@ comp(Inst *i)
 		break;
 	case IMOVPC:
 		opwst(i, Omov, RAX);
-		genw(patch[i->s.imm]+(uintptr)base);
+		genw(patch[i->s.imm]+(uintptr)base);  //TODO?
 		break;
 	case IGOTO:
 		opwst(i, Olea, RBX);
@@ -1390,7 +1400,7 @@ comp(Inst *i)
 		if(bflag){
 			opwst(i, Oldw, RAX);
 			modrm(0x3b, O(Array, len), RTMP, RAX);	/* CMP index, len */
-			gen2(0x72, 5);		/* JB */
+			gen2(0x72, 0x0c);		/* JB */
 			bra((uintptr)bounds, Ocall);
 			modrm(Oldw, O(Array, t), RTMP, RTA);
 			modrm(0xf7, O(Type, size), RTA, 5);		/* IMULL AX, xx(t) */
@@ -1426,7 +1436,7 @@ comp(Inst *i)
 		opwst(i, Oldw, RTMP);
 		if(bflag){
 			modrm(0x3b, O(Array, len), RAX, RTMP);	/* CMP index, len */
-			gen2(0x72, 0x0e);		/* JB .+14*/
+			gen2(0x72, 0x0c);		/* JB .+12*/
 			bra((uintptr)bounds, Ocall);
 		}
 		modrm(Oldw, O(Array, data), RAX, RAX);
@@ -1446,7 +1456,7 @@ comp(Inst *i)
 			cmpl(RTA, 0);
 			gen2(Ojltb, 16);
 			gen2(0x3b, (3<<6)|(RBX<<3)|RTA);	/* cmp index, len */
-			gen2(0x72, 0x0e);		/* JB */
+			gen2(0x72, 0x0c);		/* JB */
 			bra((uintptr)bounds, Ocall);
 			genb(0x0f);
 			gen2(Omovzxb, (1<<6)|(0<<3)|4);
@@ -1976,6 +1986,7 @@ compile(Module *m, int size, Modlink *ml)
 		comp(&m->prog[i]);
 		patch[i] = n;
 		n += code - tmp;
+		//print("inst %d size %d\n", i, code - tmp);
 	}
 
 	for(i = 0; i < nelem(mactab); i++) {
@@ -1985,7 +1996,7 @@ compile(Module *m, int size, Modlink *ml)
 		n += code - tmp;
 	}
 
-	n = (n+3)&~3;
+	n = (n+7)&~7;
 
 	nlit *= sizeof(uintptr);
 	base = mallocz(n + nlit, 0);
@@ -2008,6 +2019,7 @@ compile(Module *m, int size, Modlink *ml)
 			print("%D\n", &m->prog[i]);
 			das(s, code-s);
 		}
+		//print("inst %d size %d\n", i, code - s);
 	}
 
 	for(i = 0; i < nelem(mactab); i++)

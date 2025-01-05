@@ -5,7 +5,7 @@
 #include "pool.h"
 
 #define DBG if(0) print
-static int debug = 0;
+//static int debug = 0;
 
 REG	R;			/* Virtual Machine registers */
 String	snil;			/* String known to be zero length */
