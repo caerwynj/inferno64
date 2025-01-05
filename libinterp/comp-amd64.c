@@ -1600,12 +1600,12 @@ maccase(void)
 	uchar *loop, *def, *lab1;
 
 	modrm(Oldw, 0, RSI, RDX);		// n = t[0]
-	modrm(Olea, 4, RSI, RSI);		// t = &t[1]
+	modrm(Olea, 8, RSI, RSI);		// t = &t[1]
 	gen2(Oldw, (3<<6)|(RBX<<3)|RDX);	// MOVL	DX, BX
 	gen2(Oshr, (3<<6)|(4<<3)|RBX);		// SHL	BX,1
 	gen2(0x01, (3<<6)|(RDX<<3)|RBX);	// ADDL	DX, BX	BX = n*3
 	gen2(Opushrm, (0<<6)|(6<<3)|4);
-	genb((2<<6)|(RBX<<3)|RSI);		// PUSHL 0(SI)(BX*4)
+	genb((3<<6)|(RBX<<3)|RSI);		// PUSHL 0(SI)(BX*8)
 	loop = code;
 	cmpl(RDX, 0);
 	gen2(Ojleb, 0);
@@ -1616,25 +1616,25 @@ maccase(void)
 	gen2(Oshr, (3<<6)|(4<<3)|RBX);		// SHL	BX,1
 	gen2(0x01, (3<<6)|(RCX<<3)|RBX);	// ADDL	CX, BX	BX = n2*3
 	gen2(0x3b, (0<<6)|(RAX<<3)|4);
-	genb((2<<6)|(RBX<<3)|RSI);		// CMPL AX, 0(SI)(BX*4)
+	genb((3<<6)|(RBX<<3)|RSI);		// CMPL AX, 0(SI)(BX*8)
 	gen2(Ojgeb, 0);				// JGE	lab1
 	lab1 = code-1;
 	gen2(Oldw, (3<<6)|(RDX<<3)|RCX);
 	gen2(Ojmpb, loop-code-2);
 	*lab1 = code-lab1-1;			// lab1:
 	gen2(0x3b, (1<<6)|(RAX<<3)|4);
-	gen2((2<<6)|(RBX<<3)|RSI, 4);		// CMPL AX, 4(SI)(BX*4)
+	gen2((3<<6)|(RBX<<3)|RSI, 4);		// CMPL AX, 4(SI)(BX*8)
 	gen2(Ojltb, 0);
 	lab1 = code-1;
 	rex();
 	gen2(Olea, (1<<6)|(RSI<<3)|4);
-	gen2((2<<6)|(RBX<<3)|RSI, 12);		// LEA	12(SI)(RBX*4), RSI
+	gen2((3<<6)|(RBX<<3)|RSI, 12);		// LEA	12(SI)(RBX*8), RSI
 	gen2(0x2b, (3<<6)|(RDX<<3)|RCX);	// SUBL	CX, DX		n -= n2
 	gen2(Odecrm, (3<<6)|(1<<3)|RDX);	// DECL	DX		n -= 1
 	gen2(Ojmpb, loop-code-2);
 	*lab1 = code-lab1-1;			// lab1:
 	gen2(Oldw, (1<<6)|(RAX<<3)|4);
-	gen2((2<<6)|(RBX<<3)|RSI, 8);		// MOVL 8(SI)(BX*4), AX
+	gen2((3<<6)|(RBX<<3)|RSI, 8);		// MOVL 8(SI)(BX*8), AX
 	genb(Opopl+RSI);			// ditch default
 	genb(Opopl+RSI);
 	gen2(Ojmprm, (3<<6)|(4<<3)|RAX);	// JMP*L AX
