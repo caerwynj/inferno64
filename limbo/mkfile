@@ -30,6 +30,7 @@ LIBS=	bio\
 	sec\
 	mp\
 	9\
+	alloc\
 
 YFILES=	limbo.y
 
