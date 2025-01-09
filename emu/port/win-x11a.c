@@ -559,7 +559,7 @@ xkbdproc(void *arg)
 	for(;;){
 		XNextEvent(xd, &event);
 		xkeyboard(&event);
-		xsetcursor(&event);
+		//xsetcursor(&event);
 	}
 }
 
