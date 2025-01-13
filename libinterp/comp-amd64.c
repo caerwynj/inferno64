@@ -10,7 +10,6 @@
 enum
 {
 	RAX	= 0,
-	RAH	= 4,
 	RCX	= 1,
 	RDX	= 2,
 	RBX	= 3,
@@ -18,6 +17,13 @@ enum
 	RBP	= 5,
 	RSI	= 6,
 	RDI	= 7,
+	R8	= 8,
+	R9	= 9,
+	R10	= 10,
+	R11	= 11,
+	R12	= 12,
+	R13	= 13,
+	R14	= 14,
 
 	RFP	= RSI,
 	RMP	= RDI,
@@ -272,9 +278,9 @@ rex()
 }
 
 static void
-modrm(int inst, uintptr disp, int rm, int r)
+modrm32(int inst, uintptr disp, int rm, int r)
 {
-	rex();  /* 64bit addressing */
+	//if(inst != Ocmpw)
 	*code++ = inst;
 	if(disp == 0) {
 		*code++ = (0<<6)|(r<<3)|rm;
@@ -288,13 +294,21 @@ modrm(int inst, uintptr disp, int rm, int r)
 	}
 	*code++ = (2<<6)|(r<<3)|rm;
 	*(u32*)code = (u32)disp;
-	code += 4;  /* In 64bit addressing displacement can only be 32bit */
+	code += 4;  /* In 64bit mode, addressing displacement can only be 32bit */
+}
+
+static void
+modrm(int inst, uintptr disp, int rm, int r)
+{
+	rex(); /* 64bit addressing */
+	modrm32(inst, disp, rm, r);
 }
 
 static void
 con(uintptr o, int r)
 {
 	if(o == 0) {
+		rex();
 		gen2(Oxor, (3<<6)|(r<<3)|r);
 		return;
 	}
@@ -629,11 +643,13 @@ cbra(Inst *i, int jmp)
 	if(RESCHED)
 		schedcheck(i);
 	mid(i, Oldw, RAX);
+	//if((i->add&ARM) == AXIMM)
+	//	jmp = swapbraop(jmp);
+
 	if(UXSRC(i->add) == SRC(AIMM)) {
 		cmpl(RAX, i->s.imm);
 		jmp = swapbraop(jmp);
-	}
-	else
+	} else
 		opwld(i, Ocmpw, RAX);
 	genb(0x0f);
 	rbra(patch[i->d.ins-mod->prog], jmp);
@@ -1831,7 +1847,7 @@ macfram(void)
 	modrm(Ostw, O(REG, SP), RTMP, RAX);	// MOVL	AX, R.SP
 
 	modrm(Ostw, O(Frame, t), RCX, RTA);	// MOVL	RTA, t(CX) f->t = t
-	modrm(Omov, REGMOD*4, RCX, 0);     	// MOVL $0, mr(CX) f->mr
+	modrm(Omov, REGMOD*8, RCX, 0);     	// MOVL $0, mr(CX) f->mr
 	genw(0);
 	modrm(Oldw, O(Type, initialize), RTA, RTA);
 	gen2(Ojmprm, (3<<6)|(4<<3)|RTA);	// JMP*L RTA
@@ -1873,7 +1889,7 @@ comd(Type *t)
 
 	for(i = 0; i < t->np; i++) {
 		c = t->map[i];
-		j = i<<5;
+		j = i<<6;
 		for(m = 0x80; m != 0; m >>= 1) {
 			if(c & m) {
 				modrm(Oldw, j, RFP, RAX);
@@ -1893,7 +1909,7 @@ comi(Type *t)
 	con((ulong)H, RAX);
 	for(i = 0; i < t->np; i++) {
 		c = t->map[i];
-		j = i<<5;
+		j = i<<6;
 		for(m = 0x80; m != 0; m >>= 1) {
 			if(c & m)
 				modrm(Ostw, j, RCX, RAX);

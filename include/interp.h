@@ -139,8 +139,8 @@ struct Progq
 	
 struct String
 {
-	int	len;		/* string length */
-	int	max;		/* maximum length in representation */
+	WORD	len;		/* string length */
+	WORD	max;		/* maximum length in representation */
 	char*	tmp;
 	union {
 	#define	Sascii	data.ascii
@@ -203,7 +203,7 @@ struct Type
 	int	ref;
 	void	(*free)(Heap*, int);
 	void	(*mark)(Type*, void*);
-	int	size;
+	WORD	size;
 	int	np;
 	void*	destroy;
 	void*	initialize;
@@ -313,7 +313,7 @@ struct Modlink
 {
 	uchar*	MP;		/* Module data for this instance */
 	Module*	m;		/* The real module */
-	int	compiled;	/* Compiled into native assembler */
+	WORD	compiled;	/* Compiled into native assembler */
 	Inst*	prog;		/* text segment */
 	Type**	type;		/* Type descriptors */
 	uchar*	data;		/* for dynamic C modules */

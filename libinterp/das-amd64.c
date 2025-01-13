@@ -1076,7 +1076,7 @@ igetll(Instr *ip, ulong *lp)
 
 	if (igetl(ip, &l) < 0)
 		return -1;
-	ll = l&(0x00000000<<32);
+	ll = l&(0x00000000ffffffff);
 	if (igetl(ip, &l) < 0)
 		return -1;
 	ll |= (l<<32);

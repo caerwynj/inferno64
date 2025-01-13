@@ -1,5 +1,10 @@
 #include "lib9.h"
 
+#undef malloc
+#undef free
+#undef realloc
+#undef calloc
+
 void*
 kmalloc(size_t size)
 {
