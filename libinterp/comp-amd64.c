@@ -1361,7 +1361,7 @@ comp(Inst *i)
 		opwst(i, Olea, RBX);
 		opwld(i, Oldw, RAX);
 		gen2(Ojmprm, (0<<6)|(4<<3)|4);
-		genb((2<<6)|(RAX<<3)|RBX);
+		genb((3<<6)|(RAX<<3)|RBX);
 
 		if(pass == 0)
 			break;

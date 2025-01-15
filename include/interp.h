@@ -200,7 +200,7 @@ struct Alt
 
 struct Type
 {
-	int	ref;
+	WORD	ref;
 	void	(*free)(Heap*, int);
 	void	(*mark)(Type*, void*);
 	WORD	size;
@@ -324,7 +324,7 @@ struct Modlink
 /* must be a multiple of 8 bytes */
 struct Heap
 {
-	int	color;		/* Allocation color */
+	WORD	color;		/* Allocation color */
 	ulong	ref;
 	Type*	t;
 	ulong	hprof;	/* heap profiling */
