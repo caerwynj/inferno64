@@ -46,6 +46,8 @@ enum
 	Oincrm	= 0xff,
 	Ojccl	= 0x83,
 	Ojcsl	= 0x82,
+	Ojbb	= 0x72,
+	Ojnbb	= 0x73,
 	Ojeqb	= 0x74,
 	Ojeql	= 0x84,
 	Ojgel	= 0x8d,
@@ -96,6 +98,8 @@ enum
 	Opushl	= 0x50,
 	Opushrm	= 0xff,
 	Oneg	= 0xf7,
+	Oaddb	= 0x00,
+	Oaddw	= 0x01,
 
 	SRCOP	= (1<<0),
 	DSTOP	= (1<<1),
@@ -155,7 +159,7 @@ struct
 	MacMCAL,	macmcal,	/* mcall bottom half */
 	MacFRAM,	macfram,	/* frame instruction */
 	MacMFRA,	macmfra,	/* punt mframe because t->initialize==0 */
-	MacRELQ,		macrelq,	/* reschedule */
+	MacRELQ,	macrelq,	/* reschedule */
 };
 
 static void
@@ -305,6 +309,13 @@ modrm(int inst, uintptr disp, int rm, int r)
 }
 
 static void
+modrmn(int inst, uintptr disp, int rm, int r, int sz)
+{
+	if(sz) rex();
+	modrm32(inst, disp, rm, r);
+}
+
+static void
 con(uintptr o, int r)
 {
 	if(o == 0) {
@@ -326,7 +337,7 @@ conw(uintptr o, int r)
 }
 
 static void
-opwld(Inst *i, int mi, int r)
+opwldn(Inst *i, int mi, int r, int sz)
 {
 	int ir, rta;
 
@@ -335,10 +346,10 @@ opwld(Inst *i, int mi, int r)
 		print("%D\n", i);
 		urk();
 	case SRC(AFP):
-		modrm(mi, i->s.ind, RFP, r);
+		modrmn(mi, i->s.ind, RFP, r, sz);
 		return;
 	case SRC(AMP):
-		modrm(mi, i->s.ind, RMP, r);
+		modrmn(mi, i->s.ind, RMP, r, sz);
 		return;
 	case SRC(AIMM):
 		con(i->s.imm, r);
@@ -354,11 +365,17 @@ opwld(Inst *i, int mi, int r)
 	if(mi == Olea)
 		rta = r;
 	modrm(Oldw, i->s.i.f, ir, rta);
-	modrm(mi, i->s.i.s, rta, r);
+	modrmn(mi, i->s.i.s, rta, r, sz);
 }
 
 static void
-opwst(Inst *i, int mi, int r)
+opwld(Inst *i, int mi, int r)
+{
+	opwldn(i, mi, r, 1);
+}
+
+static void
+opwstn(Inst *i, int mi, int r, int sz)
 {
 	int ir, rta;
 
@@ -370,10 +387,10 @@ opwst(Inst *i, int mi, int r)
 		con(i->d.imm, r);
 		return;
 	case DST(AFP):
-		modrm(mi, i->d.ind, RFP, r);
+		modrmn(mi, i->d.ind, RFP, r, sz);
 		return;
 	case DST(AMP):
-		modrm(mi, i->d.ind, RMP, r);
+		modrmn(mi, i->d.ind, RMP, r, sz);
 		return;
 	case DST(AIND|AFP):
 		ir = RFP;
@@ -386,7 +403,13 @@ opwst(Inst *i, int mi, int r)
 	if(mi == Olea)
 		rta = r;
 	modrm(Oldw, i->d.i.f, ir, rta);
-	modrm(mi, i->d.i.s, rta, r);
+	modrmn(mi, i->d.i.s, rta, r, sz);
+}
+
+static void
+opwst(Inst *i, int mi, int r)
+{
+	opwstn(i, mi, r, 1);
 }
 
 static void
@@ -506,13 +529,13 @@ punt(Inst *i, int m, void (*fn)(void))
 }
 
 static void
-mid(Inst *i, uchar mi, int r)
+midn(Inst *i, uchar mi, int r, int sz)
 {
 	int ir;
 
 	switch(i->add&ARM) {
 	default:
-		opwst(i, mi, r);
+		opwstn(i, mi, r, sz);
 		return;
 	case AXIMM:
 		con((short)i->reg, r);
@@ -524,7 +547,13 @@ mid(Inst *i, uchar mi, int r)
 		ir = RMP;
 		break;
 	}
-	modrm(mi, i->reg, ir, r);
+	modrmn(mi, i->reg, ir, r,sz);
+}
+
+static void
+mid(Inst *i, uchar mi, int r)
+{
+	midn(i, mi, r, 1);
 }
 
 static void
@@ -533,12 +562,12 @@ arith(Inst *i, int op2, int rm)
 	if(UXSRC(i->add) != SRC(AIMM)) {
 		if(i->add&ARM) {
 			mid(i, Oldw, RAX);
-			opwld(i, op2|2, 0);
-			opwst(i, Ostw, 0);
+			opwldn(i, op2|2, 0, 0);
+			opwstn(i, Ostw, 0, 0);
 			return;
 		}
-		opwld(i, Oldw, RAX);
-		opwst(i, op2, 0);
+		opwldn(i, Oldw, RAX, 0);
+		opwstn(i, op2, 0, 0);
 		return;
 	}
 	if(i->add&ARM) {
@@ -555,11 +584,11 @@ arith(Inst *i, int op2, int rm)
 		return;
 	}
 	if(bc(i->s.imm)) {
-		opwst(i, 0x83, rm);
+		opwstn(i, 0x83, rm, 0);
 		genb(i->s.imm);
 		return;
 	}
-	opwst(i, 0x81, rm);
+	opwstn(i, 0x81, rm, 0);
 	genw(i->s.imm);
 }
 
@@ -571,21 +600,21 @@ arithb(Inst *i, int op2)
 
 	if(i->add&ARM) {
 		mid(i, Oldb, RAX);
-		opwld(i, op2|2, 0);
-		opwst(i, Ostb, 0);
+		opwldn(i, op2|2, 0, 0);
+		opwstn(i, Ostb, 0, 0);
 		return;
 	}
-	opwld(i, Oldb, RAX);
-	opwst(i, op2, RAX);
+	opwldn(i, Oldb, RAX, 0);
+	opwstn(i, op2, RAX, 0);
 }
 
 static void
 shift(Inst *i, int ld, int st, int op, int r)
 {
 	mid(i, ld, RAX);
-	opwld(i, Oldw, RCX);
+	opwldn(i, Oldw, RCX, 0);
 	gen2(op, (3<<6)|(r<<3)|RAX);
-	opwst(i, st, RAX);
+	opwstn(i, st, RAX, 0);
 }
 
 static void
@@ -630,7 +659,7 @@ schedcheck(Inst *i)
 	if(RESCHED && i->d.ins <= i){
 		con((uintptr)&R, RTMP);
 		/* sub $1, R.IC */
-		modrm(0x83, O(REG, IC), RTMP, 5);
+		modrm32(0x83, O(REG, IC), RTMP, 5);
 		genb(1);
 		gen2(Ojgtb, 5);
 		rbra(macro[MacRELQ], Ocall);
@@ -642,15 +671,13 @@ cbra(Inst *i, int jmp)
 {
 	if(RESCHED)
 		schedcheck(i);
-	mid(i, Oldw, RAX);
-	//if((i->add&ARM) == AXIMM)
-	//	jmp = swapbraop(jmp);
+	midn(i, Oldw, RAX, 0);
 
 	if(UXSRC(i->add) == SRC(AIMM)) {
 		cmpl(RAX, i->s.imm);
 		jmp = swapbraop(jmp);
 	} else
-		opwld(i, Ocmpw, RAX);
+		opwldn(i, Ocmpw, RAX, 0);
 	genb(0x0f);
 	rbra(patch[i->d.ins-mod->prog], jmp);
 }
@@ -665,7 +692,7 @@ cbral(Inst *i, int jmsw, int jlsw, int mode)
 		schedcheck(i);
 	opwld(i, Olea, RTMP);
 	mid(i, Olea, RTA);
-	modrm(Oldw, 4, RTA, RAX);
+	modrm(Oldw, 4, RTA, RAX);  // TODO for 64 bit
 	modrm(Ocmpw, 4, RTMP, RAX);
 	label = 0;
 	dst = patch[i->d.ins-mod->prog];
@@ -698,11 +725,11 @@ cbrab(Inst *i, int jmp)
 {
 	if(RESCHED)
 		schedcheck(i);
-	mid(i, Oldb, RAX);
+	midn(i, Oldb, RAX, 0);
 	if(UXSRC(i->add) == SRC(AIMM))
 		urk();
 
-	opwld(i, Ocmpb, RAX);
+	opwldn(i, Ocmpb, RAX, 0);
 	genb(0x0f);
 	rbra(patch[i->d.ins-mod->prog], jmp);
 }
@@ -729,7 +756,7 @@ comcase(Inst *i, int w)
 	WORD *t, *e;
 
 	if(w != 0) {
-		opwld(i, Oldw, RAX);		// v
+		opwldn(i, Oldw, RAX, 0);		// v
 		genb(Opushl+RSI);
 		opwst(i, Olea, RSI);		// table
 		rbra(macro[MacCASE], Ojmp);
@@ -850,7 +877,7 @@ commcall(Inst *i)
 		mid(i, Oldw, RCX);		// index
 		rex();
 		gen2(Olea, (0<<6)|(0<<3)|4);	// lea	(RTA)(RCX*8)
-		genb((3<<6)|(RCX<<3)|RTA);	// assumes sizeof(Modl) == 8 hence 3
+		genb((3<<6)|(RCX<<3)|RTA);	// assumes sizeof(Modl) == 8 hence 3.  TODO sizeof(Modl) == 24
 		modrm(Oldw, OA(Modlink, links)+O(Modl, u.pc), RAX, RAX);
 		genb(Opopl+RCX);
 	}
@@ -865,12 +892,12 @@ larith(Inst *i, int op, int opc)
 	mid(i, Olea, RTA);
 	modrm(Oldw, 0, RTA, RAX);	// MOVL	0(RTA), AX
 	modrm(op, 0, RTMP, RAX);	// ADDL 0(RTMP), AX
-	modrm(Oldw, 4, RTA, RCX);	// MOVL 4(RTA), CX
-	modrm(opc, 4, RTMP, RCX);	// ADCL 4(RTMP), CX
+	//modrm(Oldw, 4, RTA, RCX);	// MOVL 4(RTA), CX
+	//modrm(opc, 4, RTMP, RCX);	// ADCL 4(RTMP), CX
 	if((i->add&ARM) != AXNON)
 		opwst(i, Olea, RTA);
 	modrm(Ostw, 0, RTA, RAX);
-	modrm(Ostw, 4, RTA, RCX);
+	//modrm(Ostw, 4, RTA, RCX);
 }
 
 static void
@@ -1314,18 +1341,18 @@ comp(Inst *i)
 		opwst(i, Omovf, 3);
 		break;
 	case IMOVB:
-		opwld(i, Oldb, RAX);
-		opwst(i, Ostb, RAX);
+		opwldn(i, Oldb, RAX, 0);
+		opwstn(i, Ostb, RAX, 0);
 		break;
 	case IMOVW:
 	case ICVTLW:			// Little endian
 		if(UXSRC(i->add) == SRC(AIMM)) {
-			opwst(i, Omov, RAX);
+			opwstn(i, Omov, RAX, 0);
 			genw(i->s.imm);
 			break;
 		}
-		opwld(i, Oldw, RAX);
-		opwst(i, Ostw, RAX);
+		opwldn(i, Oldw, RAX, 0);
+		opwstn(i, Ostw, RAX, 0);
 		break;
 	case ICVTWL:
 		opwst(i, Olea, RTMP);
@@ -1446,7 +1473,7 @@ comp(Inst *i)
 		r = 3;
 		goto idx;
 	case IINDW:
-		r = 2;
+		r = 2;  /* TODO was 2; should be 3 if WORD size is 8 */
 	idx:
 		opwld(i, Oldw, RAX);
 		opwst(i, Oldw, RTMP);
@@ -1466,7 +1493,7 @@ comp(Inst *i)
 		break;
 	case IINDC:
 		opwld(i, Oldw, RAX);			// string
-		mid(i, Oldw, RBX);			// index
+		midn(i, Oldw, RBX, 0);			// index
 		if(bflag){
 			modrm(Oldw, O(String, len), RAX, RTA);
 			cmpl(RTA, 0);
@@ -1518,8 +1545,8 @@ comp(Inst *i)
 		opwst(i, Olea, RTMP);
 		modrm(Oldw, 0, RTA, RAX);
 		modrm(Ostw, 0, RTMP, RAX);
-		modrm(Oldw, 4, RTA, RAX);
-		modrm(Ostw, 4, RTMP, RAX);
+		//modrm(Oldw, 4, RTA, RAX);
+		//modrm(Ostw, 4, RTMP, RAX);
 		break;
 	case IADDL:
 		larith(i, 0x03, 0x13);
@@ -1644,13 +1671,13 @@ maccase(void)
 	lab1 = code-1;
 	rex();
 	gen2(Olea, (1<<6)|(RSI<<3)|4);
-	gen2((3<<6)|(RBX<<3)|RSI, 12);		// LEA	12(SI)(RBX*8), RSI
+	gen2((3<<6)|(RBX<<3)|RSI, 24);		// LEA	24(SI)(RBX*8), RSI
 	gen2(0x2b, (3<<6)|(RDX<<3)|RCX);	// SUBL	CX, DX		n -= n2
 	gen2(Odecrm, (3<<6)|(1<<3)|RDX);	// DECL	DX		n -= 1
 	gen2(Ojmpb, loop-code-2);
 	*lab1 = code-lab1-1;			// lab1:
 	gen2(Oldw, (1<<6)|(RAX<<3)|4);
-	gen2((3<<6)|(RBX<<3)|RSI, 8);		// MOVL 8(SI)(BX*8), AX
+	gen2((3<<6)|(RBX<<3)|RSI, 16);		// MOVL 16(SI)(BX*8), AX
 	genb(Opopl+RSI);			// ditch default
 	genb(Opopl+RSI);
 	gen2(Ojmprm, (3<<6)|(4<<3)|RAX);	// JMP*L AX

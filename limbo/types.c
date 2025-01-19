@@ -167,7 +167,7 @@ typeinit(void)
 	tbyte->ok = OKmask;
 
 	tint = mktype(&noline, &noline, Tint, nil, nil);
-	tint->size = IBY2WD;
+	tint->size = IBY2WD; /* TODO should be 4; and so should align*/
 	tint->align = IBY2WD;
 	tint->ok = OKmask;
 

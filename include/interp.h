@@ -1,8 +1,10 @@
 typedef uchar		BYTE;		/* 8  bits */
 /* moved the WORD and UWORD to 9front/amd64/include/u.h
 	with the goal of making it architecture specific */
-/*typedef int		WORD;*/		/* 32 bits */
-/*typedef unsigned int	UWORD;*/		/* 32 bits */
+typedef long		WORD;		/* 64 bits */
+typedef unsigned long	UWORD;		/* 64 bits */
+typedef long		INT;		/* TODO should be 32 bits */
+typedef unsigned long	UINT;		/* TODO should be 32 bits */
 typedef vlong		LONG;		/* 64 bits */
 typedef uvlong		ULONG;		/* 64 bits */
 typedef double		REAL;		/* 64 double IEEE754 */

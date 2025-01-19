@@ -15,8 +15,8 @@ String	snil;			/* String known to be zero length */
 
 #define OP(fn)	void fn(void)
 #define B(r)	*((BYTE*)(R.r))
-#define W(r)	*((WORD*)(R.r))
-#define UW(r)	*((UWORD*)(R.r))
+#define W(r)	*((INT*)(R.r))
+#define UW(r)	*((UINT*)(R.r))
 #define F(r)	*((REAL*)(R.r))
 #define V(r)	*((LONG*)(R.r))	
 #define UV(r)	*((ULONG*)(R.r))	
