@@ -1410,8 +1410,8 @@ comp(Inst *i)
 	case IMODW:
 	case IDIVW:
 	case IMULW:
-		mid(i, Oldw, RAX);
-		opwld(i, Oldw, RTMP);
+		midn(i, Oldw, RAX, 0);
+		opwldn(i, Oldw, RTMP, 0);
 		if(i->op == IMULW)
 			gen2(0xf7, (3<<6)|(4<<3)|RTMP);
 		else {
@@ -1420,13 +1420,13 @@ comp(Inst *i)
 			if(i->op == IMODW)
 				genb(0x90+RDX);		// XCHG	AX, DX
 		}
-		opwst(i, Ostw, RAX);
+		opwstn(i, Ostw, RAX, 0);
 		break;
 	case IMODB:
 	case IDIVB:
 	case IMULB:
-		mid(i, Oldb, RAX);
-		opwld(i, Oldb, RTMP);
+		midn(i, Oldb, RAX,0);
+		opwldn(i, Oldb, RTMP,0);
 		if(i->op == IMULB)
 			gen2(0xf6, (3<<6)|(4<<3)|RTMP);
 		else {
@@ -1435,7 +1435,7 @@ comp(Inst *i)
 			if(i->op == IMODB)
 				genb(0x90+RDX);		// XCHG	AX, DX
 		}
-		opwst(i, Ostb, RAX);
+		opwstn(i, Ostb, RAX,0);
 		break;
 	case IINDX:
 		opwld(i, Oldw, RTMP);			// MOVW	xx(s), BX
@@ -1642,7 +1642,7 @@ maccase(void)
 {
 	uchar *loop, *def, *lab1;
 
-	modrm(Oldw, 0, RSI, RDX);		// n = t[0]
+	modrmn(Oldw, 0, RSI, RDX,0);		// n = t[0]
 	modrm(Olea, 8, RSI, RSI);		// t = &t[1]
 	gen2(Oldw, (3<<6)|(RBX<<3)|RDX);	// MOVL	DX, BX
 	gen2(Oshr, (3<<6)|(4<<3)|RBX);		// SHL	BX,1
@@ -1666,7 +1666,7 @@ maccase(void)
 	gen2(Ojmpb, loop-code-2);
 	*lab1 = code-lab1-1;			// lab1:
 	gen2(0x3b, (1<<6)|(RAX<<3)|4);
-	gen2((3<<6)|(RBX<<3)|RSI, 4);		// CMPL AX, 4(SI)(BX*8)
+	gen2((3<<6)|(RBX<<3)|RSI, 8);		// CMPL AX, 8(SI)(BX*8)
 	gen2(Ojltb, 0);
 	lab1 = code-1;
 	rex();
@@ -1676,13 +1676,14 @@ maccase(void)
 	gen2(Odecrm, (3<<6)|(1<<3)|RDX);	// DECL	DX		n -= 1
 	gen2(Ojmpb, loop-code-2);
 	*lab1 = code-lab1-1;			// lab1:
+	rex();
 	gen2(Oldw, (1<<6)|(RAX<<3)|4);
 	gen2((3<<6)|(RBX<<3)|RSI, 16);		// MOVL 16(SI)(BX*8), AX
 	genb(Opopl+RSI);			// ditch default
 	genb(Opopl+RSI);
 	gen2(Ojmprm, (3<<6)|(4<<3)|RAX);	// JMP*L AX
 	*def = code-def-1;			// def:
-	genb(Opopl+RAX);			// ditch default
+	genb(Opopl+RAX);			// default
 	genb(Opopl+RSI);
 	gen2(Ojmprm, (3<<6)|(4<<3)|RAX);
 }
