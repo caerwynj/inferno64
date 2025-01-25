@@ -1430,22 +1430,22 @@ comp(Inst *i)
 		opwld(i, Oldw, RTMP);			// MOVW	xx(s), BX
 
 		if(bflag){
-			opwst(i, Oldw, RAX);
-			modrm(0x3b, O(Array, len), RTMP, RAX);	/* CMP index, len */
+			opwstw(i, Oldw, RAX);
+			modrmw(0x3b, O(Array, len), RTMP, RAX);	/* CMP index, len */
 			gen2(0x72, 0x0c);		/* JB */
 			bra((uintptr)bounds, Ocall);
 			modrm(Oldw, O(Array, t), RTMP, RTA);
-			modrm(0xf7, O(Type, size), RTA, 5);		/* IMULL AX, xx(t) */
+			modrmw(0xf7, O(Type, size), RTA, 5);		/* IMULL AX, xx(t) */
 		}
 		else{
 			modrm(Oldw, O(Array, t), RTMP, RAX);	// MOVW	t(BX), AX
-			modrm(Oldw, O(Type, size), RAX, RAX);	// MOVW size(AX), AX
+			modrmw(Oldw, O(Type, size), RAX, RAX);	// MOVW size(AX), AX
 			if(UXDST(i->add) == DST(AIMM)) {
 				gen2(0x69, (3<<6)|(RAX<<3)|0);
 				genw(i->d.imm);
 			}
 			else
-				opwst(i, 0xf7, 5);		// IMULL AX,xx(d)
+				opwstw(i, 0xf7, 5);		// IMULL AX,xx(d)
 		}
 
 		modrm(0x03, O(Array, data), RBX, RAX);	// ADDL data(BX), AX
