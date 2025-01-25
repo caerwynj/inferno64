@@ -597,7 +597,7 @@ arith(Inst *i, int op2, int rm)
 			gen2(0x81, (3<<6)|(rm<<3)|RAX);
 			genw(i->s.imm);
 		}
-		opwst(i, Ostw, RAX);
+		opwstw(i, Ostw, RAX);
 		return;
 	}
 	if(bc(i->s.imm)) {
@@ -628,10 +628,20 @@ arithb(Inst *i, int op2)
 static void
 shift(Inst *i, int ld, int st, int op, int r)
 {
-	mid(i, ld, RAX);
+	midw(i, ld, RAX);
 	opwldw(i, Oldw, RCX);
 	gen2(op, (3<<6)|(r<<3)|RAX);
 	opwstw(i, st, RAX);
+}
+
+static void
+shiftl(Inst *i, int ld, int st, int op, int r)
+{
+	mid(i, ld, RAX);
+	opwld(i, Oldw, RCX);
+	rex();
+	gen2(op, (3<<6)|(r<<3)|RAX);
+	opwst(i, st, RAX);
 }
 
 static void
@@ -700,41 +710,19 @@ cbra(Inst *i, int jmp)
 }
 
 static void
-cbral(Inst *i, int jmsw, int jlsw, int mode)
+cbral(Inst *i, int jmp)
 {
-	uintptr dst;
-	uchar *label;
-
 	if(RESCHED)
 		schedcheck(i);
-	opwld(i, Olea, RTMP);
-	mid(i, Olea, RTA);
-	modrm(Oldw, 4, RTA, RAX);  
-	modrm(Ocmpw, 4, RTMP, RAX);
-	label = 0;
-	dst = patch[i->d.ins-mod->prog];
-	switch(mode) {
-	case ANDAND:
-		gen2(Ojneb, 0);
-		label = code-1;
-		break;
-	case OROR:
-		genb(0x0f);
-		rbra(dst, jmsw);
-		break;
-	case EQAND:
-		genb(0x0f);
-		rbra(dst, jmsw);
-		gen2(Ojneb, 0);
-		label = code-1;
-		break;
-	}
-	modrm(Oldw, 0, RTA, RAX);
-	modrm(Ocmpw, 0, RTMP, RAX);
+	mid(i, Oldw, RAX);
+
+	if(UXSRC(i->add) == SRC(AIMM)) {
+		cmpl(RAX, i->s.imm);
+		jmp = swapbraop(jmp);
+	} else
+		opwld(i, Ocmpw, RAX);
 	genb(0x0f);
-	rbra(dst, jlsw);
-	if(label != nil)
-		*label = code-label-1;
+	rbra(patch[i->d.ins-mod->prog], jmp);
 }
 
 static void
@@ -903,8 +891,46 @@ commcall(Inst *i)
 }
 
 static void
+larith(Inst *i, int op2, int rm)
+{
+	if(UXSRC(i->add) != SRC(AIMM)) {
+		if(i->add&ARM) {
+			mid(i, Oldw, RAX);
+			opwld(i, op2|2, 0);
+			opwst(i, Ostw, 0);
+			return;
+		}
+		opwld(i, Oldw, RAX);
+		opwst(i, op2, 0);
+		return;
+	}
+	if(i->add&ARM) {
+		mid(i, Oldw, RAX);
+		if(bc(i->s.imm)) {
+			gen2(0x83, (3<<6)|(rm<<3)|RAX);
+			genb(i->s.imm);
+		}
+		else {
+			gen2(0x81, (3<<6)|(rm<<3)|RAX);
+			genw(i->s.imm);
+		}
+		opwst(i, Ostw, RAX);
+		return;
+	}
+	if(bc(i->s.imm)) {
+		opwst(i, 0x83, rm);
+		genb(i->s.imm);
+		return;
+	}
+	opwst(i, 0x81, rm);
+	genw(i->s.imm);
+}
+
+/*
+static void
 larith(Inst *i, int op, int opc)
 {
+	// TODO
 	opwld(i, Olea, RTMP);
 	mid(i, Olea, RTA);
 	modrm(Oldw, 0, RTA, RAX);	// MOVL	0(RTA), AX
@@ -916,65 +942,7 @@ larith(Inst *i, int op, int opc)
 	modrm(Ostw, 0, RTA, RAX);
 	//modrm(Ostw, 4, RTA, RCX);
 }
-
-static void
-shll(Inst *i)
-{
-	uchar *label, *label1;
-
-	opwld(i, Oldw, RCX);
-	mid(i, Olea, RTA);
-	gen2(Otestib, (3<<6)|(0<<3)|RCX);
-	genb(0x20);
-	gen2(Ojneb, 0);
-	label = code-1;
-	modrm(Oldw, 0, RTA, RAX);
-	modrm(Oldw, 4, RTA, RBX);
-	genb(0x0f);
-	gen2(Oshld, (3<<6)|(RAX<<3)|RBX);
-	gen2(Oshl, (3<<6)|(4<<3)|RAX);
-	gen2(Ojmpb, 0);
-	label1 = code-1;
-	*label = code-label-1;
-	modrm(Oldw, 0, RTA, RBX);
-	con(0, RAX);
-	gen2(Oshl, (3<<6)|(4<<3)|RBX);
-	*label1 = code-label1-1;
-	opwst(i, Olea, RTA);
-	modrm(Ostw, 0, RTA, RAX);
-	modrm(Ostw, 4, RTA, RBX);
-}
-
-static void
-shrl(Inst *i)
-{
-	uchar *label, *label1;
-
-	opwld(i, Oldw, RCX);
-	mid(i, Olea, RTA);
-	gen2(Otestib, (3<<6)|(0<<3)|RCX);
-	genb(0x20);
-	gen2(Ojneb, 0);
-	label = code-1;
-	modrm(Oldw, 0, RTA, RAX);
-	modrm(Oldw, 4, RTA, RBX);
-	genb(0x0f);
-	gen2(Oshrd, (3<<6)|(RBX<<3)|RAX);
-	gen2(Osar, (3<<6)|(7<<3)|RBX);
-	gen2(Ojmpb, 0);
-	label1 = code-1;
-	*label = code-label-1;
-	modrm(Oldw, 4, RTA, RBX);
-	rex();
-	gen2(Oldw, (3<<6)|(RAX<<3)|RBX);
-	gen2(Osarimm, (3<<6)|(7<<3)|RBX);
-	genb(0x1f);
-	gen2(Osar, (3<<6)|(7<<3)|RAX);
-	*label1 = code-label1-1;
-	opwst(i, Olea, RTA);
-	modrm(Ostw, 0, RTA, RAX);
-	modrm(Ostw, 4, RTA, RBX);
-}
+*/
 
 static
 void
@@ -1098,14 +1066,14 @@ comp(Inst *i)
 		punt(i, 0, optab[i->op]);
 		break;
 	case ICVTBW:
-		opwld(i, Oldb, RAX);
+		opwldw(i, Oldb, RAX);
 		genb(0x0f);
 		gen2(0xb6, (3<<6)|(RAX<<3)|RAX);
-		opwst(i, Ostw, RAX);
+		opwstw(i, Ostw, RAX);
 		break;
 	case ICVTWB:
-		opwld(i, Oldw, RAX);
-		opwst(i, Ostb, RAX);
+		opwldw(i, Oldw, RAX);
+		opwstw(i, Ostb, RAX);
 		break;
 	case ICVTFW:
 		if(1){
@@ -1346,6 +1314,12 @@ comp(Inst *i)
 	case ISHRB:
 		shift(i, Oldb, Ostb, 0xd2, 5);
 		break;
+	case ISHLL:
+		shiftl(i, Oldw, Ostw, 0xd3, 4);
+		break;
+	case ISHRL:
+		shiftl(i, Oldw, Ostw, 0xd3, 7);
+		break;
 	case IMOVF:
 		opwld(i, Omovf, 0);
 		opwst(i, Omovf, 3);
@@ -1367,15 +1341,14 @@ comp(Inst *i)
 			genw(i->s.imm);
 			break;
 		}
-		opwldw(i, Oldw, RAX);
+		opwld(i, Oldw, RAX);
 		opwstw(i, Ostw, RAX);
 		break;
 	case ICVTWL:
-		opwst(i, Olea, RTMP);
-		opwld(i, Oldw, RAX);
-		modrm(Ostw, 0, RTMP, RAX);
-		genb(0x99);
-		modrm(Ostw, 4, RTMP, RDX);   /* TODO */
+		opwldw(i, Oldw, RAX);
+		rex();
+		gen2(0x63, (3<<6)|(RAX<<3)|RAX);  // MOVSXD
+		opwst(i, Ostw, RAX);
 		break;
 	case ICALL:
 		if(UXDST(i->add) != DST(AIMM))
@@ -1557,51 +1530,41 @@ comp(Inst *i)
 		comcase(i, 1);
 		break;
 	case IMOVL:
-		opwld(i, Olea, RTA);
-		opwst(i, Olea, RTMP);
-		modrm(Oldw, 0, RTA, RAX);
-		modrm(Ostw, 0, RTMP, RAX);
-		//modrm(Oldw, 4, RTA, RAX);
-		//modrm(Ostw, 4, RTMP, RAX);
+		opwld(i, Oldw, RAX);
+		opwst(i, Ostw, RAX);
 		break;
 	case IADDL:
-		larith(i, 0x03, 0x13);
+		larith(i, 0x01, 0);
 		break;
 	case ISUBL:
-		larith(i, 0x2b, 0x1b);
+		larith(i, 0x29, 5);
 		break;
 	case IORL:
-		larith(i, 0x0b, 0x0b);
+		larith(i, 0x09, 1);
 		break;
 	case IANDL:
-		larith(i, 0x23, 0x23);
+		larith(i, 0x21, 4);
 		break;
 	case IXORL:
-		larith(i, 0x33, 0x33);
+		larith(i, Oxor, 6);
 		break;
 	case IBEQL:
-		cbral(i, Ojnel, Ojeql, ANDAND);
+		cbral(i, Ojeql);
 		break;
 	case IBNEL:
-		cbral(i, Ojnel, Ojnel, OROR);
+		cbral(i, Ojnel);
 		break;
 	case IBLEL:
-		cbral(i, Ojltl, Ojbel, EQAND);
+		cbral(i, Ojbel);
 		break;
 	case IBGTL:
-		cbral(i, Ojgtl, Ojal, EQAND);
+		cbral(i, Ojgtl);
 		break;
 	case IBLTL:
-		cbral(i, Ojltl, Ojbl, EQAND);
+		cbral(i, Ojltl);
 		break;
 	case IBGEL:
-		cbral(i, Ojgtl, Ojael, EQAND);
-		break;
-	case ISHLL:
-		shll(i);
-		break;
-	case ISHRL:
-		shrl(i);
+		cbral(i, Ojgel);
 		break;
 	case IRAISE:
 		punt(i, SRCOP|WRTPC|NEWPC, optab[i->op]);
