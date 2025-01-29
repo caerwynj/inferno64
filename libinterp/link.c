@@ -108,9 +108,7 @@ linkmod(Module *m, Import *ldt, int mkmp)
 	ml = mklinkmod(m, i);
 
 	if(mkmp){
-		if(m->rt == DYNMOD)
-			newdyndata(ml);
-		else if(mkmp && m->origmp != H && m->ntype > 0) {
+		if(mkmp && m->origmp != H && m->ntype > 0) {
 			t = m->type[0];
 			h = nheap(t->size);
 			h->t = t;

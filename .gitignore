@@ -1,6 +1,8 @@
 # object files, libraries, etc
 *.[8qkv5967o]
 *.obj
+*.swp
+.gdbinit
 [8qkv965o].out
 [8qkv965o].emu
 obj.out

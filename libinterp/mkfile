@@ -8,7 +8,7 @@ OFILES=\
 	conv.$O\
 	crypt.$O\
 	dec.$O\
-	dlm-$TARGMODEL.$O\
+#	dlm-$TARGMODEL.$O\
 	draw.$O\
 #	freetype.$O\
 	gc.$O\
@@ -20,7 +20,6 @@ OFILES=\
 	load.$O\
 	loader.$O\
 	math.$O\
-#	prefab.$O\
 	raise.$O\
 	readmod.$O\
 	runt.$O\
@@ -43,7 +42,6 @@ MODULES=\
 	../module/runt.m\
 	../module/sys.m\
 	../module/draw.m\
-	../module/prefab.m\
 	../module/math.m\
 	../module/tk.m\
 	../module/keyring.m\
@@ -66,9 +64,6 @@ keyring.h:D: $MODULES
 
 drawmod.h:D: $MODULES
 	rm -f $target && limbo -t Draw -I../module ../module/runt.m > $target
-
-prefabmod.h:D: $MODULES
-	rm -f $target && limbo -t Prefab -I../module ../module/runt.m > $target
 
 tkmod.h:D: $MODULES
 	rm -f $target && limbo -t Tk -I../module ../module/runt.m > $target
@@ -101,11 +96,8 @@ bench.h:D:../module/bench.m
 xec.$O:		optab.h  $ROOT/include/pool.h
 tk.$O:		$ROOT/include/tk.h  $ROOT/include/pool.h
 draw.$O: 	$ROOT/include/draw.h $ROOT/include/drawif.h
-prefab.$O: 	$ROOT/include/draw.h\
-		$ROOT/include/prefab.h
 
 runt.$O:	sysmod.h
-prefab.$O:	prefabmod.h
 draw.$O:	drawmod.h
 tk.$O:		$ROOT/include/draw.h tkmod.h
 math.$O:	mathmod.h
@@ -126,4 +118,4 @@ comp-spim.c:N:	comp-mips.c
 #	it works only on UNIX and Plan 9.
 
 nuke:EV:	nuke-std
-	rm -f runt.h sysmod.h drawmod.h prefabmod.h tkmod.h mathmod.h keyring.h readimagemod.h loadermod.h freetypemod.h cryptmod.h keyringif.h ipintsmod.h
+	rm -f runt.h sysmod.h drawmod.h tkmod.h mathmod.h keyring.h readimagemod.h loadermod.h freetypemod.h cryptmod.h keyringif.h ipintsmod.h
