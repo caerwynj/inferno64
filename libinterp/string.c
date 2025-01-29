@@ -7,7 +7,7 @@
 #define DP if(1){}else print
 #define OP(fn)	void fn(void)
 #define B(r)	*((BYTE*)(R.r))
-#define W(r)	*((WORD*)(R.r))
+#define W(r)	*((long*)(R.r))
 #define F(r)	*((REAL*)(R.r))
 #define V(r)	*((LONG*)(R.r))
 #define	S(r)	*((String**)(R.r))

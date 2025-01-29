@@ -118,11 +118,11 @@ tkrgbavals(ulong rgba, int *R, int *G, int *B, int *A)
 	a = rgba & 0xff;
 	*A = a;
 	if (a != 0xff) {
-		*R = revalpha(rgba>>24, a);
+		*R = revalpha((rgba>>24) & 0xFF, a);
 		*G = revalpha((rgba>>16) & 0xFF, a);
 		*B = revalpha((rgba >> 8) & 0xFF, a);
 	} else {
-		*R = (rgba>>24);
+		*R = ((rgba>>24) & 0xFF);
 		*G = ((rgba>>16) & 0xFF);
 		*B = ((rgba >> 8) & 0xFF);
 	}

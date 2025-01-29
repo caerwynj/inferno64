@@ -1205,12 +1205,11 @@ comp(Inst *i)
 		con(0, RAX);
 		opwld(i, Oldw, RBX);
 		cmpl(RBX, (ulong)H);
-		gen2(Ojeqb, 0x08);
+		gen2(Ojeqb, 0x07);
 		modrm(Oldw, O(List, tail), RBX, RBX);
-		rex();
 		gen2(Oincrm, (3<<6)|(0<<3)|RAX);	
-		gen2(Ojmpb, 0xf3);
-		opwst(i, Ostw, RAX);
+		gen2(Ojmpb, 0xf4);
+		opwstw(i, Ostw, RAX);
 		break;
 	case IBEQF:
 		cbraf(i, Ojeql);
@@ -1342,7 +1341,7 @@ comp(Inst *i)
 			break;
 		}
 		opwld(i, Oldw, RAX);
-		opwstw(i, Ostw, RAX);
+		opwst(i, Ostw, RAX);  // TODO we leave this as 64bit because limbo uses movw to move a pointer, e.g. a channel
 		break;
 	case ICVTWL:
 		opwldw(i, Oldw, RAX);

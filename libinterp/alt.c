@@ -4,7 +4,7 @@
 #include "raise.h"
 
 #define OP(fn)	void fn(void)
-#define W(p)	*((WORD*)(p))
+#define W(p)	*((long*)(p))
 
 #define CANGET(c)	((c)->size > 0)
 #define CANPUT(c)	((c)->buf != H && (c)->size < (c)->buf->len)
@@ -85,8 +85,8 @@ altrdy(Alt *a, Prog *p)
 	e = nil;
 	nrdy = 0;
 
-	ac = a->ac + a->nsend;
-	eac = ac + a->nrecv;
+	ac = a->ac + (int)a->nsend;
+	eac = ac + (int)a->nrecv;
 	while(ac < eac) {
 		c = ac->c;
 		ac++;
@@ -105,7 +105,7 @@ altrdy(Alt *a, Prog *p)
 	}
 
 	ac = a->ac;
-	eac = ac + a->nsend;
+	eac = ac + (int)a->nsend;
 	while(ac < eac) {
 		c = ac->c;
 		ac++;
@@ -144,7 +144,7 @@ altdone(Alt *a, Prog *p, Channel *sel, int sr)
 
 	n = 0;
 	ac = a->ac;
-	eac = a->ac + a->nsend;
+	eac = a->ac + (int)a->nsend;
 	while(ac < eac) {
 		c = ac->c;
 		if(c != H) {
@@ -160,7 +160,7 @@ altdone(Alt *a, Prog *p, Channel *sel, int sr)
 		n++;
 	}
 
-	eac = a->ac + a->nsend + a->nrecv;
+	eac = a->ac + (int)a->nsend + (int)a->nrecv;
 	while(ac < eac) {
 		c = ac->c;
 		if(c != H) {
@@ -197,7 +197,7 @@ altcomm(Alt *a, int which)
 
 	n = 0;
 	ac = a->ac;
-	eac = ac + a->nsend;
+	eac = ac + (int)a->nsend;
 	while(ac < eac) {
 		c = ac->c;
 		if((c->recv->prog != nil || CANPUT(c)) && which-- == 0) {
@@ -211,7 +211,7 @@ altcomm(Alt *a, int which)
 		n++;
 	}
 
-	eac = eac + a->nrecv;
+	eac = eac + (int)a->nrecv;
 	while(ac < eac) {
 		c = ac->c;
 		t = D2H(c)->t;
@@ -283,7 +283,7 @@ xecalt(int block)
 			R.t = 1;
 			return;
 		}
-		W(R.d) = a->nsend + a->nrecv;
+		W(R.d) = (int)a->nsend + (int)a->nrecv;
 		altdone(a, p, nil, -1);
 		return;
 	}
