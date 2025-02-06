@@ -7,7 +7,7 @@
 #define DP if(1){}else print
 #define OP(fn)	void fn(void)
 #define B(r)	*((BYTE*)(R.r))
-#define W(r)	*((long*)(R.r))
+#define W(r)	*((int*)(R.r))
 #define F(r)	*((REAL*)(R.r))
 #define V(r)	*((LONG*)(R.r))
 #define	S(r)	*((String**)(R.r))
@@ -20,7 +20,7 @@
 OP(indc)
 {
 	int l;
-	WORD v;
+	int v;
 	String *ss;
 
 	v = W(m);
@@ -30,10 +30,10 @@ OP(indc)
 		error(exNilref);
 
 	l = ss->len;
-	DP("indc string %s len %d v %zd\n", string2c(ss), l, v);
+	DP("indc string %s len %d v %d\n", string2c(ss), l, v);
 	if(l < 0) {
 		if(v >= -l){
-	print("indc string %s len %d v %zd\n", string2c(ss), l, v);
+	print("indc string %s len %d v %d\n", string2c(ss), l, v);
 e:			error(exBounds);
 		}
 		l = ss->Srune[v];			
@@ -351,7 +351,7 @@ OP(cvtwc)
 	String *ds, **dp;
 
 	ds = newstring(16);
-	ds->len = sprint(ds->Sascii, "%zd", W(s));
+	ds->len = sprint(ds->Sascii, "%d", W(s));
 
 	dp = R.d;
 	destroy(*dp);

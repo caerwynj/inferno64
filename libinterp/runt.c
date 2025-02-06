@@ -69,10 +69,10 @@ xprint(Prog *xp, void *vfp, void *vva, String *s1, char *buf, int n)
 			default:
 				continue;
 			case '*':
-				i = *(WORD*)va;
+				i = *(int*)va;
 				f--;
 				f += snprint(f, sizeof(fmt)-(f-fmt), "%zd", i);
-				va += IBY2WD;
+				va += sizeof(int);
 				continue;
 			case 'b':
 				f[-1] = 'l';
@@ -131,12 +131,12 @@ xprint(Prog *xp, void *vfp, void *vva, String *s1, char *buf, int n)
 					va += IBY2LG;
 				}
 				else {
-					i = *(WORD*)va;
+					i = *(int*)va;
 					/* always a unicode character */
 					if(c == 'c')
 						f[-1] = 'C';
 					b += snprint(b, eb-b, fmt, i);
-					va += IBY2WD;
+					va += sizeof(int);
 				}
 				break;
 			case 'r':
@@ -313,7 +313,7 @@ Sys_utfbytes(void *fp)
 
 	f = fp;
 	a = f->buf;
-	if(a == H || (UWORD)f->n > a->len)
+	if(a == H || (UINT)f->n > a->len)
 		error(exBounds);
 
 	utfnleng((char*)a->data, f->n, &nbyte);
@@ -332,7 +332,7 @@ Sys_byte2char(void *fp)
 	f = fp;
 	a = f->buf;
 	n = f->n;
-	if(a == H || (UWORD)n >= a->len)
+	if(a == H || (UINT)n >= a->len)
 		error(exBounds);
 	r = a->data[n];
 	if(r < Runeself){
@@ -374,7 +374,7 @@ Sys_char2byte(void *fp)
 	a = f->buf;
 	n = f->n;
 	c = f->c;
-	if(a == H || (UWORD)n>=a->len)
+	if(a == H || (UINT)n>=a->len)
 		error(exBounds);
 	if(c<0 || c>=Runemax)
 		c = Runeerror;

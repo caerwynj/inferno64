@@ -1340,8 +1340,8 @@ comp(Inst *i)
 			genw(i->s.imm);
 			break;
 		}
-		opwld(i, Oldw, RAX);
-		opwst(i, Ostw, RAX);  // TODO we leave this as 64bit because limbo uses movw to move a pointer, e.g. a channel
+		opwldw(i, Oldw, RAX);
+		opwstw(i, Ostw, RAX);  // TODO we leave this as 64bit because limbo uses movw to move a pointer, e.g. a channel
 		break;
 	case ICVTWL:
 		opwldw(i, Oldw, RAX);
@@ -1429,6 +1429,8 @@ comp(Inst *i)
 		opwld(i, Oldw, RTMP);			// MOVW	xx(s), BX
 
 		if(bflag){
+			cmpl(RTMP, (ulong)H);			// CMPL AX, $H
+			gen2(Ojeqb, 0x07);			// JNE	.+10
 			opwstw(i, Oldw, RAX);
 			modrmw(0x3b, O(Array, len), RTMP, RAX);	/* CMP index, len */
 			gen2(0x72, 0x0c);		/* JB */
@@ -1504,7 +1506,7 @@ comp(Inst *i)
 				gen2(Omovzxw, (1<<6)|(0<<3)|4);
 				gen2((1<<6)|(RBX<<3)|RAX, O(String, data));
 			}
-			opwst(i, Ostw, RAX);
+			opwstw(i, Ostw, RAX);
 			break;
 		}
 		modrm(Ocmpi, O(String, len), RAX, 7);  /* TODO from here to the break*/
@@ -1523,7 +1525,7 @@ comp(Inst *i)
 			gen2(Omovzxw, (1<<6)|(0<<3)|4);		/* movzwx 12(AX)(RBX*2), RAX */
 			gen2((1<<6)|(RBX<<3)|RAX, O(String, data));
 		}
-		opwst(i, Ostw, RAX);
+		opwstw(i, Ostw, RAX);
 		break;
 	case ICASE:
 		comcase(i, 1);

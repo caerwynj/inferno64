@@ -3,8 +3,8 @@ typedef uchar		BYTE;		/* 8  bits */
 	with the goal of making it architecture specific */
 typedef long		WORD;		/* 64 bits */
 typedef unsigned long	UWORD;		/* 64 bits */
-typedef long		INT;		/* TODO should be 32 bits */
-typedef unsigned long	UINT;		/* TODO should be 32 bits */
+typedef int		INT;		/* TODO should be 32 bits */
+typedef unsigned int	UINT;		/* TODO should be 32 bits */
 typedef vlong		LONG;		/* 64 bits */
 typedef uvlong		ULONG;		/* 64 bits */
 typedef double		REAL;		/* 64 double IEEE754 */

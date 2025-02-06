@@ -4,7 +4,7 @@
 #include "raise.h"
 
 #define OP(fn)	void fn(void)
-#define W(p)	*((long*)(p))
+#define W(p)	*((int*)(p))
 
 #define CANGET(c)	((c)->size > 0)
 #define CANPUT(c)	((c)->buf != H && (c)->size < (c)->buf->len)

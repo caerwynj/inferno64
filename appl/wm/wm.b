@@ -25,6 +25,8 @@ Bdwidth: con 3;
 Sminx, Sminy, Smaxx, Smaxy: con iota;
 Minx, Miny, Maxx, Maxy: con 1<<iota;
 Background: con int 16r777777FF;
+DBG: con 1;
+print: import sys;
 
 screen: ref Screen;
 display: ref Display;
@@ -125,6 +127,7 @@ init(ctxt: ref Draw->Context, argv: list of string)
 			break;
 		if(p.buttons && (ptrfocus == nil || buttons == 0)){
 			c := wmsrv->find(p.xy);
+			if(DBG)print("ptr (%d,%d) b=%x c=%d\n", p.xy.x, p.xy.y, p.buttons, c==nil);
 			if(c != nil){
 				ptrfocus = c;
 				c.ctl <-= "raise";
@@ -200,7 +203,7 @@ init(ctxt: ref Draw->Context, argv: list of string)
 
 handlerequest(win: ref Wmclient->Window, wmctxt: ref Wmcontext, c: ref Client, req: string): string
 {
-#sys->print("%d: %s\n", c.id, req);
+	if(DBG)print("%d: %s\n", c.id, req);
 	args := str->unquoted(req);
 	if(args == nil)
 		return "no request";
@@ -586,6 +589,7 @@ setfocus(win: ref Wmclient->Window, new: ref Client)
 		old.ctl <-= "haskbdfocus 0";
 	
 	if(new != nil){
+		if(DBG)print("setfocus %d\n", new.id);
 		new.ctl <-= "raise";
 		new.ctl <-= "haskbdfocus 1";
 		kbdfocus = new;

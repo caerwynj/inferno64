@@ -15,9 +15,8 @@ String	snil;			/* String known to be zero length */
 
 #define OP(fn)	void fn(void)
 #define B(r)	*((BYTE*)(R.r))
-#define W(r)	*((long*)(R.r))
-#define UW(r)	*((unsigned long*)(R.r))
-#define DW(r)	*((LONG*)(R.r))
+#define W(r)	*((int*)(R.r))
+#define UW(r)	*((unsigned int*)(R.r))
 #define F(r)	*((REAL*)(R.r))
 #define V(r)	*((LONG*)(R.r))	
 #define UV(r)	*((ULONG*)(R.r))	
@@ -38,7 +37,7 @@ OP(movpc){ T(d) = &R.M->prog[W(s)]; }
 OP(movm) { memmove(R.d, R.s, W(m)); }
 OP(lea)  { P(d) = (WORD*)R.s; }
 OP(movb) { B(d) = B(s); }
-OP(movw) { DW(d) = DW(s); }  /* TODO this instruction is used by LImbo to move the address of a Channel when creating Alt structure*/
+OP(movw) { W(d) = W(s); }  /* TODO this instruction is used by LImbo to move the address of a Channel when creating Alt structure*/
 OP(movf) { F(d) = F(s); }
 OP(movl) { V(d) = V(s); }
 OP(cvtbw){ W(d) = B(s); }

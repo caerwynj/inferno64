@@ -195,7 +195,7 @@ Tk_color(void *fp)
 	if(tkparsecolor(string2c(f->col), &rgba) != nil)
 		*f->ret = DNotacolor;
 	else
-		*f->ret = rgba;
+		*f->ret = (int)rgba;
 }
 
 void

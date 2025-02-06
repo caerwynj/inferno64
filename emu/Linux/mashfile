@@ -1,0 +1,4 @@
+pwd;
+echo hello;
+ls /dev;
+exit;

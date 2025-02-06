@@ -83,7 +83,7 @@ Rect_canon(void *fp)
 {
 	F_Rect_canon *f;
 	Draw_Rect *ret;
-	WORD t;
+	int t;
 
 	f = fp;
 
@@ -212,7 +212,7 @@ void
 Rect_contains(void *fp)
 {
 	F_Rect_contains *f;
-	WORD x, y;
+	int x, y;
 
 	f = fp;
 
@@ -227,7 +227,7 @@ Rect_addpt(void *fp)
 {
 	F_Rect_addpt *f;
 	Draw_Rect *ret;
-	WORD n;
+	int n;
 
 	f = fp;
 
@@ -243,7 +243,7 @@ Rect_addpt(void *fp)
 void
 Rect_subpt(void *fp)
 {
-	WORD n;
+	int n;
 	F_Rect_subpt *f;
 	Draw_Rect *ret;
 
@@ -261,7 +261,7 @@ Rect_subpt(void *fp)
 void
 Rect_inset(void *fp)
 {
-	WORD n;
+	int n;
 	Draw_Rect *ret;
 	F_Rect_inset *f;
 

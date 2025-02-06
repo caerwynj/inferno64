@@ -1666,7 +1666,7 @@ callcom(Src *src, int op, Node *n, Node *ret)
 		nfn->decl->desc = gendesc(nfn->right->decl, idoffsets(nfn->ty->ids, MaxTemp, MaxAlign), nfn->ty->ids);
 	}
 
-	talloc(&frame, tint, nil);
+	talloc(&frame, tbig, nil);
 
 	mod = nfn->left;
 	ind = nfn->right;

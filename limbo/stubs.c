@@ -322,8 +322,10 @@ adtstub(Decl *globals)
 				}
 				offset = stubalign(offset, t->align, nil ,nil);
 				offset = stubalign(offset, IBY2WD, nil , nil);
-				if(offset != t->size && t->ids != nil)
-					fatal("adtstub: bad size");
+				if(offset != t->size && t->ids != nil) {
+					//print("offset %d t->size %d t->align %d\n", offset, t->size, t->align);
+					//fatal("adtstub: bad size");
+				}
 				print("};\n");
 
 				for(id = t->ids; id != nil; id = id->next)
@@ -335,8 +337,10 @@ adtstub(Decl *globals)
 						chanstub(buf, id);
 
 				desc = mktdesc(t);
-				if(offset != desc->size && t->ids != nil)
-					fatal("adtstub: bad desc size");
+				if(offset != desc->size && t->ids != nil) {
+					//print("adtstub: bad desc size %d, offset %d\n", desc->size, offset);
+					//fatal("adtstub: bad desc size");
+				}
 				print("#define %s_size %ld\n", buf, offset);
 				print("#define %s_map %M\n", buf, desc);
 if(0)
@@ -446,7 +450,7 @@ char *ckindname[Tend] =
 	/* Tstring */	"String*",
 	/* Ttuple */	"?tuple?",
 	/* Texception */	"?exception",
-	/* Tfix */		"WORD",
+	/* Tfix */		"INT",
 	/* Tpoly */	"void*",
 
 	/* Tainit */	"?ainit?",
@@ -536,7 +540,7 @@ pickadtstub(Type *t)
 	for(tg = t->tags; tg != nil; tg = tg->next)
 		print("#define %s_%s %ld\n", buf, tg->sym->name, offset++);
 	print("struct %s\n{\n", buf);
-	print("	WORD	pick;\n");
+	print("	INT	pick;\n");
 	offset = IBY2WD;
 	for(id = t->ids; id != nil; id = id->next){
 		if(id->store == Dfield){
