@@ -19,7 +19,7 @@ EMUDIRS=\
 	libkeyring\
 	libdraw\
 #	libprefab\
-	libtk\
+#	libtk\
 #	libfreetype\
 	libmemdraw\
 	libmemlayer\
