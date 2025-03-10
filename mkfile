@@ -12,6 +12,7 @@ EMUDIRS=\
 	libmp\
 	libsec\
 	libmath\
+	utils/liballoc\
 	utils/iyacc\
 	limbo\
 	libinterp\
@@ -55,9 +56,9 @@ cleandist:V: clean
 nukedist:V: nuke
 	rm -f $ROOT/$OBJDIR/bin/*.exe
 	rm -f $ROOT/$OBJDIR/lib/lib*.a
-	
+
 &-Posix:QV:
-	for j in $DIRS utils tools
+	for j in $DIRS utils
 	do
 		echo "(cd $j; mk $MKFLAGS $stem)"
 		(cd $j; mk $MKFLAGS $stem) || exit 1
