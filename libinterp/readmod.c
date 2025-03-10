@@ -4,7 +4,7 @@
 #include "kernel.h"
 #define DBG if(0) print
 
-static int debug = 0;
+//static int debug = 0;
 
 Module*
 readmod(char *path, Module *m, int sync)
