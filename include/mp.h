@@ -72,6 +72,11 @@ void	mpdiv(mpint *dividend, mpint *divisor,  mpint *quotient, mpint *remainder);
 /* return neg, 0, pos as b1-b2 is neg, 0, pos */
 int	mpcmp(mpint *b1, mpint *b2);
 
+void mpor(mpint *b1, mpint *b2, mpint *sum);
+void mpand(mpint *b1, mpint *b2, mpint *sum);
+void mpnot(mpint *b, mpint *r);
+void mpxor(mpint *b1, mpint *b2, mpint *sum);
+
 /* extended gcd return d, x, and y, s.t. d = gcd(a,b) and ax+by = d */
 void	mpextendedgcd(mpint *a, mpint *b, mpint *d, mpint *x, mpint *y);
 
