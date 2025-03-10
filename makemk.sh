@@ -10,7 +10,7 @@
 # ROOT should be the root of the Inferno tree
 ROOT=${ROOT:-$PWD}
 SYSTARG=Linux
-OBJTYPE=${objtype:-arm64}
+OBJTYPE=${objtype:-amd64}
 SYSTYPE=posix
 
 # if you have already changed mkconfig from the distribution, we'll use the definitions from that
