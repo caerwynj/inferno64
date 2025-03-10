@@ -34,16 +34,18 @@ static void
 usage(void)
 {
 	fprint(2, "Usage: emu [options...] [file.dis [args...]]\n"
-		"\t-gXxY\n"
-		"\t-c[0-9]\n"
-		"\t-d file.dis\n"
-		"\t-s\n"
-		"\t-v\n"
+		"\t-h           This help screen\n"
+		"\t-gXxY        Window geometry\n"
+		"\t-c[0-9]      Compile on the fly\n"
+		"\t-d file.dis  Run as a daemon\n"
+		"\t-s           No trap handling\n"
+		"\t-v           Print startup messages\n"
+                "\t-m[0-9]      GC mark and sweep"
 		"\t-p<poolname>=maxsize\n"
 		"\t-f<fontpath>\n"
-		"\t-r<rootpath>\n"
+		"\t-r<rootpath> Set inferno root\n"
 		"\t-7\n"
-		"\t-B\n"
+		"\t-B           Suppress jit array bounds checks\n"
 		"\t-C<channel string>\n"
 		"\t-S\n");
 
@@ -141,6 +143,9 @@ option(int argc, char *argv[], void (*badusage)(void))
 		if(cflag < 0|| cflag > 9)
 			usage();
 		break;
+        case 'h':
+                usage();
+                break;
 	case 'I':	/* (temporary option) run without cons */
 		dflag++;
 		break;
