@@ -6,7 +6,7 @@
 
 #define DBG  if(0)print
 
-static int debug = 0;
+//static int debug = 0;
 
 #define T(r)	*((void**)(R.r))
 

@@ -1,5 +1,6 @@
 %{
 #include "limbo.h"
+extern	int	tolower(int);
 %}
 
 %union

@@ -14,8 +14,8 @@ char**		rebootargv;
 char	gkscanid[32] = "";
 static	char	*imod = "/dis/emuinit.dis";
 extern	char*	hosttype;
-extern char*	tkfont;	/* for libtk/utils.c */
-extern int	tkstylus;	/* libinterp/tk.c */
+/*extern*/ char*	tkfont;	/* for libtk/utils.c */
+/*extern*/ int	tkstylus;	/* libinterp/tk.c */
 extern	int	mflag;
 	int	dflag;
 	int	vflag;
@@ -34,16 +34,18 @@ static void
 usage(void)
 {
 	fprint(2, "Usage: emu [options...] [file.dis [args...]]\n"
-		"\t-gXxY\n"
-		"\t-c[0-9]\n"
-		"\t-d file.dis\n"
-		"\t-s\n"
-		"\t-v\n"
+		"\t-h           This help screen\n"
+		"\t-gXxY        Window geometry\n"
+		"\t-c[0-9]      Compile on the fly\n"
+		"\t-d file.dis  Run as a daemon\n"
+		"\t-s           No trap handling\n"
+		"\t-v           Print startup messages\n"
+                "\t-m[0-9]      GC mark and sweep"
 		"\t-p<poolname>=maxsize\n"
 		"\t-f<fontpath>\n"
-		"\t-r<rootpath>\n"
+		"\t-r<rootpath> Set inferno root\n"
 		"\t-7\n"
-		"\t-B\n"
+		"\t-B           Suppress jit array bounds checks\n"
 		"\t-C<channel string>\n"
 		"\t-S\n");
 
@@ -73,7 +75,7 @@ geom(char *val)
 {
 	char *p;
 	int x, y;
-	if (val == '\0' || (*val < '0' || *val > '9')) 
+	if (!val || (*val < '0' || *val > '9'))
 		return 0;
 	x = strtoul(val, &p, 0);
 	if(x >= 64) 
@@ -141,6 +143,9 @@ option(int argc, char *argv[], void (*badusage)(void))
 		if(cflag < 0|| cflag > 9)
 			usage();
 		break;
+        case 'h':
+                usage();
+                break;
 	case 'I':	/* (temporary option) run without cons */
 		dflag++;
 		break;
@@ -307,9 +312,9 @@ emuinit(void *imod)
 	/* the setid cannot precede the bind of #U */
 	kbind("#U", "/", MAFTER|MCREATE);
 	setid(eve, 0);
-	kbind("#^", "/dev", MBEFORE);	/* snarf */
-	kbind("#^", "/chan", MBEFORE); 
-	kbind("#m", "/dev", MBEFORE);	/* pointer */
+	//kbind("#^", "/dev", MBEFORE);	/* snarf */
+	//kbind("#^", "/chan", MBEFORE);
+	//kbind("#m", "/dev", MBEFORE);	/* pointer */
 	kbind("#c", "/dev", MBEFORE);
 	kbind("#p", "/prog", MREPL);
 	kbind("#d", "/fd", MREPL);

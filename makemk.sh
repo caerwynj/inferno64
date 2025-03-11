@@ -8,9 +8,9 @@
 
 # change these defines as appropriate here or in mkconfig
 # ROOT should be the root of the Inferno tree
-ROOT=${ROOT:-~/github/9ferno}
+ROOT=${ROOT:-$PWD}
 SYSTARG=Linux
-OBJTYPE=${objtype:-arm64}
+OBJTYPE=${objtype:-amd64}
 SYSTYPE=posix
 
 # if you have already changed mkconfig from the distribution, we'll use the definitions from that
@@ -53,6 +53,13 @@ $CC $CFILES || error libregexp compilation failed
 $AR $PLAT/lib/libregexp.a `ofiles $CFILES` || error libregexp ar failed
 $RANLIB $PLAT/lib/libregexp.a || error libregexp ranlib failed
 
+# liballoc
+cd $ROOT/utils/liballoc || error cannot find liballoc directory
+CFILES="alloc.c"
+$CC $CFILES || error liballoc compilation failed
+$AR $PLAT/lib/liballoc.a `ofiles $CFILES` || error liballoc ar failed
+$RANLIB $PLAT/lib/liballoc.a || error liballoc ranlib failed
+
 # libbio
 cd $ROOT/libbio || error cannot find libbio directory
 $CC *.c || error libbio compilation failed
@@ -72,7 +79,7 @@ cd $ROOT/utils/mk
 CFILES="Posix.c sh.c"	# system specific
 CFILES="$CFILES arc.c archive.c bufblock.c env.c file.c graph.c job.c lex.c main.c match.c mk.c parse.c recipe.c rule.c run.c shprint.c symtab.c var.c varsub.c word.c"
 $CC $CFILES || error mk compilation failed
-$LD -o mk `ofiles $CFILES` $PLAT/lib/libregexp.a $PLAT/lib/libbio.a $PLAT/lib/lib9.a || error mk link failed
+$LD -o mk `ofiles $CFILES` $PLAT/lib/libregexp.a $PLAT/lib/liballoc.a $PLAT/lib/libbio.a $PLAT/lib/lib9.a || error mk link failed
 cp mk $PLAT/bin || error mk binary install failed
 
 echo mk binary built successfully!

@@ -26,5 +26,5 @@ krealloc(void *v, size_t size)
 void*
 kcalloc(size_t n, size_t szelem)
 {
-	return malloc(n*szelem);
+	return calloc(n, szelem);
 }

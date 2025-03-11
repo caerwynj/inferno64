@@ -268,6 +268,7 @@ extern	int	(*doquote)(int);
  */
 extern	ulong	truerand(void);
 extern	ulong	ntruerand(ulong);
+extern	int nrand(int n);
 
 /*
  * math

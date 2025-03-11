@@ -24,9 +24,12 @@ sprint(char *buf, char *fmt, ...)
 	/*
 	 * the stack might be near the top of memory, so
 	 * we must be sure not to overflow a 32-bit pointer.
+	 *
+	 * careful!  gcc-4.2 assumes buf+len < buf can never be true and
+	 * optimizes the test away.  casting to uintptr works around this bug.
 	 */
 	if((uintptr)buf+len < (uintptr)buf)
-		len = -(uint)buf-1;
+		len = -(uintptr)buf-1;
 
 	va_start(args, fmt);
 	n = vsnprint(buf, len, fmt, args);
