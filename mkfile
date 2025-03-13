@@ -13,17 +13,14 @@ EMUDIRS=\
 	libsec\
 	libmath\
 	utils/iyacc\
+	utils/liballoc\
 	limbo\
 	libinterp\
 	libkeyring\
 	libdraw\
-#	libprefab\
 	libtk\
-#	libfreetype\
 	libmemdraw\
 	libmemlayer\
-#	libdynld\
-	utils/data2c\
 	utils/ndate\
 	emu\
 
@@ -43,10 +40,10 @@ all:V:		all-$HOSTMODEL
 clean:V:	clean-$HOSTMODEL
 install:V:	install-$HOSTMODEL
 installall:V:	installall-$HOSTMODEL
-emu:V:	emu/all-$HOSTMODEL
-emuinstall:V:	emu/install-$HOSTMODEL
-emuclean:V:	emu/clean-$HOSTMODEL
-emunuke:V:	emu/nuke-$HOSTMODEL
+#emu:V:	emu/all-$HOSTMODEL
+#emuinstall:V:	emu/install-$HOSTMODEL
+#emuclean:V:	emu/clean-$HOSTMODEL
+#emunuke:V:	emu/nuke-$HOSTMODEL
 nuke:V:		nuke-$HOSTMODEL
 
 cleandist:V: clean
@@ -57,7 +54,7 @@ nukedist:V: nuke
 	rm -f $ROOT/$OBJDIR/lib/lib*.a
 	
 &-Posix:QV:
-	for j in $DIRS utils tools
+	for j in $DIRS utils
 	do
 		echo "(cd $j; mk $MKFLAGS $stem)"
 		(cd $j; mk $MKFLAGS $stem) || exit 1
@@ -97,20 +94,6 @@ emu/&-Plan9:QV:
 		echo '@{builtin cd' $j '; mk $MKFLAGS $stem}'
 		@{builtin cd $j; mk $MKFLAGS $stem }
 	}
-
-# Convenience targets
-
-Inferno-% inferno-% Inferno-386-% inferno-386-%:V:
-	mk 'SYSHOST=Inferno' 'OBJTYPE=386' $stem
-
-Inferno-arm-% inferno-arm-%:V:
-	mk 'SYSHOST=Inferno' 'OBJTYPE=arm' $stem
-
-Plan9-% plan9-%:V:
-	mk 'SYSHOST=Plan9' 'OBJTYPE=386' $stem
-
-Linux-% linux-%:V:
-	mk 'SYSHOST=Linux' 'OBJTYPE=386' $stem
 
 mkdirs:V:	mkdirs-$SHELLTYPE
 
