@@ -87,7 +87,7 @@ r:
 				error(exBounds);
 			}
 			ns = newstring((v + 1 + v/4)*sizeof(Rune));
-			memmove(ns->Srune, ss->Srune, -ss->len*sizeof(Rune));
+			memmove(ns->Srune, ss->Srune, l*sizeof(Rune));
 			ns->Srune[v] = r;
 			ns->len = -(v+1);
 			ns->max /= sizeof(Rune);
