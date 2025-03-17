@@ -253,7 +253,7 @@ rewrite(Node *n)
 		n->right = rewrite(right);
 		n = mkunary(Oind, n);
 		n->ty = n->left->ty;
-		n->left->ty = tint;
+		n->left->ty = tbig;
 		break;
 	case Oload:
 		n->right = mkn(Oname, nil, nil);
@@ -391,11 +391,11 @@ if(debug['U']) print("call %n\n", left);
 			right->ty = tint;
 
 			n->left = left = mkunary(Oind, left);
-			left->ty = tint;
+			left->ty = tbig;
 			n->op = Oadd;
 			n = mkunary(Oind, n);
 			n->ty = n->left->ty;
-			n->left->ty = tint;
+			n->left->ty = tbig;
 			n->left = rewrite(n->left);
 			return n;
 		case Darg:
@@ -442,12 +442,12 @@ if(debug['U']) print("call %n\n", left);
 
 		if(left->ty->kind != Tref){
 			n->left = mkunary(Oadr, left);
-			n->left->ty = tint;
+			n->left->ty = tbig;
 		}
 		n->op = Oadd;
 		n = mkunary(Oind, n);
 		n->ty = n->left->ty;
-		n->left->ty = tint;
+		n->left->ty = tbig;
 		n->left = rewrite(n->left);
 		return n;
 	case Oadr:
@@ -510,7 +510,7 @@ if(debug['U']) print("call %n\n", left);
 			}
 			else
 				addiface(left->decl, d);	/* is this necessary ? */
-			n->ty = tint;
+			n->ty = tbig;
 			return n;
 		}
 		if(n->flags == FNPTRA){
@@ -520,7 +520,7 @@ if(debug['U']) print("call %n\n", left);
 		}
 		if(n->flags == (FNPTRA|FNPTR2)){
 			n = mkdeclname(&n->src, d->link->next);
-			n->ty = tint;
+			n->ty = tbig;
 			return n;
 		}
 		break;
@@ -675,6 +675,7 @@ sumark(Node *n)
 		switch(n->ty->kind){
 		case Tint:
 		case Tfix:
+		case Tbig:
 			v = n->val;
 			if(v < 0 && ((v >> 29) & 0x7) != 7
 			|| v > 0 && (v >> 29) != 0){
@@ -683,10 +684,11 @@ sumark(Node *n)
 			}else
 				n->addable = Rconst;
 			break;
-		case Tbig:
+			/*
 			n->decl = globalBconst(n);
 			n->addable = Rmreg;
 			break;
+			*/
 		case Tbyte:
 			n->decl = globalbconst(n);
 			n->addable = Rmreg;
@@ -1235,11 +1237,12 @@ ecom(Src *src, Node *nto, Node *n)
 			sumark(&tr);
 			ecom(src, &tr, mod);
 			ind = mkunary(Oind, mkbin(Oadd, dupn(0, src, &tto), mkconst(src, IBY2WD)));
-			ind->ty = ind->left->ty = ind->left->right->ty = tint;
+			ind->ty = ind->left->ty = tbig;
+			ind->left->right->ty = tint;
 			tr.op = Oas;
 			tr.left = ind;
 			tr.right = mkdeclname(src, d);
-			tr.ty = tr.right->ty = tint;
+			tr.ty = tr.right->ty = tbig;
 			sumark(&tr);
 			tr.right->addable = mod->op == Oself && newfnptr ? Rnoff : Roff;
 			ecom(src, nil, &tr);
@@ -1921,7 +1924,7 @@ arraydefault(Node *a, Node *elem)
 	t = mkbin(Oas, mkunary(Oind, t), elem);
 	t->ty = elem->ty;
 	t->left->ty = elem->ty;
-	t->left->left->ty = tint;
+	t->left->left->ty = tbig;
 	sumark(t);
 	ecom(&t->src, nil, t);
 
@@ -1952,7 +1955,7 @@ tupcom(Node *nto, Node *n)
 	toff.ty = tint;
 	tadr.op = Oadr;
 	tadr.left = nto;
-	tadr.ty = tint;
+	tadr.ty = tbig;
 	tadd.op = Oadd;
 	tadd.left = &tadr;
 	tadd.right = &toff;
@@ -1995,7 +1998,7 @@ tuplcom(Node *n, Node *nto)
 	toff.ty = tint;
 	tadr.op = Oadr;
 	tadr.left = n;
-	tadr.ty = tint;
+	tadr.ty = tbig;
 	tadd.op = Oadd;
 	tadd.left = &tadr;
 	tadd.right = &toff;
@@ -2190,7 +2193,7 @@ recvacom(Src *src, Node *nto, Node *n)
 	c->labs = labs;
 	talt = mktalt(c);
 
-	talloc(&which, tint, nil);
+	talloc(&which, tbig, nil);
 	talloc(&tab, talt, nil);
 
 	/*
@@ -2204,7 +2207,7 @@ recvacom(Src *src, Node *nto, Node *n)
 	adr = znode;
 	adr.op = Oadr;
 	adr.left = &tab;
-	adr.ty = tint;
+	adr.ty = tbig;
 	add = znode;
 	add.op = Oadd;
 	add.left = &adr;
@@ -2295,7 +2298,7 @@ pickdupcom(Src *src, Node *nto, Node *n)
 	talloc(&tmp, orig->ty, nil);
 	ecom(src, &tmp, orig);
 	orig = mkunary(Oind, &tmp);
-	orig->ty = tint;
+	orig->ty = tbig;
 	sumark(orig);
 
 	dest = mkunary(Oind, nto);
@@ -2425,7 +2428,7 @@ globalBconst(Node *n)
 	s = enter(buf, 0);
 	d = s->decl;
 	if(d == nil){
-		d = mkids(&n->src, s, tbig, nil);
+		d = mkids(&n->src, s, tint, nil);
 		installids(Dglobal, d);
 		d->init = n;
 		d->refs++;
@@ -2551,7 +2554,8 @@ fpcall(Src *src, int op, Node *n, Node *ret)
 	ind = mkunary(Oind, mkbin(Oadd, dupn(0, src, e), mkconst(src, IBY2WD)));
 	n->left = mkbin(Omdot, mod, ind);
 	n->left->ty = e->ty->tof;
-	mod->ty = ind->ty = ind->left->ty = ind->left->right->ty = tint;
+	mod->ty = ind->ty = ind->left->ty = tbig;
+	ind->left->right->ty = tint;
 	sumark(n);
 	callcom(src, op, n, ret);
 	tfree(&tp);

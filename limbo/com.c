@@ -834,9 +834,9 @@ casecom(Node *cn)
 			ecom(&left->src, nil, left);
 			tfreenow();
 			left = mkunary(Oind, dupn(1, &left->src, left->left));
-			left->ty = tint;
+			left->ty = tbig;
 			sumark(left);
-			ctype = tint;
+			ctype = tbig;
 		}else{
 			left = eacom(left, &tmp, nil);
 			tfreenow();
@@ -987,12 +987,12 @@ altcom(Node *nalt)
 		}
 	}
 
-	talloc(&which, tint, nil);
+	talloc(&which, tbig, nil);
 	talloc(&tab, talt, nil);
 
 	/*
 	 * build the node for the address of each channel,
-	 * the values to send, and the storage fro values received
+	 * the values to send, and the storage for values received
 	 */
 	off = znode;
 	off.op = Oconst;
@@ -1001,7 +1001,7 @@ altcom(Node *nalt)
 	adr = znode;
 	adr.op = Oadr;
 	adr.left = &tab;
-	adr.ty = tint;
+	adr.ty = tbig;
 	add = znode;
 	add.op = Oadd;
 	add.left = &adr;

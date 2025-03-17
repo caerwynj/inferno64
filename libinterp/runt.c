@@ -86,6 +86,8 @@ xprint(Prog *xp, void *vfp, void *vva, String *s1, char *buf, int n)
 				break;
 			case 'q':
 			case 's':
+				while((va - fp) & (sizeof(WORD)-1))
+					va++;
 				ss = *(String**)va;
 				va += IBY2WD;
 				if(ss == H)
