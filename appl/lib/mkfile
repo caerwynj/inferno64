@@ -7,7 +7,7 @@ DIRS=\
 	encoding\
 	ida\
 	print\
-	spki\
+	#spki\
 	strokes\
 	styxconv\
 	#usb\
