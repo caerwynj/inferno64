@@ -688,7 +688,7 @@ schedcheck(Inst *i)
 {
 	if(RESCHED && i->d.ins <= i){
 		con((uintptr)&R, RTMP);
-		/* sub $1, R.IC */
+		/* sub $1, R.IC # IC is an int*/
 		modrmw(0x83, O(REG, IC), RTMP, 5);
 		genb(1);
 		gen2(Ojgtb, 5);
@@ -1677,7 +1677,7 @@ macfrp(void)
 	genb(Oret);				// RET
 	modrm(0x83, O(Heap, ref)-sizeof(Heap), RAX, 7);
 	genb(0x01);				// CMP	AX.ref, $1
-	gen2(Ojeqb, 0x04);			// JNE	.+4
+	gen2(Ojeqb, 0x05);			// JNE	.+5
 	modrm(Odecrm, O(Heap, ref)-sizeof(Heap), RAX, 1);
 	genb(Oret);				// DEC	AX.ref
 						// RET
@@ -1768,7 +1768,7 @@ maccolr(void)
 {
 	modrm(Oincrm, O(Heap, ref)-sizeof(Heap), RBX, 0);  // INCL	ref(BX)
 	con((uintptr)&mutator, RAX);
-	modrm(Oldw, 0, RAX, RAX);
+	modrmw(Oldw, 0, RAX, RAX);    // mutator is an int
 	//gen2(Oldw, (3<<6)|(RAX<<3)|RAX);
 	//gen2(Oldw, (0<<6)|(RAX<<3)|5);		
 	//gen4(code - (uintptr)&mutator);			// MOVL	mutator, RAX
@@ -1780,7 +1780,7 @@ maccolr(void)
 	//gen2(Ostw, (0<<6)|(RAX<<3)|5);		// can be any !0 value
 	//gen8((uintptr)&nprop);			// MOVL	RBX, nprop
 	con((uintptr)&nprop, RAX);
-	modrm(Ostw, 0, RAX, RBX);
+	modrmw(Ostw, 0, RAX, RBX);   // nprop is an int
 	
 	genb(Oret);
 }
