@@ -1641,6 +1641,7 @@ main(int argc, char *argv[])
 	char *s, *ofile, *ext, *root;
 	int i;
 
+	setbinmode();
 	FPinit();
 	FPcontrol(0, INVAL|ZDIV|OVFL|UNFL|INEX);
 	canonnan = canontod(canonnanbits);

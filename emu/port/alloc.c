@@ -624,7 +624,7 @@ smalloc(uintptr size)
 
 /* this function signature is tied to the system's libc.h */
 void*
-kmalloc(ulong size)
+kmalloc(size_t size)
 {
 	void *v;
 
@@ -674,7 +674,7 @@ kfree(void *v)
 
 /* this function signature is tied to the system's libc.h */
 void*
-krealloc(void *v, ulong size)
+krealloc(void *v, size_t size)
 {
 	void *nv;
 
@@ -693,7 +693,7 @@ krealloc(void *v, ulong size)
 }
 
 void
-setmalloctag(void *v, uintptr pc)
+setmalloctag(void *v, ulong pc)
 {
 	Bhdr *b;
 
@@ -703,7 +703,7 @@ setmalloctag(void *v, uintptr pc)
 	}
 }
 
-uintptr
+ulong
 getmalloctag(void *v)
 {
 	Bhdr *b;
@@ -715,7 +715,7 @@ getmalloctag(void *v)
 }
 
 void
-setrealloctag(void *v, uintptr pc)
+setrealloctag(void *v, ulong  pc)
 {
 	Bhdr *b;
 
@@ -725,7 +725,7 @@ setrealloctag(void *v, uintptr pc)
 	}
 }
 
-uintptr
+ulong
 getrealloctag(void *v)
 {
 	Bhdr *b;
@@ -746,7 +746,7 @@ msize(void *v)
 
 /* this function signature is tied to the system's libc.h */
 void*
-kcalloc(ulong n, ulong szelem)
+kcalloc(size_t n, size_t szelem)
 {
 	return malloc(n*szelem);
 }

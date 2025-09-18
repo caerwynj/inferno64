@@ -246,6 +246,7 @@ main(int argc, char *argv[])
 
 	if(coherence == nil)
 		coherence = nofence;
+	setbinmode();
 	quotefmtinstall();
 	savestartup(argc, argv);
 	/* set default root now, so either $EMU or -r can override it later */

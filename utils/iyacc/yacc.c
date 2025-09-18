@@ -377,7 +377,7 @@ int	gtnm(void);
 void
 main(int argc, char *argv[])
 {
-
+	setbinmode();
 	setup(argc, argv);	/* initialize and read productions */
 	tbitset = NWORDS(ntokens);
 	cpres();		/* make table of which productions yield a given nonterminal */

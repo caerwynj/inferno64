@@ -352,8 +352,9 @@ fsinit(void)
 	 * set up for nt file security checking
 	 */
 	ntsrv = filesrv(rootdir);
-	usesec = PlatformId == VER_PLATFORM_WIN32_NT; 	/* true for NT and 2000 */
-	if(0 && usesec){
+	//usesec = PlatformId == VER_PLATFORM_WIN32_NT; 	/* true for NT and 2000 */
+	usesec = 0;
+	if(usesec){
 		file_share_delete = FILE_SHARE_DELETE;	/* sensible handling of shared files by delete and rename */
 		secinit();
 		if(!fsacls(rootdir))

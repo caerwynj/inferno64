@@ -27,7 +27,7 @@ static	int	donetermset = 0;
 static	int sleepers = 0;
 
 
-__declspec(thread)       Proc    *up;
+__thread Proc    *up;
 
 HANDLE	ntfd2h(int);
 int	nth2fd(HANDLE);
