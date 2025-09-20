@@ -44,7 +44,7 @@ rbnotempty(void *v)
  *  spin counting up
  */
 void
-genrandom(void *v)
+rgenrandom(void *v)
 {
 	USED(v);
 	oslopri();
@@ -122,7 +122,7 @@ if(0)print("A%ld.%d.%zx|", n, rb.target, getcallerpc(&xp));
 	qlock(&rb.l);
 	if(!rb.kprocstarted){
 		rb.kprocstarted = 1;
-		kproc("genrand", genrandom, 0, 0);
+		kproc("genrand", rgenrandom, 0, 0);
 		kproc("randomclock", randomclock, 0, 0);
 	}
 
