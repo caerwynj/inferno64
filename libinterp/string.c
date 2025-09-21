@@ -301,7 +301,7 @@ OP(cvtac)
 
 OP(lenc)
 {
-	int l;
+	ulong l;
 	String *ss;
 
 	l = 0;
