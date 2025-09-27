@@ -325,7 +325,7 @@ request(r: ref Reply, query: string, nbytes: int, now: int, wc: chan of (int, st
 	donec <-= r;
 }
 
-reply(r: ref Reply, off: big, nbytes: int, rc: chan of (array of byte, string))
+reply(r: ref Reply, off: int, nbytes: int, rc: chan of (array of byte, string))
 {
 	if(r.err != nil){
 		rc <-= (nil, r.err);
@@ -336,24 +336,24 @@ reply(r: ref Reply, off: big, nbytes: int, rc: chan of (array of byte, string))
 		addr = hd r.addrs;
 		r.addrs = tl r.addrs;
 	}
-	off = big 0;	# this version ignores offset
+	off = 0;	# this version ignores offset
 	rc <-= reads(addr, off, nbytes);
 }
 
 #
 # return the file2chan reply for a read of the given string
 #
-reads(str: string, off: big, nbytes: int): (array of byte, string)
+reads(str: string, off: int, nbytes: int): (array of byte, string)
 {
 	bstr := array of byte str;
 	slen := len bstr;
-	if(off < big 0 || off >= big slen)
+	if(off < 0 || off >= slen)
 		return (nil, nil);
-	if(off + big nbytes > big slen)
-		nbytes = slen - int off; # TODO potential bug truncating big to int
+	if(off + nbytes > slen)
+		nbytes = slen - off; # TODO potential bug truncating big to int
 	if(nbytes <= 0)
 		return (nil, nil);
-	return (bstr[int off:int off+nbytes], nil); # TODO potential bug truncating big to int
+	return (bstr[off:off+nbytes], nil); # TODO potential bug truncating big to int
 }
 
 lookcache(query: string, now: int): ref Cached

@@ -31,7 +31,7 @@ HFILES=	fns.h\
 	../include/ar.h\
 	mk.h\
 
-LIBS=	regexp bio 9
+LIBS=	regexp bio 9 alloc
 
 BIN=$ROOT/$OBJDIR/bin
 

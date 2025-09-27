@@ -9,7 +9,7 @@
 #define	A(r)	*((Array**)(r))
 
 Module*	modules;
-int	dontcompile = 1; /* TODO compiler is broken on amd64 atleast */
+int	dontcompile = 0; /* TODO compiler is broken on amd64 atleast */
 
 static s32
 operand(uchar **p)
@@ -724,10 +724,7 @@ unload(Module *m)
 		last = &mm->link;
 	}
 
-	if(m->rt == DYNMOD)
-		freedyncode(m);
-	else
-		destroy(m->origmp);
+	destroy(m->origmp);
 
 	destroylinks(m);
 

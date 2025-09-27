@@ -71,8 +71,6 @@ typedef unsigned int	u32int;
 typedef signed int	s32int;
 typedef unsigned int	u32;
 typedef signed int s32;
-typedef intptr		WORD;
-typedef uintptr		UWORD;
 typedef unsigned short	u16int;
 typedef signed short	s16int;
 typedef unsigned short	u16;
@@ -169,6 +167,15 @@ extern	uintptr	getmalloctag(void*);
 extern	uintptr	getrealloctag(void*);
 extern	void*	malloctopoolblock(void*);
 
+#define malloc kmalloc
+#define free kfree
+#define realloc krealloc
+#define calloc kcalloc
+
+extern	void*	kmalloc(size_t);
+extern	void	kfree(void*);
+extern	void*	kcalloc(size_t,size_t);
+extern	void*	krealloc(void*, size_t);
 /*
  * print routines
  */

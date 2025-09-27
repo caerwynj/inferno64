@@ -4,7 +4,7 @@
 #	They are almost always the same.
 
 #	On Nt systems, the ROOT path MUST be of the form `drive:/path'
-ROOT=/home/9ferno
+#ROOT=
 
 #
 #	Specify the flavour of Tk (std for standard builds)
@@ -12,7 +12,7 @@ ROOT=/home/9ferno
 TKSTYLE=std
 
 # emu target, emu-g is a headless variant. Linux/BSD only (emu, emu-g)
-CONF=emu
+CONF=emu-g
 
 #	binary will be placed at $SYSTARG/$OBJTYPE/bin/$CONF
 
@@ -27,7 +27,7 @@ SYSTARG=$SYSHOST	# target system OS type (Hp, Inferno, Irix, Linux, Nt, Plan9, S
 #	environment; for other systems it is usually just hard-coded
 #
 #OBJTYPE=386			# target system object type (eg, 386, arm, mips, power, s800, sparc)
-OBJTYPE=arm64
+OBJTYPE=$objtype
 
 #
 #	no changes required beyond this point

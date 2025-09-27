@@ -54,9 +54,9 @@ X917init(void)
 void
 genrandom(uchar *p, int n)
 {
-	_genrandomqlock();
+//	_genrandomqlock();
 	if(x917state.seeded == 0)
 		X917init();
 	X917(p, n);
-	_genrandomqunlock();
+//	_genrandomqunlock();
 }

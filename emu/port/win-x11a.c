@@ -21,6 +21,11 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#undef malloc
+#undef free
+#undef calloc
+#undef realloc
+
 #define Colormap	XColormap
 #define Cursor		XCursor
 #define Display		XDisplay
@@ -553,7 +558,7 @@ xkbdproc(void *arg)
 	for(;;){
 		XNextEvent(xd, &event);
 		xkeyboard(&event);
-		xsetcursor(&event);
+		//xsetcursor(&event);
 	}
 }
 
@@ -1211,7 +1216,7 @@ xkeyboard(XEvent *e)
 	ind = 0;
 	if(md & ShiftMask)
 		ind = 1;
-	if(0){
+	if(1){
 		k = XKeycodeToKeysym(e->xany.display, (KeyCode)e->xkey.keycode, ind);
 
 		/* May have to try unshifted version */

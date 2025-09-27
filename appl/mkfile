@@ -5,14 +5,14 @@ DIRS=\
 #	alphabet\
 	charon\
 	cmd\
-	collab\
-	demo\
-	ebook\
+#	collab\
+#	demo\
+#	ebook\
 	grid\
 	lib\
 	math\
 #	mux\
-	spree\
+#	spree\
 	svc\
 	tiny\
 	wm\

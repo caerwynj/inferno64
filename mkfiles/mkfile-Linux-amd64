@@ -13,7 +13,7 @@ ASFLAGS=
 
 CC=		cc -c 
 CFLAGS=		-g\
-		-O\
+		#-O\
 		-fno-strict-aliasing\
 		-fno-aggressive-loop-optimizations\
 		-Wuninitialized -Wunused-variable -Wreturn-type -Wimplicit\
@@ -25,7 +25,7 @@ ANSICPP=
 LD=		cc 
 LDFLAGS=
 
-SYSLIBS=
+SYSLIBS= -lm
 
 YACC=		iyacc
 YFLAGS=		-d

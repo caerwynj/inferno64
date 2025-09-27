@@ -44,7 +44,7 @@ Name:	con "Mash";
 
 Rdreq: adt
 {
-	off:	big;
+	off:	int;
 	nbytes:	int;
 	fid:	int;
 	rc:	chan of (array of byte, string);
@@ -348,7 +348,7 @@ init(ctxt: ref Context, argv: list of string)
 	}
 }
 
-RPCread: type (big, int, int, chan of (array of byte, string));
+RPCread: type (int, int, int, chan of (array of byte, string));
 
 append(r: RPCread)
 {

@@ -44,7 +44,7 @@ sysfault(char *what, void *addr)
 {
 	char buf[64];
 
-	snprint(buf, sizeof(buf), "sys: %s%#p", what, addr);
+	snprint(buf, sizeof(buf), "sys: %s%#llux", what, addr);
 	disfault(nil, buf);
 }
 
@@ -141,7 +141,7 @@ cleanexit(int x)
 	if(dflag == 0)
 		termrestore();
 
-	kill(0, SIGKILL);
+	/*kill(0, SIGKILL);*/
 	exit(0);
 }
 

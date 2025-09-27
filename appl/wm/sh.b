@@ -47,7 +47,7 @@ Name:	con "Shell";
 
 Rdreq: adt
 {
-	off:	big;
+	off:	int;
 	nbytes:	int;
 	fid:	int;
 	rc:	chan of (array of byte, string);
@@ -261,7 +261,7 @@ main(ctxt: ref Draw->Context, argv: list of string)
 		sys->print("newsh: shell cons creation failed\n");
 		return;
 	}
-	dummyfwrite := chan of (big, array of byte, int, Sys->Rwrite);
+	dummyfwrite := chan of (int, array of byte, int, Sys->Rwrite);
 	fwrite := file.write;
 
 	rdrpc: Rdreq;
@@ -591,7 +591,7 @@ shctlcmd(win: ref Tk->Toplevel, c: string): string
 }
 
 
-RPCread: type (big, int, int, chan of (array of byte, string));
+RPCread: type (int, int, int, chan of (array of byte, string));
 
 append(r: RPCread)
 {

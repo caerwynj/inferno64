@@ -184,8 +184,8 @@ serveproc(w: ref Window, mouserq: chan of Sys->Rread, fwinname, fconsctl, fcons,
 				}
 			}
 			d := array of byte winname;
-			if(offset < big len d)
-				d = d[int offset:]; # TODO pontential bug truncating to int
+			if(offset < len d)
+				d = d[offset:]; # TODO pontential bug truncating to int
 			else
 				d = nil;
 			rc <-= (d, nil);

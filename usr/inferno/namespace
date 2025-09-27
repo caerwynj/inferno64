@@ -1,5 +1,3 @@
 bind -ia #C /
-
-# /chan/foo is more natural than '#s'/foo
 bind -b '#s' /chan
 

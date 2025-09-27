@@ -220,7 +220,6 @@ vlong		nhgetv(void*);
 ulong		nhgetl(void*);
 ushort		nhgets(void*);
 void*	smalloc(uintptr);
-void*	kmalloc(uintptr);
 
 /* Namespace Emulation */
 int		kbind(char*, char*, int);

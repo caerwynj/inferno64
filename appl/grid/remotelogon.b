@@ -314,15 +314,15 @@ infofile(fileio: ref Sys->FileIO, sync: chan of int)
 	(off, nbytes, fid, rc) := <-fileio.read =>
 		if(rc == nil)
 			break;
-		if(off > big len infodata)
-			off = big len infodata;
-		rc <-= (infodata[int off:], nil); # TODO potential bug truncating big to int
+		if(off > len infodata)
+			off = len infodata;
+		rc <-= (infodata[off:], nil); # TODO potential bug truncating big to int
 
 	(off, data, fid, wc) := <-fileio.write =>
 		if(wc == nil)
 			break;
 
-		if(off != big len infodata){
+		if(off != len infodata){
 			wc <-= (0, "cannot be rewritten");
 		} else {
 			nid := array[len infodata+len data] of byte;

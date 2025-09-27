@@ -259,19 +259,19 @@ save2file(dir, file: string)
 	(off, nbytes, fid, rc) := <-fileio.read =>
 		if(rc == nil)
 			break;
-		if(off > big len infodata){
+		if(off > len infodata){
 			rc <-= (infodata[int off:int off], nil); # TODO potential bug truncating big to int
 		} else {
-			if(off + big nbytes > big len infodata)
+			if(off + nbytes > len infodata)
 				nbytes = len infodata - int off; # TODO potential bug truncating big to int
-			rc <-= (infodata[int off:int off+nbytes], nil); # TODO potential bug truncating big to int
+			rc <-= (infodata[off:off+nbytes], nil); # TODO potential bug truncating big to int
 		}
 
 	(off, data, fid, wc) := <-fileio.write =>
 		if(wc == nil)
 			break;
 
-		if(off != big len infodata){
+		if(off != len infodata){
 			wc <-= (0, "cannot be rewritten");
 		} else {
 			nid := array[len infodata+len data] of byte;

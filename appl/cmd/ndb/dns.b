@@ -144,11 +144,8 @@ init(nil: ref Draw->Context, args: list of string)
 	stderr = sys->fildes(2);
 	readservers();
 	now = time();
-	(ok, nil) := sys->stat(svcname+"/dns");
-	if(ok == 0) {
-		sys->remove(svcname+"/dns");
-		sys->unmount(svcname, mntpt);
-	}
+	sys->remove(svcname+"/dns");
+	sys->unmount(svcname, mntpt);
 	publish(svcname);
 	if(sys->bind(svcname, mntpt, Sys->MBEFORE) < 0)
 		error(sys->sprint("can't bind #s on %s: %r", mntpt));
@@ -283,7 +280,7 @@ request(r: ref Reply, data: array of byte, wc: chan of (int, string), pidc: chan
 	donec <-= r;
 }
 
-reply(r: ref Reply, off: big, nbytes: int, rc: chan of (array of byte, string))
+reply(r: ref Reply, off: int, nbytes: int, rc: chan of (array of byte, string))
 {
 	if(r.err != nil || r.addrs == nil){
 		rc <-= (nil, r.err);
@@ -294,7 +291,7 @@ reply(r: ref Reply, off: big, nbytes: int, rc: chan of (array of byte, string))
 		addr = hd r.addrs;
 		r.addrs = tl r.addrs;
 	}
-	off = big 0;	# this version ignores offsets
+	off = 0;	# this version ignores offsets
 #	rc <-= reads(r.query+" "+r.attr+" "+addr, off, nbytes);
 	rc <-= reads(addr, off, nbytes);
 }
@@ -302,17 +299,17 @@ reply(r: ref Reply, off: big, nbytes: int, rc: chan of (array of byte, string))
 #
 # return the file2chan reply for a read of the given string
 #
-reads(str: string, off: big, nbytes: int): (array of byte, string)
+reads(str: string, off, nbytes: int): (array of byte, string)
 {
 	bstr := array of byte str;
 	slen := len bstr;
-	if(off < big 0 || off >= big slen)
+	if(off < 0 || off >= slen)
 		return (nil, nil);
-	if(off + big nbytes > big slen)
-		nbytes = slen - int off; # TODO potential bug truncating big to int
+	if(off + nbytes > slen)
+		nbytes = slen - off;
 	if(nbytes <= 0)
 		return (nil, nil);
-	return (bstr[int off:int off+nbytes], nil); # TODO potential bug truncating big to int
+	return (bstr[off:off+nbytes], nil);
 }
 
 sysname(): string

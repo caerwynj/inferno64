@@ -924,7 +924,7 @@ vt_param(vt: ref Vt, n: int, def: int, min, max: int): int
 #############################################################################
 
 
-consinp(cs: chan of string, cr: chan of (big, int, int, Sys->Rread))
+consinp(cs: chan of string, cr: chan of (int, int, int, Sys->Rread))
 {
 	for(;;) {
 		alt {

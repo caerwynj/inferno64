@@ -1,13 +1,16 @@
 # object files, libraries, etc
 *.[8qkv5967o]
 *.obj
+*.swp
+.gdbinit
 [8qkv965o].out
 [8qkv965o].emu
 obj.out
 obj.map
 vc*.pdb
 *.a
-o.emu-g
+emu/Linux/o.emu-g
+utils/mk/mk
 
 # yacc artifacts
 y.output
@@ -362,3 +365,6 @@ os/pc64/*.i
 os/pc64/primitives.s
 os/pc64/words.s
 os/pc64/forth.h
+
+.env
+

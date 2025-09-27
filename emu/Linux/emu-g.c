@@ -70,5 +70,7 @@ void modinit(void){
 
 	void setpointer(int x, int y){USED(x); USED(y);}
 	ulong strtochan(char *s){USED(s); return ~0;}
+	char*	tkfont;	/* for libtk/utils.c */
+	int	tkstylus;	/* libinterp/tk.c */
 char* conffile = "emu-g";
 ulong kerndate = KERNDATE;

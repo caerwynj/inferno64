@@ -12,7 +12,7 @@
 static void
 Hrand(uchar *s)
 {
-	ulong *u = (ulong*)s;
+	int *u = (int*)s;
 	*u++ = fastrand();
 	*u++ = fastrand();
 	*u++ = fastrand();

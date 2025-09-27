@@ -1,8 +1,10 @@
 typedef uchar		BYTE;		/* 8  bits */
 /* moved the WORD and UWORD to 9front/amd64/include/u.h
 	with the goal of making it architecture specific */
-/*typedef int		WORD;*/		/* 32 bits */
-/*typedef unsigned int	UWORD;*/		/* 32 bits */
+typedef long		WORD;		/* 64 bits */
+typedef unsigned long	UWORD;		/* 64 bits */
+typedef long		INT;		/* TODO should be 32 bits */
+typedef unsigned long	UINT;		/* TODO should be 32 bits */
 typedef vlong		LONG;		/* 64 bits */
 typedef uvlong		ULONG;		/* 64 bits */
 typedef double		REAL;		/* 64 double IEEE754 */
@@ -139,8 +141,8 @@ struct Progq
 	
 struct String
 {
-	int	len;		/* string length */
-	int	max;		/* maximum length in representation */
+	WORD	len;		/* string length */
+	WORD	max;		/* maximum length in representation */
 	char*	tmp;
 	union {
 	#define	Sascii	data.ascii
@@ -200,10 +202,10 @@ struct Alt
 
 struct Type
 {
-	int	ref;
+	WORD	ref;
 	void	(*free)(Heap*, int);
 	void	(*mark)(Type*, void*);
-	int	size;
+	WORD	size;
 	int	np;
 	void*	destroy;
 	void*	initialize;
@@ -313,7 +315,7 @@ struct Modlink
 {
 	uchar*	MP;		/* Module data for this instance */
 	Module*	m;		/* The real module */
-	int	compiled;	/* Compiled into native assembler */
+	WORD	compiled;	/* Compiled into native assembler */
 	Inst*	prog;		/* text segment */
 	Type**	type;		/* Type descriptors */
 	uchar*	data;		/* for dynamic C modules */
@@ -324,7 +326,7 @@ struct Modlink
 /* must be a multiple of 8 bytes */
 struct Heap
 {
-	int	color;		/* Allocation color */
+	WORD	color;		/* Allocation color */
 	ulong	ref;
 	Type*	t;
 	ulong	hprof;	/* heap profiling */
@@ -538,7 +540,7 @@ extern	int		runeslen(Rune*, int);
 extern	String*		c2string(char*, int);
 extern	char*		string2c(String*);
 extern	List*		cons(ulong, List**);
-extern	String*		slicer(ulong, ulong, String*);
+extern	String*		slicer(u32, u32, String*);
 extern	String*		addstring(String*, String*, int);
 extern	int		brpatch(Inst*, Module*);
 extern	void		readimagemodinit(void);

@@ -621,25 +621,10 @@ smalloc(uintptr size)
 	return v;
 }
 
-void*
-kmalloc(uintptr size)
-{
-	void *v;
-
-	v = dopoolalloc(mainmem, size, getcallerpc(&size));
-	if(v != nil){
-		ML(v, size, getcallerpc(&size));
-		setmalloctag(v, getcallerpc(&size));
-		setrealloctag(v, 0);
-		memset(v, 0, size);
-		MM(0, getcallerpc(&size), v, size);
-	}
-	return v;
-}
 
 /* this function signature is tied to the system's libc.h */
 void*
-__wrap_malloc(ulong size)
+kmalloc(ulong size)
 {
 	void *v;
 
@@ -675,7 +660,7 @@ mallocz(ulong size, int clr)
 }
 
 void
-__wrap_free(void *v)
+kfree(void *v)
 {
 	Bhdr *b;
 
@@ -689,7 +674,7 @@ __wrap_free(void *v)
 
 /* this function signature is tied to the system's libc.h */
 void*
-__wrap_realloc(void *v, ulong size)
+krealloc(void *v, ulong size)
 {
 	void *nv;
 
@@ -761,7 +746,7 @@ msize(void *v)
 
 /* this function signature is tied to the system's libc.h */
 void*
-__wrap_calloc(ulong n, ulong szelem)
+kcalloc(ulong n, ulong szelem)
 {
 	return malloc(n*szelem);
 }

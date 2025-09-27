@@ -21,7 +21,7 @@ umult:
 	popq	%rbx
 	popq	%rbp
 	ret
-
+/*
 	.type	FPsave,@function
 	.global	FPsave
 FPsave:
@@ -33,7 +33,7 @@ FPsave:
 FPrestore:
 	fldenv	(%rdi)
 	ret
-
+*/
 	.type	_tas,@function
 	.globl	_tas
 _tas:

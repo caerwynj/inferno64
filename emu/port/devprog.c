@@ -568,7 +568,7 @@ progstack(REG *reg, int state, char *va, int count, long offset)
 
 	while(fp != nil) {
 		f = (Frame*)fp;
-		n += snprint(va+n, count-n, "%.8zx %.8zx %.8zx %.8zx %d %s\n",
+		n += snprint(va+n, count-n, "%.16zx %.16zx %.16zx %.16zx %d %s\n",
 				(uintptr)f,		/* FP */
 				(uintptr)(pc - m->prog),	/* PC in dis instructions */
 				(uintptr)m->MP,		/* MP */

@@ -251,9 +251,9 @@ catchnotes()
 char*
 maketmp(void)
 {
-	static char temp[L_tmpnam];
-
-	return tmpnam(temp);
+	static char temp[] = "/data/data/com.termux/files/usr/tmpxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+	tmpnam(temp+35);
+	return temp;
 }
 
 int

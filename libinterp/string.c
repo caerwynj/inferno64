@@ -7,7 +7,7 @@
 #define DP if(1){}else print
 #define OP(fn)	void fn(void)
 #define B(r)	*((BYTE*)(R.r))
-#define W(r)	*((WORD*)(R.r))
+#define W(r)	*((long*)(R.r))
 #define F(r)	*((REAL*)(R.r))
 #define V(r)	*((LONG*)(R.r))
 #define	S(r)	*((String**)(R.r))
@@ -48,7 +48,7 @@ e:			error(exBounds);
 
 OP(insc)
 {
-	ulong v;
+	u32 v;
 	int l, r, expand;
 	String *ss, *ns, **sp;
 
@@ -87,7 +87,7 @@ r:
 				error(exBounds);
 			}
 			ns = newstring((v + 1 + v/4)*sizeof(Rune));
-			memmove(ns->Srune, ss->Srune, -ss->len*sizeof(Rune));
+			memmove(ns->Srune, ss->Srune, l*sizeof(Rune));
 			ns->Srune[v] = r;
 			ns->len = -(v+1);
 			ns->max /= sizeof(Rune);
@@ -120,7 +120,7 @@ r:
 }
 
 String*
-slicer(ulong start, ulong v, String *ds)
+slicer(u32 start, u32 v, String *ds)
 {
 	String *ns;
 	int l, nc;
@@ -301,7 +301,7 @@ OP(cvtac)
 
 OP(lenc)
 {
-	int l;
+	ulong l;
 	String *ss;
 
 	l = 0;
