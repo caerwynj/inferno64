@@ -650,9 +650,9 @@ shiftl(Inst *i, int ld, int st, int op, int r)
 static void
 arithf(Inst *i, int op)
 {
-	opwld(i, Omovf, 0);
-	mid(i, 0xdc, op);
-	opwst(i, Omovf, 3);
+	opwldw(i, Omovf, 0);
+	midw(i, 0xdc, op);
+	opwstw(i, Omovf, 3);
 }
 
 static void
@@ -747,8 +747,8 @@ cbraf(Inst *i, int jmp)
 {
 	if(RESCHED)
 		schedcheck(i);
-	opwld(i, Omovf, 0);
-	mid(i, 0xdc, 3);	// FCOMP
+	opwldw(i, Omovf, 0);
+	midw(i, 0xdc, 3);	// FCOMP
 	genb(0x9b);		// FWAIT
 	gen2(0xdf, 0xe0);	// FSTSW AX
 	genb(0x9e);		// SAHF
@@ -1005,9 +1005,6 @@ comp(Inst *i)
 		punt(i, SRCOP|DSTOP|NEWPC, optab[i->op]);
 		break;
 	case IADDC:
-	case IMULL:
-	case IDIVL:
-	case IMODL:
 	case IMNEWZ:
 	case ILSRW:
 	case ILSRL:
@@ -1070,13 +1067,14 @@ comp(Inst *i)
 		break;
 	case ICVTBW:
 		opwldw(i, Oldb, RAX);
+		rex();
 		genb(0x0f);
 		gen2(0xb6, (3<<6)|(RAX<<3)|RAX);
 		opwst(i, Ostw, RAX);
 		break;
 	case ICVTWB:
 		opwldw(i, Oldw, RAX);
-		opwst(i, Ostb, RAX);
+		opwstw(i, Ostb, RAX);
 		break;
 	case ICVTFW:
 		if(1){
@@ -1197,10 +1195,11 @@ comp(Inst *i)
 		opwld(i, Oldw, RBX);
 		con(0, RAX);
 		cmpl(RBX, (ulong)H);
-		gen2(Ojeqb, 0x0a);	/* Manual Count */
+		gen2(Ojeqb, 0x0b);	/* Manual Count */
 		modrm(Oldw, O(String, len), RBX, RAX);
 		cmpl(RAX, 0);
-		gen2(Ojgeb, 0x02);
+		gen2(Ojgeb, 0x03);
+		rex();
 		gen2(Oneg, (3<<6)|(3<<3)|RAX);
 		opwst(i, Ostw, RAX);
 		break;
@@ -1323,14 +1322,14 @@ comp(Inst *i)
 		shiftl(i, Oldw, Ostw, 0xd3, 7);
 		break;
 	case IMOVF:
-		opwld(i, Omovf, 0);
-		opwst(i, Omovf, 3);
+		opwldw(i, Omovf, 0);
+		opwstw(i, Omovf, 3);
 		break;
 	case INEGF:
-		opwld(i, Omovf, 0);
+		opwldw(i, Omovf, 0);
 		genb(0xd9);
 		genb(0xe0);
-		opwst(i, Omovf, 3);
+		opwstw(i, Omovf, 3);
 		break;
 	case IMOVB:
 		opwldw(i, Oldb, RAX);
@@ -1398,12 +1397,15 @@ comp(Inst *i)
 	case IDIVF:
 		arithf(i, 7);
 		break;
+	case IMULL:
+	case IDIVL:
+	case IMODL:
 	case IMODW:
 	case IDIVW:
 	case IMULW:
 		midw(i, Oldw, RAX);
 		opwld(i, Oldw, RTMP);
-		if(i->op == IMULW)
+		if(i->op == IMULW || i->op == IMULL)
 			gen2(0xf7, (3<<6)|(4<<3)|RTMP);
 		else {
 			genb(Ocdq);
@@ -1488,14 +1490,15 @@ comp(Inst *i)
 		if(bflag){
 			modrmw(Oldw, O(String, len), RAX, RTA);
 			cmpl(RTA, 0);
-			gen2(Ojltb, 23);
+			gen2(Ojltb, 23);   /* Manual count */
 			gen2(0x3b, (3<<6)|(RBX<<3)|RTA);	/* cmp index, len */
 			gen2(0x72, 0x0c);		/* JB */
 			bra((uintptr)bounds, Ocall);
 			genb(0x0f);
 			gen2(Omovzxb, (1<<6)|(0<<3)|4);
 			gen2((0<<6)|(RBX<<3)|RAX, O(String, data));
-			gen2(Ojmpb, sizeof(Rune)==4? 10: 11);
+			gen2(Ojmpb, sizeof(Rune)==4? 11: 12);
+			rex();
 			gen2(Oneg, (3<<6)|(3<<3)|RTA);
 			gen2(0x3b, (3<<6)|(RBX<<3)|RTA);	/* cmp index, len */
 			gen2(0x73, 0xe7);		/* JNB */
@@ -1536,19 +1539,19 @@ comp(Inst *i)
 		opwst(i, Ostw, RAX);
 		break;
 	case IADDL:
-		larith(i, 0x01, 0);
+		arith(i, 0x01, 0);
 		break;
 	case ISUBL:
-		larith(i, 0x29, 5);
+		arith(i, 0x29, 5);
 		break;
 	case IORL:
-		larith(i, 0x09, 1);
+		arith(i, 0x09, 1);
 		break;
 	case IANDL:
-		larith(i, 0x21, 4);
+		arith(i, 0x21, 4);
 		break;
 	case IXORL:
-		larith(i, Oxor, 6);
+		arith(i, Oxor, 6);
 		break;
 	case IBEQL:
 		cbral(i, Ojeql);

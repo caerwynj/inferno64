@@ -51,7 +51,7 @@ main(int argc, char **argv)
 	int i;
 
 	start = time(0);
-	fmtinstall('B', mpconv);
+	/*fmtinstall('B', mpconv);*/
 	mpsetminbits(2*Dbits);
 
 	x = mpnew(0);

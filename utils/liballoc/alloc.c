@@ -27,4 +27,15 @@ void*
 kcalloc(size_t n, size_t szelem)
 {
 	return malloc(n*szelem);
+}	
+
+void*
+mallocz(size_t n, int clr)
+{
+	void *v;
+	v = malloc(n);
+	if(v && clr) {
+		memset(v, 0, n);
+	}
+	return v;
 }
