@@ -8,7 +8,7 @@
 #include	"fns.h"
 #include	"error.h"
 
-extern int	nth2fd(HANDLE);
+extern uvlong	nth2fd(HANDLE);
 extern wchar_t	*widen(char*);
 
 /*
@@ -212,7 +212,7 @@ Error:
 int
 oscmdwait(void *v, char *buf, int n)
 {
-	int status;
+	DWORD status;
 	HANDLE proc = (HANDLE)v;
 
 	/* need not worry about being interrupted */

@@ -4,6 +4,7 @@ load std
 user = `{cat /dev/user}
 home = /usr/^$user
 bind -c '#U*'^$emuwdir /n/local
+bind -a '#U*'/home /usr
 cd /n/local
 #cd $home
 

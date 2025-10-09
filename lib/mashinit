@@ -1,4 +1,8 @@
 sysname = `{ cat /dev/sysname };
-user = `{ cat  /dev/user };
+user = `{ cat /dev/user };
 home = /usr/$user;
-run - $home/lib/mashinit;
+#run - $home/lib/mashinit;
+emuwdir = `{ cat /env/emuwdir }; 
+bind -c '#U*'$emuwdir /n/local; 
+bind -a '#U*'/home /usr;
+cd /n/local;

@@ -439,7 +439,7 @@ char *ckindname[Tend] =
 	/* Tchan */	"Channel*",
 	/* Treal */	"REAL",
 	/* Tfn */	"?fn?",
-	/* Tint */	"WORD",
+	/* Tint */	"INT",
 	/* Tlist */	"List*",
 	/* Tmodule */	"Modlink*",
 	/* Tref */	"?ref?",

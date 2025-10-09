@@ -388,7 +388,7 @@ struct Proc
 	int	type;		/* interpreter or not */
 	char	text[KNAMELEN];
 	Proc*	qnext;		/* list of processes waiting on a Qlock */
-	u32	pid;
+	uvlong	pid;
 	Proc*	next;		/* list of created processes */
 	Proc*	prev;
 	Lock	rlock;	/* sync between sleep/swiproc for r */

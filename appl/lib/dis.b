@@ -524,45 +524,45 @@ inst2s(o: ref Inst): string
 	mid := "";
 	case (o.addr>>3) & 7 {
 	AFP =>
-		src = sprint("%d(fp)", o.src);
+		src = sprint("%x(fp)", o.src);
 	AMP =>
-		src = sprint("%d(mp)", o.src);
+		src = sprint("%x(mp)", o.src);
 	AIMM =>
 		src = sprint("$%d", o.src);
 	AIND|AFP =>
 		fi = (o.src>>16) & 16rFFFF;
 		si = o.src & 16rFFFF;
-		src = sprint("%d(%d(fp))", si, fi);
+		src = sprint("%x(%x(fp))", si, fi);
 	AIND|AMP =>
 		fi = (o.src>>16) & 16rFFFF;
 		si = o.src & 16rFFFF;
-		src = sprint("%d(%d(mp))", si, fi);
+		src = sprint("%x(%x(mp))", si, fi);
 	}
 
 	case o.addr & ARM {
 	AXIMM =>
 		mid = sprint("$%d", o.mid);
 	AXINF =>
-		mid = sprint("%d(fp)", o.mid);
+		mid = sprint("%x(fp)", o.mid);
 	AXINM =>
-		mid = sprint("%d(mp)", o.mid);
+		mid = sprint("%x(mp)", o.mid);
 	}
 
 	case o.addr & 7 {
 	AFP =>
-		dst = sprint("%d(fp)", o.dst);
+		dst = sprint("%x(fp)", o.dst);
 	AMP =>
-		dst = sprint("%d(mp)", o.dst);
+		dst = sprint("%x(mp)", o.dst);
 	AIMM =>
 		dst = sprint("$%d", o.dst);
 	AIND|AFP =>
 		fi = (o.dst>>16) & 16rFFFF;
 		si = o.dst & 16rFFFF;
-		dst = sprint("%d(%d(fp))", si, fi);
+		dst = sprint("%x(%x(fp))", si, fi);
 	AIND|AMP =>
 		fi = (o.dst>>16) & 16rFFFF;
 		si = o.dst & 16rFFFF;
-		dst = sprint("%d(%d(mp))", si, fi);
+		dst = sprint("%x(%x(mp))", si, fi);
 	}
 	if(mid == "") {
 		if(src == "")

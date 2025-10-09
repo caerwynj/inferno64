@@ -5,7 +5,7 @@
 #include "pool.h"
 
 #define DBG if(0) print
-static int debug = 0;
+//static int debug = 0;
 
 REG	R;			/* Virtual Machine registers */
 String	snil;			/* String known to be zero length */
@@ -15,8 +15,9 @@ String	snil;			/* String known to be zero length */
 
 #define OP(fn)	void fn(void)
 #define B(r)	*((BYTE*)(R.r))
-#define W(r)	*((WORD*)(R.r))
-#define UW(r)	*((UWORD*)(R.r))
+#define W(r)	*((vlong*)(R.r))
+#define UW(r)	*((uvlong*)(R.r))
+#define DW(r)	*((LONG*)(R.r))
 #define F(r)	*((REAL*)(R.r))
 #define V(r)	*((LONG*)(R.r))	
 #define UV(r)	*((ULONG*)(R.r))	
@@ -35,9 +36,9 @@ OP(negf) { F(d) = -F(s); }
 OP(jmp)  { JMP(d); }
 OP(movpc){ T(d) = &R.M->prog[W(s)]; }
 OP(movm) { memmove(R.d, R.s, W(m)); }
-OP(lea)  { W(d) = (WORD)R.s; }
+OP(lea)  { P(d) = (WORD*)R.s; }
 OP(movb) { B(d) = B(s); }
-OP(movw) { W(d) = W(s); }
+OP(movw) { DW(d) = DW(s); }  /* TODO this instruction is used by LImbo to move the address of a Channel when creating Alt structure*/
 OP(movf) { F(d) = F(s); }
 OP(movl) { V(d) = V(s); }
 OP(cvtbw){ W(d) = B(s); }
@@ -227,7 +228,7 @@ OP(indx)
 	print("indx a %p a->len %zd i %zd\n", a, a->len, i);
 		error(exBounds);
 	}
-	W(m) = (WORD)(a->data+i*a->t->size);
+	P(m) = (WORD*)(a->data+i*a->t->size);
 }
 OP(indw)
 {
@@ -241,7 +242,7 @@ OP(indw)
 	print("indw a %p a->len %zd i %zd\n", a, a->len, i);
 		error(exBounds);
 	}
-	W(m) = (WORD)(a->data+i*sizeof(WORD));
+	P(m) = (WORD*)(a->data+i*sizeof(WORD));
 }
 OP(indf)
 {
@@ -255,7 +256,7 @@ OP(indf)
 	print("indf a %p a->len %zd i %zd\n", a, a->len, i);
 		error(exBounds);
 	}
-	W(m) = (WORD)(a->data+i*sizeof(REAL));
+	P(m) = (WORD*)(a->data+i*sizeof(REAL));
 }
 OP(indl)
 {
@@ -269,7 +270,7 @@ OP(indl)
 	print("indl a %p a->len %zd i %zd\n", a, a->len, i);
 		error(exBounds);
 	}
-	W(m) = (WORD)(a->data+i*sizeof(LONG));
+	P(m) = (WORD*)(a->data+i*sizeof(LONG));
 }
 OP(indb)
 {
@@ -283,7 +284,7 @@ OP(indb)
 	print("indb a %p a->len %zd a->data 0x%p i %zd\n", a, a->len, a->data, i);
 		error(exBounds);
 	}
-	W(m) = (WORD)(a->data+i*sizeof(BYTE));
+	P(m) = (WORD*)(a->data+i*sizeof(BYTE));
 }
 OP(movp)
 {
@@ -1700,7 +1701,7 @@ movtmp(void)		/* Used by send & receive */
 {
 	Type *t;
 
-	t = (Type*)W(m);
+	t = (Type*)P(m);  //TODO: shouldn't this be R.M->type[W(m}] like movmp?
 
 	incmem(R.s, t);
 	if (t->np)

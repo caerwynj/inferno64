@@ -248,7 +248,7 @@ attachscreen(Rectangle *r, ulong *chan, int *d, int *width, int *softscreen)
 	}
 	i = RealizePalette(screen);
 	GdiFlush();
-	bits = CreateDIBSection(screen, bmi, DIB_RGB_COLORS, &data, nil, 0);
+	bits = CreateDIBSection(screen, bmi, DIB_RGB_COLORS, (void**)&data, nil, 0);
 	if(bits == nil){
 		fprint(2, "CreateDIBSection failed\n");
 		return nil;

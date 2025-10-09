@@ -29,8 +29,8 @@ static	int sleepers = 0;
 
 __thread Proc    *up;
 
-HANDLE	ntfd2h(int);
-int	nth2fd(HANDLE);
+HANDLE	ntfd2h(uvlong);
+uvlong	nth2fd(HANDLE);
 void	termrestore(void);
 char *hosttype = "Nt";
 char *cputype = "386";
@@ -89,7 +89,7 @@ pexit(char *msg, int t)
 
 LONG TrapHandler(LPEXCEPTION_POINTERS ureg);
 
-__cdecl
+__cdecl int
 Exhandler(EXCEPTION_RECORD *rec, void *frame, CONTEXT *context, void *dcon)
 {
 	EXCEPTION_POINTERS ep;
@@ -162,13 +162,13 @@ kproc(char *name, void (*func)(void*), void *arg, int flags)
 	procs.tail = p;
 	unlock(&procs.l);
 
-	p->pid = (int)CreateThread(0, 16384, tramp, p, 0, &h);
+	p->pid = (uvlong) CreateThread(0, 16384, tramp, p, 0, &h);
 	if(p->pid <= 0)
 		panic("ran out of  kernel processes");
 }
 
 #if(_WIN32_WINNT >= 0x0400)
-void APIENTRY sleepintr(DWORD param)
+void APIENTRY sleepintr(uvlong param)
 {
 }
 #endif
@@ -444,9 +444,10 @@ close(int fd)
 }
 
 int
-read(int fd, void *buf, uint n)
+read(int fd, void *buf, unsigned int n)
 {
 	HANDLE h;
+	DWORD nn;
 
 	if(fd == 0)
 		h = kbdh;
@@ -454,15 +455,16 @@ read(int fd, void *buf, uint n)
 		h = ntfd2h(fd);
 	if(h == INVALID_HANDLE_VALUE)
 		return -1;
-	if(!ReadFile(h, buf, n, &n, NULL))
+	if(!ReadFile(h, buf, n, &nn, NULL))
 		return -1;
-	return n;
+	return (int)nn;
 }
 
 int
 write(int fd, const void *buf, uint n)
 {
 	HANDLE h;
+	DWORD nn;
 
 	if(fd == 1 || fd == 2){
 		if(!donetermset)
@@ -473,13 +475,13 @@ write(int fd, const void *buf, uint n)
 			h = errh;
 		if(h == INVALID_HANDLE_VALUE)
 			return -1;
-		if(!WriteFile(h, buf, n, &n, NULL))
+		if(!WriteFile(h, buf, n, &nn, NULL))
 			return -1;
-		return n;
+		return (int)nn;
 	}
-	if(!WriteFile(ntfd2h(fd), buf, n, &n, NULL))
+	if(!WriteFile(ntfd2h(fd), buf, n, &nn, NULL))
 		return -1;
-	return n;
+	return (int)nn;
 }
 
 /*
@@ -488,14 +490,14 @@ write(int fd, const void *buf, uint n)
  * that INVALID_HANDLE_VALUE is -1, and assumes
  * that all tests of invalid fds check only for -1, not < 0
  */
-int
+uvlong
 nth2fd(HANDLE h)
 {
-	return (int)h;
+	return (uvlong)h;
 }
 
 HANDLE
-ntfd2h(int fd)
+ntfd2h(uvlong fd)
 {
 	return (HANDLE)fd;
 }

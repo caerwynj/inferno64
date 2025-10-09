@@ -184,9 +184,7 @@ freemodlink(Heap *h, int swept)
 	Modlink *ml;
 
 	ml = H2D(Modlink*, h);
-	if(ml->m->rt == DYNMOD)
-		freedyndata(ml);
-	else if(!swept)
+	if(!swept)
 		destroy(ml->MP);
 	unload(ml->m);
 }

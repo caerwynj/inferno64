@@ -1563,16 +1563,16 @@ secinit(void)
 
 	if(!AllocateAndInitializeSid(&id, 1,
 		SECURITY_CREATOR_OWNER_RID,
-		1, 2, 3, 4, 5, 6, 7, &creatorowner)
+		1, 2, 3, 4, 5, 6, 7, (void**)&creatorowner)
 	|| !AllocateAndInitializeSid(&id, 1,
 		SECURITY_CREATOR_GROUP_RID,
-		1, 2, 3, 4, 5, 6, 7, &creatorgroup)
+		1, 2, 3, 4, 5, 6, 7, (void**)&creatorgroup)
 	|| !AllocateAndInitializeSid(&wid, 1,
 		SECURITY_WORLD_RID,
-		1, 2, 3, 4, 5, 6, 7, &everyone)
+		1, 2, 3, 4, 5, 6, 7, (void**)&everyone)
 	|| !AllocateAndInitializeSid(&ntid, 1,
 		0,
-		1, 2, 3, 4, 5, 6, 7, &ntignore))
+		1, 2, 3, 4, 5, 6, 7, (void**)&ntignore))
 		panic("can't initialize well-known sids");
 
 	fsnone = sidtouser(ntsrv, everyone);
@@ -1777,7 +1777,7 @@ secsdstat(SECURITY_DESCRIPTOR *sd, Stat *st, Rune16 *srv)
 
 	osid = nil;
 	gsid = nil;
-	if(!GetSecurityDescriptorOwner(sd, &osid, &b)
+	if(!GetSecurityDescriptorOwner(sd, (void**)&osid, &b)
 	|| !GetSecurityDescriptorDacl(sd, &hasacl, &acl, &b))
 		return 0;
 
@@ -1790,7 +1790,7 @@ secsdstat(SECURITY_DESCRIPTOR *sd, Stat *st, Rune16 *srv)
 	 * first pass through acl finds group
 	 */
 	for(i = 0; i < size.AceCount; i++){
-		if(!GetAce(acl, i, &aceh))
+		if(!GetAce(acl, i, (void**)&aceh))
 			continue;
 		if(aceh->AceFlags & INHERIT_ONLY_ACE)
 			continue;
@@ -1831,7 +1831,7 @@ secsdstat(SECURITY_DESCRIPTOR *sd, Stat *st, Rune16 *srv)
 		allow = 0777;
 	deny = 0;
 	for(i = 0; i < size.AceCount; i++){
-		if(!GetAce(acl, i, &aceh))
+		if(!GetAce(acl, i, (void**)&aceh))
 			continue;
 		if(aceh->AceFlags & INHERIT_ONLY_ACE)
 			continue;
@@ -1896,7 +1896,7 @@ secsdhasperm(SECURITY_DESCRIPTOR *sd, ulong access, Rune16 *srv)
 	if(!GetAclInformation(acl, &size, sizeof(size), AclSizeInformation))
 		return 0;
 	for(i = 0; i < size.AceCount; i++){
-		if(!GetAce(acl, i, &aceh))
+		if(!GetAce(acl, i, (void**)&aceh))
 			continue;
 		if(aceh->AceFlags & INHERIT_ONLY_ACE)
 			continue;
@@ -1961,13 +1961,13 @@ secmksd(char *sdrock, Stat *st, ACL *dacl, int isdir)
 
 	if(isdir){
 		/* hack to add inherit flags */
-		if(!GetAce(dacl, 1, &aceh))
+		if(!GetAce(dacl, 1, (void**)&aceh))
 			return nil;
 		aceh->AceFlags |= OBJECT_INHERIT_ACE|CONTAINER_INHERIT_ACE;
-		if(!GetAce(dacl, 2, &aceh))
+		if(!GetAce(dacl, 2, (void**)&aceh))
 			return nil;
 		aceh->AceFlags |= OBJECT_INHERIT_ACE|CONTAINER_INHERIT_ACE;
-		if(!GetAce(dacl, 3, &aceh))
+		if(!GetAce(dacl, 3, (void**)&aceh))
 			return nil;
 		aceh->AceFlags |= OBJECT_INHERIT_ACE|CONTAINER_INHERIT_ACE;
 	}
@@ -1979,7 +1979,7 @@ secmksd(char *sdrock, Stat *st, ACL *dacl, int isdir)
 		if(!AddAccessAllowedAce(dacl, ACL_REVISION, RMODE|WMODE|XMODE, fsuser->sid))
 			return nil;
 		if(isdir){
-			if(!GetAce(dacl, 4, &aceh))
+			if(!GetAce(dacl, 4, (void**)&aceh))
 				return nil;
 			aceh->AceFlags |= OBJECT_INHERIT_ACE|CONTAINER_INHERIT_ACE;
 		}
@@ -2253,7 +2253,7 @@ dupsid(SID *sid)
 static Rune16*
 filesrv(char *file)
 {
-	int n;
+	ulong n;
 	Rune16 *srv;
 	char *p, uni[MAX_PATH], mfile[MAX_PATH];
 	wchar_t vol[3];

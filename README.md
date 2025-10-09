@@ -8,5 +8,26 @@ Inferno can run 'native' on various ARM, PowerPC, SPARC and x86 platforms but al
 
 This project includes source for the basic applications, Inferno itself (hosted and native), all supporting software, including the native compiler suite, essential executables and supporting files.
 
-How this fork differs: 9boot instead of 9load, amd64 hosted (OpenBSD, Linux, 9front) and native (shell prompt) support, kfs64, NAPT (Network address and port translation), 9front drivers and ip stack.
+How this fork differs: the focus is on using limbo as a programming language on 64bit hosts: amd64, arm64, risc64. Development will be on getting the JIT working well and language binding for popular libraries such as SQLite. 
+
+To build the repo, install the package dependencies on Linux
+```
+$ apt install libx11-dev libxext-dev linux-libc-dev
+```
+
+Then in the root folder of the repo,
+```
+$ export ROOT=<path to inferno>
+$ export objtype=amd64
+$ export PATH=$PATH:$ROOT/Linux/$objtype/bin
+$ ./makemk.sh
+$ mk mkdirs
+$ mk install
+```
+That will bind all the binaries for mk, iyacc, limbo, and emu in Linux/amd64/bin and also build all the dis object code. Inferno can then be launched by just typing `emu`.
+
+```
+$ emu
+; wm/wm&
+```
 

@@ -67,12 +67,19 @@ $CC $CFILES || error lib9 compilation failed
 $AR $PLAT/lib/lib9.a `ofiles $CFILES` || error lib9 ar failed
 $RANLIB $PLAT/lib/lib9.a || error lib9 ranlib failed
 
+# liballoc
+cd $ROOT/utils/liballoc || error cannot find liballoc directory
+CFILES="alloc.c"
+$CC $CFILES || error liballoc compilation failed
+$AR $PLAT/lib/liballoc.a `ofiles $CFILES` || error liballoc ar failed
+$RANLIB $PLAT/lib/liballoc.a || error liballoc randlib failed
+
 # mk itself
 cd $ROOT/utils/mk
 CFILES="Nt.c sh.c"	# system specific
 CFILES="$CFILES arc.c archive.c bufblock.c env.c file.c graph.c job.c lex.c main.c match.c mk.c parse.c recipe.c rule.c run.c shprint.c symtab.c var.c varsub.c word.c"
 $CC $CFILES || error mk compilation failed
-$LD -o mk `ofiles $CFILES` $PLAT/lib/libregexp.a $PLAT/lib/libbio.a $PLAT/lib/lib9.a || error mk link failed
+$LD -o mk `ofiles $CFILES` $PLAT/lib/libregexp.a $PLAT/lib/libbio.a $PLAT/lib/lib9.a $PLAT/lib/liballoc.a || error mk link failed
 cp mk $PLAT/bin || error mk binary install failed
 
 echo mk binary built successfully!

@@ -6,7 +6,7 @@ OFILES=	data2s.$O\
 
 HFILES=../../include/bio.h
 
-LIBS=bio 9			#order matters
+LIBS=bio 9 alloc			#order matters
 
 BIN=$ROOT/$OBJDIR/bin
 
