@@ -11,5 +11,5 @@ cd /n/local
 # build the user's namespace in $home/
 #and {ftest -e namespace}	{nsbuild}
 
-# Run the user's profile
-#and {ftest -e lib/profile}	{run ./lib/profile}
+# Run the local profile
+and {ftest -e lib/profile}	{run ./lib/profile}

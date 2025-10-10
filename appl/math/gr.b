@@ -47,6 +47,10 @@ open(ctxt: ref Draw->Context, title: string): ref Plot
 		tk = load Tk Tk->PATH;
 		tkclient = load Tkclient Tkclient->PATH;
 		tkclient->init();
+		if(ctxt == nil)
+			ctxt = tkclient->makedrawcontext();
+		if(ctxt == nil)
+			raise "fail:bad context";
 	}
 	textsize := 8.;	# textsize is in points, if no user transform
 	(t, tb) := tkclient->toplevel(ctxt, "", title, Tkclient->Appl);
