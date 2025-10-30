@@ -187,13 +187,13 @@ enum
 #define Subi 	0x51
 #define Sbc 	0x5a
 //TODO
-#define Mov	0x00
+#define Mov	0x2a
 #define Mvf	0x00
 #define Mvn	0x00
 
 #define DP(Op, Rn, Rd, Sh, Rm)	*code++ = (1<<31)|(Op<<24)|(Rm<<16)|\
 					  (Sh<<10)|(Rn<<5)|(Rd)
-#define DPI(Op, Rn, Rd, RO, O)	*code++ = (1<<31)|(Op<<24)|(RO<<22)|(O<<10)|\
+#define DPI(Op, Rn, Rd, Sh, O)	*code++ = (1<<31)|(Op<<24)|(IMM(O)<<10)|\
 					  (Rn<<5)|(Rd)
 
 #define CMPI(Rn, sh, O)	*code++ = (0xf1<<24)|(sh<<22)|(IMM(O)<<10)|\
@@ -222,6 +222,7 @@ enum
 #define CPFLT(C, Fn, Rd)	*code++ = (C<<28)|(0xE<<24)|(0<<20)|(Fn<<16)|(Rd<<12)|(1<<8)|(9<<4)
 #define CPFIX(C, Rd, Fm)	*code++ = (C<<28)|(0xE<<24)|(1<<20)|(0<<16)|(Rd<<12)|(1<<8)|(9<<4)|(Fm)
 
+#define BR(r)				*code++ = (0xd6<<24)|(0x1f<<16)|(r<<5)
 #define BRAW(C, o)			((0x2a<<25)|(((o) & 0x0007ffff)<<5)|(C))
 #define BL(o)                        	((1<<31)|(5<<26)|(((o) & 0x03ffffff)))
 #define BRA(C, o)			gen(BRAW((C),(o)))
@@ -241,7 +242,13 @@ enum
 #define CRETURN(C)			DPI(Add, RLINK, R15, 0, 0)				
 #define PATCH(ptr)			*ptr |= (((ulong)code-(ulong)(ptr)-8)>>2) & 0x00ffffff
 
-#define MOV(src, dst)			DP(Mov, 0, dst, 0, src)
+#define MOV(Rm, Rd)	*code++ = (1<<31)|(0x2a<<24)|(Rm<<16)|\
+					  (0x1f<<5)|(Rd)
+#define MOVZ(O, Sh, Rd)	*code++ = (1<<31)|(0xa5<<23)|(Sh<<21)|((O)<<5)|Rd
+#define MOVK(O, Sh, Rd)	*code++ = (1<<31)|(0xe5<<23)|(Sh<<21)|((O)<<5)|Rd
+
+#define ADR(O, Rd)	*code++ = (1<<28)|((O & 0x3)<<29)|((O & ~0x3)<<5)|Rd
+#define ADRP(O, Rd)	*code++ = (1<<31)|((O & 0x3)<<29)|(1<<28)|(((O & ((1<<21)-1)) & ~0x3)<<2)|Rd
 
 #define FITS12(v)	((ulong)(v)<BITS(12))
 #define FITS8(v)	((ulong)(v)<BITS(8))
@@ -388,6 +395,8 @@ gen(ulong w)
 	*code++ = w;
 }
 
+/* TODO won't need this in Aarch64
+*/
 static long
 immrot(ulong v)
 {
@@ -455,37 +464,23 @@ flushchk(void)
 static void
 con(ulong o, int r, int opt)
 {
-	ulong u;
 	Const *c;
 
 	if(opt != 0) {
-		u = o & ~0xff;
-		if(u == 0) {
-			DPI(Mov, 0, r, 0, o);
-			return;		
-		}
-		if(u == ~0xff) {
-			DPI(Mvn, 0, r, 0, ~o);
-			return;
-		}
-		u = immrot(o);
-		if(u) {
-			DPI(Mov, 0, r, 0, 0) | u;
-			return;
-		}
-		u = o & ~0xffff;
-		if(u == 0) {
-			DPI(Mov, 0, r, 0, o);
-			DPI(Orr, r, r, (24/2), o>>8);
-			return;
-		}
+		MOVZ((o>>48) & 0xffff, 3, r);
+		MOVK((o>>32) & 0xffff, 2, r);
+		MOVK((o>>16) & 0xffff, 1, r);
+		MOVK((o) & 0xffff, 0, r);
+		return;
 	}
+	/* for relative PC offsets. Use ADRP */
 	flushchk();
 	c = &rcon.table[rcon.ptr++];
 	c->o = o;
 	c->code = code;
 	c->pc = code+codeoff;
-	LDW(R15, r, 0);  //TODO
+	ADR(0, r);
+	//LDW(R15, r, 0);  //TODO
 }
 
 static void
@@ -514,6 +509,7 @@ mem(int inst, ulong disp, int rm, int r)
 	}
 
 	if(disp < BITS(12) || -disp < BITS(12)) {	/* Direct load */
+		disp /= 8;
 		if(disp < BITS(12))
 			bit = 0;
 		else {
@@ -555,19 +551,7 @@ mem(int inst, ulong disp, int rm, int r)
 		break;
 	}
 }
-/*
-static void
-con(ulong o, int r, int opt)
-{
-	ccon(AL, o, r, opt);
-}
 
-static void
-mem(int inst, ulong disp, int rm, int r)
-{
-	memc(AL, inst, disp, rm, r);
-}
-*/
 static void
 opx(int mode, Adr *a, int mi, int r, int li)
 {
@@ -1515,26 +1499,34 @@ comp(Inst *i)
 		break;
 	case IORW:
 		r = Orr;
+		if(UXSRC(i->add) == SRC(AIMM) && FITS12(i->s.imm))
+			r = Orri;
 		goto arithw;
 	case IANDW:
 		r = And;
+		if(UXSRC(i->add) == SRC(AIMM) && FITS12(i->s.imm))
+			r = Andi;
 		goto arithw;
 	case IXORW:
 		r = Eor;
+		if(UXSRC(i->add) == SRC(AIMM) && FITS12(i->s.imm))
+			r = Eori;
 		goto arithw;
 	case ISUBW:
 		r = Sub;
+		if(UXSRC(i->add) == SRC(AIMM) && FITS12(i->s.imm))
+			r = Subi;
 		goto arithw;
 	case IADDW:
 		r = Add;
+		if(UXSRC(i->add) == SRC(AIMM) && FITS12(i->s.imm))
+			r = Addi;
 	arithw:
 		mid(i, Ldw, RA1);
-		if(UXSRC(i->add) == SRC(AIMM) && FITS8(i->s.imm))
+		if(UXSRC(i->add) == SRC(AIMM) && FITS12(i->s.imm))
+			//TODO this should be Addi,Subi, etc.
 			DPI(r, RA1, RA0, 0, i->s.imm);
-		else if(UXSRC(i->add) == SRC(AIMM) && immrot(i->s.imm)){
-			DPI(r, RA1, RA0, 0, 0) | immrot(i->s.imm);
-			//print("rot: %ux %ux\n", i->s.imm, immrot(i->s.imm)); das(code-1, 1);
-		} else {
+		else {
 			opwld(i, Ldw, RA0);
 			DP(r, RA1, RA0, 0, RA0);
 		}
@@ -1835,11 +1827,14 @@ preamble(void)
 		error(exNomem);
 	code = (uint*)comvec;
 
-	con((ulong)&R, RREG, 0);
+	ADRP(((ulong)&R) - ((ulong)code)>>12, RREG);
+	DPI(Addi, RREG, RREG, 0, (ulong)&R);
+	con((ulong)&R, RREG, 1);
 	mem(Stw, O(REG, xpc), RREG, RLINK);
 	mem(Ldw, O(REG, FP), RREG, RFP);
 	mem(Ldw, O(REG, MP), RREG, RMP);
 	mem(Ldw, O(REG, PC), RREG, R15);
+	BR(R15);
 	pass++;
 	flushcon(0);
 	pass--;
@@ -2297,10 +2292,12 @@ compile(Module *m, int size, Modlink *ml)
 			urk("phase error");
 		}
 		n += code - s;
+/*
 		if(cflag > 4) {
 			print("%s:\n", mactab[i].name);
 			das(s, code-s);
 		}
+*/
 	}
 	s = code;
 	flushcon(0);

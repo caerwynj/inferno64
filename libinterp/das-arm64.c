@@ -48,9 +48,9 @@ char*	shtype[4] =
 };
 
 static int
-get4(ulong addr, long *v)
+get4(ulong addr, uint *v)
 {
-	*v = *(ulong*)addr;
+	*v = *(uint*)addr;
 	return 1;	
 }
 
@@ -70,53 +70,50 @@ _hexify(char *buf, ulong p, int zeros)
 }
 
 int
-armclass(long w)
+armclass(ulong w)
 {
-	int op;
+	uint op;
 
-	op = (w >> 25) & 0x7;
+	op = (w >> 24) & 0x1f;
 	switch(op) {
-	case 0:	/* data processing r,r,r */
-		op = ((w >> 4) & 0xf);
-		if(op == 0x9) {
-			op = 48+16;		/* mul */
-			if(w & (1<<24)) {
-				op += 2;
-				if(w & (1<<22))
-					op++;	/* swap */
-				break;
-			}
-			if(w & (1<<21))
-				op++;		/* mla */
-			break;
-		}
-		op = (w >> 21) & 0xf;
-		if(w & (1<<4))
-			op += 32;
-		else
-		if(w & (31<<7))
-			op += 16;
+	case 0b01010:
+		/* AND,ORR,EOR */
+		op = (w>>29) & 0x3;
 		break;
-	case 1:	/* data processing i,r,r */
-		op = (48) + ((w >> 21) & 0xf);
+	case 0b01011:
+		/* ADD,SUB,CMN,CMP */
+		op = 4 + ((w>>29) & 0x3);
 		break;
-	case 2:	/* load/store byte/word i(r) */
-		op = (48+20) + ((w >> 22) & 0x1) + ((w >> 19) & 0x2);
+	case 0b10000:
+		/* ADR,ADRP */
+		op = (64 + 4 + 4 + 4 + 2) + ((w>>31) & 0x1);
 		break;
-	case 3:	/* load/store byte/word (r)(r) */
-		op = (48+20+4) + ((w >> 22) & 0x1) + ((w >> 19) & 0x2);
+	case 0b10001:
+		/* ADDI,SUBI,CMNI,CMPI */
+		op = 48 + 4 + ((w>>29) & 0x3);
 		break;
-	case 4:	/* block data transfer (r)(r) */
-		op = (48+20+4+4) + ((w >> 20) & 0x1);
+	case 0b10010:
+		/* ANDI,ORRI,EORI */	
+		op = 48 + ((w>>29) & 0x3);
 		break;
-	case 5:	/* branch / branch link */
-		op = (48+20+4+4+2) + ((w >> 24) & 0x1);
+	case 0b10100:
+		/* B.c */
+		op = (64+ 4 + 4 + 4 + 1);
 		break;
-	case 7:	/* coprocessor crap */
-		op = (48+20+4+4+2+2) + ((w >> 3) & 0x2) + ((w >> 20) & 0x1);
+	case 0b10110:
+		/* RET */
+		op = (64 + 4 + 4 + 4 + 2 + 2);
+		break;
+	case 0b11000:
+		/* LDR, STR */
+		op = (64+4+4+4+2+3);
+		break;
+	case 0b11010:
+		/* ADC,SUBC */
+		op = 8 + ((w>>30) & 1);
 		break;
 	default:
-		op = (48+20+4+4+2+2+4);
+		op = (64+4+4+4+2+3);
 		break;
 	}
 	return op;
@@ -125,7 +122,7 @@ armclass(long w)
 static int
 decode(ulong pc, Instr *i)
 {
-	long w;
+	uint w;
 
 	get4(pc, &w);
 	i->w = w;
@@ -148,30 +145,10 @@ bprint(Instr *i, char *fmt, ...)
 static void
 armdps(Opcode *o, Instr *i)
 {
-	i->store = (i->w >> 20) & 1;
-	i->rn = (i->w >> 16) & 0xf;
-	i->rd = (i->w >> 12) & 0xf;
-	i->rs = (i->w >> 0) & 0xf;
-	if(i->rn == 15 && i->rs == 0) {
-		if(i->op == 8) {
-			format("MOVW", i,"CPSR, R%d");
-			return;
-		} else
-		if(i->op == 10) {
-			format("MOVW", i,"SPSR, R%d");
-			return;
-		}
-	} else
-	if(i->rn == 9 && i->rd == 15) {
-		if(i->op == 9) {
-			format("MOVW", i, "R%s, CPSR");
-			return;
-		} else
-		if(i->op == 11) {
-			format("MOVW", i, "R%s, SPSR");
-			return;
-		}
-	}
+	i->store = (i->w >> 29) & 1;
+	i->rn = (i->w >> 5) & 0x1f;
+	i->rd = (i->w >> 0) & 0x1f;
+	i->rs = (i->w >> 16) & 0x1f;
 	format(o->o, i, o->a);
 }
 
@@ -181,23 +158,12 @@ armdpi(Opcode *o, Instr *i)
 	ulong v;
 	int c;
 
-	v = (i->w >> 0) & 0xff;
-	c = (i->w >> 8) & 0xf;
-	while(c) {
-		v = (v<<30) | (v>>2);
-		c--;
-	}
+	v = (((i->w >> 10) & 0x3f) << 6) | ((i->w >>16) & 0x3f);
 	i->imm = v;
-	i->store = (i->w >> 20) & 1;
-	i->rn = (i->w >> 16) & 0xf;
-	i->rd = (i->w >> 12) & 0xf;
-	i->rs = i->w&0x0f;
+	i->store = (i->w >> 29) & 1;
+	i->rn = (i->w >> 5) & 0x1f;
+	i->rd = (i->w >> 0) & 0x1f;
 
-		/* RET is encoded as ADD #0,R14,R15 */
-	if(i->w == 0xe282f000){
-		format("RET", i, "");
-		return;
-	} else
 	format(o->o, i, o->a);
 }
 
@@ -223,10 +189,10 @@ armsdti(Opcode *o, Instr *i)
 static void
 armsdts(Opcode *o, Instr *i)
 {
-	i->store = ((i->w >> 23) & 0x2) | ((i->w >>21) & 0x1);
-	i->rs = (i->w >> 0) & 0xf;
-	i->rn = (i->w >> 16) & 0xf;
-	i->rd = (i->w >> 12) & 0xf;
+	i->store = ((i->w >> 29) & 1);
+	i->rs = (i->w >> 0) & 0x1f;
+	i->rn = (i->w >> 5) & 0x1f;
+	i->rd = (i->w >> 0) & 0x1f;
 	format(o->o, i, o->a);
 }
 
@@ -296,99 +262,95 @@ armco(Opcode *o, Instr *i)		/* coprocessor instructions */
 
 static Opcode opcodes[] =
 {
-	"AND%C%S",	armdps,	"R%s,R%n,R%d",
-	"EOR%C%S",	armdps,	"R%s,R%n,R%d",
-	"SUB%C%S",	armdps,	"R%s,R%n,R%d",
-	"RSB%C%S",	armdps,	"R%s,R%n,R%d",
-	"ADD%C%S",	armdps,	"R%s,R%n,R%d",
-	"ADC%C%S",	armdps,	"R%s,R%n,R%d",
-	"SBC%C%S",	armdps,	"R%s,R%n,R%d",
-	"RSC%C%S",	armdps,	"R%s,R%n,R%d",
-	"TST%C%S",	armdps,	"R%s,R%n,",
-	"TEQ%C%S",	armdps,	"R%s,R%n,",
-	"CMP%C%S",	armdps,	"R%s,R%n,",
-	"CMN%C%S",	armdps,	"R%s,R%n,",
-	"ORR%C%S",	armdps,	"R%s,R%n,R%d",
-	"MOVW%C%S",	armdps,	"R%s,R%d",
-	"BIC%C%S",	armdps,	"R%s,R%n,R%d",
-	"MVN%C%S",	armdps,	"R%s,R%d",
+	"AND%S",	armdps,	"R%s,R%n,R%d",
+	"ORR%S",	armdps,	"R%s,R%n,R%d",
+	"EOR%S",	armdps,	"R%s,R%n,R%d",
+	"MOVW%S",	armdps,	"R%s,R%d",
+	"ADD%S",	armdps,	"R%s,R%n,R%d",
+	"CMN%S",	armdps,	"R%s,R%n,",
+	"SUB%S",	armdps,	"R%s,R%n,R%d",
+	"CMP%S",	armdps,	"R%s,R%n,",
+	"ADC%S",	armdps,	"R%s,R%n,R%d",
+	"SBC%S",	armdps,	"R%s,R%n,R%d",
+	"RSB%S",	armdps,	"R%s,R%n,R%d",
+	"RSC%S",	armdps,	"R%s,R%n,R%d",
+	"TST%S",	armdps,	"R%s,R%n,",
+	"TEQ%S",	armdps,	"R%s,R%n,",
+	"BIC%S",	armdps,	"R%s,R%n,R%d",
+	"MVN%S",	armdps,	"R%s,R%d",
 
-	"AND%C%S",	armdps,	"(R%s%h#%m),R%n,R%d",
-	"EOR%C%S",	armdps,	"(R%s%h#%m),R%n,R%d",
-	"SUB%C%S",	armdps,	"(R%s%h#%m),R%n,R%d",
-	"RSB%C%S",	armdps,	"(R%s%h#%m),R%n,R%d",
-	"ADD%C%S",	armdps,	"(R%s%h#%m),R%n,R%d",
-	"ADC%C%S",	armdps,	"(R%s%h#%m),R%n,R%d",
-	"SBC%C%S",	armdps,	"(R%s%h#%m),R%n,R%d",
-	"RSC%C%S",	armdps,	"(R%s%h#%m),R%n,R%d",
-	"TST%C%S",	armdps,	"(R%s%h#%m),R%n,",
-	"TEQ%C%S",	armdps,	"(R%s%h#%m),R%n,",
-	"CMP%C%S",	armdps,	"(R%s%h#%m),R%n,",
-	"CMN%C%S",	armdps,	"(R%s%h#%m),R%n,",
-	"ORR%C%S",	armdps,	"(R%s%h#%m),R%n,R%d",
-	"MOVW%C%S",	armdps,	"(R%s%h#%m),R%d",
-	"BIC%C%S",	armdps,	"(R%s%h#%m),R%n,R%d",
-	"MVN%C%S",	armdps,	"(R%s%h#%m),R%d",
+	"AND%S",	armdps,	"(R%s%h#%m),R%n,R%d",
+	"ORR%S",	armdps,	"(R%s%h#%m),R%n,R%d",
+	"EOR%S",	armdps,	"(R%s%h#%m),R%n,R%d",
+	"MOVW%S",	armdps,	"(R%s%h#%m),R%d",
+	"ADD%S",	armdps,	"(R%s%h#%m),R%n,R%d",
+	"CMN%S",	armdps,	"(R%s%h#%m),R%n,",
+	"SUB%S",	armdps,	"(R%s%h#%m),R%n,R%d",
+	"CMP%S",	armdps,	"(R%s%h#%m),R%n,",
+	"ADC%S",	armdps,	"(R%s%h#%m),R%n,R%d",
+	"SBC%S",	armdps,	"(R%s%h#%m),R%n,R%d",
+	"RSB%S",	armdps,	"(R%s%h#%m),R%n,R%d",
+	"RSC%S",	armdps,	"(R%s%h#%m),R%n,R%d",
+	"TST%S",	armdps,	"(R%s%h#%m),R%n,",
+	"TEQ%S",	armdps,	"(R%s%h#%m),R%n,",
+	"BIC%S",	armdps,	"(R%s%h#%m),R%n,R%d",
+	"MVN%S",	armdps,	"(R%s%h#%m),R%d",
 
-	"AND%C%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"EOR%C%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"SUB%C%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"RSB%C%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"ADD%C%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"ADC%C%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"SBC%C%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"RSC%C%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"TST%C%S",	armdps,	"(R%s%hR%m),R%n,",
-	"TEQ%C%S",	armdps,	"(R%s%hR%m),R%n,",
-	"CMP%C%S",	armdps,	"(R%s%hR%m),R%n,",
-	"CMN%C%S",	armdps,	"(R%s%hR%m),R%n,",
-	"ORR%C%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"MOVW%C%S",	armdps,	"(R%s%hR%m),R%d",
-	"BIC%C%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"MVN%C%S",	armdps,	"(R%s%hR%m),R%d",
+	"AND%S",	armdps,	"(R%s%hR%m),R%n,R%d",
+	"ORR%S",	armdps,	"(R%s%hR%m),R%n,R%d",
+	"EOR%S",	armdps,	"(R%s%hR%m),R%n,R%d",
+	"MOVW%S",	armdps,	"(R%s%hR%m),R%d",
+	"ADD%S",	armdps,	"(R%s%hR%m),R%n,R%d",
+	"CMN%S",	armdps,	"(R%s%hR%m),R%n,",
+	"SUB%S",	armdps,	"(R%s%hR%m),R%n,R%d",
+	"CMP%S",	armdps,	"(R%s%hR%m),R%n,",
+	"ADC%S",	armdps,	"(R%s%hR%m),R%n,R%d",
+	"SBC%S",	armdps,	"(R%s%hR%m),R%n,R%d",
+	"RSB%S",	armdps,	"(R%s%hR%m),R%n,R%d",
+	"RSC%S",	armdps,	"(R%s%hR%m),R%n,R%d",
+	"TST%S",	armdps,	"(R%s%hR%m),R%n,",
+	"TEQ%S",	armdps,	"(R%s%hR%m),R%n,",
+	"BIC%S",	armdps,	"(R%s%hR%m),R%n,R%d",
+	"MVN%S",	armdps,	"(R%s%hR%m),R%d",
 
-	"AND%C%S",	armdpi,	"$#%i,R%n,R%d",
-	"EOR%C%S",	armdpi,	"$#%i,R%n,R%d",
-	"SUB%C%S",	armdpi,	"$#%i,R%n,R%d",
-	"RSB%C%S",	armdpi,	"$#%i,R%n,R%d",
-	"ADD%C%S",	armdpi,	"$#%i,R%n,R%d",
-	"ADC%C%S",	armdpi,	"$#%i,R%n,R%d",
-	"SBC%C%S",	armdpi,	"$#%i,R%n,R%d",
-	"RSC%C%S",	armdpi,	"$#%i,R%n,R%d",
-	"TST%C%S",	armdpi,	"$#%i,R%n,",
-	"TEQ%C%S",	armdpi,	"$#%i,R%n,",
-	"CMP%C%S",	armdpi,	"$#%i,R%n,",
-	"CMN%C%S",	armdpi,	"$#%i,R%n,",
-	"ORR%C%S",	armdpi,	"$#%i,R%n,R%d",
-	"MOVW%C%S",	armdpi,	"$#%i,,R%d",
-	"BIC%C%S",	armdpi,	"$#%i,R%n,R%d",
-	"MVN%C%S",	armdpi,	"$#%i,,R%d",
+	"AND%S",	armdpi,	"$#%i,R%n,R%d",
+	"ORR%S",	armdpi,	"$#%i,R%n,R%d",
+	"EOR%S",	armdpi,	"$#%i,R%n,R%d",
+	"MOVW%S",	armdpi,	"$#%i,,R%d",
+	"ADD%S",	armdpi,	"$#%i,R%n,R%d",
+	"CMN%S",	armdpi,	"$#%i,R%n,",
+	"SUB%S",	armdpi,	"$#%i,R%n,R%d",
+	"CMP%S",	armdpi,	"$#%i,R%n,",
+	"ADC%S",	armdpi,	"$#%i,R%n,R%d",
+	"SBC%S",	armdpi,	"$#%i,R%n,R%d",
+	"RSB%S",	armdpi,	"$#%i,R%n,R%d",
+	"RSC%S",	armdpi,	"$#%i,R%n,R%d",
+	"TST%S",	armdpi,	"$#%i,R%n,",
+	"TEQ%S",	armdpi,	"$#%i,R%n,",
+	"BIC%S",	armdpi,	"$#%i,R%n,R%d",
+	"MVN%S",	armdpi,	"$#%i,,R%d",
 
-	"MUL%C%S",	armdpi,	"R%s,R%m,R%n",
-	"MULA%C%S",	armdpi,	"R%s,R%m,R%n,R%d",
+	"MUL%S",	armdpi,	"R%s,R%m,R%n",
+	"MULA%S",	armdpi,	"R%s,R%m,R%n,R%d",
 	"SWPW",		armdpi,	"R%s,(R%n),R%d",
 	"SWPB",		armdpi,	"R%s,(R%n),R%d",
 
-	"MOVW%C%p",	armsdti,"R%d,#%i(R%n)",
-	"MOVB%C%p",	armsdti,"R%d,#%i(R%n)",
-	"MOVW%C%p",	armsdti,"#%i(R%n),R%d",
-	"MOVB%C%p",	armsdti,"#%i(R%n),R%d",
+	"STR%p",	armsdti,"R%d,#%i(R%n)",
+	"STRB%p",	armsdti,"R%d,#%i(R%n)",
+	"LDR%p",	armsdti,"#%i(R%n),R%d",
+	"LDRB%p",	armsdti,"#%i(R%n),R%d",
 
-	"MOVW%C%p",	armsdts,"R%d,%D(R%s%h#%m)(R%n)",
-	"MOVB%C%p",	armsdts,"R%d,%D(R%s%h#%m)(R%n)",
-	"MOVW%C%p",	armsdts,"%D(R%s%h#%m)(R%n),R%d",
-	"MOVB%C%p",	armsdts,"%D(R%s%h#%m)(R%n),R%d",
-
-	"MOVM%C%P%a",	armbdt,	"R%n,[%r]",
-	"MOVM%C%P%a",	armbdt,	"[%r],R%n",
+	"STR%p",	armsdts,"R%d,%D(R%s%h#%m)(R%n)",
+	"STRB%p",	armsdts,"R%d,%D(R%s%h#%m)(R%n)",
+	"LDR%p",	armsdts,"%D(R%s%h#%m)(R%n),R%d",
+	"LDRB%p",	armsdts,"%D(R%s%h#%m)(R%n),R%d",
 
 	"B%C",		armb,	"%b",
 	"BL%C",		armb,	"%b",
 
-	"CDP%C",	armco,	"",
-	"CDP%C",	armco,	"",
-	"MCR%C",	armco,	"",
-	"MRC%C",	armco,	"",
+	"ADR",		armunk,	"",
+	"ADRP",		armunk,	"",
+	"RET",		armunk, "",
 
 	"UNK",		armunk,	"",
 };
