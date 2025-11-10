@@ -79,7 +79,7 @@ r:
 			ss->Srune[v] = r;
 		else
 		if(v == l && v < ss->max) {
-			ss->len = -(v+1);
+			ss->len = -((long)v+1);
 			ss->Srune[v] = r;
 		}
 		else {
@@ -90,7 +90,7 @@ r:
 			ns = newstring((v + 1 + v/4)*sizeof(Rune));
 			memmove(ns->Srune, ss->Srune, l*sizeof(Rune));
 			ns->Srune[v] = r;
-			ns->len = -(v+1);
+			ns->len = -((long)v+1);
 			ns->max /= sizeof(Rune);
 			ss = ns;
 		}
@@ -302,7 +302,7 @@ OP(cvtac)
 
 OP(lenc)
 {
-	ulong l;
+	long l;
 	String *ss;
 
 	l = 0;
