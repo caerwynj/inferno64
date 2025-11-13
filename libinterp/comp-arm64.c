@@ -32,7 +32,7 @@ enum
 	R14	= 14,		/* Link Register */
 	R15	= 15,		/* PC */
 
-	RLINK	= 14,
+	RLINK	= 31,
 
 	RFP	= R9,		/* Frame Pointer */
 	RMP	= R8,		/* Module Pointer */
@@ -69,24 +69,7 @@ enum
 
 	HS	= CS,
 	LO	= CC,
-/*
-	And	= 0,
-	Eor	= 1,
-	Sub	= 2,
-	Rsb	= 3,
-	Add	= 4,
-	Adc	= 5,
-	Sbc	= 6,
-	Rsc	= 7, //not used
-	Tst	= 8, //not used
-	Teq	= 9, //not used
-	Cmp	= 10,
-	Cmn	= 11,
-	Orr	= 12,
-	Mov	= 13,
-	Bic	= 14, //not used
-	Mvn	= 15,
-*/
+
 	Adf	= 0,
 	Muf	= 1,
 	Suf	= 2,
@@ -155,14 +138,14 @@ enum
 #define SBIT	(1<<29)
 #define UPBIT	(1<<23)
 
-#define LDW(Rn, Rd, O)		*code++ = (3<<30)|(7<<27)|(1<<24)|(1<<22)|\
-					   (O<<10)|(Rn<<5)|(Rd)
-#define STW(Rn, Rd, O)		*code++ = (3<<30)|(7<<27)|(1<<24)|(O<<10)|\
+#define LDW(Rn, Rd, O)		*code++ = (3<<30)|(7<<27)|(1<<24)|(1<<22)|(IMM(O)<<10)|\
+					   (Rn<<5)|(Rd)
+#define STW(Rn, Rd, O)		*code++ = (3<<30)|(7<<27)|(1<<24)|(IMM(O)<<10)|\
 					  (Rn<<5)|(Rd)
 
 #define LDB(Rn, Rd, O)		*code++ = (7<<27)|(1<<24)|(1<<22)|\
-					   (O<<10)|(Rn<<5)|(Rd)
-#define STB(Rn, Rd, O)		*code++ = (7<<27)|(1<<24)|(O<<10)|\
+					   (IMM(O)<<10)|(Rn<<5)|(Rd)
+#define STB(Rn, Rd, O)		*code++ = (7<<27)|(1<<24)|(IMM(O)<<10)|\
 					  (Rn<<5)|(Rd)
 
 #define LDRW(Rn, Rd, R)		*code++ = (3<<30)|(7<<27)|(1<<22)|(1<<21)|\
@@ -188,8 +171,6 @@ enum
 #define Sbc 	0x5a
 //TODO
 #define Mov	0x2a
-#define Mvf	0x00
-#define Mvn	0x00
 
 #define DP(Op, Rn, Rd, Sh, Rm)	*code++ = (1<<31)|(Op<<24)|(Rm<<16)|\
 					  (Sh<<10)|(Rn<<5)|(Rd)

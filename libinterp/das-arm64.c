@@ -104,9 +104,13 @@ armclass(ulong w)
 		/* RET */
 		op = (64 + 4 + 4 + 4 + 2 + 2);
 		break;
+	case 0b11001:
+		/* LDRI, STRI */
+		op = (64+4) + ((w>>22) & 0x1) + ((w>>31) & 1)*2;
+		break;
 	case 0b11000:
 		/* LDR, STR */
-		op = (64+4+4+4+2+3);
+		op = (64+4+4) + ((w>>22) & 0x1) + ((w>>31) & 1)*2;
 		break;
 	case 0b11010:
 		/* ADC,SUBC */
@@ -156,7 +160,6 @@ static void
 armdpi(Opcode *o, Instr *i)
 {
 	ulong v;
-	int c;
 
 	v = (((i->w >> 10) & 0x3f) << 6) | ((i->w >>16) & 0x3f);
 	i->imm = v;
@@ -172,25 +175,19 @@ armsdti(Opcode *o, Instr *i)
 {
 	ulong v;
 
-	v = (i->w >> 0) & 0xfff;
-	if(!(i->w & (1<<23)))
-		v = -v;
-	i->store = ((i->w >> 23) & 0x2) | ((i->w >>21) & 0x1);
+	v = (i->w >> 10) & 0xfff;
+	i->store = 0;
 	i->imm = v;
-	i->rn = (i->w >> 16) & 0xf;
-	i->rd = (i->w >> 12) & 0xf;
-		/* convert load of offset(PC) to a load immediate */
-	if(i->rn == 15 && (i->w & (1<<20)) && get4(i->addr+v+8, &i->imm) > 0)
-		format(o->o, i, "$#%i,R%d");
-	else
-		format(o->o, i, o->a);
+	i->rn = (i->w >> 5) & 0x1f;
+	i->rd = (i->w >> 0) & 0x1f;
+	format(o->o, i, o->a);
 }
 
 static void
 armsdts(Opcode *o, Instr *i)
 {
-	i->store = ((i->w >> 29) & 1);
-	i->rs = (i->w >> 0) & 0x1f;
+	i->store = 0;
+	i->rs = (i->w >> 16) & 0x1f;
 	i->rn = (i->w >> 5) & 0x1f;
 	i->rd = (i->w >> 0) & 0x1f;
 	format(o->o, i, o->a);
@@ -335,15 +332,15 @@ static Opcode opcodes[] =
 	"SWPW",		armdpi,	"R%s,(R%n),R%d",
 	"SWPB",		armdpi,	"R%s,(R%n),R%d",
 
-	"STR%p",	armsdti,"R%d,#%i(R%n)",
 	"STRB%p",	armsdti,"R%d,#%i(R%n)",
-	"LDR%p",	armsdti,"#%i(R%n),R%d",
 	"LDRB%p",	armsdti,"#%i(R%n),R%d",
+	"STR%p",	armsdti,"R%d,#%i(R%n)",
+	"LDR%p",	armsdti,"#%i(R%n),R%d",
 
-	"STR%p",	armsdts,"R%d,%D(R%s%h#%m)(R%n)",
 	"STRB%p",	armsdts,"R%d,%D(R%s%h#%m)(R%n)",
-	"LDR%p",	armsdts,"%D(R%s%h#%m)(R%n),R%d",
 	"LDRB%p",	armsdts,"%D(R%s%h#%m)(R%n),R%d",
+	"STR%p",	armsdts,"R%d,%D(R%s%h#%m)(R%n)",
+	"LDR%p",	armsdts,"%D(R%s%h#%m)(R%n),R%d",
 
 	"B%C",		armb,	"%b",
 	"BL%C",		armb,	"%b",
