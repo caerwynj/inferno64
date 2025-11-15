@@ -32,7 +32,7 @@ enum
 	R14	= 14,		/* Link Register */
 	R15	= 15,		/* PC */
 
-	RLINK	= 31,
+	RLINK	= 30,
 
 	RFP	= R9,		/* Frame Pointer */
 	RMP	= R8,		/* Module Pointer */
@@ -208,20 +208,20 @@ enum
 #define BL(o)                        	((1<<31)|(5<<26)|(((o) & 0x03ffffff)))
 #define BRA(C, o)			gen(BRAW((C),(o)))
 #define IA(s, o)			(ulong)(base+s[o])
-#define BRADIS(C, o)			BRA(C, (IA(patch, o)-(ulong)code-8)>>2)
-#define BRAMAC(r, o)			BRA(r, (IA(macro, o)-(ulong)code-8)>>2)
-#define BRANCH(C, o)			gen(BRAW(C, ((ulong)(o)-(ulong)code-8)>>2))
-#define CALL(o)				gen(BL(((ulong)(o)-(ulong)code-8)>>2))
+#define BRADIS(C, o)			BRA(C, (IA(patch, o)-(ulong)code)>>2)
+#define BRAMAC(r, o)			BRA(r, (IA(macro, o)-(ulong)code)>>2)
+#define BRANCH(C, o)			gen(BRAW(C, ((ulong)(o)-(ulong)code)>>2))
+#define CALL(o)				gen(BL(((ulong)(o)-(ulong)code)>>2))
 //TODO should be BL
-#define CCALL(C,o)			gen(BRAW((C), ((ulong)(o)-(ulong)code-8)>>2))
+#define CCALL(C,o)			gen(BRAW((C), ((ulong)(o)-(ulong)code)>>2))
 //TODO should be BL
-#define CALLMAC(C,o)			gen(BRAW((C), (IA(macro, o)-(ulong)code-8)>>2))
+#define CALLMAC(C,o)			gen(BRAW((C), (IA(macro, o)-(ulong)code)>>2))
 #define RELPC(pc)			(ulong)(base+(pc))
 //TODO should be RET
-#define RETURN				DPI(Add, RLINK, R15, 0, 0)				
+#define RETURN				*code++ = (0xd<<28)|(6<<24)|(5<<20)|(0xf<<16)|(30<<5)
 //TODO
 #define CRETURN(C)			DPI(Add, RLINK, R15, 0, 0)				
-#define PATCH(ptr)			*ptr |= (((ulong)code-(ulong)(ptr)-8)>>2) & 0x00ffffff
+#define PATCH(ptr)			*ptr |= ((((ulong)code-(ulong)(ptr)-8)>>2) & 0x07ffff)<<5
 
 #define MOV(Rm, Rd)	*code++ = (1<<31)|(0x2a<<24)|(Rm<<16)|\
 					  (0x1f<<5)|(Rd)
@@ -490,7 +490,6 @@ mem(int inst, ulong disp, int rm, int r)
 	}
 
 	if(disp < BITS(12) || -disp < BITS(12)) {	/* Direct load */
-		disp /= 8;
 		if(disp < BITS(12))
 			bit = 0;
 		else {
@@ -499,12 +498,14 @@ mem(int inst, ulong disp, int rm, int r)
 		}
 		switch(inst) {
 		case Ldw:
+			disp /= 8;
 			LDW(rm, r, disp);
 			break;
 		case Ldb:
 			LDB(rm, r, disp);
 			break;
 		case Stw:
+			disp /= 8;
 			STW(rm, r, disp);
 			break;
 		case Stb:
@@ -751,7 +752,8 @@ punt(Inst *i, int m, void (*fn)(void))
 	mem(Ldw, O(REG, MP), RREG, RMP);
 
 	if(m & NEWPC){
-		mem(Ldw, O(REG, PC), RREG, R15);
+		mem(Ldw, O(REG, PC), RREG, R15);  //TODO
+		BR(R15);
 		flushcon(0);
 	}
 }
@@ -1963,7 +1965,7 @@ macret(void)
 
 	PATCH(cp4);
 	MOV(R15, R14);		// call destroy(t(fp))
-	MOV(RA0, R15);
+	MOV(RA0, R15); //TODO
 
 	mem(Stw, O(REG,SP),RREG, RFP);
 	mem(Ldw, O(Frame,lr),RFP, RA1);
@@ -1973,7 +1975,7 @@ macret(void)
 
 	PATCH(linterp);
 	MOV(R15, R14);		// call destroy(t(fp))
-	MOV(RA0, R15);
+	MOV(RA0, R15); //TODO
 
 	mem(Stw, O(REG,SP),RREG, RFP);
 	mem(Ldw, O(Frame,lr),RFP, RA1);
