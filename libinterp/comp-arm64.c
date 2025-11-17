@@ -206,12 +206,13 @@ enum
 #define BR(r)				*code++ = (0xd6<<24)|(0x1f<<16)|(r<<5)
 #define BRAW(C, o)			((0x2a<<25)|(((o) & 0x0007ffff)<<5)|(C))
 #define BL(o)                        	((1<<31)|(5<<26)|(((o) & 0x03ffffff)))
+#define BLR(r)				*code++ = (0xd<<28)|(0x6<<24)|(0x3<<20)|(0xf<<16)|(r<<5)
 #define BRA(C, o)			gen(BRAW((C),(o)))
 #define IA(s, o)			(ulong)(base+s[o])
 #define BRADIS(C, o)			BRA(C, (IA(patch, o)-(ulong)code)>>2)
 #define BRAMAC(r, o)			BRA(r, (IA(macro, o)-(ulong)code)>>2)
 #define BRANCH(C, o)			gen(BRAW(C, ((ulong)(o)-(ulong)code)>>2))
-#define CALL(o)				gen(BL(((ulong)(o)-(ulong)code)>>2))
+#define CALL(o)				gen(BL(((long)(o)-(long)code)>>2))
 //TODO should be BL
 #define CCALL(C,o)			gen(BRAW((C), ((ulong)(o)-(ulong)code)>>2))
 //TODO should be BL
@@ -221,7 +222,7 @@ enum
 #define RETURN				*code++ = (0xd<<28)|(6<<24)|(5<<20)|(0xf<<16)|(30<<5)
 //TODO
 #define CRETURN(C)			DPI(Add, RLINK, R15, 0, 0)				
-#define PATCH(ptr)			*ptr |= ((((ulong)code-(ulong)(ptr)-8)>>2) & 0x07ffff)<<5
+#define PATCH(ptr)			*ptr |= ((((ulong)code-(ulong)(ptr))>>2) & 0x07ffff)<<5
 
 #define MOV(Rm, Rd)	*code++ = (1<<31)|(0x2a<<24)|(Rm<<16)|\
 					  (0x1f<<5)|(Rd)
@@ -462,6 +463,13 @@ con(ulong o, int r, int opt)
 	c->pc = code+codeoff;
 	ADR(0, r);
 	//LDW(R15, r, 0);  //TODO
+}
+
+static void
+bl(ulong w)
+{
+	con(w, R15, 1);
+	BLR(R15);
 }
 
 static void
@@ -737,16 +745,19 @@ punt(Inst *i, int m, void (*fn)(void))
 	}
 	mem(Stw, O(REG, FP), RREG, RFP);
 
-	CALL(fn);
+	bl((ulong)fn);
 
 	con((ulong)&R, RREG, 1);
 	if(m & TCHECK) {
 		mem(Ldw, O(REG, t), RREG, RA0);
 		CMPI(RA0, 0, 0);
+		BRA(NE, 2);
+		mem(Ldw, O(REG, xpc), RREG, RLINK);
+		RETURN;
 		/* TODO
-		memc(NE, Ldw, O(REG, xpc), RREG, RLINK);
-		*/
-		CRETURN(NE);		/* if(R.t) goto(R.xpc) */
+		//memc(NE, Ldw, O(REG, xpc), RREG, RLINK);
+		CRETURN(NE); */		/* if(R.t) goto(R.xpc) */
+		
 	}
 	mem(Ldw, O(REG, FP), RREG, RFP);
 	mem(Ldw, O(REG, MP), RREG, RMP);
@@ -1375,11 +1386,14 @@ comp(Inst *i)
 		con(0, RA0, 1);
 		CMPH(RA1);
 		/* TODO
-		memc(NE, Ldw, O(String,len),RA1, RA0);
+		BRA(NE, 1);
+		mem(Ldw, O(String,len),RA1, RA0);
+		//memc(NE, Ldw, O(String,len),RA1, RA0);
 		*/
 		CMPI(RA0, 0, 0);
 		/* TODO
-		DPI(LT, Rsb, RA0, RA0, 0, 0);
+		BRA(LT, 1);
+		DPI(Rsb, RA0, RA0, 0, 0);
 		*/
 		opwst(i, Stw, RA0);
 		break;
@@ -1810,8 +1824,10 @@ preamble(void)
 		error(exNomem);
 	code = (uint*)comvec;
 
+	/*
 	ADRP(((ulong)&R) - ((ulong)code)>>12, RREG);
 	DPI(Addi, RREG, RREG, 0, (ulong)&R);
+	*/
 	con((ulong)&R, RREG, 1);
 	mem(Stw, O(REG, xpc), RREG, RLINK);
 	mem(Ldw, O(REG, FP), RREG, RFP);
@@ -1949,7 +1965,7 @@ macret(void)
 
 	mem(Ldw, O(REG,M),RREG, RA2);
 	mem(Ldw, O(Heap,ref)-sizeof(Heap),RA2, RA3);
-	DPI(Sub, RA3, RA3, 0, 1) | SBIT;
+	DPI(Sub, RA3, RA3, 0, 1) | SBIT;  //TODO
 	cp5 = code;
 	BRA(EQ, 0);				// --ref(arg) == 0
 	mem(Stw, O(Heap,ref)-sizeof(Heap),RA2, RA3);
@@ -1966,6 +1982,7 @@ macret(void)
 	PATCH(cp4);
 	MOV(R15, R14);		// call destroy(t(fp))
 	MOV(RA0, R15); //TODO
+	BR(R15);
 
 	mem(Stw, O(REG,SP),RREG, RFP);
 	mem(Ldw, O(Frame,lr),RFP, RA1);
@@ -1976,6 +1993,7 @@ macret(void)
 	PATCH(linterp);
 	MOV(R15, R14);		// call destroy(t(fp))
 	MOV(RA0, R15); //TODO
+	BR(R15);
 
 	mem(Stw, O(REG,SP),RREG, RFP);
 	mem(Ldw, O(Frame,lr),RFP, RA1);
