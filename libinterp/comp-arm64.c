@@ -27,10 +27,13 @@ enum
 	R9	= 9,
 	R10	= 10,
 	R11	= 11,
-	R12	= 12,		/* C's SB */
-	R13	= 13,		/* C's SP */
-	R14	= 14,		/* Link Register */
-	R15	= 15,		/* PC */
+	R12	= 12,		
+	R13	= 13,	
+	R14	= 14,		
+	R15	= 15,		/* Used for Branch to Register as if PC */
+				/* R19 through R28 are non-volatile/callee-saved */
+	R29	= 29,		/* C's FP */
+	R30	= 30,		/* Link Register */
 
 	RLINK	= 30,
 
@@ -43,7 +46,6 @@ enum
 	RA2	= R3,		/* gpr 2 2+3 = L */
 	RA1	= R2,		/* gpr 1 */
 	RA0	= R1,		/* gpr 0 0+1 = L */
-
 
 	FA2	= 2,		/* Floating */
 	FA3	= 3,
@@ -148,14 +150,14 @@ enum
 #define STB(Rn, Rd, O)		*code++ = (7<<27)|(1<<24)|(IMM(O)<<10)|\
 					  (Rn<<5)|(Rd)
 
-#define LDRW(Rn, Rd, R)		*code++ = (3<<30)|(7<<27)|(1<<22)|(1<<21)|\
-					  (Rd<<16)|(1<<11)|(Rn<<5)|R
-#define STRW(Rn, Rd, R)		*code++ = (3<<30)|(7<<27)|(1<<21)|\
-					  (Rd<<16)|(1<<11)|(Rn<<5)|R
-#define LDRB(Rn, Rd, R)		*code++ = (7<<27)|(1<<22)|(1<<21)|\
-					  (Rd<<16)|(1<<11)|(Rn<<5)|R
-#define STRB(Rn, Rd, R)		*code++ = (7<<27)|(1<<21)|\
-					  (Rd<<16)|(1<<11)|(Rn<<5)|R
+#define LDRW(Rn, Rm, Rt)	*code++ = (3<<30)|(7<<27)|(3<<21)|\
+					  (Rm<<16)|(3<<13)|(1<<11)|(Rn<<5)|Rt
+#define STRW(Rn, Rm, Rt)	*code++ = (3<<30)|(7<<27)|(1<<21)|\
+					  (Rm<<16)|(1<<11)|(Rn<<5)|Rt
+#define LDRB(Rn, Rm, Rt)	*code++ = (7<<27)|(1<<22)|(1<<21)|\
+					  (Rm<<16)|(1<<11)|(Rn<<5)|Rt
+#define STRB(Rn, Rm, Rt)	*code++ = (7<<27)|(1<<21)|\
+					  (Rm<<16)|(1<<11)|(Rn<<5)|Rt
 
 #define Add 	0x0b
 #define Addi 	0x11
@@ -229,8 +231,8 @@ enum
 #define MOVZ(O, Sh, Rd)	*code++ = (1<<31)|(0xa5<<23)|(Sh<<21)|((O)<<5)|Rd
 #define MOVK(O, Sh, Rd)	*code++ = (1<<31)|(0xe5<<23)|(Sh<<21)|((O)<<5)|Rd
 
-#define ADR(O, Rd)	*code++ = (1<<28)|((O & 0x3)<<29)|((O & ~0x3)<<5)|Rd
-#define ADRP(O, Rd)	*code++ = (1<<31)|((O & 0x3)<<29)|(1<<28)|(((O & ((1<<21)-1)) & ~0x3)<<2)|Rd
+#define ADR(O, Rd)	*code++ = (1<<28)|((O & 0x3)<<29)|((O & ~0x3)<<3)|Rd
+#define ADRP(O, Rd)	*code++ = (1<<31)|((O & 0x3)<<29)|(1<<28)|(((O & ((1<<21)-1)) & ~0x3)<<3)|Rd
 
 #define FITS12(v)	((ulong)(v)<BITS(12))
 #define FITS8(v)	((ulong)(v)<BITS(8))
@@ -422,13 +424,14 @@ flushcon(int genbr)
 	c = &rcon.table[0];
 	for(i = 0; i < rcon.ptr; i++) {
 		if(pass){
-			disp = (code - c->code) * sizeof(*code) - 8;
-			if(disp >= BITS(12))
+			disp = (code - c->code) * sizeof(*code); 
+			if(disp >= BITS(21))
 				print("INVALID constant range %lud", disp);
-			if(0)print("data %8.8p %8.8lux (%8.8p, ins=%8.8lux cpc=%8.8p)\n", code, c->o, c->code, *c->code, c->pc);
-			*c->code |= (disp&0xfff);
+			if(1)print("data %8.8p %8.8lux (%8.8p, ins=%8.8lux cpc=%8.8p)\n", code, c->o, c->code, *c->code, c->pc);
+			*c->code |= ((disp & 0x3)<<29)|((disp & ~0x3)<<3);
 		}
-		*code++ = c->o;
+		*(ulong*)code++ = c->o; //TODO this needs to hold a 64bit address
+		code++;
 		c++;
 	}
 	rcon.ptr = 0;
@@ -462,6 +465,7 @@ con(ulong o, int r, int opt)
 	c->code = code;
 	c->pc = code+codeoff;
 	ADR(0, r);
+	LDW(r, r, 0);
 	//LDW(R15, r, 0);  //TODO
 }
 
@@ -480,7 +484,7 @@ mem(int inst, ulong disp, int rm, int r)
 	if(inst == Lea) {
 		if(disp < BITS(8)) {
 			if(disp != 0 || rm != r)
-				DPI(Add, rm, r, 0, disp);
+				DPI(Addi, rm, r, 0, disp);
 			return;
 		}
 		if(-disp < BITS(8)) {
