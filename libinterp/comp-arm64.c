@@ -137,6 +137,7 @@ enum
 #define BITS(B)				(1<<B)
 #define IMM(O)				(O & ((1<<12)-1))
 #define IMM6(O)				(O & ((1<<6)-1))
+#define IMM9(O)				(O & ((1<<9)-1))
 #define SBIT	(1<<29)
 #define UPBIT	(1<<23)
 
@@ -159,6 +160,14 @@ enum
 #define STRB(Rn, Rm, Rt)	*code++ = (7<<27)|(1<<21)|\
 					  (Rm<<16)|(1<<11)|(Rn<<5)|Rt
 
+#define LDUW(Rn, Rd, O)		*code++ = (3<<30)|(7<<27)|(1<<22)|(IMM9(O)<<12)|\
+					   (Rn<<5)|(Rd)
+#define LDUB(Rn, Rd, O)		*code++ = (7<<27)|(1<<22)|\
+					   (IMM9(O)<<12)|(Rn<<5)|(Rd)
+#define STUW(Rn, Rd, O)		*code++ = (3<<30)|(7<<27)|(IMM9(O)<<12)|\
+					  (Rn<<5)|(Rd)
+#define STUB(Rn, Rd, O)		*code++ = (7<<27)|(IMM9(O)<<12)|\
+					  (Rn<<5)|(Rd)
 #define Add 	0x0b
 #define Addi 	0x11
 #define Adc 	0x1a
@@ -183,9 +192,9 @@ enum
 					  (Rn<<5)|((1<<5)-1)
 #define CMNI(Rn, sh, O)	*code++ = (0xb1<<24)|(sh<<22)|(IMM(O)<<10)|\
 					  (Rn<<5)|((1<<5)-1)
-#define CMP(Rn, Rm, sh, O)	*code++ = (0xeb<<24)|(sh<<22)|(Rm<<16)|\
+#define CMP(Rn, O, sh, Rm)	*code++ = (0xeb<<24)|(sh<<22)|(Rm<<16)|\
 					  (IMM6(O)<<10)|(Rn<<5)|((1<<5)-1)
-#define CMN(Rn, Rm, sh, O)	*code++ = (0xab<<24)|(sh<<22)|(Rm<<16)|\
+#define CMN(Rn, O, sh, Rm)	*code++ = (0xab<<24)|(sh<<22)|(Rm<<16)|\
 					  (IMM6(O)<<10)|(Rn<<5)|((1<<5)-1)
 
 #define MUL(Rm, Rs, Rd)		*code++ = (1<<31)|(3<<27)|(3<<24)|(Rm<<16)|\
@@ -206,30 +215,27 @@ enum
 #define CPFIX(C, Rd, Fm)	*code++ = (C<<28)|(0xE<<24)|(1<<20)|(0<<16)|(Rd<<12)|(1<<8)|(9<<4)|(Fm)
 
 #define BR(r)				*code++ = (0xd6<<24)|(0x1f<<16)|(r<<5)
+#define BLR(r)				*code++ = (0xd<<28)|(0x6<<24)|(0x3<<20)|(0xf<<16)|(r<<5)
 #define BRAW(C, o)			((0x2a<<25)|(((o) & 0x0007ffff)<<5)|(C))
 #define BL(o)                        	((1<<31)|(5<<26)|(((o) & 0x03ffffff)))
-#define BLR(r)				*code++ = (0xd<<28)|(0x6<<24)|(0x3<<20)|(0xf<<16)|(r<<5)
 #define BRA(C, o)			gen(BRAW((C),(o)))
 #define IA(s, o)			(ulong)(base+s[o])
 #define BRADIS(C, o)			BRA(C, (IA(patch, o)-(ulong)code)>>2)
 #define BRAMAC(r, o)			BRA(r, (IA(macro, o)-(ulong)code)>>2)
 #define BRANCH(C, o)			gen(BRAW(C, ((ulong)(o)-(ulong)code)>>2))
 #define CALL(o)				gen(BL(((long)(o)-(long)code)>>2))
-//TODO should be BL
-#define CCALL(C,o)			gen(BRAW((C), ((ulong)(o)-(ulong)code)>>2))
-//TODO should be BL
-#define CALLMAC(C,o)			gen(BRAW((C), (IA(macro, o)-(ulong)code)>>2))
+#define CCALL(C,o)			ccall(C, ((ulong)(o)-(ulong)code)>>2)
+#define CALLMAC(C,o)			ccall((C), (IA(macro, o)-(ulong)code)>>2)
 #define RELPC(pc)			(ulong)(base+(pc))
-//TODO should be RET
 #define RETURN				*code++ = (0xd<<28)|(6<<24)|(5<<20)|(0xf<<16)|(30<<5)
-//TODO
-#define CRETURN(C)			DPI(Add, RLINK, R15, 0, 0)				
+#define CRETURN(C)			creturn(C)
 #define PATCH(ptr)			*ptr |= ((((ulong)code-(ulong)(ptr))>>2) & 0x07ffff)<<5
 
 #define MOV(Rm, Rd)	*code++ = (1<<31)|(0x2a<<24)|(Rm<<16)|\
 					  (0x1f<<5)|(Rd)
 #define MOVZ(O, Sh, Rd)	*code++ = (1<<31)|(0xa5<<23)|(Sh<<21)|((O)<<5)|Rd
 #define MOVK(O, Sh, Rd)	*code++ = (1<<31)|(0xe5<<23)|(Sh<<21)|((O)<<5)|Rd
+#define MOVN(O, Sh, Rd)	*code++ = (1<<31)|(0x25<<23)|(Sh<<21)|((O)<<5)|Rd
 
 #define ADR(O, Rd)	*code++ = (1<<28)|((O & 0x3)<<29)|((O & ~0x3)<<3)|Rd
 #define ADRP(O, Rd)	*code++ = (1<<31)|((O & 0x3)<<29)|(1<<28)|(((O & ((1<<21)-1)) & ~0x3)<<3)|Rd
@@ -452,21 +458,51 @@ con(ulong o, int r, int opt)
 	Const *c;
 
 	if(opt != 0) {
-		MOVZ((o>>48) & 0xffff, 3, r);
-		MOVK((o>>32) & 0xffff, 2, r);
-		MOVK((o>>16) & 0xffff, 1, r);
-		MOVK((o) & 0xffff, 0, r);
+		if (o == 0) {
+			MOVZ(0, 0, r);
+			// TODO; could also use xzr zero register
+		} else if(o == -1) {
+			MOVN(0, 0, r);
+		} else {
+			MOVZ((o>>48) & 0xffff, 3, r);
+			MOVK((o>>32) & 0xffff, 2, r);
+			MOVK((o>>16) & 0xffff, 1, r);
+			MOVK((o) & 0xffff, 0, r);
+		}
 		return;
 	}
-	/* for relative PC offsets. Use ADRP */
+	/* for relative PC offsets. Use ADR */
 	flushchk();
 	c = &rcon.table[rcon.ptr++];
 	c->o = o;
 	c->code = code;
 	c->pc = code+codeoff;
-	ADR(0, r);
+	/* The next instruction will be patched to contain the address of the litpool.
+	 * The litpool will contain the address of the immediate value.
+	 * That's the address we return in 'r'.
+	 */
+	ADR(0, r); 
 	LDW(r, r, 0);
-	//LDW(R15, r, 0);  //TODO
+}
+
+static void
+ccall(char cond, ulong o)
+{
+	if (cond == AL) {
+		gen(BL(o));
+		return;
+	}
+	cond ^= 1;
+	BRA(cond, 1); 
+	gen(BL(o));
+}
+
+static void
+creturn(char cond)
+{
+	cond ^= 1;
+	BRA(cond, 1);  
+	RETURN;
 }
 
 static void
@@ -488,12 +524,12 @@ mem(int inst, ulong disp, int rm, int r)
 			return;
 		}
 		if(-disp < BITS(8)) {
-			DPI(Sub, rm, r, 0, -disp);
+			DPI(Subi, rm, r, 0, -disp);
 			return;
 		}
 		bit = immrot(disp);
 		if(bit) {
-			DPI(Add, rm, r, 0, 0) | bit;
+			DPI(Addi, rm, r, 0, 0) | bit;
 			return;
 		}
 		con(disp, RCON, 1);
@@ -503,29 +539,38 @@ mem(int inst, ulong disp, int rm, int r)
 
 	if(disp < BITS(12) || -disp < BITS(12)) {	/* Direct load */
 		if(disp < BITS(12))
-			bit = 0;
+			switch(inst) {
+			case Ldw:
+				disp /= 8;
+				LDW(rm, r, disp);
+				break;
+			case Ldb:
+				LDB(rm, r, disp);
+				break;
+			case Stw:
+				disp /= 8;
+				STW(rm, r, disp);
+				break;
+			case Stb:
+				STB(rm, r, disp);
+				break;
+			}
 		else {
-			disp = -disp;
-			bit = UPBIT;
+			switch(inst) {
+			case Ldw:
+				LDUW(rm, r, disp);
+				break;
+			case Ldb:
+				LDUB(rm, r, disp);
+				break;
+			case Stw:
+				STUW(rm, r, disp);
+				break;
+			case Stb:
+				STUB(rm, r, disp);
+				break;
+			}
 		}
-		switch(inst) {
-		case Ldw:
-			disp /= 8;
-			LDW(rm, r, disp);
-			break;
-		case Ldb:
-			LDB(rm, r, disp);
-			break;
-		case Stw:
-			disp /= 8;
-			STW(rm, r, disp);
-			break;
-		case Stb:
-			STB(rm, r, disp);
-			break;
-		}
-		if(bit)
-			code[-1] ^= bit;
 		return;
 	}
 
@@ -680,7 +725,7 @@ schedcheck(Inst *i)
 {
 	if(RESCHED && i->d.ins <= i){
 		mem(Ldw, O(REG, IC), RREG, RA0);
-		DPI(Sub, RA0, RA0, 0, 1) | SBIT;
+		DPI(Subi, RA0, RA0, 0, 1) | SBIT;
 		mem(Stw, O(REG, IC), RREG, RA0);
 		/* CMPI(AL, RA0, 0, 0, 1); */
 		CALLMAC(LE, MacRELQ);
@@ -1085,7 +1130,7 @@ movloop(Inst *i, int s)
 	LDxP(AL, RA1, RA0, s, b);
 	STxP(AL, RA2, RA0, s, b);
 	*/
-	DPI(Sub, RA3, RA3, 0, 1) | SBIT;
+	DPI(Subi, RA3, RA3, 0, 1) | SBIT;
 	BRA(NE, (-3*4-8)>>2);
 }
 
@@ -1301,7 +1346,7 @@ comp(Inst *i)
 		opwld(i, Ldw, RA1);
 		NOTNIL(RA1);
 		if(OA(List,data) != 0)
-			DPI(Add, RA1, RA1, 0, OA(List,data));
+			DPI(Addi, RA1, RA1, 0, OA(List,data));
 		movmem(i);
 		break;
 /*
@@ -1408,7 +1453,7 @@ comp(Inst *i)
 		CMPH(RA1);
 		/* TODO
 		LDW(NE, RA1, RA1, O(List, tail));
-		DPI(NE, Add, RA0, RA0, 0, 1);
+		DPI(NE, Addi, RA0, RA0, 0, 1);
 		BRA(NE, (-4*3-8)>>2);
 		*/
 		opwst(i, Stw, RA0);
@@ -1598,7 +1643,7 @@ comp(Inst *i)
 		}
 		mem(Ldw, O(String,len),RA1, RA0);	// len<0 => index Runes, otherwise bytes
 		if(bflag){
-			DPI(Orr, RA0, RA3, 0, 0);
+			DPI(Orri, RA0, RA3, 0, 0);
 			/* TODO
 			DPI(LT, Rsb, RA3, RA3, 0, 0);
 			*/
@@ -1607,7 +1652,7 @@ comp(Inst *i)
 			else
 				BCK(RA2, RA3);
 		}
-		DPI(Add, RA1, RA1, 0, O(String,data));
+		DPI(Addi, RA1, RA1, 0, O(String,data));
 		CMPI(RA0, 0, 0);
 		if(imm){
 			/* TODO
@@ -1647,7 +1692,7 @@ comp(Inst *i)
 			if(bflag)
 				BCKR(imm, RA2);
 			if(i->d.imm != 0)
-				DPI(Add, RA0, RA0, 0, 0) | immrot(i->d.imm<<r);
+				DPI(Addi, RA0, RA0, 0, 0) | immrot(i->d.imm<<r);
 		} else {
 			opwst(i, Ldw, RA1);
 			if(bflag)
@@ -1883,8 +1928,8 @@ maccase(void)
 	*/
 
 	// v >= l[2] (high)
-	DPI(Add, RCON, RA3, 0, 12);	// t = l+3;
-	DPI(Add, RA0, RTA, 0, 1);
+	DPI(Addi, RCON, RA3, 0, 12);	// t = l+3;
+	DPI(Addi, RA0, RTA, 0, 1);
 	DP(Sub, RA2, RA2, 0, RTA) | SBIT;	// n -= n2+1
 	BRANCH(GT, inner);	// n > 0? goto loop
 
@@ -1904,7 +1949,10 @@ macfrp(void)
 	CRETURN(EQ);		// arg == H? => return
 
 	mem(Ldw, O(Heap, ref)-sizeof(Heap), RA0, RA2);
-	DPI(Sub, RA2, RA2, 0, 1) | SBIT;
+	DPI(Subi, RA2, RA2, 0, 1) | SBIT;
+
+	BRA(NE, 2);
+	mem(Stw, O(Heap, ref)-sizeof(Heap), RA0, RA2);
 	/* TODO
 	memc(NE, Stw, O(Heap, ref)-sizeof(Heap), RA0, RA2);
 	*/
@@ -1927,7 +1975,7 @@ maccolr(void)
 {
 	/* color the pointer in RA1 */
 	mem(Ldw, O(Heap, ref)-sizeof(Heap), RA1, RA0);
-	DPI(Add, RA0, RA0, 0, 1);
+	DPI(Addi, RA0, RA0, 0, 1);
 	mem(Stw, O(Heap, ref)-sizeof(Heap), RA1, RA0);	// h->ref++
 	con((ulong)&mutator, RA2, 1);
 	mem(Ldw, O(Heap, color)-sizeof(Heap), RA1, RA0);
@@ -1969,7 +2017,7 @@ macret(void)
 
 	mem(Ldw, O(REG,M),RREG, RA2);
 	mem(Ldw, O(Heap,ref)-sizeof(Heap),RA2, RA3);
-	DPI(Sub, RA3, RA3, 0, 1) | SBIT;  //TODO
+	DPI(Subi, RA3, RA3, 0, 1) | SBIT;  //TODO
 	cp5 = code;
 	BRA(EQ, 0);				// --ref(arg) == 0
 	mem(Stw, O(Heap,ref)-sizeof(Heap),RA2, RA3);
@@ -1984,20 +2032,17 @@ macret(void)
 	BRA(EQ, 0);
 
 	PATCH(cp4);
-	MOV(R15, R14);		// call destroy(t(fp))
-	MOV(RA0, R15); //TODO
-	BR(R15);
+	BLR(RA0);		// call destroy(t(fp))
 
 	mem(Stw, O(REG,SP),RREG, RFP);
 	mem(Ldw, O(Frame,lr),RFP, RA1);
 	mem(Ldw, O(Frame,fp),RFP, RFP);
 	mem(Stw, O(REG,FP),RREG, RFP);	// R.FP = RFP
-	DP(Mov, 0, R15, 0, RA1);		// goto lr(Rfp), if compiled
+	//DP(Mov, 0, R15, 0, RA1); TODO	
+	BR(RA1);	// goto lr(Rfp), if compiled
 
 	PATCH(linterp);
-	MOV(R15, R14);		// call destroy(t(fp))
-	MOV(RA0, R15); //TODO
-	BR(R15);
+	BLR(RA0);		// call destroy(t(fp))
 
 	mem(Stw, O(REG,SP),RREG, RFP);
 	mem(Ldw, O(Frame,lr),RFP, RA1);
@@ -2021,10 +2066,10 @@ macmcal(void)
 	uint *lab;
 
 	CMPH(RA0);
-	/* TODO
-	memc(NE, Ldw, O(Modlink, prog), RA3, RA1);	// RA0 != H
-	CMPI(NE, RA1, 0, 0, 0);	// RA0 != H
-	*/
+	BRA(NE, 2);
+	mem(Ldw, O(Modlink, prog), RA3, RA1);	// RA0 != H
+	CMPI(RA1, 0, 0);	// RA0 != H
+	
 	lab = code;
 	BRA(NE, 0);	// RA0 != H && m->prog!=0
 
@@ -2040,18 +2085,18 @@ macmcal(void)
 	RETURN;
 
 	PATCH(lab);				// patch:
-	DP(Mov, 0, RFP, 0, RA2);
+	MOV(RA2, RFP);
 	mem(Stw, O(REG, M), RREG, RA3);	// MOVL RA3, R.M
 	mem(Ldw, O(Heap, ref)-sizeof(Heap), RA3, RA1);
-	DPI(Add, RA1, RA1, 0, 1);
+	DPI(Addi, RA1, RA1, 0, 1);
 	mem(Stw, O(Heap, ref)-sizeof(Heap), RA3, RA1);
 	mem(Ldw, O(Modlink, MP), RA3, RMP);	// MOVL R.M->mp, RMP
 	mem(Stw, O(REG, MP), RREG, RMP);	// MOVL RA3, R.MP	R.MP = ml->m
 	mem(Ldw, O(Modlink,compiled), RA3, RA1);	// M.compiled?
 	CMPI(RA1, 0, 0);
-	/* TODO
-	DP(NE, Mov, 0, R15, 0, RA0);	// return to compiled code
-	*/
+	BRA(NE, 1);
+	BR(RA0);	// return to compiled code
+
 	mem(Stw, O(REG,FP),RREG, RFP);	// R.FP = RFP
 	mem(Stw, O(REG,PC),RREG, RA0);	// R.PC = RPC
 	mem(Ldw, O(REG, xpc), RREG, RLINK);
@@ -2079,6 +2124,7 @@ macfram(void)
 	con(0, RA0, 1);
 	mem(Stw, O(Frame,mr), RA2, RA0);     	// MOVL $0, mr(RA2) f->mr
 	mem(Ldw, O(Type, initialize), RA3, R15);	// become t->init(RA2), returning RA2
+	BR(R15);
 
 	PATCH(lab1);
 	mem(Stw, O(REG, s), RREG, RA3);
