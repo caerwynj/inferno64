@@ -2066,14 +2066,15 @@ macret(void)
 static void
 macmcal(void)
 {
-	uint *lab;
+	uint *lab1, *lab2;
 
 	CMPH(RA0);
-	BRA(NE, 3);
+	lab1 = code;
+	BRA(EQ, 0);
 	mem(Ldw, O(Modlink, prog), RA3, RA1);	// RA0 != H
 	CMPI(RA1, 0, 0);	// RA0 != H
 	
-	lab = code;
+	lab2 = code;
 	BRA(NE, 0);	// RA0 != H && m->prog!=0
 
 	mem(Stw, O(REG, st), RREG, RLINK);
@@ -2087,7 +2088,8 @@ macmcal(void)
 	mem(Ldw, O(REG, MP), RREG, RMP);
 	RETURN;
 
-	PATCH(lab);				// patch:
+	PATCH(lab1);				// patch:
+	PATCH(lab2);
 	MOV(RA2, RFP);
 	mem(Stw, O(REG, M), RREG, RA3);	// MOVL RA3, R.M
 	mem(Ldw, O(Heap, ref)-sizeof(Heap), RA3, RA1);
