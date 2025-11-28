@@ -224,8 +224,8 @@ enum
 #define BRAMAC(r, o)			BRA(r, (IA(macro, o)-(ulong)code)>>2)
 #define BRANCH(C, o)			gen(BRAW(C, ((ulong)(o)-(ulong)code)>>2))
 #define CALL(o)				gen(BL(((long)(o)-(long)code)>>2))
-#define CCALL(C,o)			ccall(C, ((ulong)(o)-(ulong)code)>>2)
-#define CALLMAC(C,o)			ccall((C), (IA(macro, o)-(ulong)code)>>2)
+#define CCALL(C,o)			ccall(C, o) 
+#define CALLMAC(C,o)			ccall((C), IA(macro, o))
 #define RELPC(pc)			(ulong)(base+(pc))
 #define RETURN				*code++ = (0xd<<28)|(6<<24)|(5<<20)|(0xf<<16)|(30<<5)
 #define CRETURN(C)			creturn(C)
@@ -246,12 +246,12 @@ enum
 
 /* assumes H==-1 */
 #define CMPH(r)		CMNI(r, 0, 1)
-#define NOTNIL(r)	(CMPH((r)), CCALL(EQ, nullity))
+#define NOTNIL(r)	(CMPH((r)), CCALL(EQ, (ulong)nullity))
 
 /* array bounds checking */
-#define BCK(r, rb)	(CMP(rb, 0, 0, r), CCALL(LS, bounds))
-#define BCKI(i, rb)	(CMPI(rb, 0, i), CCALL(LS, bounds))
-#define BCKR(i, rb)	(CMPI(rb, 0, 0)|(i), CCALL(LS, bounds))
+#define BCK(r, rb)	(CMP(rb, 0, 0, r), CCALL(LS, (ulong)bounds))
+#define BCKI(i, rb)	(CMPI(rb, 0, i), CCALL(LS, (ulong)bounds))
+#define BCKR(i, rb)	(CMPI(rb, 0, 0)|(i), CCALL(LS, (ulong)bounds))
 
 static	uint*	code;
 static	uint*	base;
@@ -489,19 +489,19 @@ static void
 ccall(char cond, ulong o)
 {
 	if (cond == AL) {
-		gen(BL(o));
+		gen(BL((o-(ulong)code) >> 2));
 		return;
 	}
 	cond ^= 1;
-	BRA(cond, 1); 
-	gen(BL(o));
+	BRA(cond, 2); 
+	gen(BL((o-(ulong)code) >> 2));
 }
 
 static void
 creturn(char cond)
 {
 	cond ^= 1;
-	BRA(cond, 1);  
+	BRA(cond, 2);  
 	RETURN;
 }
 
@@ -518,18 +518,21 @@ mem(int inst, ulong disp, int rm, int r)
 	int bit;
 
 	if(inst == Lea) {
-		if(disp < BITS(8)) {
+		if(disp < BITS(12)) {
 			if(disp != 0 || rm != r)
 				DPI(Addi, rm, r, 0, disp);
 			return;
 		}
-		if(-disp < BITS(8)) {
+		if(-disp < BITS(12)) {
 			DPI(Subi, rm, r, 0, -disp);
 			return;
 		}
-		bit = immrot(disp);
+		//TODO 
+		// Use ADR
+		bit = disp < BITS(20) || -disp < BITS(20);
 		if(bit) {
-			DPI(Addi, rm, r, 0, 0) | bit;
+			ADR((ulong)code - (ulong)disp, r);
+			// DPI(Addi, rm, r, 0, 0) | bit;
 			return;
 		}
 		con(disp, RCON, 1);
@@ -800,7 +803,7 @@ punt(Inst *i, int m, void (*fn)(void))
 	if(m & TCHECK) {
 		mem(Ldw, O(REG, t), RREG, RA0);
 		CMPI(RA0, 0, 0);
-		BRA(NE, 2);
+		BRA(NE, 3);
 		mem(Ldw, O(REG, xpc), RREG, RLINK);
 		RETURN;
 		/* TODO
@@ -1435,13 +1438,13 @@ comp(Inst *i)
 		con(0, RA0, 1);
 		CMPH(RA1);
 		/* TODO
-		BRA(NE, 1);
+		BRA(NE, 2);
 		mem(Ldw, O(String,len),RA1, RA0);
 		//memc(NE, Ldw, O(String,len),RA1, RA0);
 		*/
 		CMPI(RA0, 0, 0);
 		/* TODO
-		BRA(LT, 1);
+		BRA(LT, 2);
 		DPI(Rsb, RA0, RA0, 0, 0);
 		*/
 		opwst(i, Stw, RA0);
@@ -1951,7 +1954,7 @@ macfrp(void)
 	mem(Ldw, O(Heap, ref)-sizeof(Heap), RA0, RA2);
 	DPI(Subi, RA2, RA2, 0, 1) | SBIT;
 
-	BRA(NE, 2);
+	BRA(NE, 3);
 	mem(Stw, O(Heap, ref)-sizeof(Heap), RA0, RA2);
 	/* TODO
 	memc(NE, Stw, O(Heap, ref)-sizeof(Heap), RA0, RA2);
@@ -1961,7 +1964,7 @@ macfrp(void)
 	mem(Stw, O(REG, FP), RREG, RFP);
 	mem(Stw, O(REG, st), RREG, RLINK);
 	mem(Stw, O(REG, s), RREG, RA0);
-	CALL(rdestroy);
+	bl((ulong)rdestroy);
 	con((ulong)&R, RREG, 1);
 	mem(Ldw, O(REG, st), RREG, RLINK);
 	mem(Ldw, O(REG, FP), RREG, RFP);
@@ -2066,7 +2069,7 @@ macmcal(void)
 	uint *lab;
 
 	CMPH(RA0);
-	BRA(NE, 2);
+	BRA(NE, 3);
 	mem(Ldw, O(Modlink, prog), RA3, RA1);	// RA0 != H
 	CMPI(RA1, 0, 0);	// RA0 != H
 	
@@ -2076,7 +2079,7 @@ macmcal(void)
 	mem(Stw, O(REG, st), RREG, RLINK);
 	mem(Stw, O(REG, FP), RREG, RA2);
 	mem(Stw, O(REG, dt), RREG, RA0);
-	CALL(rmcall);				// CALL rmcall
+	bl((ulong)rmcall);				// CALL rmcall
 
 	con((ulong)&R, RREG, 1);		// MOVL	$R, RREG
 	mem(Ldw, O(REG, st), RREG, RLINK);
@@ -2094,7 +2097,7 @@ macmcal(void)
 	mem(Stw, O(REG, MP), RREG, RMP);	// MOVL RA3, R.MP	R.MP = ml->m
 	mem(Ldw, O(Modlink,compiled), RA3, RA1);	// M.compiled?
 	CMPI(RA1, 0, 0);
-	BRA(NE, 1);
+	BRA(NE, 2);
 	BR(RA0);	// return to compiled code
 
 	mem(Stw, O(REG,FP),RREG, RFP);	// R.FP = RFP
@@ -2130,7 +2133,7 @@ macfram(void)
 	mem(Stw, O(REG, s), RREG, RA3);
 	mem(Stw, O(REG, st), RREG, RLINK);
 	mem(Stw, O(REG, FP), RREG, RFP);	// MOVL	RFP, R.FP
-	CALL(extend);				// CALL	extend
+	bl((ulong)extend);				// CALL	extend
 
 	con((ulong)&R, RREG, 1);
 	mem(Ldw, O(REG, st), RREG, RLINK);
@@ -2147,7 +2150,7 @@ macmfra(void)
 	mem(Stw, O(REG, s), RREG, RA3);	// Save type
 	mem(Stw, O(REG, d), RREG, RA0);	// Save destination
 	mem(Stw, O(REG, FP), RREG, RFP);
-	CALL(rmfram);				// CALL rmfram
+	bl((ulong)rmfram);				// CALL rmfram
 
 	con((ulong)&R, RREG, 1);
 	mem(Ldw, O(REG, st), RREG, RLINK);
@@ -2196,7 +2199,7 @@ comi(Type *t)
 	con((ulong)H, RA0, 1);
 	for(i = 0; i < t->np; i++) {
 		c = t->map[i];
-		j = i<<5;
+		j = i<<6;
 		for(m = 0x80; m != 0; m >>= 1) {
 			if(c & m)
 				mem(Stw, j, RA2, RA0);
