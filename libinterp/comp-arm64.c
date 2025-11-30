@@ -34,6 +34,8 @@ enum
 				/* R19 through R28 are non-volatile/callee-saved */
 	R29	= 29,		/* C's FP */
 	R30	= 30,		/* Link Register */
+	R31	= 31,		/* SP or XZR */
+	RZR	= R31,
 
 	RLINK	= 30,
 
@@ -433,10 +435,10 @@ flushcon(int genbr)
 			disp = (code - c->code) * sizeof(*code); 
 			if(disp >= BITS(21))
 				print("INVALID constant range %lud", disp);
-			if(1)print("data %8.8p %8.8lux (%8.8p, ins=%8.8lux cpc=%8.8p)\n", code, c->o, c->code, *c->code, c->pc);
+			if(0)print("data %8.8p %8.8lux (%8.8p, ins=%8.8lux cpc=%8.8p)\n", code, c->o, c->code, *c->code, c->pc);
 			*c->code |= ((disp & 0x3)<<29)|((disp & ~0x3)<<3);
 		}
-		*(ulong*)code++ = c->o; //TODO this needs to hold a 64bit address
+		*(ulong*)code++ = c->o; // this needs to hold a 64bit address
 		code++;
 		c++;
 	}
@@ -803,19 +805,15 @@ punt(Inst *i, int m, void (*fn)(void))
 	if(m & TCHECK) {
 		mem(Ldw, O(REG, t), RREG, RA0);
 		CMPI(RA0, 0, 0);
-		BRA(NE, 3);
+		BRA(EQ, 3);
 		mem(Ldw, O(REG, xpc), RREG, RLINK);
-		RETURN;
-		/* TODO
-		//memc(NE, Ldw, O(REG, xpc), RREG, RLINK);
-		CRETURN(NE); */		/* if(R.t) goto(R.xpc) */
-		
+		RETURN;		/* if(R.t) goto(R.xpc) */
 	}
 	mem(Ldw, O(REG, FP), RREG, RFP);
 	mem(Ldw, O(REG, MP), RREG, RMP);
 
 	if(m & NEWPC){
-		mem(Ldw, O(REG, PC), RREG, R15);  //TODO
+		mem(Ldw, O(REG, PC), RREG, R15); 
 		BR(R15);
 		flushcon(0);
 	}
@@ -1428,25 +1426,20 @@ comp(Inst *i)
 		opwld(i, Ldw, RA1);
 		con(0, RA0, 1);
 		CMPH(RA1);
-		/* TODO
-		LDW(NE, RA1, RA0, O(Array,len));
-		*/
+		BRA(EQ, 2);
+		LDW(RA1, RA0, O(Array,len));
 		opwst(i, Stw, RA0);
 		break;
 	case ILENC:
 		opwld(i, Ldw, RA1);
 		con(0, RA0, 1);
 		CMPH(RA1);
-		/* TODO
-		BRA(NE, 2);
+		BRA(EQ, 2);
 		mem(Ldw, O(String,len),RA1, RA0);
-		//memc(NE, Ldw, O(String,len),RA1, RA0);
-		*/
 		CMPI(RA0, 0, 0);
-		/* TODO
-		BRA(LT, 2);
-		DPI(Rsb, RA0, RA0, 0, 0);
-		*/
+		/* TODO  Rsb */
+		BRA(GE, 2);
+		DP(Sub, RZR, RA0, 0, RA0);
 		opwst(i, Stw, RA0);
 		break;
 	case ILENL:
@@ -1454,11 +1447,10 @@ comp(Inst *i)
 		opwld(i, Ldw, RA1);
 
 		CMPH(RA1);
-		/* TODO
-		LDW(NE, RA1, RA1, O(List, tail));
-		DPI(NE, Addi, RA0, RA0, 0, 1);
-		BRA(NE, (-4*3-8)>>2);
-		*/
+		BRA(EQ, 4);
+		LDW(RA1, RA1, O(List, tail));
+		DPI(Addi, RA0, RA0, 0, 1);
+		BRA(AL, -4);  //TODO
 		opwst(i, Stw, RA0);
 		break;
 	case ICALL:
@@ -1573,7 +1565,6 @@ comp(Inst *i)
 	arithw:
 		mid(i, Ldw, RA1);
 		if(UXSRC(i->add) == SRC(AIMM) && FITS12(i->s.imm))
-			//TODO this should be Addi,Subi, etc.
 			DPI(r, RA1, RA0, 0, i->s.imm);
 		else {
 			opwld(i, Ldw, RA0);
@@ -1586,10 +1577,10 @@ comp(Inst *i)
 	shiftw:
 		mid(i, Ldw, RA1);
 		if(UXSRC(i->add) == SRC(AIMM) && FITS5(i->s.imm))
-			DP(Mov, 0, RA0, ((i->s.imm&0x3F)<<3)|(r<<1), RA1);
+			DP(Mov, RZR, RA0, (i->s.imm&0x3F), RA1)|(r<<22);
 		else {
 			opwld(i, Ldw, RA0);
-			DP(Mov, 0, RA0, (RA0<<4)|(r<<1)|1, RA1);
+			DP(Mov, RZR, RA0, RA0, RA1)|(r<<22);
 		}
 		opwst(i, Stw, RA0);
 		break;
@@ -1629,10 +1620,10 @@ comp(Inst *i)
 	shiftb:
 		mid(i, Ldb, RA1);
 		if(UXSRC(i->add) == SRC(AIMM) && FITS5(i->s.imm))
-			DP(Mov, 0, RA0, ((i->s.imm&0x3F)<<3)|(r<<1), RA1);
+			DP(Mov, RZR, RA0, (i->s.imm&0x3F), RA1)|(r<<22);
 		else {
 			opwld(i, Ldw, RA0);
-			DP(Mov, 0, RA0, (RA0<<4)|(r<<1)|1, RA1);
+			DP(Mov, RZR, RA0, RA0, RA1)|(r<<22);
 		}
 		opwst(i, Stb, RA0);
 		break;
@@ -1640,34 +1631,36 @@ comp(Inst *i)
 		opwld(i, Ldw, RA1);			// RA1 = string
 		NOTNIL(RA1);
 		imm = 1;
-		if((i->add&ARM) != AXIMM || !FITS12((short)i->reg<<Lg2Rune) || immrot((short)i->reg) == 0){
+		if((i->add&ARM) != AXIMM || !FITS12((short)i->reg<<Lg2Rune)){
 			mid(i, Ldw, RA2);			// RA2 = i
 			imm = 0;
 		}
 		mem(Ldw, O(String,len),RA1, RA0);	// len<0 => index Runes, otherwise bytes
 		if(bflag){
 			DPI(Orri, RA0, RA3, 0, 0);
-			/* TODO
-			DPI(LT, Rsb, RA3, RA3, 0, 0);
-			*/
+			/* TODO  Rsb */
+			BRA(GE, 2);
+			DP(Sub, RZR, RA3, 0, RA3);
 			if(imm)
-				BCKR(immrot((short)i->reg), RA3);
+				BCKR(immrot((short)i->reg), RA3); // TODO
 			else
 				BCK(RA2, RA3);
 		}
 		DPI(Addi, RA1, RA1, 0, O(String,data));
 		CMPI(RA0, 0, 0);
 		if(imm){
-			/* TODO
-			LDB(GE, RA1, RA3, i->reg);
-			LDW(LT, RA1, RA3, (short)i->reg<<Lg2Rune);
-			*/
+			/* TODO */
+			BRA(LT, 2);
+			LDB(RA1, RA3, i->reg);
+			BRA(GE, 2);
+			LDW(RA1, RA3, (short)i->reg<<Lg2Rune);
 		} else {
-			/* TODO
-			LDRB(GE, RA1, RA3, RA2);
-			DP(LT, Mov, 0, RA2, (Lg2Rune<<3), RA2);
-			LDRW(LT, RA1, RA3, RA2);
-			*/
+			/* TODO */
+			BRA(LT, 2);
+			LDRB(RA1, RA3, RA2);
+			BRA(GE, 3);
+			DP(Mov, 0, RA2, (Lg2Rune<<3), RA2);
+			LDRW(RA1, RA3, RA2);
 		}
 		opwst(i, Stw, RA3);
 //if(pass){print("%D\n", i); das(s, code-s);}
@@ -1723,49 +1716,73 @@ comp(Inst *i)
 //if(pass){print("%D\n", i); das(s, code-s);}
 		break;
 	case IADDL:
-		larith(i, Add, Adc);
+		r = Add;
+		goto arithw;
+		//larith(i, Add, Adc);
 		break;
 	case ISUBL:
-		larith(i, Sub, Sbc);
+		r = Sub;
+		goto arithw;
+		//larith(i, Sub, Sbc);
 		break;
 	case IORL:
-		larith(i, Orr, Orr);
+		r = Orr;
+		goto arithw;
+		//larith(i, Orr, Orr);
 		break;
 	case IANDL:
-		larith(i, And, And);
+		r = And;
+		goto arithw;
+		//larith(i, And, And);
 		break;
 	case IXORL:
-		larith(i, Eor, Eor);
+		r = Eor;
+		goto arithw;
+		//larith(i, Eor, Eor);
 		break;
 	case ICVTWL:
 		opwld(i, Ldw, RA1);
+		opwst(i, Stw, RA1);
+		/*
+		opwld(i, Ldw, RA1);
 		opwst(i, Lea, RA2);
-		DP(Mov, 0, RA0, (0<<3)|(2<<1), RA1);	// ASR 32
-		STW(RA2, RA1, Blo);
+		DP(Mov, RZR, RA0, (0<<3)|(2<<1), RA1)|(2<<22);	// ASR 32  TODO
+		STW(RA2, RA1, Blo);  //TODO
 		STW(RA2, RA0, Bhi);
+		*/
 		break;
 	case ICVTLW:
+		opwld(i, Ldw, RA1);
+		opwst(i, Stw, RA1);
+		/*
 		opwld(i, Lea, RA0);
 		mem(Ldw, Blo, RA0, RA0);
 		opwst(i, Stw, RA0);
+		*/
 		break;
 	case IBEQL:
-		cbral(i, NE, EQ, ANDAND);
+		cbra(i, EQ);
+		//cbral(i, NE, EQ, ANDAND);
 		break;
 	case IBNEL:
-		cbral(i, NE, NE, OROR);
+		cbra(i, NE);
+		//cbral(i, NE, NE, OROR);
 		break;
 	case IBLEL:
-		cbral(i, LT, LS, EQAND);
+		cbra(i, LE);
+		//cbral(i, LT, LS, EQAND);
 		break;
 	case IBGTL:
-		cbral(i, GT, HI, EQAND);
+		cbra(i, GT);
+		//cbral(i, GT, HI, EQAND);
 		break;
 	case IBLTL:
-		cbral(i, LT, CC, EQAND);
+		cbra(i, LT);
+		//cbral(i, LT, CC, EQAND);
 		break;
 	case IBGEL:
-		cbral(i, GT, CS, EQAND);
+		cbra(i, GE);
+		//cbral(i, GT, CS, EQAND);
 		break;
 	case ICVTFL:
 	case ICVTLF:
@@ -1920,14 +1937,17 @@ maccase(void)
 	LDW(RCON, RTA, 4);
 	CMP(RA1, 0, 0, RTA);
 	/* TODO
-	DP(LT, Mov, 0, RA2, 0, RA0);	// v < l[1]? n=n2
+	BRA(GE, 2);
+	DP(Mov, 0, RA2, 0, RA0);	// v < l[1]? n=n2
 	*/
 	BRANCH(LT, loop);	// v < l[1]? goto loop
 
 	LDW(RCON, RTA, 8);
 	CMP(RA1, 0, 0, RTA);
-	/*
-	LDW(LT, RCON, R15, 12);	// v >= l[1] && v < l[2] => found; goto l[3]
+	/* TODO`
+	BRA(GE, 2);
+	LDW(RCON, R15, 12);	// v >= l[1] && v < l[2] => found; goto l[3]
+	BR(R15);
 	*/
 
 	// v >= l[2] (high)
@@ -1954,11 +1974,8 @@ macfrp(void)
 	mem(Ldw, O(Heap, ref)-sizeof(Heap), RA0, RA2);
 	DPI(Subi, RA2, RA2, 0, 1) | SBIT;
 
-	BRA(NE, 3);
+	BRA(EQ, 3);
 	mem(Stw, O(Heap, ref)-sizeof(Heap), RA0, RA2);
-	/* TODO
-	memc(NE, Stw, O(Heap, ref)-sizeof(Heap), RA0, RA2);
-	*/
 	CRETURN(NE);		// --h->ref != 0 => return
 
 	mem(Stw, O(REG, FP), RREG, RFP);
@@ -2020,7 +2037,7 @@ macret(void)
 
 	mem(Ldw, O(REG,M),RREG, RA2);
 	mem(Ldw, O(Heap,ref)-sizeof(Heap),RA2, RA3);
-	DPI(Subi, RA3, RA3, 0, 1) | SBIT;  //TODO
+	DPI(Subi, RA3, RA3, 0, 1) | SBIT; 
 	cp5 = code;
 	BRA(EQ, 0);				// --ref(arg) == 0
 	mem(Stw, O(Heap,ref)-sizeof(Heap),RA2, RA3);
@@ -2041,7 +2058,6 @@ macret(void)
 	mem(Ldw, O(Frame,lr),RFP, RA1);
 	mem(Ldw, O(Frame,fp),RFP, RFP);
 	mem(Stw, O(REG,FP),RREG, RFP);	// R.FP = RFP
-	//DP(Mov, 0, R15, 0, RA1); TODO	
 	BR(RA1);	// goto lr(Rfp), if compiled
 
 	PATCH(linterp);
@@ -2099,7 +2115,7 @@ macmcal(void)
 	mem(Stw, O(REG, MP), RREG, RMP);	// MOVL RA3, R.MP	R.MP = ml->m
 	mem(Ldw, O(Modlink,compiled), RA3, RA1);	// M.compiled?
 	CMPI(RA1, 0, 0);
-	BRA(NE, 2);
+	BRA(EQ, 2);
 	BR(RA0);	// return to compiled code
 
 	mem(Stw, O(REG,FP),RREG, RFP);	// R.FP = RFP
