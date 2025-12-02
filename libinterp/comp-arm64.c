@@ -141,7 +141,7 @@ enum
 #define IMM6(O)				(O & ((1<<6)-1))
 #define IMM9(O)				(O & ((1<<9)-1))
 #define SBIT	(1<<29)
-#define UPBIT	(1<<23)
+#define UPBIT	(1<<23)  //TODO do not use
 
 #define LDW(Rn, Rd, O)		*code++ = (3<<30)|(7<<27)|(1<<24)|(1<<22)|(IMM(O)<<10)|\
 					   (Rn<<5)|(Rd)
@@ -153,13 +153,13 @@ enum
 #define STB(Rn, Rd, O)		*code++ = (7<<27)|(1<<24)|(IMM(O)<<10)|\
 					  (Rn<<5)|(Rd)
 
-#define LDRW(Rn, Rm, Rt)	*code++ = (3<<30)|(7<<27)|(3<<21)|\
+#define LDRW(Rn, Rt, Rm)	*code++ = (3<<30)|(7<<27)|(3<<21)|\
 					  (Rm<<16)|(3<<13)|(1<<11)|(Rn<<5)|Rt
-#define STRW(Rn, Rm, Rt)	*code++ = (3<<30)|(7<<27)|(1<<21)|\
+#define STRW(Rn, Rt, Rm)	*code++ = (3<<30)|(7<<27)|(1<<21)|\
 					  (Rm<<16)|(1<<11)|(Rn<<5)|Rt
-#define LDRB(Rn, Rm, Rt)	*code++ = (7<<27)|(1<<22)|(1<<21)|\
+#define LDRB(Rn, Rt, Rm)	*code++ = (7<<27)|(1<<22)|(1<<21)|\
 					  (Rm<<16)|(1<<11)|(Rn<<5)|Rt
-#define STRB(Rn, Rm, Rt)	*code++ = (7<<27)|(1<<21)|\
+#define STRB(Rn, Rt, Rm)	*code++ = (7<<27)|(1<<21)|\
 					  (Rm<<16)|(1<<11)|(Rn<<5)|Rt
 
 #define LDUW(Rn, Rd, O)		*code++ = (3<<30)|(7<<27)|(1<<22)|(IMM9(O)<<12)|\
@@ -182,7 +182,6 @@ enum
 #define Sub 	0x4b
 #define Subi 	0x51
 #define Sbc 	0x5a
-//TODO
 #define Mov	0x2a
 
 #define DP(Op, Rn, Rd, Sh, Rm)	*code++ = (1<<31)|(Op<<24)|(Rm<<16)|\
@@ -253,7 +252,6 @@ enum
 /* array bounds checking */
 #define BCK(r, rb)	(CMP(rb, 0, 0, r), CCALL(LS, (ulong)bounds))
 #define BCKI(i, rb)	(CMPI(rb, 0, i), CCALL(LS, (ulong)bounds))
-#define BCKR(i, rb)	(CMPI(rb, 0, 0)|(i), CCALL(LS, (ulong)bounds))
 
 static	uint*	code;
 static	uint*	base;
@@ -387,21 +385,6 @@ gen(ulong w)
 	*code++ = w;
 }
 
-/* TODO won't need this in Aarch64
-*/
-static long
-immrot(ulong v)
-{
-	int i;
-
-	for(i=0; i<16; i++) {
-		if((v & ~0xff) == 0)
-			return (i<<8) | v | (1<<25);
-		v = (v<<2) | (v>>30);
-	}
-	return 0;
-}
-
 static long
 immaddr(long v)
 {
@@ -462,7 +445,6 @@ con(ulong o, int r, int opt)
 	if(opt != 0) {
 		if (o == 0) {
 			MOVZ(0, 0, r);
-			// TODO; could also use xzr zero register
 		} else if(o == -1) {
 			MOVN(0, 0, r);
 		} else {
@@ -529,8 +511,6 @@ mem(int inst, ulong disp, int rm, int r)
 			DPI(Subi, rm, r, 0, -disp);
 			return;
 		}
-		//TODO 
-		// Use ADR
 		bit = disp < BITS(20) || -disp < BITS(20);
 		if(bit) {
 			ADR((ulong)code - (ulong)disp, r);
@@ -993,7 +973,7 @@ comcase(Inst *i, int w)
 		BRAMAC(AL, MacCASE);
 	}
 
-	t = (WORD*)(mod->origmp+i->d.ind+4);
+	t = (WORD*)(mod->origmp+i->d.ind+sizeof(WORD));
 	l = t[-1];
 
 	/* have to take care not to relocate the same table twice - 
@@ -1103,6 +1083,7 @@ commcall(Inst *i)
 	CALLMAC(AL, MacMCAL);
 }
 
+/* NOT USED */
 static void
 larith(Inst *i, int op, int opc)
 {
@@ -1128,11 +1109,11 @@ movloop(Inst *i, int s)
 	b = (s==1);
 	opwst(i, Lea, RA2);
 	/* TODO
-	LDxP(AL, RA1, RA0, s, b);
-	STxP(AL, RA2, RA0, s, b);
+	LDxP(RA1, RA0, s, b);
+	STxP(RA2, RA0, s, b);
 	*/
 	DPI(Subi, RA3, RA3, 0, 1) | SBIT;
-	BRA(NE, (-3*4-8)>>2);
+	BRA(NE, 3);
 }
 
 static void
@@ -1437,7 +1418,6 @@ comp(Inst *i)
 		BRA(EQ, 2);
 		mem(Ldw, O(String,len),RA1, RA0);
 		CMPI(RA0, 0, 0);
-		/* TODO  Rsb */
 		BRA(GE, 2);
 		DP(Sub, RZR, RA0, 0, RA0);
 		opwst(i, Stw, RA0);
@@ -1450,7 +1430,7 @@ comp(Inst *i)
 		BRA(EQ, 4);
 		LDW(RA1, RA1, O(List, tail));
 		DPI(Addi, RA0, RA0, 0, 1);
-		BRA(AL, -4);  //TODO
+		BRA(AL, -4);  
 		opwst(i, Stw, RA0);
 		break;
 	case ICALL:
@@ -1642,7 +1622,7 @@ comp(Inst *i)
 			BRA(GE, 2);
 			DP(Sub, RZR, RA3, 0, RA3);
 			if(imm)
-				BCKR(immrot((short)i->reg), RA3); // TODO
+				BCKI(((short)i->reg), RA3); // TODO  reg must < 12 bits
 			else
 				BCK(RA2, RA3);
 		}
@@ -1681,19 +1661,19 @@ comp(Inst *i)
 			r = 3;
 			break;
 		case IINDW:
-			r = 2;
+			r = 3;
 			break;
 		}
-		if(UXDST(i->add) == DST(AIMM) && (imm = immrot(i->d.imm)) != 0) {
+		if(UXDST(i->add) == DST(AIMM) && FITS12(i->d.imm<<r)) {
 			if(bflag)
-				BCKR(imm, RA2);
+				BCKI(i->d.imm<<r, RA2);  // TODO imm<<r must fit 12 bits
 			if(i->d.imm != 0)
-				DPI(Addi, RA0, RA0, 0, 0) | immrot(i->d.imm<<r);
+				DPI(Addi, RA0, RA0, 0, i->d.imm<<r);
 		} else {
 			opwst(i, Ldw, RA1);
 			if(bflag)
 				BCK(RA1, RA2);
-			DP(Add, RA0, RA0, r<<3, RA1);
+			DP(Add, RA0, RA0, r, RA1);
 		}
 		mid(i, Stw, RA0);
 //if(pass){print("%D\n", i); das(s, code-s);}
@@ -1746,8 +1726,8 @@ comp(Inst *i)
 		/*
 		opwld(i, Ldw, RA1);
 		opwst(i, Lea, RA2);
-		DP(Mov, RZR, RA0, (0<<3)|(2<<1), RA1)|(2<<22);	// ASR 32  TODO
-		STW(RA2, RA1, Blo);  //TODO
+		DP(Mov, RZR, RA0, (0<<3)|(2<<1), RA1)|(2<<22);	// ASR 32  
+		STW(RA2, RA1, Blo);  
 		STW(RA2, RA0, Bhi);
 		*/
 		break;
@@ -1936,19 +1916,15 @@ maccase(void)
 
 	LDW(RCON, RTA, 4);
 	CMP(RA1, 0, 0, RTA);
-	/* TODO
 	BRA(GE, 2);
 	DP(Mov, 0, RA2, 0, RA0);	// v < l[1]? n=n2
-	*/
 	BRANCH(LT, loop);	// v < l[1]? goto loop
 
 	LDW(RCON, RTA, 8);
 	CMP(RA1, 0, 0, RTA);
-	/* TODO`
 	BRA(GE, 2);
 	LDW(RCON, R15, 12);	// v >= l[1] && v < l[2] => found; goto l[3]
 	BR(R15);
-	*/
 
 	// v >= l[2] (high)
 	DPI(Addi, RCON, RA3, 0, 12);	// t = l+3;
@@ -1961,7 +1937,7 @@ maccase(void)
 	DP(Add, RA2, RA2, (1<<3), RA2);	// n = n+(n<<1) = 3*n
 	DP(Add, RLINK, RLINK, (2<<3), RA2);	// t' = &(initial t)[n*3]
 	LDW(RLINK, R15, 4);		// goto (initial t)[n*3+1]
-					// TODO
+	BR(R15);			// TODO
 }
 
 static void
