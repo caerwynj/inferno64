@@ -1,11 +1,11 @@
 # sh initialisation here
-load std
+#load std
 
-user = `{cat /dev/user}
-home = /usr/^$user
-bind -c '#U*'^$emuwdir /n/local
-bind -a '#U*'/home /usr
-cd /n/local
+#user = `{cat /dev/user}
+#home = /usr/^$user
+#bind -c '#U*'^$emuwdir /n/local
+#bind -a '#U*'/home /usr
+#cd /n/local
 #cd $home
 
 # build the user's namespace in $home/

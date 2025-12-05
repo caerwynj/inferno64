@@ -39,7 +39,7 @@ struct Fsinfo
 	int	uid;
 	int	gid;
 	int	mode;
-	int	fd;
+	vlong	fd;
 	vlong	offset;
 	QLock	oq;
 	char*	spec;
@@ -156,8 +156,8 @@ static	void		fsremove(Chan*);
 
 static char Etoolong[] = "file name too long";
 
-extern	int		nth2fd(HANDLE);
-extern	HANDLE		ntfd2h(int);
+extern	vlong		nth2fd(HANDLE);
+extern	HANDLE		ntfd2h(vlong);
 static	int		cnisroot(Cname*);
 static	int		fsisroot(Chan*);
 static	int		okelem(char*, int);

@@ -29,8 +29,8 @@ static	int sleepers = 0;
 
 __thread Proc    *up;
 
-HANDLE	ntfd2h(uvlong);
-uvlong	nth2fd(HANDLE);
+HANDLE	ntfd2h(vlong);
+vlong	nth2fd(HANDLE);
 void	termrestore(void);
 char *hosttype = "Nt";
 char *cputype = "386";
@@ -490,14 +490,14 @@ write(int fd, const void *buf, uint n)
  * that INVALID_HANDLE_VALUE is -1, and assumes
  * that all tests of invalid fds check only for -1, not < 0
  */
-uvlong
+vlong
 nth2fd(HANDLE h)
 {
-	return (uvlong)h;
+	return (vlong)h;
 }
 
 HANDLE
-ntfd2h(uvlong fd)
+ntfd2h(vlong fd)
 {
 	return (HANDLE)fd;
 }

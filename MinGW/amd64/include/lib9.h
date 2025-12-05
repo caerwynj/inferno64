@@ -30,6 +30,8 @@
 #define isinf(x) (!_finite(x))
 #endif
 
+/* extern int tolower(int); */
+
 #ifndef EMU
 typedef struct Proc Proc;
 #endif

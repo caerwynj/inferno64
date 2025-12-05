@@ -405,7 +405,7 @@ Block*
 iallocb(int size)
 {
 	Block *b;
-	ulong addr;
+	uvlong addr;
 
 	b = kmalloc(sizeof(Block)+size);
 	if(b == 0)

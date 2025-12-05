@@ -7,6 +7,7 @@
  * necessary to back up the input stream up one byte after calling charstod.
  */
 
+#define NaN()  nan("")
 #define ADVANCE *s++ = c; if(s>=e) return NaN(); c = (*f)(vp)
 
 double
