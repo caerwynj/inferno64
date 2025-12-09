@@ -1,0 +1,21 @@
+define macs
+p/x base+macro[0]
+p/x base+macro[1]
+p/x base+macro[2]
+p/x base+macro[3]
+p/x base+macro[4]
+p/x base+macro[5]
+end
+
+define fp
+x/16a R.FP
+end
+
+define mp
+x/16a R.MP
+end
+
+define lsa
+disas/r $pc,+60
+end
+

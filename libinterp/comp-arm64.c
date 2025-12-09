@@ -27,10 +27,15 @@ enum
 	R9	= 9,
 	R10	= 10,
 	R11	= 11,
-	R12	= 12,		/* C's SB */
-	R13	= 13,		/* C's SP */
-	R14	= 14,		/* Link Register */
-	R15	= 15,		/* PC */
+	R12	= 12,		
+	R13	= 13,	
+	R14	= 14,		
+	R15	= 15,		/* Used for Branch to Register as if PC */
+				/* R19 through R28 are non-volatile/callee-saved */
+	R29	= 29,		/* C's FP */
+	R30	= 30,		/* Link Register */
+	R31	= 31,		/* SP or XZR */
+	RZR	= R31,
 
 	RLINK	= 30,
 
@@ -43,7 +48,6 @@ enum
 	RA2	= R3,		/* gpr 2 2+3 = L */
 	RA1	= R2,		/* gpr 1 */
 	RA0	= R1,		/* gpr 0 0+1 = L */
-
 
 	FA2	= 2,		/* Floating */
 	FA3	= 3,
@@ -135,8 +139,9 @@ enum
 #define BITS(B)				(1<<B)
 #define IMM(O)				(O & ((1<<12)-1))
 #define IMM6(O)				(O & ((1<<6)-1))
+#define IMM9(O)				(O & ((1<<9)-1))
 #define SBIT	(1<<29)
-#define UPBIT	(1<<23)
+#define UPBIT	(1<<23)  //TODO do not use
 
 #define LDW(Rn, Rd, O)		*code++ = (3<<30)|(7<<27)|(1<<24)|(1<<22)|(IMM(O)<<10)|\
 					   (Rn<<5)|(Rd)
@@ -148,15 +153,23 @@ enum
 #define STB(Rn, Rd, O)		*code++ = (7<<27)|(1<<24)|(IMM(O)<<10)|\
 					  (Rn<<5)|(Rd)
 
-#define LDRW(Rn, Rd, R)		*code++ = (3<<30)|(7<<27)|(1<<22)|(1<<21)|\
-					  (Rd<<16)|(1<<11)|(Rn<<5)|R
-#define STRW(Rn, Rd, R)		*code++ = (3<<30)|(7<<27)|(1<<21)|\
-					  (Rd<<16)|(1<<11)|(Rn<<5)|R
-#define LDRB(Rn, Rd, R)		*code++ = (7<<27)|(1<<22)|(1<<21)|\
-					  (Rd<<16)|(1<<11)|(Rn<<5)|R
-#define STRB(Rn, Rd, R)		*code++ = (7<<27)|(1<<21)|\
-					  (Rd<<16)|(1<<11)|(Rn<<5)|R
+#define LDRW(Rn, Rt, Rm)	*code++ = (3<<30)|(7<<27)|(3<<21)|\
+					  (Rm<<16)|(3<<13)|(1<<11)|(Rn<<5)|Rt
+#define STRW(Rn, Rt, Rm)	*code++ = (3<<30)|(7<<27)|(1<<21)|\
+					  (Rm<<16)|(1<<11)|(Rn<<5)|Rt
+#define LDRB(Rn, Rt, Rm)	*code++ = (7<<27)|(1<<22)|(1<<21)|\
+					  (Rm<<16)|(1<<11)|(Rn<<5)|Rt
+#define STRB(Rn, Rt, Rm)	*code++ = (7<<27)|(1<<21)|\
+					  (Rm<<16)|(1<<11)|(Rn<<5)|Rt
 
+#define LDUW(Rn, Rd, O)		*code++ = (3<<30)|(7<<27)|(1<<22)|(IMM9(O)<<12)|\
+					   (Rn<<5)|(Rd)
+#define LDUB(Rn, Rd, O)		*code++ = (7<<27)|(1<<22)|\
+					   (IMM9(O)<<12)|(Rn<<5)|(Rd)
+#define STUW(Rn, Rd, O)		*code++ = (3<<30)|(7<<27)|(IMM9(O)<<12)|\
+					  (Rn<<5)|(Rd)
+#define STUB(Rn, Rd, O)		*code++ = (7<<27)|(IMM9(O)<<12)|\
+					  (Rn<<5)|(Rd)
 #define Add 	0x0b
 #define Addi 	0x11
 #define Adc 	0x1a
@@ -169,7 +182,6 @@ enum
 #define Sub 	0x4b
 #define Subi 	0x51
 #define Sbc 	0x5a
-//TODO
 #define Mov	0x2a
 
 #define DP(Op, Rn, Rd, Sh, Rm)	*code++ = (1<<31)|(Op<<24)|(Rm<<16)|\
@@ -181,9 +193,9 @@ enum
 					  (Rn<<5)|((1<<5)-1)
 #define CMNI(Rn, sh, O)	*code++ = (0xb1<<24)|(sh<<22)|(IMM(O)<<10)|\
 					  (Rn<<5)|((1<<5)-1)
-#define CMP(Rn, Rm, sh, O)	*code++ = (0xeb<<24)|(sh<<22)|(Rm<<16)|\
+#define CMP(Rn, O, sh, Rm)	*code++ = (0xeb<<24)|(sh<<22)|(Rm<<16)|\
 					  (IMM6(O)<<10)|(Rn<<5)|((1<<5)-1)
-#define CMN(Rn, Rm, sh, O)	*code++ = (0xab<<24)|(sh<<22)|(Rm<<16)|\
+#define CMN(Rn, O, sh, Rm)	*code++ = (0xab<<24)|(sh<<22)|(Rm<<16)|\
 					  (IMM6(O)<<10)|(Rn<<5)|((1<<5)-1)
 
 #define MUL(Rm, Rs, Rd)		*code++ = (1<<31)|(3<<27)|(3<<24)|(Rm<<16)|\
@@ -204,33 +216,30 @@ enum
 #define CPFIX(C, Rd, Fm)	*code++ = (C<<28)|(0xE<<24)|(1<<20)|(0<<16)|(Rd<<12)|(1<<8)|(9<<4)|(Fm)
 
 #define BR(r)				*code++ = (0xd6<<24)|(0x1f<<16)|(r<<5)
+#define BLR(r)				*code++ = (0xd<<28)|(0x6<<24)|(0x3<<20)|(0xf<<16)|(r<<5)
 #define BRAW(C, o)			((0x2a<<25)|(((o) & 0x0007ffff)<<5)|(C))
 #define BL(o)                        	((1<<31)|(5<<26)|(((o) & 0x03ffffff)))
-#define BLR(r)				*code++ = (0xd<<28)|(0x6<<24)|(0x3<<20)|(0xf<<16)|(r<<5)
 #define BRA(C, o)			gen(BRAW((C),(o)))
 #define IA(s, o)			(ulong)(base+s[o])
 #define BRADIS(C, o)			BRA(C, (IA(patch, o)-(ulong)code)>>2)
 #define BRAMAC(r, o)			BRA(r, (IA(macro, o)-(ulong)code)>>2)
 #define BRANCH(C, o)			gen(BRAW(C, ((ulong)(o)-(ulong)code)>>2))
 #define CALL(o)				gen(BL(((long)(o)-(long)code)>>2))
-//TODO should be BL
-#define CCALL(C,o)			gen(BRAW((C), ((ulong)(o)-(ulong)code)>>2))
-//TODO should be BL
-#define CALLMAC(C,o)			gen(BRAW((C), (IA(macro, o)-(ulong)code)>>2))
+#define CCALL(C,o)			ccall(C, o) 
+#define CALLMAC(C,o)			ccall((C), IA(macro, o))
 #define RELPC(pc)			(ulong)(base+(pc))
-//TODO should be RET
 #define RETURN				*code++ = (0xd<<28)|(6<<24)|(5<<20)|(0xf<<16)|(30<<5)
-//TODO
-#define CRETURN(C)			DPI(Add, RLINK, R15, 0, 0)				
+#define CRETURN(C)			creturn(C)
 #define PATCH(ptr)			*ptr |= ((((ulong)code-(ulong)(ptr))>>2) & 0x07ffff)<<5
 
 #define MOV(Rm, Rd)	*code++ = (1<<31)|(0x2a<<24)|(Rm<<16)|\
 					  (0x1f<<5)|(Rd)
 #define MOVZ(O, Sh, Rd)	*code++ = (1<<31)|(0xa5<<23)|(Sh<<21)|((O)<<5)|Rd
 #define MOVK(O, Sh, Rd)	*code++ = (1<<31)|(0xe5<<23)|(Sh<<21)|((O)<<5)|Rd
+#define MOVN(O, Sh, Rd)	*code++ = (1<<31)|(0x25<<23)|(Sh<<21)|((O)<<5)|Rd
 
-#define ADR(O, Rd)	*code++ = (1<<28)|((O & 0x3)<<29)|((O & ~0x3)<<5)|Rd
-#define ADRP(O, Rd)	*code++ = (1<<31)|((O & 0x3)<<29)|(1<<28)|(((O & ((1<<21)-1)) & ~0x3)<<2)|Rd
+#define ADR(O, Rd)	*code++ = (1<<28)|((O & 0x3)<<29)|((O & ~0x3)<<3)|Rd
+#define ADRP(O, Rd)	*code++ = (1<<31)|((O & 0x3)<<29)|(1<<28)|(((O & ((1<<21)-1)) & ~0x3)<<3)|Rd
 
 #define FITS12(v)	((ulong)(v)<BITS(12))
 #define FITS8(v)	((ulong)(v)<BITS(8))
@@ -238,12 +247,11 @@ enum
 
 /* assumes H==-1 */
 #define CMPH(r)		CMNI(r, 0, 1)
-#define NOTNIL(r)	(CMPH((r)), CCALL(EQ, nullity))
+#define NOTNIL(r)	(CMPH((r)), CCALL(EQ, (ulong)nullity))
 
 /* array bounds checking */
-#define BCK(r, rb)	(CMP(rb, 0, 0, r), CCALL(LS, bounds))
-#define BCKI(i, rb)	(CMPI(rb, 0, i), CCALL(LS, bounds))
-#define BCKR(i, rb)	(CMPI(rb, 0, 0)|(i), CCALL(LS, bounds))
+#define BCK(r, rb)	(CMP(rb, 0, 0, r), CCALL(LS, (ulong)bounds))
+#define BCKI(i, rb)	(CMPI(rb, 0, i), CCALL(LS, (ulong)bounds))
 
 static	uint*	code;
 static	uint*	base;
@@ -377,21 +385,6 @@ gen(ulong w)
 	*code++ = w;
 }
 
-/* TODO won't need this in Aarch64
-*/
-static long
-immrot(ulong v)
-{
-	int i;
-
-	for(i=0; i<16; i++) {
-		if((v & ~0xff) == 0)
-			return (i<<8) | v | (1<<25);
-		v = (v<<2) | (v>>30);
-	}
-	return 0;
-}
-
 static long
 immaddr(long v)
 {
@@ -422,13 +415,14 @@ flushcon(int genbr)
 	c = &rcon.table[0];
 	for(i = 0; i < rcon.ptr; i++) {
 		if(pass){
-			disp = (code - c->code) * sizeof(*code) - 8;
-			if(disp >= BITS(12))
+			disp = (code - c->code) * sizeof(*code); 
+			if(disp >= BITS(21))
 				print("INVALID constant range %lud", disp);
 			if(0)print("data %8.8p %8.8lux (%8.8p, ins=%8.8lux cpc=%8.8p)\n", code, c->o, c->code, *c->code, c->pc);
-			*c->code |= (disp&0xfff);
+			*c->code |= ((disp & 0x3)<<29)|((disp & ~0x3)<<3);
 		}
-		*code++ = c->o;
+		*(ulong*)code++ = c->o; // this needs to hold a 64bit address
+		code++;
 		c++;
 	}
 	rcon.ptr = 0;
@@ -449,20 +443,50 @@ con(ulong o, int r, int opt)
 	Const *c;
 
 	if(opt != 0) {
-		MOVZ((o>>48) & 0xffff, 3, r);
-		MOVK((o>>32) & 0xffff, 2, r);
-		MOVK((o>>16) & 0xffff, 1, r);
-		MOVK((o) & 0xffff, 0, r);
+		if (o == 0) {
+			MOVZ(0, 0, r);
+		} else if(o == -1) {
+			MOVN(0, 0, r);
+		} else {
+			MOVZ((o>>48) & 0xffff, 3, r);
+			MOVK((o>>32) & 0xffff, 2, r);
+			MOVK((o>>16) & 0xffff, 1, r);
+			MOVK((o) & 0xffff, 0, r);
+		}
 		return;
 	}
-	/* for relative PC offsets. Use ADRP */
+	/* for relative PC offsets. Use ADR */
 	flushchk();
 	c = &rcon.table[rcon.ptr++];
 	c->o = o;
 	c->code = code;
 	c->pc = code+codeoff;
-	ADR(0, r);
-	//LDW(R15, r, 0);  //TODO
+	/* The next instruction will be patched to contain the address of the litpool.
+	 * The litpool will contain the address of the immediate value.
+	 * That's the address we return in 'r'.
+	 */
+	ADR(0, r); 
+	LDW(r, r, 0);
+}
+
+static void
+ccall(char cond, ulong o)
+{
+	if (cond == AL) {
+		gen(BL((o-(ulong)code) >> 2));
+		return;
+	}
+	cond ^= 1;
+	BRA(cond, 2); 
+	gen(BL((o-(ulong)code) >> 2));
+}
+
+static void
+creturn(char cond)
+{
+	cond ^= 1;
+	BRA(cond, 2);  
+	RETURN;
 }
 
 static void
@@ -478,18 +502,19 @@ mem(int inst, ulong disp, int rm, int r)
 	int bit;
 
 	if(inst == Lea) {
-		if(disp < BITS(8)) {
+		if(disp < BITS(12)) {
 			if(disp != 0 || rm != r)
-				DPI(Add, rm, r, 0, disp);
+				DPI(Addi, rm, r, 0, disp);
 			return;
 		}
-		if(-disp < BITS(8)) {
-			DPI(Sub, rm, r, 0, -disp);
+		if(-disp < BITS(12)) {
+			DPI(Subi, rm, r, 0, -disp);
 			return;
 		}
-		bit = immrot(disp);
+		bit = disp < BITS(20) || -disp < BITS(20);
 		if(bit) {
-			DPI(Add, rm, r, 0, 0) | bit;
+			ADR((ulong)code - (ulong)disp, r);
+			// DPI(Addi, rm, r, 0, 0) | bit;
 			return;
 		}
 		con(disp, RCON, 1);
@@ -499,29 +524,38 @@ mem(int inst, ulong disp, int rm, int r)
 
 	if(disp < BITS(12) || -disp < BITS(12)) {	/* Direct load */
 		if(disp < BITS(12))
-			bit = 0;
+			switch(inst) {
+			case Ldw:
+				disp /= 8;
+				LDW(rm, r, disp);
+				break;
+			case Ldb:
+				LDB(rm, r, disp);
+				break;
+			case Stw:
+				disp /= 8;
+				STW(rm, r, disp);
+				break;
+			case Stb:
+				STB(rm, r, disp);
+				break;
+			}
 		else {
-			disp = -disp;
-			bit = UPBIT;
+			switch(inst) {
+			case Ldw:
+				LDUW(rm, r, disp);
+				break;
+			case Ldb:
+				LDUB(rm, r, disp);
+				break;
+			case Stw:
+				STUW(rm, r, disp);
+				break;
+			case Stb:
+				STUB(rm, r, disp);
+				break;
+			}
 		}
-		switch(inst) {
-		case Ldw:
-			disp /= 8;
-			LDW(rm, r, disp);
-			break;
-		case Ldb:
-			LDB(rm, r, disp);
-			break;
-		case Stw:
-			disp /= 8;
-			STW(rm, r, disp);
-			break;
-		case Stb:
-			STB(rm, r, disp);
-			break;
-		}
-		if(bit)
-			code[-1] ^= bit;
 		return;
 	}
 
@@ -676,7 +710,7 @@ schedcheck(Inst *i)
 {
 	if(RESCHED && i->d.ins <= i){
 		mem(Ldw, O(REG, IC), RREG, RA0);
-		DPI(Sub, RA0, RA0, 0, 1) | SBIT;
+		DPI(Subi, RA0, RA0, 0, 1) | SBIT;
 		mem(Stw, O(REG, IC), RREG, RA0);
 		/* CMPI(AL, RA0, 0, 0, 1); */
 		CALLMAC(LE, MacRELQ);
@@ -751,19 +785,15 @@ punt(Inst *i, int m, void (*fn)(void))
 	if(m & TCHECK) {
 		mem(Ldw, O(REG, t), RREG, RA0);
 		CMPI(RA0, 0, 0);
-		BRA(NE, 2);
+		BRA(EQ, 3);
 		mem(Ldw, O(REG, xpc), RREG, RLINK);
-		RETURN;
-		/* TODO
-		//memc(NE, Ldw, O(REG, xpc), RREG, RLINK);
-		CRETURN(NE); */		/* if(R.t) goto(R.xpc) */
-		
+		RETURN;		/* if(R.t) goto(R.xpc) */
 	}
 	mem(Ldw, O(REG, FP), RREG, RFP);
 	mem(Ldw, O(REG, MP), RREG, RMP);
 
 	if(m & NEWPC){
-		mem(Ldw, O(REG, PC), RREG, R15);  //TODO
+		mem(Ldw, O(REG, PC), RREG, R15); 
 		BR(R15);
 		flushcon(0);
 	}
@@ -943,7 +973,7 @@ comcase(Inst *i, int w)
 		BRAMAC(AL, MacCASE);
 	}
 
-	t = (WORD*)(mod->origmp+i->d.ind+4);
+	t = (WORD*)(mod->origmp+i->d.ind+sizeof(WORD));
 	l = t[-1];
 
 	/* have to take care not to relocate the same table twice - 
@@ -1053,6 +1083,7 @@ commcall(Inst *i)
 	CALLMAC(AL, MacMCAL);
 }
 
+/* NOT USED */
 static void
 larith(Inst *i, int op, int opc)
 {
@@ -1078,11 +1109,11 @@ movloop(Inst *i, int s)
 	b = (s==1);
 	opwst(i, Lea, RA2);
 	/* TODO
-	LDxP(AL, RA1, RA0, s, b);
-	STxP(AL, RA2, RA0, s, b);
+	LDxP(RA1, RA0, s, b);
+	STxP(RA2, RA0, s, b);
 	*/
-	DPI(Sub, RA3, RA3, 0, 1) | SBIT;
-	BRA(NE, (-3*4-8)>>2);
+	DPI(Subi, RA3, RA3, 0, 1) | SBIT;
+	BRA(NE, 3);
 }
 
 static void
@@ -1297,7 +1328,7 @@ comp(Inst *i)
 		opwld(i, Ldw, RA1);
 		NOTNIL(RA1);
 		if(OA(List,data) != 0)
-			DPI(Add, RA1, RA1, 0, OA(List,data));
+			DPI(Addi, RA1, RA1, 0, OA(List,data));
 		movmem(i);
 		break;
 /*
@@ -1376,25 +1407,19 @@ comp(Inst *i)
 		opwld(i, Ldw, RA1);
 		con(0, RA0, 1);
 		CMPH(RA1);
-		/* TODO
-		LDW(NE, RA1, RA0, O(Array,len));
-		*/
+		BRA(EQ, 2);
+		LDW(RA1, RA0, O(Array,len));
 		opwst(i, Stw, RA0);
 		break;
 	case ILENC:
 		opwld(i, Ldw, RA1);
 		con(0, RA0, 1);
 		CMPH(RA1);
-		/* TODO
-		BRA(NE, 1);
+		BRA(EQ, 2);
 		mem(Ldw, O(String,len),RA1, RA0);
-		//memc(NE, Ldw, O(String,len),RA1, RA0);
-		*/
 		CMPI(RA0, 0, 0);
-		/* TODO
-		BRA(LT, 1);
-		DPI(Rsb, RA0, RA0, 0, 0);
-		*/
+		BRA(GE, 2);
+		DP(Sub, RZR, RA0, 0, RA0);
 		opwst(i, Stw, RA0);
 		break;
 	case ILENL:
@@ -1402,11 +1427,10 @@ comp(Inst *i)
 		opwld(i, Ldw, RA1);
 
 		CMPH(RA1);
-		/* TODO
-		LDW(NE, RA1, RA1, O(List, tail));
-		DPI(NE, Add, RA0, RA0, 0, 1);
-		BRA(NE, (-4*3-8)>>2);
-		*/
+		BRA(EQ, 4);
+		LDW(RA1, RA1, O(List, tail));
+		DPI(Addi, RA0, RA0, 0, 1);
+		BRA(AL, -4);  
 		opwst(i, Stw, RA0);
 		break;
 	case ICALL:
@@ -1521,7 +1545,6 @@ comp(Inst *i)
 	arithw:
 		mid(i, Ldw, RA1);
 		if(UXSRC(i->add) == SRC(AIMM) && FITS12(i->s.imm))
-			//TODO this should be Addi,Subi, etc.
 			DPI(r, RA1, RA0, 0, i->s.imm);
 		else {
 			opwld(i, Ldw, RA0);
@@ -1534,10 +1557,10 @@ comp(Inst *i)
 	shiftw:
 		mid(i, Ldw, RA1);
 		if(UXSRC(i->add) == SRC(AIMM) && FITS5(i->s.imm))
-			DP(Mov, 0, RA0, ((i->s.imm&0x3F)<<3)|(r<<1), RA1);
+			DP(Mov, RZR, RA0, (i->s.imm&0x3F), RA1)|(r<<22);
 		else {
 			opwld(i, Ldw, RA0);
-			DP(Mov, 0, RA0, (RA0<<4)|(r<<1)|1, RA1);
+			DP(Mov, RZR, RA0, RA0, RA1)|(r<<22);
 		}
 		opwst(i, Stw, RA0);
 		break;
@@ -1577,10 +1600,10 @@ comp(Inst *i)
 	shiftb:
 		mid(i, Ldb, RA1);
 		if(UXSRC(i->add) == SRC(AIMM) && FITS5(i->s.imm))
-			DP(Mov, 0, RA0, ((i->s.imm&0x3F)<<3)|(r<<1), RA1);
+			DP(Mov, RZR, RA0, (i->s.imm&0x3F), RA1)|(r<<22);
 		else {
 			opwld(i, Ldw, RA0);
-			DP(Mov, 0, RA0, (RA0<<4)|(r<<1)|1, RA1);
+			DP(Mov, RZR, RA0, RA0, RA1)|(r<<22);
 		}
 		opwst(i, Stb, RA0);
 		break;
@@ -1588,34 +1611,36 @@ comp(Inst *i)
 		opwld(i, Ldw, RA1);			// RA1 = string
 		NOTNIL(RA1);
 		imm = 1;
-		if((i->add&ARM) != AXIMM || !FITS12((short)i->reg<<Lg2Rune) || immrot((short)i->reg) == 0){
+		if((i->add&ARM) != AXIMM || !FITS12((short)i->reg<<Lg2Rune)){
 			mid(i, Ldw, RA2);			// RA2 = i
 			imm = 0;
 		}
 		mem(Ldw, O(String,len),RA1, RA0);	// len<0 => index Runes, otherwise bytes
 		if(bflag){
-			DPI(Orr, RA0, RA3, 0, 0);
-			/* TODO
-			DPI(LT, Rsb, RA3, RA3, 0, 0);
-			*/
+			DPI(Orri, RA0, RA3, 0, 0);
+			/* TODO  Rsb */
+			BRA(GE, 2);
+			DP(Sub, RZR, RA3, 0, RA3);
 			if(imm)
-				BCKR(immrot((short)i->reg), RA3);
+				BCKI(((short)i->reg), RA3); // TODO  reg must < 12 bits
 			else
 				BCK(RA2, RA3);
 		}
-		DPI(Add, RA1, RA1, 0, O(String,data));
+		DPI(Addi, RA1, RA1, 0, O(String,data));
 		CMPI(RA0, 0, 0);
 		if(imm){
-			/* TODO
-			LDB(GE, RA1, RA3, i->reg);
-			LDW(LT, RA1, RA3, (short)i->reg<<Lg2Rune);
-			*/
+			/* TODO */
+			BRA(LT, 2);
+			LDB(RA1, RA3, i->reg);
+			BRA(GE, 2);
+			LDW(RA1, RA3, (short)i->reg<<Lg2Rune);
 		} else {
-			/* TODO
-			LDRB(GE, RA1, RA3, RA2);
-			DP(LT, Mov, 0, RA2, (Lg2Rune<<3), RA2);
-			LDRW(LT, RA1, RA3, RA2);
-			*/
+			/* TODO */
+			BRA(LT, 2);
+			LDRB(RA1, RA3, RA2);
+			BRA(GE, 3);
+			DP(Mov, 0, RA2, (Lg2Rune<<3), RA2);
+			LDRW(RA1, RA3, RA2);
 		}
 		opwst(i, Stw, RA3);
 //if(pass){print("%D\n", i); das(s, code-s);}
@@ -1636,19 +1661,19 @@ comp(Inst *i)
 			r = 3;
 			break;
 		case IINDW:
-			r = 2;
+			r = 3;
 			break;
 		}
-		if(UXDST(i->add) == DST(AIMM) && (imm = immrot(i->d.imm)) != 0) {
+		if(UXDST(i->add) == DST(AIMM) && FITS12(i->d.imm<<r)) {
 			if(bflag)
-				BCKR(imm, RA2);
+				BCKI(i->d.imm<<r, RA2);  // TODO imm<<r must fit 12 bits
 			if(i->d.imm != 0)
-				DPI(Add, RA0, RA0, 0, 0) | immrot(i->d.imm<<r);
+				DPI(Addi, RA0, RA0, 0, i->d.imm<<r);
 		} else {
 			opwst(i, Ldw, RA1);
 			if(bflag)
 				BCK(RA1, RA2);
-			DP(Add, RA0, RA0, r<<3, RA1);
+			DP(Add, RA0, RA0, r, RA1);
 		}
 		mid(i, Stw, RA0);
 //if(pass){print("%D\n", i); das(s, code-s);}
@@ -1671,49 +1696,73 @@ comp(Inst *i)
 //if(pass){print("%D\n", i); das(s, code-s);}
 		break;
 	case IADDL:
-		larith(i, Add, Adc);
+		r = Add;
+		goto arithw;
+		//larith(i, Add, Adc);
 		break;
 	case ISUBL:
-		larith(i, Sub, Sbc);
+		r = Sub;
+		goto arithw;
+		//larith(i, Sub, Sbc);
 		break;
 	case IORL:
-		larith(i, Orr, Orr);
+		r = Orr;
+		goto arithw;
+		//larith(i, Orr, Orr);
 		break;
 	case IANDL:
-		larith(i, And, And);
+		r = And;
+		goto arithw;
+		//larith(i, And, And);
 		break;
 	case IXORL:
-		larith(i, Eor, Eor);
+		r = Eor;
+		goto arithw;
+		//larith(i, Eor, Eor);
 		break;
 	case ICVTWL:
 		opwld(i, Ldw, RA1);
+		opwst(i, Stw, RA1);
+		/*
+		opwld(i, Ldw, RA1);
 		opwst(i, Lea, RA2);
-		DP(Mov, 0, RA0, (0<<3)|(2<<1), RA1);	// ASR 32
-		STW(RA2, RA1, Blo);
+		DP(Mov, RZR, RA0, (0<<3)|(2<<1), RA1)|(2<<22);	// ASR 32  
+		STW(RA2, RA1, Blo);  
 		STW(RA2, RA0, Bhi);
+		*/
 		break;
 	case ICVTLW:
+		opwld(i, Ldw, RA1);
+		opwst(i, Stw, RA1);
+		/*
 		opwld(i, Lea, RA0);
 		mem(Ldw, Blo, RA0, RA0);
 		opwst(i, Stw, RA0);
+		*/
 		break;
 	case IBEQL:
-		cbral(i, NE, EQ, ANDAND);
+		cbra(i, EQ);
+		//cbral(i, NE, EQ, ANDAND);
 		break;
 	case IBNEL:
-		cbral(i, NE, NE, OROR);
+		cbra(i, NE);
+		//cbral(i, NE, NE, OROR);
 		break;
 	case IBLEL:
-		cbral(i, LT, LS, EQAND);
+		cbra(i, LE);
+		//cbral(i, LT, LS, EQAND);
 		break;
 	case IBGTL:
-		cbral(i, GT, HI, EQAND);
+		cbra(i, GT);
+		//cbral(i, GT, HI, EQAND);
 		break;
 	case IBLTL:
-		cbral(i, LT, CC, EQAND);
+		cbra(i, LT);
+		//cbral(i, LT, CC, EQAND);
 		break;
 	case IBGEL:
-		cbral(i, GT, CS, EQAND);
+		cbra(i, GE);
+		//cbral(i, GT, CS, EQAND);
 		break;
 	case ICVTFL:
 	case ICVTLF:
@@ -1867,20 +1916,19 @@ maccase(void)
 
 	LDW(RCON, RTA, 4);
 	CMP(RA1, 0, 0, RTA);
-	/* TODO
-	DP(LT, Mov, 0, RA2, 0, RA0);	// v < l[1]? n=n2
-	*/
+	BRA(GE, 2);
+	DP(Mov, 0, RA2, 0, RA0);	// v < l[1]? n=n2
 	BRANCH(LT, loop);	// v < l[1]? goto loop
 
 	LDW(RCON, RTA, 8);
 	CMP(RA1, 0, 0, RTA);
-	/*
-	LDW(LT, RCON, R15, 12);	// v >= l[1] && v < l[2] => found; goto l[3]
-	*/
+	BRA(GE, 2);
+	LDW(RCON, R15, 12);	// v >= l[1] && v < l[2] => found; goto l[3]
+	BR(R15);
 
 	// v >= l[2] (high)
-	DPI(Add, RCON, RA3, 0, 12);	// t = l+3;
-	DPI(Add, RA0, RTA, 0, 1);
+	DPI(Addi, RCON, RA3, 0, 12);	// t = l+3;
+	DPI(Addi, RA0, RTA, 0, 1);
 	DP(Sub, RA2, RA2, 0, RTA) | SBIT;	// n -= n2+1
 	BRANCH(GT, inner);	// n > 0? goto loop
 
@@ -1889,7 +1937,7 @@ maccase(void)
 	DP(Add, RA2, RA2, (1<<3), RA2);	// n = n+(n<<1) = 3*n
 	DP(Add, RLINK, RLINK, (2<<3), RA2);	// t' = &(initial t)[n*3]
 	LDW(RLINK, R15, 4);		// goto (initial t)[n*3+1]
-					// TODO
+	BR(R15);			// TODO
 }
 
 static void
@@ -1900,16 +1948,16 @@ macfrp(void)
 	CRETURN(EQ);		// arg == H? => return
 
 	mem(Ldw, O(Heap, ref)-sizeof(Heap), RA0, RA2);
-	DPI(Sub, RA2, RA2, 0, 1) | SBIT;
-	/* TODO
-	memc(NE, Stw, O(Heap, ref)-sizeof(Heap), RA0, RA2);
-	*/
+	DPI(Subi, RA2, RA2, 0, 1) | SBIT;
+
+	BRA(EQ, 3);
+	mem(Stw, O(Heap, ref)-sizeof(Heap), RA0, RA2);
 	CRETURN(NE);		// --h->ref != 0 => return
 
 	mem(Stw, O(REG, FP), RREG, RFP);
 	mem(Stw, O(REG, st), RREG, RLINK);
 	mem(Stw, O(REG, s), RREG, RA0);
-	CALL(rdestroy);
+	bl((ulong)rdestroy);
 	con((ulong)&R, RREG, 1);
 	mem(Ldw, O(REG, st), RREG, RLINK);
 	mem(Ldw, O(REG, FP), RREG, RFP);
@@ -1923,7 +1971,7 @@ maccolr(void)
 {
 	/* color the pointer in RA1 */
 	mem(Ldw, O(Heap, ref)-sizeof(Heap), RA1, RA0);
-	DPI(Add, RA0, RA0, 0, 1);
+	DPI(Addi, RA0, RA0, 0, 1);
 	mem(Stw, O(Heap, ref)-sizeof(Heap), RA1, RA0);	// h->ref++
 	con((ulong)&mutator, RA2, 1);
 	mem(Ldw, O(Heap, color)-sizeof(Heap), RA1, RA0);
@@ -1965,7 +2013,7 @@ macret(void)
 
 	mem(Ldw, O(REG,M),RREG, RA2);
 	mem(Ldw, O(Heap,ref)-sizeof(Heap),RA2, RA3);
-	DPI(Sub, RA3, RA3, 0, 1) | SBIT;  //TODO
+	DPI(Subi, RA3, RA3, 0, 1) | SBIT; 
 	cp5 = code;
 	BRA(EQ, 0);				// --ref(arg) == 0
 	mem(Stw, O(Heap,ref)-sizeof(Heap),RA2, RA3);
@@ -1980,20 +2028,16 @@ macret(void)
 	BRA(EQ, 0);
 
 	PATCH(cp4);
-	MOV(R15, R14);		// call destroy(t(fp))
-	MOV(RA0, R15); //TODO
-	BR(R15);
+	BLR(RA0);		// call destroy(t(fp))
 
 	mem(Stw, O(REG,SP),RREG, RFP);
 	mem(Ldw, O(Frame,lr),RFP, RA1);
 	mem(Ldw, O(Frame,fp),RFP, RFP);
 	mem(Stw, O(REG,FP),RREG, RFP);	// R.FP = RFP
-	DP(Mov, 0, R15, 0, RA1);		// goto lr(Rfp), if compiled
+	BR(RA1);	// goto lr(Rfp), if compiled
 
 	PATCH(linterp);
-	MOV(R15, R14);		// call destroy(t(fp))
-	MOV(RA0, R15); //TODO
-	BR(R15);
+	BLR(RA0);		// call destroy(t(fp))
 
 	mem(Stw, O(REG,SP),RREG, RFP);
 	mem(Ldw, O(Frame,lr),RFP, RA1);
@@ -2014,20 +2058,21 @@ macret(void)
 static void
 macmcal(void)
 {
-	uint *lab;
+	uint *lab1, *lab2;
 
 	CMPH(RA0);
-	/* TODO
-	memc(NE, Ldw, O(Modlink, prog), RA3, RA1);	// RA0 != H
-	CMPI(NE, RA1, 0, 0, 0);	// RA0 != H
-	*/
-	lab = code;
+	lab1 = code;
+	BRA(EQ, 0);
+	mem(Ldw, O(Modlink, prog), RA3, RA1);	// RA0 != H
+	CMPI(RA1, 0, 0);	// RA0 != H
+	
+	lab2 = code;
 	BRA(NE, 0);	// RA0 != H && m->prog!=0
 
 	mem(Stw, O(REG, st), RREG, RLINK);
 	mem(Stw, O(REG, FP), RREG, RA2);
 	mem(Stw, O(REG, dt), RREG, RA0);
-	CALL(rmcall);				// CALL rmcall
+	bl((ulong)rmcall);				// CALL rmcall
 
 	con((ulong)&R, RREG, 1);		// MOVL	$R, RREG
 	mem(Ldw, O(REG, st), RREG, RLINK);
@@ -2035,19 +2080,20 @@ macmcal(void)
 	mem(Ldw, O(REG, MP), RREG, RMP);
 	RETURN;
 
-	PATCH(lab);				// patch:
-	DP(Mov, 0, RFP, 0, RA2);
+	PATCH(lab1);				// patch:
+	PATCH(lab2);
+	MOV(RA2, RFP);
 	mem(Stw, O(REG, M), RREG, RA3);	// MOVL RA3, R.M
 	mem(Ldw, O(Heap, ref)-sizeof(Heap), RA3, RA1);
-	DPI(Add, RA1, RA1, 0, 1);
+	DPI(Addi, RA1, RA1, 0, 1);
 	mem(Stw, O(Heap, ref)-sizeof(Heap), RA3, RA1);
 	mem(Ldw, O(Modlink, MP), RA3, RMP);	// MOVL R.M->mp, RMP
 	mem(Stw, O(REG, MP), RREG, RMP);	// MOVL RA3, R.MP	R.MP = ml->m
 	mem(Ldw, O(Modlink,compiled), RA3, RA1);	// M.compiled?
 	CMPI(RA1, 0, 0);
-	/* TODO
-	DP(NE, Mov, 0, R15, 0, RA0);	// return to compiled code
-	*/
+	BRA(EQ, 2);
+	BR(RA0);	// return to compiled code
+
 	mem(Stw, O(REG,FP),RREG, RFP);	// R.FP = RFP
 	mem(Stw, O(REG,PC),RREG, RA0);	// R.PC = RPC
 	mem(Ldw, O(REG, xpc), RREG, RLINK);
@@ -2075,12 +2121,13 @@ macfram(void)
 	con(0, RA0, 1);
 	mem(Stw, O(Frame,mr), RA2, RA0);     	// MOVL $0, mr(RA2) f->mr
 	mem(Ldw, O(Type, initialize), RA3, R15);	// become t->init(RA2), returning RA2
+	BR(R15);
 
 	PATCH(lab1);
 	mem(Stw, O(REG, s), RREG, RA3);
 	mem(Stw, O(REG, st), RREG, RLINK);
 	mem(Stw, O(REG, FP), RREG, RFP);	// MOVL	RFP, R.FP
-	CALL(extend);				// CALL	extend
+	bl((ulong)extend);				// CALL	extend
 
 	con((ulong)&R, RREG, 1);
 	mem(Ldw, O(REG, st), RREG, RLINK);
@@ -2097,7 +2144,7 @@ macmfra(void)
 	mem(Stw, O(REG, s), RREG, RA3);	// Save type
 	mem(Stw, O(REG, d), RREG, RA0);	// Save destination
 	mem(Stw, O(REG, FP), RREG, RFP);
-	CALL(rmfram);				// CALL rmfram
+	bl((ulong)rmfram);				// CALL rmfram
 
 	con((ulong)&R, RREG, 1);
 	mem(Ldw, O(REG, st), RREG, RLINK);
@@ -2146,7 +2193,7 @@ comi(Type *t)
 	con((ulong)H, RA0, 1);
 	for(i = 0; i < t->np; i++) {
 		c = t->map[i];
-		j = i<<5;
+		j = i<<6;
 		for(m = 0x80; m != 0; m >>= 1) {
 			if(c & m)
 				mem(Stw, j, RA2, RA0);
