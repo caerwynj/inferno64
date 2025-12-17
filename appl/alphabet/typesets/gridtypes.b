@@ -11,10 +11,10 @@ include "alphabet.m";
 	proxymod: Proxy;
 	Typescmd, Modulecmd: import Proxy;
 include "alphabet/endpoints.m";
-include "grid.m";
+include "alphabet/grid.m";
 	grid: Grid;
 	Value: import grid;
-include "gridtypes.m";
+include "alphabet/gridtypes.m";
 
 Pcontext: adt {
 	cvt: ref Gridcvt;

@@ -6,7 +6,7 @@ include "draw.m";
 include "sh.m";
 include "alphabet/reports.m";
 include "alphabet.m";
-include "abc.m";
+include "alphabet/abc.m";
 mkabc(a: Alphabet): ref Value.VA
 {
 	r := chan[1] of int;

@@ -10,10 +10,10 @@ include "alphabet.m";
 	Values: import extvalues;
 	proxymod: Proxy;
 	Typescmd, Modulecmd: import Proxy;
-include "fs.m";
+include "alphabet/fs.m";
 	fs: Fs;
 	Value: import fs;
-include "fstypes.m";
+include "alphabet/fstypes.m";
 
 Pcontext: adt {
 	cvt: ref Fscvt;

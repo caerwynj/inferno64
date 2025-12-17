@@ -5,7 +5,7 @@ include "sys.m";
 include "draw.m";
 include "sh.m";
 include "alphabet/reports.m";
-include "fs.m";
+include "alphabet/fs.m";
 sendnulldir(c: Fschan): int
 {
 	reply := chan of int;
