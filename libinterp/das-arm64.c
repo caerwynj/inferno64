@@ -98,11 +98,11 @@ armclass(ulong w)
 		break;
 	case 0b10100:
 		/* B.c */
-		op = (64+ 4 + 4 + 4 + 1);
+		op = (64 + 4 + 4 + 4 + 1);
 		break;
 	case 0b10110:
 		/* RET */
-		op = (64 + 4 + 4 + 4 + 2 + 2);
+		op = (64 + 4 + 4 + 4 + 2 + 2) + (w>>24 == 0xd6);
 		break;
 	case 0b11001:
 		/* LDRI, STRI */
@@ -177,7 +177,7 @@ armsdti(Opcode *o, Instr *i)
 
 	v = (i->w >> 10) & 0xfff;
 	i->store = 0;
-	i->imm = v;
+	i->imm = v*8;
 	i->rn = (i->w >> 5) & 0x1f;
 	i->rd = (i->w >> 0) & 0x1f;
 	format(o->o, i, o->a);
@@ -206,6 +206,15 @@ armbdt(Opcode *o, Instr *i)
 }
 
 static void
+armbadr(Opcode *o, Instr *i)
+{
+	i->rd = i->w & 0x1f;
+	i->imm = (((i->w >> 5) & 0x7ffff)<<2) | ((i->w >> 29) & 0x3);
+	format(o->o, i, o->a);
+}
+
+
+static void
 armund(Opcode *o, Instr *i)
 {
 	format(o->o, i, o->a);
@@ -231,6 +240,7 @@ armb(Opcode *o, Instr *i)
 	v = i->w & 0xffffff;
 	if(v & 0x800000)
 		v |= ~0xffffff;
+	i->cond = i->w & 0xF;
 	i->imm = (v<<2) + i->addr + 8;
 	format(o->o, i, o->a);
 }
@@ -332,22 +342,23 @@ static Opcode opcodes[] =
 	"SWPW",		armdpi,	"R%s,(R%n),R%d",
 	"SWPB",		armdpi,	"R%s,(R%n),R%d",
 
-	"STRB%p",	armsdti,"R%d,#%i(R%n)",
-	"LDRB%p",	armsdti,"#%i(R%n),R%d",
-	"STR%p",	armsdti,"R%d,#%i(R%n)",
-	"LDR%p",	armsdti,"#%i(R%n),R%d",
+	"STRB",	armsdti,"R%d,#%i(R%n)",
+	"LDRB",	armsdti,"#%i(R%n),R%d",
+	"STR",	armsdti,"R%d,#%i(R%n)",
+	"LDR",	armsdti,"#%i(R%n),R%d",
 
-	"STRB%p",	armsdts,"R%d,%D(R%s%h#%m)(R%n)",
-	"LDRB%p",	armsdts,"%D(R%s%h#%m)(R%n),R%d",
-	"STR%p",	armsdts,"R%d,%D(R%s%h#%m)(R%n)",
-	"LDR%p",	armsdts,"%D(R%s%h#%m)(R%n),R%d",
+	"STRB",	armsdts,"R%d,%D(R%s%h#%m)(R%n)",
+	"LDRB",	armsdts,"%D(R%s%h#%m)(R%n),R%d",
+	"STR",	armsdts,"R%d,%D(R%s%h#%m)(R%n)",
+	"LDR",	armsdts,"%D(R%s%h#%m)(R%n),R%d",
 
 	"B%C",		armb,	"%b",
 	"BL%C",		armb,	"%b",
 
-	"ADR",		armunk,	"",
-	"ADRP",		armunk,	"",
+	"ADR",		armbadr,"%b,R%d",
+	"ADRP",		armbadr,"%b,R%d",
 	"RET",		armunk, "",
+	"BLR",		armsdts, "R%n",
 
 	"UNK",		armunk,	"",
 };
