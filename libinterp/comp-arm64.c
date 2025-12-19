@@ -174,15 +174,16 @@ enum
 #define Addi 	0x11
 #define Adc 	0x1a
 #define And 	0x0a
-#define Andi 	0x12
 #define Eor 	0x4a
-#define Eori 	0x52
 #define Orr 	0x2a
-#define Orri 	0x32
 #define Sub 	0x4b
 #define Subi 	0x51
 #define Sbc 	0x5a
 #define Mov	0x2a
+// TODO Eori immediate uses bitmask encoding scheme
+#define Andi 	0x12
+#define Eori 	0x52
+#define Orri 	0x32
 
 #define DP(Op, Rn, Rd, Sh, Rm)	*code++ = (1<<31)|(Op<<24)|(Rm<<16)|\
 					  (Sh<<10)|(Rn<<5)|(Rd)
@@ -1520,18 +1521,24 @@ comp(Inst *i)
 		break;
 	case IORW:
 		r = Orr;
+		/*
 		if(UXSRC(i->add) == SRC(AIMM) && FITS12(i->s.imm))
 			r = Orri;
+		*/
 		goto arithw;
 	case IANDW:
 		r = And;
+		/* TODO
 		if(UXSRC(i->add) == SRC(AIMM) && FITS12(i->s.imm))
 			r = Andi;
+		*/
 		goto arithw;
 	case IXORW:
 		r = Eor;
+		/* TODO
 		if(UXSRC(i->add) == SRC(AIMM) && FITS12(i->s.imm))
 			r = Eori;
+		*/
 		goto arithw;
 	case ISUBW:
 		r = Sub;
@@ -1544,7 +1551,7 @@ comp(Inst *i)
 			r = Addi;
 	arithw:
 		mid(i, Ldw, RA1);
-		if(UXSRC(i->add) == SRC(AIMM) && FITS12(i->s.imm))
+		if(UXSRC(i->add) == SRC(AIMM) && FITS12(i->s.imm) && (r == Addi || r == Subi))
 			DPI(r, RA1, RA0, 0, i->s.imm);
 		else {
 			opwld(i, Ldw, RA0);

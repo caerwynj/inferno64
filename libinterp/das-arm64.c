@@ -7,12 +7,12 @@ struct	Instr
 	ulong	addr;
 	uchar	op;			/* super opcode */
 
-	uchar	cond;			/* bits 28-31 */
-	uchar	store;			/* bit 20 */
+	uchar	cond;			
+	uchar	store;			
 
-	uchar	rd;			/* bits 12-15 */
-	uchar	rn;			/* bits 16-19 */
-	uchar	rs;			/* bits 0-11 */
+	uchar	rd;			
+	uchar	rn;			
+	uchar	rs;			
 
 	long	imm;			/* rotated imm */
 	char*	curr;			/* fill point in buffer */
@@ -84,40 +84,51 @@ armclass(ulong w)
 		/* ADD,SUB,CMN,CMP */
 		op = 4 + ((w>>29) & 0x3);
 		break;
-	case 0b10000:
-		/* ADR,ADRP */
-		op = (64 + 4 + 4 + 4 + 2) + ((w>>31) & 0x1);
-		break;
-	case 0b10001:
-		/* ADDI,SUBI,CMNI,CMPI */
-		op = 48 + 4 + ((w>>29) & 0x3);
-		break;
-	case 0b10010:
-		/* ANDI,ORRI,EORI */	
-		op = 48 + ((w>>29) & 0x3);
-		break;
-	case 0b10100:
-		/* B.c */
-		op = (64 + 4 + 4 + 4 + 1);
-		break;
-	case 0b10110:
-		/* RET */
-		op = (64 + 4 + 4 + 4 + 2 + 2) + (w>>24 == 0xd6);
-		break;
-	case 0b11001:
-		/* LDRI, STRI */
-		op = (64+4) + ((w>>22) & 0x1) + ((w>>31) & 1)*2;
-		break;
-	case 0b11000:
-		/* LDR, STR */
-		op = (64+4+4) + ((w>>22) & 0x1) + ((w>>31) & 1)*2;
-		break;
 	case 0b11010:
 		/* ADC,SUBC */
 		op = 8 + ((w>>30) & 1);
 		break;
+	case 0b10010:
+		/* MOVZ MOVK */	
+		op = 10 + ((w>>29) & 0x3) - 2;
+		break;
+	case 0b10001:
+		/* ADDI,SUBI,CMNI,CMPI */
+		op = 12 + ((w>>29) & 0x3);
+		break;
+	case 0b10000:
+		/* ADR,ADRP */
+		op = 16 + ((w>>31) & 0x1);
+		break;
+	case 0b11011:
+		/* MUL, MADD */
+		op = 18;
+		break;
+	case 0b10100:
+		/* B.c */
+		op = 20;
+		if(w>>31 == 0)
+			break;
+		/* else fall through */
+	case 0b10101:
+	case 0b10110:
+	case 0b10111:
+		/* RET, BL, BLR, BR*/
+		if(w>>26 == 0x25)
+			op = 21; //BL
+		else 
+			op = 22 + ((w >> 21) & 3); 
+		break;
+	case 0b11001:
+		/* LDRI, STRI */
+		op = 25 + ((w>>22) & 0x1) + ((w>>31) & 1)*2;
+		break;
+	case 0b11000:
+		/* LDR, STR */
+		op = 29 + ((w>>22) & 0x1) + ((w>>31) & 1)*2;
+		break;
 	default:
-		op = (64+4+4+4+2+3);
+		op = 33;
 		break;
 	}
 	return op;
@@ -161,10 +172,22 @@ armdpi(Opcode *o, Instr *i)
 {
 	ulong v;
 
-	v = (((i->w >> 10) & 0x3f) << 6) | ((i->w >>16) & 0x3f);
+	v = (i->w>>10) & 0xfff;
 	i->imm = v;
 	i->store = (i->w >> 29) & 1;
 	i->rn = (i->w >> 5) & 0x1f;
+	i->rd = (i->w >> 0) & 0x1f;
+
+	format(o->o, i, o->a);
+}
+
+static void
+armdpi16(Opcode *o, Instr *i)
+{
+	ulong v;
+
+	v = (i->w>>5) & 0xffff;
+	i->imm = v;
 	i->rd = (i->w >> 0) & 0x1f;
 
 	format(o->o, i, o->a);
@@ -269,78 +292,43 @@ armco(Opcode *o, Instr *i)		/* coprocessor instructions */
 
 static Opcode opcodes[] =
 {
-	"AND%S",	armdps,	"R%s,R%n,R%d",
-	"ORR%S",	armdps,	"R%s,R%n,R%d",
-	"EOR%S",	armdps,	"R%s,R%n,R%d",
-	"MOVW%S",	armdps,	"R%s,R%d",
-	"ADD%S",	armdps,	"R%s,R%n,R%d",
-	"CMN%S",	armdps,	"R%s,R%n,",
-	"SUB%S",	armdps,	"R%s,R%n,R%d",
-	"CMP%S",	armdps,	"R%s,R%n,",
-	"ADC%S",	armdps,	"R%s,R%n,R%d",
-	"SBC%S",	armdps,	"R%s,R%n,R%d",
-	"RSB%S",	armdps,	"R%s,R%n,R%d",
-	"RSC%S",	armdps,	"R%s,R%n,R%d",
-	"TST%S",	armdps,	"R%s,R%n,",
-	"TEQ%S",	armdps,	"R%s,R%n,",
-	"BIC%S",	armdps,	"R%s,R%n,R%d",
-	"MVN%S",	armdps,	"R%s,R%d",
-
 	"AND%S",	armdps,	"(R%s%h#%m),R%n,R%d",
 	"ORR%S",	armdps,	"(R%s%h#%m),R%n,R%d",
 	"EOR%S",	armdps,	"(R%s%h#%m),R%n,R%d",
-	"MOVW%S",	armdps,	"(R%s%h#%m),R%d",
+	"ORN",		armdps,	"(R%s%h#%m),R%n,R%d",
+
 	"ADD%S",	armdps,	"(R%s%h#%m),R%n,R%d",
 	"CMN%S",	armdps,	"(R%s%h#%m),R%n,",
 	"SUB%S",	armdps,	"(R%s%h#%m),R%n,R%d",
 	"CMP%S",	armdps,	"(R%s%h#%m),R%n,",
+
 	"ADC%S",	armdps,	"(R%s%h#%m),R%n,R%d",
 	"SBC%S",	armdps,	"(R%s%h#%m),R%n,R%d",
-	"RSB%S",	armdps,	"(R%s%h#%m),R%n,R%d",
-	"RSC%S",	armdps,	"(R%s%h#%m),R%n,R%d",
-	"TST%S",	armdps,	"(R%s%h#%m),R%n,",
-	"TEQ%S",	armdps,	"(R%s%h#%m),R%n,",
-	"BIC%S",	armdps,	"(R%s%h#%m),R%n,R%d",
-	"MVN%S",	armdps,	"(R%s%h#%m),R%d",
 
-	"AND%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"ORR%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"EOR%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"MOVW%S",	armdps,	"(R%s%hR%m),R%d",
-	"ADD%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"CMN%S",	armdps,	"(R%s%hR%m),R%n,",
-	"SUB%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"CMP%S",	armdps,	"(R%s%hR%m),R%n,",
-	"ADC%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"SBC%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"RSB%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"RSC%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"TST%S",	armdps,	"(R%s%hR%m),R%n,",
-	"TEQ%S",	armdps,	"(R%s%hR%m),R%n,",
-	"BIC%S",	armdps,	"(R%s%hR%m),R%n,R%d",
-	"MVN%S",	armdps,	"(R%s%hR%m),R%d",
+	"MOVZ",		armdpi16,"$#%i,lsl %q,R%d",
+	"MOVK",		armdpi16,"$#%i,lsl %q,R%d",
 
-	"AND%S",	armdpi,	"$#%i,R%n,R%d",
-	"ORR%S",	armdpi,	"$#%i,R%n,R%d",
-	"EOR%S",	armdpi,	"$#%i,R%n,R%d",
-	"MOVW%S",	armdpi,	"$#%i,,R%d",
 	"ADD%S",	armdpi,	"$#%i,R%n,R%d",
 	"CMN%S",	armdpi,	"$#%i,R%n,",
 	"SUB%S",	armdpi,	"$#%i,R%n,R%d",
 	"CMP%S",	armdpi,	"$#%i,R%n,",
-	"ADC%S",	armdpi,	"$#%i,R%n,R%d",
-	"SBC%S",	armdpi,	"$#%i,R%n,R%d",
-	"RSB%S",	armdpi,	"$#%i,R%n,R%d",
-	"RSC%S",	armdpi,	"$#%i,R%n,R%d",
-	"TST%S",	armdpi,	"$#%i,R%n,",
-	"TEQ%S",	armdpi,	"$#%i,R%n,",
-	"BIC%S",	armdpi,	"$#%i,R%n,R%d",
-	"MVN%S",	armdpi,	"$#%i,,R%d",
+
+	/* TODO instructions with bitmask immediate encoding 
+	"AND%S",	armdpi,	"$#%i,R%n,R%d",
+	"ORR%S",	armdpi,	"$#%i,R%n,R%d",
+	*/
+
+	"ADR",		armbadr,"%b,R%d",
+	"ADRP",		armbadr,"%b,R%d",
 
 	"MUL%S",	armdpi,	"R%s,R%m,R%n",
-	"MULA%S",	armdpi,	"R%s,R%m,R%n,R%d",
-	"SWPW",		armdpi,	"R%s,(R%n),R%d",
-	"SWPB",		armdpi,	"R%s,(R%n),R%d",
+	"MADD", 	armdpi, "R%s,R%m,R%n",
+
+	"B%C",		armb,	"%b",
+	"BL",		armb,	"%b",
+	"BR",		armsdts, "R%n",
+	"BLR",		armsdts, "R%n",
+	"RET",		armunk, "",
 
 	"STRB",	armsdti,"R%d,#%i(R%n)",
 	"LDRB",	armsdti,"#%i(R%n),R%d",
@@ -351,14 +339,6 @@ static Opcode opcodes[] =
 	"LDRB",	armsdts,"%D(R%s%h#%m)(R%n),R%d",
 	"STR",	armsdts,"R%d,%D(R%s%h#%m)(R%n)",
 	"LDR",	armsdts,"%D(R%s%h#%m)(R%n),R%d",
-
-	"B%C",		armb,	"%b",
-	"BL%C",		armb,	"%b",
-
-	"ADR",		armbadr,"%b,R%d",
-	"ADRP",		armbadr,"%b,R%d",
-	"RET",		armunk, "",
-	"BLR",		armsdts, "R%n",
 
 	"UNK",		armunk,	"",
 };
@@ -422,11 +402,15 @@ format(char *mnemonic, Instr *i, char *f)
 			break;
 				
 		case 'm':
-			bprint(i, "%d", (i->w>>7) & 0x1f);
+			bprint(i, "%d", (i->w>>10) & 0x3f);
+			break;
+
+		case 'q':
+			bprint(i, "%d", ((i->w>>21) & 0x3)*16);
 			break;
 
 		case 'h':
-			bprint(i, "%s", shtype[(i->w>>5) & 0x3]);
+			bprint(i, "%s", shtype[(i->w>>22) & 0x3]);
 			break;
 
 		case 'n':
