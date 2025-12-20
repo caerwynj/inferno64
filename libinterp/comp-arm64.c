@@ -444,10 +444,17 @@ con(ulong o, int r, int opt)
 	Const *c;
 
 	if(opt != 0) {
-		if (o == 0) {
-			MOVZ(0, 0, r);
-		} else if(o == -1) {
-			MOVN(0, 0, r);
+		if ((o & ~0xffff) == 0) {
+			MOVZ(o, 0, r);
+		} else if(((~o)>>16) == 0) {  //TODO
+			MOVN(~o, 0, r);
+		} else if((o>>32) == 0) {
+			MOVZ((o>>16) & 0xffff, 1, r);
+			MOVK((o) & 0xffff, 0, r);
+		} else if((o>>48) == 0) {
+			MOVZ((o>>32) & 0xffff, 2, r);
+			MOVK((o>>16) & 0xffff, 1, r);
+			MOVK((o) & 0xffff, 0, r);
 		} else {
 			MOVZ((o>>48) & 0xffff, 3, r);
 			MOVK((o>>32) & 0xffff, 2, r);
@@ -1673,7 +1680,7 @@ comp(Inst *i)
 		}
 		if(UXDST(i->add) == DST(AIMM) && FITS12(i->d.imm<<r)) {
 			if(bflag)
-				BCKI(i->d.imm<<r, RA2);  // TODO imm<<r must fit 12 bits
+				BCKI(i->d.imm, RA2);  // TODO imm<<r must fit 12 bits
 			if(i->d.imm != 0)
 				DPI(Addi, RA0, RA0, 0, i->d.imm<<r);
 		} else {
