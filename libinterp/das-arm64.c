@@ -260,11 +260,17 @@ armb(Opcode *o, Instr *i)
 {
 	ulong v;
 
-	v = i->w & 0xffffff;
-	if(v & 0x800000)
-		v |= ~0xffffff;
+	if(i->w & 0x80000000) {  //BL  26bit immediate
+		v = i->w & 0x3ffffff;
+		if (v & (1<<25))
+			v |= ~0x3ffffff;
+	}else{  //B.c  19bit immediate
+		v = (i->w>>5) & 0x7ffff;
+		if (v & (1<<18))
+			v |= ~0x7ffff;
+	}
 	i->cond = i->w & 0xF;
-	i->imm = (v<<2) + i->addr + 8;
+	i->imm = (v<<2) + i->addr;
 	format(o->o, i, o->a);
 }
 
