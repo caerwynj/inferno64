@@ -179,7 +179,7 @@ enum
 #define Sub 	0x4b
 #define Subi 	0x51
 #define Sbc 	0x5a
-#define Mov	0x2a
+#define Mov	0x2a  //alias for Orr
 // TODO Eori immediate uses bitmask encoding scheme
 #define Andi 	0x12
 #define Eori 	0x52
@@ -1149,9 +1149,9 @@ movmem(Inst *i)
 	case 8:
 		LDW(RA1, RA2, 0);
 		opwst(i, Lea, RA3);
-		LDW(RA1, RA1, 4);
+		LDW(RA1, RA1, 4);   // TODO
 		STW(RA3, RA2, 0);
-		STW(RA3, RA1, 4);
+		STW(RA3, RA1, 4);   // TODO
 		break;
 	default:
 		// could use ldm/stm loop...
@@ -1324,6 +1324,8 @@ comp(Inst *i)
 		}
 		/* if no hardware, just fall through */
 	case IMOVL:
+		goto movw;
+		/*
 		opwld(i, Lea, RA1);
 		LDW(RA1, RA2, 0);
 		LDW(RA1, RA3, 4);
@@ -1331,6 +1333,7 @@ comp(Inst *i)
 		STW(RA1, RA2, 0);
 		STW(RA1, RA3, 4);
 		break;
+		*/
 		break;
 	case IHEADM:
 		opwld(i, Ldw, RA1);
@@ -1384,6 +1387,7 @@ comp(Inst *i)
 		opwst(i, Stw, RA0);
 		break;
 	case IMOVW:
+	movw:
 		opwld(i, Ldw, RA0);
 		opwst(i, Stw, RA0);
 		break;
@@ -1924,33 +1928,33 @@ maccase(void)
 	BRA(LE, 0);	// n <= 0? goto out
 
 	inner = code;
-	DP(Mov, 0, RA0, (1<<3)|2, RA2);	// n2 = n>>1
-	DP(Add, RA0, RCON, (1<<3), RA0);	// n' = n2+(n2<<1) = 3*n2
-	DP(Add, RA3, RCON, (2<<3), RCON);	// l = t + n2*3;
+	DP(Mov, RZR, RA0, 1, RA2) | 1<<22;	// n2 = n>>1
+	DP(Add, RA0, RCON, 1, RA0);		// n' = n2+(n2<<1) = 3*n2
+	DP(Add, RA3, RCON, 3, RCON);		// l = t + n2*3;
 
-	LDW(RCON, RTA, 4);
+	LDW(RCON, RTA, 1);
 	CMP(RA1, 0, 0, RTA);
 	BRA(GE, 2);
-	DP(Mov, 0, RA2, 0, RA0);	// v < l[1]? n=n2
+	DP(Mov, RZR, RA2, 0, RA0);	// v < l[1]? n=n2
 	BRANCH(LT, loop);	// v < l[1]? goto loop
 
-	LDW(RCON, RTA, 8);
+	LDW(RCON, RTA, 2);
 	CMP(RA1, 0, 0, RTA);
 	BRA(GE, 2);
-	LDW(RCON, R15, 12);	// v >= l[1] && v < l[2] => found; goto l[3]
+	LDW(RCON, R15, 3);	// v >= l[1] && v < l[2] => found; goto l[3]
 	BR(R15);
 
 	// v >= l[2] (high)
-	DPI(Addi, RCON, RA3, 0, 12);	// t = l+3;
+	DPI(Addi, RCON, RA3, 0, 3*8);	// t = l+3;
 	DPI(Addi, RA0, RTA, 0, 1);
 	DP(Sub, RA2, RA2, 0, RTA) | SBIT;	// n -= n2+1
 	BRANCH(GT, inner);	// n > 0? goto loop
 
 	PATCH(cp1);	// out:
 	LDW(RLINK, RA2, 0);		// initial n
-	DP(Add, RA2, RA2, (1<<3), RA2);	// n = n+(n<<1) = 3*n
-	DP(Add, RLINK, RLINK, (2<<3), RA2);	// t' = &(initial t)[n*3]
-	LDW(RLINK, R15, 4);		// goto (initial t)[n*3+1]
+	DP(Add, RA2, RA2, 1, RA2);	// n = n+(n<<1) = 3*n
+	DP(Add, RLINK, RLINK, 3, RA2);	// t' = &(initial t)[n*3]
+	LDW(RLINK, R15, 1);		// goto (initial t)[n*3+1]
 	BR(R15);			// TODO
 }
 
