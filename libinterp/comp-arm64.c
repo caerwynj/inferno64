@@ -142,10 +142,20 @@ enum
 #define IMM9(O)				(O & ((1<<9)-1))
 #define SBIT	(1<<29)
 #define UPBIT	(1<<23)  //TODO do not use
+#define LSR	(1<<22)
+#define ASR	(2<<22)
+#define ROR	(3<<22)
 
+//64 bit Load WORD
 #define LDW(Rn, Rd, O)		*code++ = (3<<30)|(7<<27)|(1<<24)|(1<<22)|(IMM(O)<<10)|\
 					   (Rn<<5)|(Rd)
 #define STW(Rn, Rd, O)		*code++ = (3<<30)|(7<<27)|(1<<24)|(IMM(O)<<10)|\
+					  (Rn<<5)|(Rd)
+
+//32 bit Load Quad for Runes
+#define LDQ(Rn, Rd, O)		*code++ = (2<<30)|(7<<27)|(1<<24)|(1<<22)|(IMM(O)<<10)|\
+					   (Rn<<5)|(Rd)
+#define STQ(Rn, Rd, O)		*code++ = (2<<30)|(7<<27)|(1<<24)|(IMM(O)<<10)|\
 					  (Rn<<5)|(Rd)
 
 #define LDB(Rn, Rd, O)		*code++ = (7<<27)|(1<<24)|(1<<22)|\
@@ -158,8 +168,14 @@ enum
 #define STRW(Rn, Rt, Rm)	*code++ = (3<<30)|(7<<27)|(1<<21)|\
 					  (Rm<<16)|(1<<11)|(Rn<<5)|Rt
 #define LDRB(Rn, Rt, Rm)	*code++ = (7<<27)|(1<<22)|(1<<21)|\
-					  (Rm<<16)|(1<<11)|(Rn<<5)|Rt
+					  (Rm<<16)|(3<<13)|(1<<11)|(Rn<<5)|Rt
 #define STRB(Rn, Rt, Rm)	*code++ = (7<<27)|(1<<21)|\
+					  (Rm<<16)|(3<<13)|(1<<11)|(Rn<<5)|Rt
+
+// Load 32 bit for Runes
+#define LDRQ(Rn, Rt, Rm)	*code++ = (2<<30)|(7<<27)|(3<<21)|\
+					  (Rm<<16)|(3<<13)|(1<<11)|(Rn<<5)|Rt
+#define STRQ(Rn, Rt, Rm)	*code++ = (2<<30)|(7<<27)|(1<<21)|\
 					  (Rm<<16)|(1<<11)|(Rn<<5)|Rt
 
 #define LDUW(Rn, Rd, O)		*code++ = (3<<30)|(7<<27)|(1<<22)|(IMM9(O)<<12)|\
@@ -202,6 +218,8 @@ enum
 #define MUL(Rm, Rs, Rd)		*code++ = (1<<31)|(3<<27)|(3<<24)|(Rm<<16)|\
 					  (0x1f<<10)|(Rs<<5)|(Rd)
 
+#define BFC(Rd, lsb, width)	*code++ = (1<<31)|(1<<29)|(1<<28)|(3<<24)|(1<<22)\
+					  (lsb<<16)|(width<<10)|(0x1f<<5)|(Rd)
 /* TODO */
 #define LDF(Rn, Fd, O)	*code++ = (6<<25)|(1<<24)|(1<<23)|(1<<20)|\
 					  (Rn<<16)|(1<<15)|(Fd<<12)|(1<<8)|((O)&0xff)
@@ -1148,10 +1166,13 @@ movmem(Inst *i)
 		break;
 	case 8:
 		LDW(RA1, RA2, 0);
+		opwst(i, Stw, RA2);
+		/*
 		opwst(i, Lea, RA3);
 		LDW(RA1, RA1, 4);   // TODO
 		STW(RA3, RA2, 0);
 		STW(RA3, RA1, 4);   // TODO
+		*/
 		break;
 	default:
 		// could use ldm/stm loop...
@@ -1420,7 +1441,7 @@ comp(Inst *i)
 		con(0, RA0, 1);
 		CMPH(RA1);
 		BRA(EQ, 2);
-		LDW(RA1, RA0, O(Array,len));
+		LDW(RA1, RA0, O(Array,len)/8);
 		opwst(i, Stw, RA0);
 		break;
 	case ILENC:
@@ -1440,7 +1461,7 @@ comp(Inst *i)
 
 		CMPH(RA1);
 		BRA(EQ, 4);
-		LDW(RA1, RA1, O(List, tail));
+		LDW(RA1, RA1, O(List, tail)/8);
 		DPI(Addi, RA0, RA0, 0, 1);
 		BRA(AL, -4);  
 		opwst(i, Stw, RA0);
@@ -1629,13 +1650,13 @@ comp(Inst *i)
 		opwld(i, Ldw, RA1);			// RA1 = string
 		NOTNIL(RA1);
 		imm = 1;
-		if((i->add&ARM) != AXIMM || !FITS12((short)i->reg<<Lg2Rune)){
+		if((i->add&ARM) != AXIMM || !FITS12((short)i->reg)){
 			mid(i, Ldw, RA2);			// RA2 = i
 			imm = 0;
 		}
 		mem(Ldw, O(String,len),RA1, RA0);	// len<0 => index Runes, otherwise bytes
 		if(bflag){
-			DPI(Orri, RA0, RA3, 0, 0);
+			DPI(Addi, RA0, RA3, 0, 0) | SBIT;
 			/* TODO  Rsb */
 			BRA(GE, 2);
 			DP(Sub, RZR, RA3, 0, RA3);
@@ -1651,14 +1672,14 @@ comp(Inst *i)
 			BRA(LT, 2);
 			LDB(RA1, RA3, i->reg);
 			BRA(GE, 2);
-			LDW(RA1, RA3, (short)i->reg<<Lg2Rune);
+			LDQ(RA1, RA3, (short)i->reg);
 		} else {
 			/* TODO */
 			BRA(LT, 2);
 			LDRB(RA1, RA3, RA2);
-			BRA(GE, 3);
-			DP(Mov, 0, RA2, (Lg2Rune<<3), RA2);
-			LDRW(RA1, RA3, RA2);
+			BRA(GE, 2);
+			//DP(Mov, RZR, RA2, 1, RA2) | LSR;
+			LDRQ(RA1, RA3, RA2);
 		}
 		opwst(i, Stw, RA3);
 //if(pass){print("%D\n", i); das(s, code-s);}
@@ -1928,7 +1949,7 @@ maccase(void)
 	BRA(LE, 0);	// n <= 0? goto out
 
 	inner = code;
-	DP(Mov, RZR, RA0, 1, RA2) | 1<<22;	// n2 = n>>1
+	DP(Mov, RZR, RA0, 1, RA2) | LSR;	// n2 = n>>1
 	DP(Add, RA0, RCON, 1, RA0);		// n' = n2+(n2<<1) = 3*n2
 	DP(Add, RA3, RCON, 3, RCON);		// l = t + n2*3;
 
@@ -2188,7 +2209,7 @@ comd(Type *t)
 	mem(Stw, O(REG, dt), RREG, RLINK);
 	for(i = 0; i < t->np; i++) {
 		c = t->map[i];
-		j = i<<5;
+		j = i<<6;
 		for(m = 0x80; m != 0; m >>= 1) {
 			if(c & m) {
 				mem(Ldw, j, RFP, RA0);
