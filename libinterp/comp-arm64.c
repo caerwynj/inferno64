@@ -1869,11 +1869,11 @@ comp(Inst *i)
 //if(pass){print("%D\n", i); das(s, code-s);}
 		break;
 	case ISHLL:
-		/* should do better */
+		/* TODO should do better */
 		punt(i, SRCOP|DSTOP|THREOP, optab[i->op]);
 		break;
 	case ISHRL:
-		/* should do better */
+		/* TODO should do better */
 		punt(i, SRCOP|DSTOP|THREOP, optab[i->op]);
 		break;
 	case IRAISE:
@@ -2342,17 +2342,17 @@ compile(Module *m, int size, Modlink *ml)
 	flushcon(0);
 	n += code - tmp;
 
-	base = mallocz((n+nlit)*sizeof(*code), 0);
+	base = mallocz(n*sizeof(*code)+nlit*sizeof(ulong), 0);
 	if(base == nil)
 		goto bad;
 
 	if(cflag > 3)
-		print("dis=%5d %5d 386=%5d asm=%.8p: %s\n",
-			size, size*sizeof(Inst), n, base, m->name);
+		print("dis=%5d %5d 386=%5d nlit=%3d asm=%.8p: %s\n",
+			size, size*sizeof(Inst), n, nlit, base, m->name);
 
 	pass++;
 	nlit = 0;
-	litpool = (ulong*)base+n;
+	litpool = (ulong*)(base+n);  // sic  the code is uint, the litpool ulong
 	code = base;
 	n = 0;
 	codeoff = 0;
