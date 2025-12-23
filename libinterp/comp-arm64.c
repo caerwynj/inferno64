@@ -218,8 +218,14 @@ enum
 #define MUL(Rm, Rs, Rd)		*code++ = (1<<31)|(3<<27)|(3<<24)|(Rm<<16)|\
 					  (0x1f<<10)|(Rs<<5)|(Rd)
 
-#define BFC(Rd, lsb, width)	*code++ = (1<<31)|(1<<29)|(1<<28)|(3<<24)|(1<<22)\
+#define BFC(Rd, lsb, width)	*code++ = (1<<31)|(1<<29)|(1<<28)|(3<<24)|(1<<22)|\
 					  (lsb<<16)|(width<<10)|(0x1f<<5)|(Rd)
+
+#define ASRV(Rn, Rd, Rm)  	*code++ = (1<<31)|(0xd6<<21)|(Rm<<16)|(1<<13)|(1<<11)|\
+					  (Rn<<5)|(Rd)
+#define LSLV(Rn, Rd, Rm)  	*code++ = (1<<31)|(0xd6<<21)|(Rm<<16)|(1<<13)|\
+					  (Rn<<5)|(Rd)
+
 /* TODO */
 #define LDF(Rn, Fd, O)	*code++ = (6<<25)|(1<<24)|(1<<23)|(1<<20)|\
 					  (Rn<<16)|(1<<15)|(Fd<<12)|(1<<8)|((O)&0xff)
@@ -262,6 +268,7 @@ enum
 
 #define FITS12(v)	((ulong)(v)<BITS(12))
 #define FITS8(v)	((ulong)(v)<BITS(8))
+#define FITS6(v)	((ulong)(v)<BITS(6))
 #define FITS5(v)	((ulong)(v)<BITS(5))
 
 /* assumes H==-1 */
@@ -1595,11 +1602,14 @@ comp(Inst *i)
 		r = 2;
 	shiftw:
 		mid(i, Ldw, RA1);
-		if(UXSRC(i->add) == SRC(AIMM) && FITS5(i->s.imm))
+		if(UXSRC(i->add) == SRC(AIMM) && FITS6(i->s.imm))
 			DP(Mov, RZR, RA0, (i->s.imm&0x3F), RA1)|(r<<22);
 		else {
 			opwld(i, Ldw, RA0);
-			DP(Mov, RZR, RA0, RA0, RA1)|(r<<22);
+			if(r == 2)
+				ASRV(RA1, RA0, RA0);
+			else
+				LSLV(RA1, RA0, RA0);
 		}
 		opwst(i, Stw, RA0);
 		break;
@@ -1623,9 +1633,12 @@ comp(Inst *i)
 		r = Add;
 	arithb:
 		mid(i, Ldb, RA1);
+		/* TODO
 		if(UXSRC(i->add) == SRC(AIMM))
 			DPI(r, RA1, RA0, 0, i->s.imm);
-		else {
+		else 
+		*/
+		{
 			opwld(i, Ldb, RA0);
 			DP(r, RA1, RA0, 0, RA0);
 		}
@@ -1657,7 +1670,6 @@ comp(Inst *i)
 		mem(Ldw, O(String,len),RA1, RA0);	// len<0 => index Runes, otherwise bytes
 		if(bflag){
 			DPI(Addi, RA0, RA3, 0, 0) | SBIT;
-			/* TODO  Rsb */
 			BRA(GE, 2);
 			DP(Sub, RZR, RA3, 0, RA3);
 			if(imm)
@@ -1668,17 +1680,14 @@ comp(Inst *i)
 		DPI(Addi, RA1, RA1, 0, O(String,data));
 		CMPI(RA0, 0, 0);
 		if(imm){
-			/* TODO */
 			BRA(LT, 2);
 			LDB(RA1, RA3, i->reg);
 			BRA(GE, 2);
 			LDQ(RA1, RA3, (short)i->reg);
 		} else {
-			/* TODO */
 			BRA(LT, 2);
 			LDRB(RA1, RA3, RA2);
 			BRA(GE, 2);
-			//DP(Mov, RZR, RA2, 1, RA2) | LSR;
 			LDRQ(RA1, RA3, RA2);
 		}
 		opwst(i, Stw, RA3);
@@ -1705,7 +1714,7 @@ comp(Inst *i)
 		}
 		if(UXDST(i->add) == DST(AIMM) && FITS12(i->d.imm<<r)) {
 			if(bflag)
-				BCKI(i->d.imm, RA2);  // TODO imm<<r must fit 12 bits
+				BCKI(i->d.imm, RA2);  
 			if(i->d.imm != 0)
 				DPI(Addi, RA0, RA0, 0, i->d.imm<<r);
 		} else {
@@ -1869,10 +1878,14 @@ comp(Inst *i)
 //if(pass){print("%D\n", i); das(s, code-s);}
 		break;
 	case ISHLL:
+		r = 0;
+		goto shiftw;
 		/* TODO should do better */
 		punt(i, SRCOP|DSTOP|THREOP, optab[i->op]);
 		break;
 	case ISHRL:
+		r = 2;
+		goto shiftw;
 		/* TODO should do better */
 		punt(i, SRCOP|DSTOP|THREOP, optab[i->op]);
 		break;
@@ -1976,7 +1989,7 @@ maccase(void)
 	DP(Add, RA2, RA2, 1, RA2);	// n = n+(n<<1) = 3*n
 	DP(Add, RLINK, RLINK, 3, RA2);	// t' = &(initial t)[n*3]
 	LDW(RLINK, R15, 1);		// goto (initial t)[n*3+1]
-	BR(R15);			// TODO
+	BR(R15);			
 }
 
 static void
