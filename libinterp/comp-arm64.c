@@ -1655,7 +1655,10 @@ comp(Inst *i)
 			DP(Mov, RZR, RA0, (i->s.imm&0x3F), RA1)|(r<<22);
 		else {
 			opwld(i, Ldw, RA0);
-			DP(Mov, RZR, RA0, RA0, RA1)|(r<<22);
+			if(r == 2)
+				ASRV(RA1, RA0, RA0);
+			else
+				LSLV(RA1, RA0, RA0);
 		}
 		opwst(i, Stb, RA0);
 		break;
