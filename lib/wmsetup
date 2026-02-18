@@ -39,13 +39,22 @@ menu System			'Debugger'		{wmrun wm/deb}
 menu System			'Module manager'	{wmrun wm/rt}
 menu System			'Task manager'		{wmrun wm/task}
 menu System			'Memory monitor'	{wmrun wm/memory}
+menu System			'Chars'	{wmrun wm/unibrowse}
 menu System			'About'			{wmrun wm/about}
 menu Misc			'Coffee'			{wmrun wm/coffee}
 menu Misc			'Colours'			{wmrun wm/colors}
 #menu Misc			'Winctl'			{wmrun wm/winctl}
-menu Misc			'Clock'			{wmrun wm/date}
+menu Misc			'Clock'			{wmrun wm/clock}
+menu Misc			'Calculator'		{wmrun tkcalc}
+menu Misc			'Calendar'		{wmrun wm/calendar}
+menu Misc			'Stopwatch'		{wmrun wm/stopwatch}
 menu Games			'Tetris'			{wmrun wm/tetris}
 menu Games			'Bounce'			{wmrun wm/bounce}
+menu Games			'Snake'			{wmrun wm/snake}
+menu Games			'Sweeper'		{wmrun wm/sweeper}
+menu Games			'Reversi'		{wmrun wm/reversi}
+menu Games			'Connect4'		{wmrun wm/c4}
+menu Games			'Cards'			{wmrun wm/cards}
 #menu Games			'Game client'		{wmrun games/gameclient >/dev/null >[2=1]}
 #menu Games			'Game client (local)'	{wmrun games/gameclient -l > /dev/null >[2=1]}
 

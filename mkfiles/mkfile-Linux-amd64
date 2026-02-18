@@ -19,7 +19,8 @@ CFLAGS=		-g\
 		-Wuninitialized -Wunused-variable -Wreturn-type -Wimplicit\
 		-I$ROOT/Linux/amd64/include\
 		-I$ROOT/include\
-		-DLINUX_AMD64
+		-DLINUX_AMD64\
+		-DSQLITE_OS_INFERNO\
 
 ANSICPP=
 LD=		cc 

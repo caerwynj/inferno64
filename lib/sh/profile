@@ -6,10 +6,11 @@ home = /usr/^$user
 bind -c '#U*'^$emuwdir /n/local
 bind -a '#U*'/home /usr
 cd /n/local
+and {ftest -e namespace}	{nsbuild}
 #cd $home
 
 # build the user's namespace in $home/
-#and {ftest -e namespace}	{nsbuild}
+and {ftest -e $home/namespace}	{nsbuild $home/namespace}
 
 # Run the local profile
 and {ftest -e lib/profile}	{run ./lib/profile}
