@@ -25,7 +25,7 @@ loadmemimage(Memimage *i, Rectangle r, uchar *data, int ndata)
 			m ^= 0xFF >> rpart;
 		for(y=r.min.y; y<r.max.y; y++){
 			*q ^= (*data^*q) & m;
-			q += i->width*sizeof(ulong);
+			q += i->width*sizeof(u32);
 			data++;
 		}
 		return ndata;
@@ -33,7 +33,7 @@ loadmemimage(Memimage *i, Rectangle r, uchar *data, int ndata)
 	if(lpart==0 && rpart==0){	/* easy case */
 		for(y=r.min.y; y<r.max.y; y++){
 			memmove(q, data, l);
-			q += i->width*sizeof(ulong);
+			q += i->width*sizeof(u32);
 			data += l;
 		}
 		return ndata;
@@ -44,7 +44,7 @@ loadmemimage(Memimage *i, Rectangle r, uchar *data, int ndata)
 			*q ^= (*data^*q) & m;
 			if(l > 1)
 				memmove(q+1, data+1, l-1);
-			q += i->width*sizeof(ulong);
+			q += i->width*sizeof(u32);
 			data += l;
 		}
 		return ndata;
@@ -54,7 +54,7 @@ loadmemimage(Memimage *i, Rectangle r, uchar *data, int ndata)
 			if(l > 1)
 				memmove(q, data, l-1);
 			q[l-1] ^= (data[l-1]^q[l-1]) & mr;
-			q += i->width*sizeof(ulong);
+			q += i->width*sizeof(u32);
 			data += l;
 		}
 		return ndata;
@@ -64,7 +64,7 @@ loadmemimage(Memimage *i, Rectangle r, uchar *data, int ndata)
 		if(l > 2)
 			memmove(q+1, data+1, l-2);
 		q[l-1] ^= (data[l-1]^q[l-1]) & mr;
-		q += i->width*sizeof(ulong);
+		q += i->width*sizeof(u32);
 		data += l;
 	}
 	return ndata;
