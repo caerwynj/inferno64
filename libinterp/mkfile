@@ -8,9 +8,7 @@ OFILES=\
 	conv.$O\
 	crypt.$O\
 	dec.$O\
-#	dlm-$TARGMODEL.$O\
 	draw.$O\
-#	freetype.$O\
 	gc.$O\
 	geom.$O\
 	heap.$O\
@@ -31,6 +29,9 @@ OFILES=\
 	das-$OBJTYPE.$O\
 	keyring.$O\
 	string.$O\
+	sqlite.$O\
+	sqlite3.$O\
+
 
 HFILES=\
 	$ROOT/include/interp.h\
@@ -49,6 +50,7 @@ MODULES=\
 	../module/freetype.m\
 	../module/ipints.m\
 	../module/crypt.m\
+	../module/sqlite.m\
 	keyringif.m\
 
 <$ROOT/mkfiles/mksyslib-$SHELLTYPE
@@ -89,6 +91,8 @@ cryptmod.h:D:	$MODULES
 keyringif.h:D:	$MODULES keyringif.m
 	rm -f $target && limbo -a -I../module keyringif.m > $target
 
+sqlitemod.h:D: ../module/sqlite.m
+	rm -f $target && limbo -t Sqlite -I../module ../module/sqlite.m > $target
 
 bench.h:D:../module/bench.m
 	rm -f $target && limbo -a -I../module ../module/bench.m > $target
@@ -96,7 +100,6 @@ bench.h:D:../module/bench.m
 xec.$O:		optab.h  $ROOT/include/pool.h
 tk.$O:		$ROOT/include/tk.h  $ROOT/include/pool.h
 draw.$O: 	$ROOT/include/draw.h $ROOT/include/drawif.h
-
 runt.$O:	sysmod.h
 draw.$O:	drawmod.h
 tk.$O:		$ROOT/include/draw.h tkmod.h
@@ -107,6 +110,7 @@ ipint.$O:	ipint.h ipintsmod.h
 loader.$O:	loadermod.h
 freetype.$O:	freetypemod.h $ROOT/include/freetype.h
 math.$O:	$ROOT/include/mathi.h
+sqlite.$O:	sqlitemod.h
 
 das-spim.c:N:	das-mips.c
 comp-spim.c:N:	comp-mips.c
