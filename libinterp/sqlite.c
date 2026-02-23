@@ -204,6 +204,17 @@ Sqlite_column_bytes(void *fp)
 }
 
 void
+Sqlite_column_count(void *fp)
+{
+	F_Sqlite_column_count *f;
+	XStmt *stmt;
+
+	f = fp;
+	stmt = checktype(f->stmt, TSqlite_Stmt, exBadStmt, 0);
+	*f->ret = sqlite3_column_count(stmt->stmt);
+}
+
+void
 Sqlite_finalize(void *fp)
 {
 	F_Sqlite_finalize *f;

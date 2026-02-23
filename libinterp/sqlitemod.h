@@ -8,6 +8,7 @@ Runtab Sqlitemodtab[]={
 	"column_big",0x72d0f7c3,Sqlite_column_big,80,2,{0x0,0x80,},
 	"column_blob",0x6ff75904,Sqlite_column_blob,80,2,{0x0,0x80,},
 	"column_bytes",0xd67dfdfa,Sqlite_column_bytes,80,2,{0x0,0x80,},
+	"column_count",0xaccabe82,Sqlite_column_count,72,2,{0x0,0x80,},
 	"column_int",0xd67dfdfa,Sqlite_column_int,80,2,{0x0,0x80,},
 	"column_real",0x8ded8f64,Sqlite_column_real,80,2,{0x0,0x80,},
 	"column_text",0xd99235cd,Sqlite_column_text,80,2,{0x0,0x80,},
@@ -17,4 +18,4 @@ Runtab Sqlitemodtab[]={
 	"step",0xaccabe82,Sqlite_step,72,2,{0x0,0x80,},
 	0
 };
-#define Sqlitemodlen	15
+#define Sqlitemodlen	16

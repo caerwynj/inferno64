@@ -51,6 +51,11 @@ Wm: module
 	init:	fn(ctxt: ref Draw->Context, argv: list of string);
 };
 
+Command: module
+{
+	init:	fn(ctxt: ref Draw->Context, argv: list of string);
+};
+
 Ft: adt
 {
 	ext:	string;
@@ -75,7 +80,7 @@ dirwin_cfg := array[] of {
 	".mbar configure $font",
 	".mbar.opt configure $font",
 	"pack .mbar.opt -side left",
-	"pack .fc.scroll -side right -fill y",
+	"pack .fc.scroll -side left -fill y",
 	"pack .fc.c -fill both -expand 1",
 	"pack .mbar -fill x",
 	"pack .fc -fill both -expand 1",
@@ -101,19 +106,41 @@ dirwin_cfg := array[] of {
 	".opt add radiobutton -text {use text}"
 		+" -variable show -value t -command {send opt text}",
 	".opt add separator",
+	".opt add radiobutton -text {hide dotfiles}"
+		+" -variable hide -value h -command {send opt hidedot}",
+	".opt add radiobutton -text {show dotfiles}"
+		+" -variable hide -value s -command {send opt showdot}",
+	".opt add separator",
 	".opt add checkbutton -text {Walk} -command {send opt walk}",
 };
 
-key := Readdir->NAME;
-walk: int;
-path: string;
-usetext: int;
+FilerWin: adt
+{
+	t: ref Toplevel;
+	wmctl: chan of string;
+	filecmd: chan of string;
+	conf: chan of string;
+	opt: chan of string;
+	
+	key: int;
+	walk: int;
+	path: string;
+	usetext: int;
+	nde: int;
+	now: int;
+	de: array of ref Sys->Dir;
+	hide: int;
+
+	dragging: int;
+	dragitem: ref Sys->Dir;
+};
+
 cmdname: string;
 sysnam: string;
-nde: int;
-now: int;
 plumbed := 0;
-de: array of ref Sys->Dir;
+
+winlock: chan of int;
+windows: list of ref FilerWin;
 
 filetypes: array of ref Ft;
 deftype: ref Ft;
@@ -156,7 +183,7 @@ init(env: ref Draw->Context, argv: list of string)
 
 	font = environ->getenv("font");
 	if(font == nil)
-		font = "/fonts/misc/latin1.8x13.font";
+		font = "/fonts/pelm/unicode.8.font";
 
 	# Graceful guards?
 	Fontwidth = Font.open(ctxt.display, font).width(" ");
@@ -170,34 +197,88 @@ init(env: ref Draw->Context, argv: list of string)
 	cmdname = hd argv;
 	sysnam = sysname()+":";
 
+	winlock = chan[1] of int;
+	winlock <-= 1;
+	create_window(argv);
+}
+
+create_window(argv: list of string)
+{
 	(t, wmctl) := tkclient->toplevel(ctxt, "", "", Tkclient->Appl);
+
+	w := ref FilerWin;
+	w.t = t;
+	w.wmctl = wmctl;
+	w.filecmd = chan of string;
+	w.conf = chan of string;
+	w.opt = chan of string;
+	w.key = readdir->NAME;
+	w.walk = 0;
+	w.usetext = 0;
+	w.nde = 0;
+	w.now = 0;
+	w.path = "";
+	w.dragging = 0;
+	w.hide = 1;
 
 	tk->cmd(t, "cursor -image waiting");
 
-	filecmd := chan of string;
-	tk->namechan(t, filecmd, "fc");
-	conf := chan of string;
-	tk->namechan(t, conf, "cf");
-	opt := chan of string;
-	tk->namechan(t, opt, "opt");
+	# Initialize images unconditionally for this specific window
+	s0 := sys->sprint("image create bitmap %s -file %s.bit -maskfile %s.mask", deftype.tkname, deftype.icon, deftype.icon);
+	tk->cmd(t, s0);
+	s1 := sys->sprint("image create bitmap %s -file %s.bit -maskfile %s.mask", dirtype.tkname, dirtype.icon, dirtype.icon);
+	tk->cmd(t, s1);
+	for (i := 0; i < len filetypes; i++) {
+		s := sys->sprint("image create bitmap %s -file %s.bit -maskfile %s.mask", filetypes[i].tkname, filetypes[i].icon, filetypes[i].icon);
+		tk->cmd(t, s);
+	}
+
+	tk->namechan(t, w.filecmd, "fc");
+	tk->namechan(t, w.conf, "cf");
+	tk->namechan(t, w.opt, "opt");
 
 	argv = tl argv;
 	if(argv == nil)
-		getdir(t, "");
+		getdir(w, "");
 	else
-		getdir(t, hd argv);
+		getdir(w, hd argv);
 
 	# Patch in font (need a replaceall?)
 	dirwin_cfg = arrays->map(dirwin_cfg, fontify);
 
 	for (c:=0; c<len dirwin_cfg; c++)
 		tk->cmd(t, dirwin_cfg[c]);
-	drawdir(t);
+	tk->cmd(t, "bind .fc.c <ButtonRelease-1> {send fc R %X %Y}");
+	drawdir(w);
 	tk->cmd(t, "update; cursor -default");
 	tk->cmd(t, "bind . <Configure> {send cf conf}");
 	tkclient->onscreen(t, nil);
 	tkclient->startinput(t, "kbd"::"ptr"::nil);
 
+	<-winlock;
+	windows = w :: windows;
+	winlock <-= 1;
+
+	spawn window_loop(w);
+}
+
+remove_window(w: ref FilerWin)
+{
+	<-winlock;
+	nwindows: list of ref FilerWin = nil;
+	for (l := windows; l != nil; l = tl l) {
+		if (hd l != w)
+			nwindows = (hd l) :: nwindows;
+	}
+	windows = nwindows;
+	winlock <-= 1;
+	if (windows == nil)
+		exit;
+}
+
+window_loop(w: ref FilerWin)
+{
+	t := w.t;
 	menu := "";
 
 f:	for(;;) alt {
@@ -207,90 +288,120 @@ f:	for(;;) alt {
 		tk->pointer(t, *s);
 	s := <-t.ctxt.ctl or
 	s = <-t.wreq or
-	s = <-wmctl =>
-		if (s == "exit")
+	s = <-w.wmctl =>
+		if (s == "exit") {
+			remove_window(w);
 			exit;
+		}
 		tkclient->wmctl(t, s);
-	<-conf =>
-		#
-		# Only recompute contents if the size changed
-		#
-		if(menu[0] != 's')
-			break;
+	<-w.conf =>
 		tk->cmd(t, ".fc.c delete all");
-		drawdir(t);
+		drawdir(w);
 		tk->cmd(t, ".fc.c yview moveto 0; update");
-	mopt := <-opt =>
+	mopt := <-w.opt =>
 		case mopt {
+		"refresh" =>
+			getdir(w, w.path);
+			# fallthrough to UI update
 		"sort" =>
 			case tk->cmd(t, "variable sort") {
-			"n" => key = readdir->NAME;
-			"a" => key = readdir->ATIME;
-			"m" => key = readdir->MTIME;
-			"s" => key = readdir->SIZE;
+			"n" => w.key = readdir->NAME;
+			"a" => w.key = readdir->ATIME;
+			"m" => w.key = readdir->MTIME;
+			"s" => w.key = readdir->SIZE;
 			}
-			(de, nde) = readdir->sortdir(de, key);
+			(w.de, w.nde) = readdir->sortdir(w.de, w.key);
 		"walk" =>
-			walk = !walk;
+			w.walk = !w.walk;
 			continue f;
 		"text" =>
-			usetext = 1;
+			w.usetext = 1;
 		"icon" =>
-			usetext = 0;
+			w.usetext = 0;
+		"showdot" =>
+			w.hide = 0;
+		"hidedot" =>
+			w.hide = 1;
 		}
 		tk->cmd(t, ".fc.c delete all");
-		drawdir(t);
+		drawdir(w);
 		tk->cmd(t, ".fc.c yview moveto 0; update");
-	action := <-filecmd =>
+	action := <-w.filecmd =>
+		#sys->print("action %s\n", action);
+		case action[0] {
+		'R' =>
+			if (w.dragging) {
+				#sys->print("release\n");
+				w.dragging = 0;
+				tk->cmd(t, "grab release .fc.c; cursor -default");
+				(nil, toks) := sys->tokenize(action, " ");
+				if (len toks >= 3) {
+					x := int hd tl toks;
+					y := int hd tl tl toks;
+					resolve_drop(w, w.dragitem, x, y);
+				}
+			}
+			continue f;
+		}
+
 		nd := int action[1:];
-		if(nd > len de)
+		if(nd > len w.de)
 			break;
 		case action[0] {
 		'1' =>
-			button1(t, de[nd]);
+			button1(w, w.de[nd]);
 		'3' =>
-			button3(t, de[nd]);
+			button3(w, w.de[nd]);
+		'm' =>
+			if (!w.dragging) {
+				#sys->print("dragging\n");
+				w.dragging = 1;
+				w.dragitem = w.de[nd];
+				tk->cmd(t, "grab set .fc.c; cursor -bitmap cursor.drag");
+			}
 		}
 	}
 }
 
-getdir(t: ref Toplevel, dir: string)
+getdir(w: ref FilerWin, dir: string)
 {
+	t := w.t;
 	if(dir == "")
 		dir = "/";
 
-	path = dir;
-	if (path[len path - 1] != '/')
-		path[len path] = '/';
+	w.path = dir;
+	if (w.path[len w.path - 1] != '/')
+		w.path[len w.path] = '/';
 
-	(de, nde) = readdir->init(path, key);
-	if(nde < 0) {
+	(w.de, w.nde) = readdir->init(w.path, w.key);
+	if(w.nde < 0) {
 		dialog->prompt(ctxt, t.image, "error -fg red",
 				"Read directory",
-				sys->sprint("Error reading \"%s\"\n%r", path),
+				sys->sprint("Error reading \"%s\"\n%r", w.path),
 				0, "Exit"::nil);
+		remove_window(w);
 		exit;
 	}
 
-	if(path != "/") {
+	if(w.path != "/") {
 		(ok, d) := sys->stat("..");
 		if(ok >= 0) {
-			dot := array[nde+1] of ref Dir;
+			dot := array[w.nde+1] of ref Dir;
 			dot[0] = ref d;
 			dot[0].name = "..";
-			dot[1:] = de;
-			de = dot;
-			nde++;
+			dot[1:] = w.de;
+			w.de = dot;
+			w.nde++;
 		}
 	}
 
-	for(i := 0; i < nde; i++) {
-		s := de[i].name;
+	for(i := 0; i < w.nde; i++) {
+		s := w.de[i].name;
 		l := len s;
 		if(l > 4 && s[l-4:] == ".dis")
-			de[i].mode |= 8r111;
+			w.de[i].mode |= 8r111;
 	}
-	tkclient->settitle(t, sysnam+path);
+	tkclient->settitle(t, sysnam+w.path);
 }
 
 defcursor(t: ref Toplevel)
@@ -298,18 +409,19 @@ defcursor(t: ref Toplevel)
 	tk->cmd(t, "cursor -default");
 }
 
-button1(t: ref Toplevel, item: ref Dir)
+button1(w: ref FilerWin, item: ref Dir)
 {
+	t := w.t;
 	mod: Wm;
 
 	tk->cmd(t, "cursor -image waiting");
-	npath := path;
+	npath := w.path;
 	name := item.name + "/";
 	if(item.name == "..") {
-		i := len path - 2;
-		while(i > 0 && path[i] != '/')
+		i := len w.path - 2;
+		while(i > 0 && w.path[i] != '/')
 			i--;
-		npath = path[0:i];
+		npath = w.path[0:i];
 		name = "/";
 	}
 
@@ -317,45 +429,22 @@ button1(t: ref Toplevel, item: ref Dir)
 	ft := filetype(t, item, exec);
 
 	if(item.mode & Sys->DMDIR) {
-		if(walk != 0) {
-			path = npath;
-			getdir(t, npath+name);
+		if(w.walk != 0) {
+			w.path = npath;
+			getdir(w, npath+name);
 			tk->cmd(t, ".fc.c delete all");
-			drawdir(t);
+			drawdir(w);
 			tk->cmd(t, ".fc.c yview moveto 0; update");
 			defcursor(t);
 			return;
 		}
-		mod = load Wm "/dis/wm/dir.dis";
 		defcursor(t);
-		if(mod == nil) {
-			dialog->prompt(ctxt, t.image, "error -fg red", "Load Dir module",
-				sys->sprint("Error: %r"),
-				0, "Continue"::nil);
-			return;
-		}
-		args := npath+name :: nil;
-		args = cmdname :: args;
-		spawn mod->init(ctxt,  args);
+		create_window(cmdname :: npath+name :: nil);
 		return;
 	}
 
-	cmd := ft.cmd;
-	if(cmd == nil)
-		cmd = npath+name;
-
-	mod = load Wm cmd;
-	defcursor(t);
-	if(mod == nil) {
-		dialog->prompt(ctxt, t.image, "error -fg red", "Load Module",
-			sys->sprint("Trying to load \"%s\"\n%r", cmd),
-			0, "Continue"::nil);
-		return;
-	}
-	if(ft.givearg)
-		spawn applinit(mod, ctxt, item.name :: exec :: nil);
-	else
-		spawn applinit(mod, ctxt, item.name :: nil);
+	button3(w, item);
+	return;
 }
 
 applinit(mod: Wm, ctxt: ref Draw->Context, args: list of string)
@@ -365,19 +454,59 @@ applinit(mod: Wm, ctxt: ref Draw->Context, args: list of string)
 }
 
 
-button3(nil: ref Toplevel, stat: ref Sys->Dir)
+button3(w: ref FilerWin, stat: ref Sys->Dir)
 {
 	if(!plumbed)
 		return;
 	msg := ref Msg(
 		"WmDir",
 		"",
-		path,
+		w.path,
 		"text",
 		"",
 		array of byte stat.name);
 
 	msg.send();
+}
+
+resolve_drop(src_w: ref FilerWin, src_item: ref Sys->Dir, x: int, y: int)
+{
+	<-winlock;
+	wins := windows;
+	winlock <-= 1;
+
+	#sys->print("resolve_drop %s %s %d %d\n", src_w.path, src_item.name, x, y);
+	for (l := wins; l != nil; l = tl l) {
+		dst_w := hd l;
+		if (dst_w == src_w)
+			continue;
+
+		actx := int tk->cmd(dst_w.t, ". cget -actx");
+		acty := int tk->cmd(dst_w.t, ". cget -acty");
+		actw := int tk->cmd(dst_w.t, ". cget -actwidth");
+		acth := int tk->cmd(dst_w.t, ". cget -actheight");
+
+		if (x >= actx && x < actx + actw && y >= acty && y < acty + acth) {
+			src_path := src_w.path + src_item.name;
+			dst_path := dst_w.path + src_item.name;
+
+			mv_mod := load Command "/dis/mv.dis";
+			if (mv_mod != nil) {
+				sys->print("mv %s %s \n", src_path, dst_path);
+				args := "mv" :: src_path :: dst_path :: nil;
+				spawn run_mv(mv_mod, ctxt, args, src_w, dst_w);
+			}
+			return;
+		}
+	}
+}
+
+run_mv(mod: Command, ctxt: ref Draw->Context, args: list of string, src_w: ref FilerWin, dst_w: ref FilerWin)
+{
+	sys->pctl(Sys->NEWPGRP|Sys->FORKFD, nil);
+	mod->init(ctxt, args);
+	if (src_w != nil) src_w.opt <-= "refresh";
+	if (dst_w != nil) dst_w.opt <-= "refresh";
 }
 
 filetype(t: ref Toplevel, d: ref Dir, path: string): ref Ft
@@ -422,16 +551,17 @@ loadtype(t: ref Toplevel, ft: ref Ft): ref Ft
 	return ft;
 }
 
-drawdir(t: ref Toplevel)
+drawdir(w: ref FilerWin)
 {
-	if(usetext)
-		drawdirtxt(t);
+	if(w.usetext)
+		drawdirtxt(w);
 	else
-		drawdirico(t);
+		drawdirico(w);
 }
 
-drawdirtxt(t: ref Toplevel)
+drawdirtxt(w: ref FilerWin)
 {
+	t := w.t;
 	if(daytime == nil) {
 		daytime = load Daytime Daytime->PATH;
 		if(daytime == nil) {
@@ -440,29 +570,32 @@ drawdirtxt(t: ref Toplevel)
 				0, "Continue"::nil);
 			return;
 		}
-		now = daytime->now();
 	}
+	w.now = daytime->now();
 
 	y := 10;
-	for(i := 0; i < nde; i++) {
+	for(i := 0; i < w.nde; i++) {
+		if(w.hide && i > 0 && w.de[i].name[0] == '.')
+			continue;
 		tp := "file";
-		if(de[i].mode & Sys->DMDIR)
+		if(w.de[i].mode & Sys->DMDIR)
 			tp = "dir ";
 		else
-		if(de[i].mode & 8r111)
+		if(w.de[i].mode & 8r111)
 			tp = "exe ";
 		s := sys->sprint("%s %7bd %s %s",
 			tp,
-			de[i].length,
-			daytime->filet(now, de[i].mtime),
-			de[i].name);
+			w.de[i].length,
+			daytime->filet(w.now, w.de[i].mtime),
+			w.de[i].name);
 		id := tk->cmd(t, ".fc.c create text 10 "+string y+
 				" -anchor w -text {"+s+"}");
 
 		base := ".fc.c bind "+id;
-		tk->cmd(t, base+" <Double-Button-1> {send fc %b "+string i+"}");
-		tk->cmd(t, base+" <Button-3> {send fc %b "+string i+"}");
+		tk->cmd(t, base+" <Double-Button-1> {send fc 1 "+string i+"}");
+		tk->cmd(t, base+" <Button-3> {send fc 3 "+string i+"}");
 		tk->cmd(t, base+" <Motion-Button-3> {}");
+		tk->cmd(t, base+" <Motion-Button-1> {send fc m "+string i+"}");
 		y += 15;
 	}
 
@@ -470,16 +603,19 @@ drawdirtxt(t: ref Toplevel)
 	tk->cmd(t, ".fc.c configure -scrollregion { 0 0 "+string x+" "+string y+"}");
 }
 
-drawdirico(t: ref Toplevel)
+drawdirico(w_win: ref FilerWin)
 {
+	t := w_win.t;
 	w := int tk->cmd(t, ".fc.c cget actwidth");
 
 	longest := 0;
-	for(i := 0; i < nde; i++) {
-		l := len de[i].name;
+	for(i := 0; i < w_win.nde; i++) {
+		l := len w_win.de[i].name;
 		if(l > longest)
 			longest = l;
 	}
+	if(longest > 12)
+		longest = 12;
 	longest += 2;
 
 	minw := (longest*Fontwidth);
@@ -491,36 +627,70 @@ drawdirico(t: ref Toplevel)
 
 	xwid := Xwidth;
 	x := w/minw;
+	if (x == 0)
+		x = 1;
 	x = w/x;
 	if(x > xwid)
 		xwid = x;
 
 	x = xwid/2;
 	y := 20;
+	max_lines := 1;
 
-	for(i = 0; i < nde; i++) {
+	for(i = 0; i < w_win.nde; i++) {
+		if(w_win.hide && i > 0 && w_win.de[i].name[0] == '.')
+			continue;
 		sx := string x;
-		ft := filetype(t, de[i], de[i].name);
+		ft := filetype(t, w_win.de[i], w_win.de[i].name);
 		img := ft.tkname;
 		
 		id := tk->cmd(t, ".fc.c create image "+sx+" "+
 				string y+" -image "+img);
-		tk->cmd(t, ".fc.c create text "+sx+
-				" "+string (y+25)+" -text "+de[i].name);
 
+		chars := xwid / Fontwidth;
+		if (chars < 1) chars = 1;
+		
+		name := w_win.de[i].name;
+		wrapped := "";
+		while (len name > chars) {
+			wrapped += name[0:chars] + "\n";
+			name = name[chars:];
+		}
+		wrapped += name;
+		
+		lines := (len w_win.de[i].name + chars - 1) / chars;
+		if (lines > max_lines)
+			max_lines = lines;
+			
+		id_txt := tk->cmd(t, ".fc.c create text "+sx+
+				" "+string (y+25)+" -text {"+wrapped+"} -justify center");
+
+		# Bindings for the icon
 		base := ".fc.c bind "+id;
-		tk->cmd(t, base+" <Double-Button-1> {send fc %b "+string i+"}");
-		tk->cmd(t, base+" <Button-2> {send fc %b "+string i+"}");
+		tk->cmd(t, base+" <Double-Button-1> {send fc 1 "+string i+"}");
+		tk->cmd(t, base+" <Button-2> {send fc 2 "+string i+"}");
 		tk->cmd(t, base+" <Motion-Button-2> {}");
-		tk->cmd(t, base+" <Button-3> {send fc %b "+string i+"}");
+		tk->cmd(t, base+" <Button-3> {send fc 3 "+string i+"}");
 		tk->cmd(t, base+" <Motion-Button-3> {}");
+		tk->cmd(t, base+" <Motion-Button-1> {send fc m "+string i+"}");
+
+		# Bindings for the text
+		base = ".fc.c bind "+id_txt;
+		tk->cmd(t, base+" <Double-Button-1> {send fc 1 "+string i+"}");
+		tk->cmd(t, base+" <Button-2> {send fc 2 "+string i+"}");
+		tk->cmd(t, base+" <Motion-Button-2> {}");
+		tk->cmd(t, base+" <Button-3> {send fc 3 "+string i+"}");
+		tk->cmd(t, base+" <Motion-Button-3> {}");
+		tk->cmd(t, base+" <Motion-Button-1> {send fc m "+string i+"}");
+		
 		x += xwid;
 		if(x > w) {
 			x = xwid/2;
-			y += 50;
+			y += 35 + max_lines * 15;
+			max_lines = 1;
 		}
 	}
-	y += 50;
+	y += 35 + max_lines * 15;
 	x = int tk->cmd(t, ".fc.c cget actwidth");
 	tk->cmd(t, ".fc.c configure -scrollregion { 0 0 "+string x+" "+string y+"}");
 }

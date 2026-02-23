@@ -8,8 +8,9 @@ bind -a '#U*'/home /usr
 cd /n/local
 and {ftest -e namespace}	{nsbuild}
 #cd $home
+font=/fonts/pelm/unicode.8.font
 
-# build the user's namespace in $home/
+# build any namespace in cwd /n/local
 and {ftest -e $home/namespace}	{nsbuild $home/namespace}
 
 # Run the local profile

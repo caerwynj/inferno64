@@ -29,6 +29,7 @@ Sqlite: module {
 	column_big:fn(stmt: ref Stmt, col: int): big;
 	column_text:fn(stmt: ref Stmt, col: int): string;
 	column_blob:fn(stmt: ref Stmt, col: int): array of byte;
+	column_count:fn(stmt: ref Stmt): int;
 	finalize:fn(stmt: ref Stmt): int;
 	close:fn(conn: ref Conn): int;
 };

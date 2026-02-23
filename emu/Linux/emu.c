@@ -6,7 +6,7 @@
 
 #include "emu.root.h"
 
-ulong ndevs = 29;
+ulong ndevs = 30;
 
 extern Dev rootdevtab;
 extern Dev consdevtab;
@@ -28,6 +28,7 @@ extern Dev pointerdevtab;
 extern Dev snarfdevtab;
 extern Dev ipdevtab;
 extern Dev eiadevtab;
+extern Dev audiodevtab;
 extern Dev memdevtab;
 Dev* devtab[]={
 	&rootdevtab,
@@ -50,6 +51,7 @@ Dev* devtab[]={
 	&snarfdevtab,
 	&ipdevtab,
 	&eiadevtab,
+	&audiodevtab,
 	&memdevtab,
 	nil,
 	nil,
@@ -74,6 +76,7 @@ extern void keyringmodinit(void);
 extern void cryptmodinit(void);
 extern void ipintsmodinit(void);
 extern void loadermodinit(void);
+extern void sqlitemodinit(void);
 void modinit(void){
 	sysmodinit();
 	drawmodinit();
@@ -84,6 +87,7 @@ void modinit(void){
 	cryptmodinit();
 	ipintsmodinit();
 	loadermodinit();
+	sqlitemodinit();
 }
 
 char* conffile = "emu";
