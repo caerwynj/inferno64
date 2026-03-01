@@ -2127,6 +2127,7 @@ keyringmodinit(void)
 		algs[nalg++] = sav;
 
 	fmtinstall('U', big64conv);
+	fmtinstall('B', big64conv);
 	builtinmod("$Keyring", Keyringmodtab, Keyringmodlen);
 }
 
