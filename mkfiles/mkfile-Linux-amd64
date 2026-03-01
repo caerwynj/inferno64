@@ -23,7 +23,7 @@ CFLAGS=		-g\
 		-DSQLITE_OS_INFERNO\
 
 ANSICPP=
-LD=		cc 
+LD=		cc
 LDFLAGS=
 
 SYSLIBS= -lm
