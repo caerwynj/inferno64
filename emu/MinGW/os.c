@@ -294,6 +294,11 @@ TrapHandler(LPEXCEPTION_POINTERS ureg)
 		_asm { fninit };
 		*/
 	}
+	if (code == EXCEPTION_ACCESS_VIOLATION || code == EXCEPTION_DATATYPE_MISALIGNMENT || code == EXCEPTION_ILLEGAL_INSTRUCTION) {
+		MessageBoxA(NULL, name, "Inferno Fatal Exception", MB_OK | MB_ICONERROR);
+		panic("fatal exception: %s", name);
+	}
+
 	disfault(nil, name);
 	/* not reached */
 	return EXCEPTION_CONTINUE_EXECUTION;

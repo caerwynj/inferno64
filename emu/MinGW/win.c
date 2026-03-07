@@ -45,7 +45,7 @@ static	HINSTANCE	inst;
 static	HINSTANCE	previnst;
 static	int		cmdshow;
 static	HWND		window;
-static	HDC		screen;
+static	HBITMAP		screenbits;
 static	HPALETTE	palette;
 static	int		maxxsize;
 static	int		maxysize;
@@ -237,26 +237,26 @@ attachscreen(Rectangle *r, ulong *chan, int *d, int *width, int *softscreen)
 		}
 	}
 
-	screen = CreateCompatibleDC(NULL);
-	if(screen == nil){
+	HDC memdc = CreateCompatibleDC(NULL);
+	if(memdc == nil){
 		fprint(2, "screen dc nil\n");
 		return nil;
 	}
 
-	if(SelectPalette(screen, palette, 1) == nil){
+	if(SelectPalette(memdc, palette, 1) == nil){
 		fprint(2, "select pallete failed\n");
 	}
-	i = RealizePalette(screen);
+	i = RealizePalette(memdc);
 	GdiFlush();
-	bits = CreateDIBSection(screen, bmi, DIB_RGB_COLORS, (void**)&data, nil, 0);
-	if(bits == nil){
+	screenbits = CreateDIBSection(memdc, bmi, DIB_RGB_COLORS, (void**)&data, nil, 0);
+	if(screenbits == nil){
 		fprint(2, "CreateDIBSection failed\n");
 		return nil;
 	}
 
-	SelectObject(screen, bits);
+	DeleteDC(memdc);
 	GdiFlush();
-	CreateThread(0, 16384, winproc, nil, 0, &h);
+	CreateThread(0, 0, winproc, nil, 0, &h);
 	attached = 1;
 
     Return:
@@ -276,6 +276,9 @@ void
 flushmemscreen(Rectangle r)
 {
 	RECT wr;
+
+	if(window == nil)
+		return;
 
 	if(r.max.x<=r.min.x || r.max.y<=r.min.y)
 		return;
@@ -482,7 +485,17 @@ WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		y = paint.rcPaint.top;
 		w = paint.rcPaint.right - x;
 		h = paint.rcPaint.bottom - y;
-		BitBlt(hdc, x, y, w, h, screen, x, y, SRCCOPY);
+
+		{
+			HDC memdc = CreateCompatibleDC(hdc);
+			HBITMAP oldbits = SelectObject(memdc, screenbits);
+			SelectPalette(memdc, palette, 0);
+			RealizePalette(memdc);
+			BitBlt(hdc, x, y, w, h, memdc, x, y, SRCCOPY);
+			SelectObject(memdc, oldbits);
+			DeleteDC(memdc);
+		}
+
 		EndPaint(hwnd, &paint);
 		break;
 	case WM_GETMINMAXINFO:
@@ -515,9 +528,17 @@ winproc(LPVOID x)
 	WNDCLASSW wc;
 	WNDCLASSA wca;
 	DWORD ws;
+	char errbuf[64];
+
+	if(inst == NULL) {
+		inst = GetModuleHandle(NULL);
+	}
+	if(cmdshow == 0) {
+		cmdshow = SW_SHOW;
+	}
 
 	if(!previnst){
-		wc.style = CS_DBLCLKS;
+		wc.style = CS_DBLCLKS | CS_OWNDC;
 		wc.lpfnWndProc = WindowProc;
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
@@ -525,7 +546,6 @@ winproc(LPVOID x)
 		wc.hIcon = LoadIcon(inst, MAKEINTRESOURCE(100));
 		wc.hCursor = NULL;
 		wc.hbrBackground = GetStockObject(WHITE_BRUSH);
-
 		wc.lpszMenuName = 0;
 		wc.lpszClassName = L"inferno";
 
@@ -543,7 +563,11 @@ winproc(LPVOID x)
 			wca.lpszClassName = "inferno";
 			isunicode = 0;
 
-			RegisterClassA(&wca);
+			if(RegisterClassA(&wca) == 9) {
+				snprint(errbuf, sizeof(errbuf), "RegisterClass failed: %d", (int)GetLastError());
+				MessageBoxA(NULL, errbuf, "Inferno Error", MB_OK | MB_ICONERROR);
+				ExitThread(0);
+			}
 		}
 	}
 
@@ -561,6 +585,9 @@ winproc(LPVOID x)
 		maxxsize = Xsize + 40;
 		maxysize = Ysize + 40;
 	}
+
+	if (maxxsize < 100) maxxsize = 800;
+	if (maxysize < 100) maxysize = 600;
 
 	if(isunicode) {
 		window = CreateWindowExW(
@@ -596,6 +623,8 @@ winproc(LPVOID x)
 
 	if(window == nil){
 		fprint(2, "can't make window\n");
+		snprint(errbuf, sizeof(errbuf), "CreateWindow failed: %d", (int)GetLastError());
+		MessageBoxA(NULL, errbuf, "Inferno ERror", MB_OK | MB_ICONERROR);
 		ExitThread(0);
 	}
 
@@ -625,6 +654,9 @@ setpointer(int x, int y)
 {
 	POINT pt; 
  
+	if (window == nil)
+		return;
+
 	pt.x = x; pt.y = y;
 	ClientToScreen(window, &pt);
 	SetCursorPos(pt.x, pt.y);
@@ -638,12 +670,15 @@ drawcursor(Drawcursor* c)
 	int i, h, j, bpl, ch, cw;
 	uchar *bs, *bc, *and, *xor, *cand, *cxor;
 
+	if (window == nil)
+		return;
+
 	/* Set the default system cursor */
 	if(c->data == nil) {
 		oh = hcursor;
 		hcursor = NULL;
 		if(oh != NULL) {
-			SendMessage(window, WM_SETCURSOR, (int)window, 0);
+			PostMessage(window, WM_SETCURSOR, (WPARAM)window, 0);
 			DestroyCursor(oh);
 		}
 		return;
@@ -687,7 +722,7 @@ drawcursor(Drawcursor* c)
 	if(nh != NULL) {
 		oh = hcursor;
 		hcursor = nh;
-		SendMessage(window, WM_SETCURSOR, (int)window, 0);
+		PostMessage(window, WM_SETCURSOR, (WPARAM)window, 0);
 		if(oh != NULL)
 			DestroyCursor(oh);
 	}else{

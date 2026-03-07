@@ -64,6 +64,7 @@ _string(Image *dst, Point pt, Image *src, Point sp, Font *f, char *s, Rune *r, i
 	char **sptr;
 	Rune **rptr;
 	Font *def;
+	static Rune rnull;
 
 	if(s == nil){
 		s = "";
@@ -71,7 +72,7 @@ _string(Image *dst, Point pt, Image *src, Point sp, Font *f, char *s, Rune *r, i
 	}else
 		sptr = &s;
 	if(r == nil){
-		r = (Rune*) L"";
+		r = &rnull;
 		rptr = nil;
 	}else
 		rptr = &r;

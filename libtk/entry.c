@@ -741,8 +741,10 @@ tkentryget(Tk *tk, char *arg, char **val)
 		}
 	}
 	free(buf);
-	if(last <= first || tke->textlen == 0 || first == tke->textlen)
-		return tkvalue(val, "%S", L"");
+	if(last <= first || tke->textlen == 0 || first == tke->textlen) {
+		static Rune rnull;
+		return tkvalue(val, "%S", &rnull);
+	}
 	return tkvalue(val, "%.*S", last-first, tke->text+first);
 }
 

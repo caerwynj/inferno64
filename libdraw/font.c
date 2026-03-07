@@ -14,10 +14,11 @@ cachechars(Font *f, char **ss, Rune **rr, ushort *cp, int max, int *wp, char **s
 	Rune r, *rp, vr;
 	ulong a;
 	Cacheinfo *c, *tc, *ec;
+	static Rune rnull;
 
 	if(ss){
 		sp = *ss;
-		rp = (Rune*) L"";
+		rp = &rnull;
 	}else{
 		sp = "";
 		rp = *rr;
@@ -385,7 +386,7 @@ fontresize(Font *f, int wid, int ncache, int depth)
 	if(f->ncache != ncache){
 		i = malloc(ncache*sizeof f->cache[0]);
 		if(i != nil){
-			ret = 0;
+			ret = 1;
 			free(f->cache);
 			f->ncache = ncache;
 			f->cache = i;
