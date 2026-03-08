@@ -20,12 +20,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-/*
-#undef kmalloc
-#undef kfree
-#undef kcalloc
-#undef krealloc
-*/
+
+#undef malloc
+#undef free
+#undef calloc
+#undef realloc
 
 #define Colormap	XColormap
 #define Cursor		XCursor

@@ -67,8 +67,6 @@ typedef unsigned int	u32int;
 typedef signed int	s32int;
 typedef unsigned int	u32;
 typedef signed int s32;
-typedef intptr		WORD;
-typedef uintptr		UWORD;
 typedef unsigned short	u16int;
 typedef signed short	s16int;
 typedef unsigned short	u16;

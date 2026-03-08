@@ -19,7 +19,7 @@
 
 OP(indc)
 {
-	int l;
+	long l;
 	WORD v;
 	String *ss;
 
@@ -49,7 +49,7 @@ e:			error(exBounds);
 OP(insc)
 {
 	u32 v;
-	int l, r, expand;
+	long l, r, expand;
 	String *ss, *ns, **sp;
 
 	r = W(s);
@@ -58,6 +58,7 @@ OP(insc)
 
 	expand = r >= Runeself;
 
+	//DP("insc string %s len %d v %zd\n", string2c(ss), ss->len, v);
 	if(ss == H) {
 		ss = newstring(0);
 		if(expand) {
@@ -78,7 +79,7 @@ r:
 			ss->Srune[v] = r;
 		else
 		if(v == l && v < ss->max) {
-			ss->len = -(v+1);
+			ss->len = -((long)v+1);
 			ss->Srune[v] = r;
 		}
 		else {
@@ -89,7 +90,7 @@ r:
 			ns = newstring((v + 1 + v/4)*sizeof(Rune));
 			memmove(ns->Srune, ss->Srune, l*sizeof(Rune));
 			ns->Srune[v] = r;
-			ns->len = -(v+1);
+			ns->len = -((long)v+1);
 			ns->max /= sizeof(Rune);
 			ss = ns;
 		}
@@ -123,7 +124,7 @@ String*
 slicer(u32 start, u32 v, String *ds)
 {
 	String *ns;
-	int l, nc;
+	long l, nc;
 
 	if(ds == H) {
 		if(start == 0 && v == 0)
@@ -181,7 +182,7 @@ addstring(String *s1, String *s2, int append)
 {
 	Rune *r;
 	String *ns;
-	int l, l1, l2;
+	long l, l1, l2;
 
 	if(s1 == H) {
 		if(s2 == H)
@@ -257,7 +258,7 @@ OP(addc)
 
 OP(cvtca)
 {
-	int l;
+	long l;
 	Rune *r;
 	char *p;
 	String *ss;
@@ -301,7 +302,7 @@ OP(cvtac)
 
 OP(lenc)
 {
-	int l;
+	long l;
 	String *ss;
 
 	l = 0;

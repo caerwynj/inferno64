@@ -5,10 +5,10 @@
  *  use the X917 random number generator to create random
  *  numbers (faster than truerand() but not as random).
  */
-ulong
+int
 fastrand(void)
 {
-	ulong x;
+	int x;
 	
 	genrandom((uchar*)&x, sizeof x);
 	return x;

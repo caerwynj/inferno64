@@ -21,7 +21,11 @@ COMMONFILES=\
 	subfont.$O\
 	write.$O\
 
-<mkfile-$SYSTARG		#sets $SYSFILES based on target OS architecture
+SYSFILES=alloc.$O\
+	cload.$O\
+	draw.$O\
+	load.$O\
+	unload.$O\
 
 OFILES=$COMMONFILES $SYSFILES
 
