@@ -100,7 +100,7 @@ y.debug
 /Nt/*/bin/srclist.exe
 /Nt/*/bin/styxtest.exe
 
-/MinGW/*/bin/*
+MinGW/*/bin/*
 
 # ignore 9front, OpenBSD and Inferno native binaries
 /9front/*/bin/*
