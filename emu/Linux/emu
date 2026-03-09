@@ -21,7 +21,7 @@ dev
 
 	ip	ipif6-posix ipaux
 	eia
-#	audio	audio-oss
+	audio	audio-pulse
 	mem
 
 lib
@@ -52,6 +52,7 @@ mod
 	crypt
 	ipints
 	loader
+	sqlite
 #	freetype
 
 port

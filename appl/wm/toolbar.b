@@ -270,10 +270,10 @@ handlerequest(clientid: string, args: list of string): string
 iconify(id, label: string)
 {
 	label = condenselabel(label);
-	e := tk->cmd(tbtop, "button .toolbar." +id+" -command {send task "+id+"} -takefocus 0");
+	e := tk->cmd(tbtop, "button .toolbar." +id+" -relief sunken -height 32 -command {send task "+id+"} -takefocus 0 ");
 	cmd(tbtop, ".toolbar." +id+" configure" + font + " -text '" + label);
 	if(e[0] != '!')
-		cmd(tbtop, "pack .toolbar."+id+" -side left -fill y");
+		cmd(tbtop, "pack .toolbar."+id+" -side left -padx 3 -pady 3 ");
 	cmd(tbtop, "update");
 }
 
@@ -290,14 +290,15 @@ deiconify(id: string)
 layout(top: ref Tk->Toplevel)
 {
 	r := top.screenr;
-	h := 32;
+	h := 64;
 	if(r.dy() < 480)
 		h = tk->rect(top, ".b", Tk->Border|Tk->Required).dy();
-	cmd(top, ". configure -x " + string r.min.x +
+	cmd(top, ". configure -x " + string (r.min.x + 8) +
 			font +
 			" -y " + string (r.max.y - h) +
-			" -width " + string r.dx() +
-			" -height " + string h);
+			" -width " + string (r.dx()-16) +
+			" -height " + string h + 
+			" -bd 1 -relief flat -bg black");
 	cmd(top, "update");
 	tkclient->onscreen(tbtop, "exact");
 }
@@ -313,12 +314,18 @@ toolbar(ctxt: ref Draw->Context, startmenu: int,
 
 	tk->namechan(tbtop, exec, "exec");
 	tk->namechan(tbtop, task, "task");
-	cmd(tbtop, "frame .toolbar");
+	cmd(tbtop, "frame .toolbar -height 64");
 	if (startmenu) {
-		cmd(tbtop, "menubutton .toolbar.start -menu .m -borderwidth 0 -bitmap " + icon);
-		cmd(tbtop, "pack .toolbar.start -side left");
+		cmd(tbtop, "menubutton .toolbar.start -relief flat -menu .m -borderwidth 5 -height 60 -bitmap " + icon);
+		cmd(tbtop, "pack .toolbar.start -side left -fill y -padx 10");
+
+	#	cmd(tbtop, "button .toolbar.home -relief flat -borderwidth 5 -height 60 -bitmap newhome.bit -command {send exec {wmrun wm/filer $home}}");
+	#	cmd(tbtop, "pack .toolbar.home -side right -fill y -padx 10");
+
+	#	cmd(tbtop, "button .toolbar.find -relief flat -borderwidth 5 -height 60 -bitmap find.bit -command {send exec {wmrun wm/man}}");
+	#	cmd(tbtop, "pack .toolbar.find -side right -fill y ");
 	}
-	cmd(tbtop, "pack .toolbar -fill x");
+	cmd(tbtop, "pack .toolbar -fill both");
 	cmd(tbtop, "menu .m");
 	return tbtop;
 }

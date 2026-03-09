@@ -32,7 +32,7 @@ LIBNAMES=${LIBS:%=lib%.a}
 HFILES=\
 
 CFLAGS='-DROOT="'$ROOT'"' -DEMU -I. -I../port -I$ROOT/$SYSTARG/$OBJTYPE/include -I$ROOT/include -I$ROOT/libinterp $CTHREADFLAGS $CFLAGS $EMUOPTIONS
-SYSLIBS= $X11LIBS -lm -lpthread
+SYSLIBS= $X11LIBS -lm -lpthread -lpulse-simple -lpulse
 KERNDATE=`{$NDATE}
 #WRAP='-Wl,--wrap=malloc' '-Wl,--wrap=mallocz' '-Wl,--wrap=free' '-Wl,--wrap=realloc' '-Wl,--wrap=calloc'
 WRAP=

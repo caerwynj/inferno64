@@ -1,0 +1,16 @@
+#!/dis/sh.dis
+
+pctl forkns newpgrp
+p=${pid}
+echo Cards pid $p pgrp `{cat /prog/^$p^/pgrp}
+
+mount {spree/spree} /n/remote
+spree/join 0
+
+waitid = `{sed '' /prog/*/status | sort -n | grep Join | sed 1q | sed 's/^ +([0-9]+) +.*/\1/'}
+pgrp = `{cat /prog/^$waitid^/pgrp}
+echo Join waitid $waitid  pgrp $pgrp
+read < /prog/^$waitid^/wait
+echo DONE WAITING
+unmount /n/remote
+echo killgrp > /prog/^$p^/ctl

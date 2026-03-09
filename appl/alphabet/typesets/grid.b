@@ -6,7 +6,7 @@ include "draw.m";
 include "sh.m";
 include "alphabet/reports.m";
 include "alphabet/endpoints.m";
-include "grid.m";
+include "alphabet/grid.m";
 endpoints: Endpoints;
 
 valuec := array[] of {

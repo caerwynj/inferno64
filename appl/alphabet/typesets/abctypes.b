@@ -10,10 +10,10 @@ include "alphabet.m";
 	Values: import extvalues;
 	proxymod: Proxy;
 	Typescmd, Modulecmd: import Proxy;
-include "abc.m";
+include "alphabet/abc.m";
 	abc: Abc;
 	Value: import abc;
-include "abctypes.m";
+include "alphabet/abctypes.m";
 
 Pcontext: adt {
 	cvt: ref Abccvt;
