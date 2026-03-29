@@ -9,6 +9,7 @@ dev
 	srv
 	dup
 	ssl
+	tls
 	cap
 	fs
 	cmd	cmd
