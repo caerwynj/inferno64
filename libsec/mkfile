@@ -3,11 +3,13 @@
 LIB=libsec.a
 
 CFILES = des.c desmodes.c desECB.c desCBC.c des3ECB.c des3CBC.c\
-	aes.c blowfish.c \
+	aes.c aes_gcm.c blowfish.c \
+	chacha.c chachablock.c poly1305.c ccpoly.c \
 	idea.c \
 	hmac.c md5.c md5block.c md4.c sha1.c sha1block.c\
 	sha2.c sha256block.c sha512block.c\
 	sha1pickle.c md5pickle.c\
+	tsmemcmp.c hkdf.c \
 	rc4.c\
 	genrandom.c prng.c fastrand.c nfastrand.c\
 	probably_prime.c smallprimetest.c genprime.c dsaprimes.c gensafeprime.c genstrongprime.c\

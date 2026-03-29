@@ -32,6 +32,53 @@ void	aesCBCencrypt(uchar *p, int len, AESstate *s);
 void	aesCBCdecrypt(uchar *p, int len, AESstate *s);
 
 /*/////////////////////////////////////////////////////// */
+/* AES-GCM definitions */
+/*/////////////////////////////////////////////////////// */
+typedef struct AESGCMstate AESGCMstate;
+struct AESGCMstate
+{
+	AESstate aes;
+	ulong	gcmH[4];
+	ulong	gcmM[16][256][4];
+};
+
+void	setupAESGCMstate(AESGCMstate *s, uchar *key, int keylen, uchar *iv, int ivlen);
+void	aesgcm_setiv(AESGCMstate *s, uchar *iv, int ivlen);
+void	aesgcm_encrypt(uchar *dat, ulong ndat, uchar *aad, ulong naad, uchar tag[16], AESGCMstate *s);
+int	aesgcm_decrypt(uchar *dat, ulong ndat, uchar *aad, ulong naad, uchar tag[16], AESGCMstate *s);
+
+/*/////////////////////////////////////////////////////// */
+/* ChaCha20 definitions */
+/*/////////////////////////////////////////////////////// */
+enum
+{
+	ChachaBsize=	64,
+	ChachaKeylen=	256/8,
+	ChachaIVlen=	96/8,
+	XChachaIVlen=	192/8,
+	Poly1305dlen=	16,
+};
+
+typedef struct Chachastate Chachastate;
+struct Chachastate
+{
+	u32int	input[16];
+	u32int	xkey[8];
+	int	rounds;
+	int	ivwords;
+};
+
+void	setupChachastate(Chachastate*, uchar*, ulong, uchar*, ulong, int);
+void	chacha_setiv(Chachastate *, uchar*);
+void	chacha_setblock(Chachastate*, u64int);
+void	chacha_encrypt(uchar*, ulong, Chachastate*);
+void	chacha_encrypt2(uchar*, uchar*, ulong, Chachastate*);
+void	hchacha(uchar h[32], uchar *key, ulong keylen, uchar nonce[16], int rounds);
+
+void	ccpoly_encrypt(uchar *dat, ulong ndat, uchar *aad, ulong naad, uchar tag[16], Chachastate *cs);
+int	ccpoly_decrypt(uchar *dat, ulong ndat, uchar *aad, ulong naad, uchar tag[16], Chachastate *cs);
+
+/*/////////////////////////////////////////////////////// */
 /* Blowfish Definitions */
 /*/////////////////////////////////////////////////////// */
 
@@ -184,6 +231,13 @@ DigestState* sha384(uchar*, ulong, uchar*, DigestState*);
 DigestState* sha512(uchar*, ulong, uchar*, DigestState*);
 DigestState* hmac_md5(uchar*, ulong, uchar*, ulong, uchar*, DigestState*);
 DigestState* hmac_sha1(uchar*, ulong, uchar*, ulong, uchar*, DigestState*);
+DigestState* hmac_sha2_256(uchar*, ulong, uchar*, ulong, uchar*, DigestState*);
+DigestState* hmac_sha2_224(uchar*, ulong, uchar*, ulong, uchar*, DigestState*);
+
+int	tsmemcmp(void*, void*, ulong);
+void	hkdf_x(uchar *salt, ulong nsalt, uchar *info, ulong ninfo, uchar *key, ulong nkey, uchar *d, ulong dlen,
+		DigestState* (*x)(uchar*, ulong, uchar*, ulong, uchar*, DigestState*), int xlen);
+
 char* md5pickle(MD5state*);
 MD5state* md5unpickle(char*);
 char* sha1pickle(SHA1state*);
