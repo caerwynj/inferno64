@@ -66,3 +66,15 @@ hmac_sha2_256(uchar *p, ulong len, uchar *key, ulong klen, uchar *digest, Digest
 {
 	return hmac_x(p, len, key, klen, digest, s, sha256, SHA256dlen);
 }
+
+DigestState*
+hmac_sha2_384(uchar *p, ulong len, uchar *key, ulong klen, uchar *digest, DigestState *s)
+{
+	return hmac_x(p, len, key, klen, digest, s, sha384, SHA384dlen);
+}
+
+DigestState*
+hmac_sha2_512(uchar *p, ulong len, uchar *key, ulong klen, uchar *digest, DigestState *s)
+{
+	return hmac_x(p, len, key, klen, digest, s, sha512, SHA512dlen);
+}

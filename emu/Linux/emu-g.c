@@ -64,6 +64,7 @@ extern void keyringmodinit(void);
 extern void cryptmodinit(void);
 extern void ipintsmodinit(void);
 extern void loadermodinit(void);
+extern void tlsmodinit(void);
 void modinit(void){
 	sysmodinit();
 	mathmodinit();
@@ -72,6 +73,7 @@ void modinit(void){
 	cryptmodinit();
 	ipintsmodinit();
 	loadermodinit();
+	tlsmodinit();
 }
 
 	void setpointer(int x, int y){USED(x); USED(y);}
