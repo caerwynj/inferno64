@@ -25,20 +25,26 @@ store128(ulong W[4], uchar b[16])
 static void
 gfmul(ulong X[4], ulong Y[4], ulong Z[4])
 {
-	long m, i;
+	ulong m, x0, x1, x2, x3;
+	long i;
 
+	/* copy to locals so 32-bit word invariant is explicit */
+	x0 = X[0] & 0xFFFFFFFF;
+	x1 = X[1] & 0xFFFFFFFF;
+	x2 = X[2] & 0xFFFFFFFF;
+	x3 = X[3] & 0xFFFFFFFF;
 	Z[0] = Z[1] = Z[2] = Z[3] = 0;
 	for(i=127; i>=0; i--){
-		m = ((long)Y[i>>5] << 31-(i&31)) >> 31;
-		Z[0] ^= X[0] & m;
-		Z[1] ^= X[1] & m;
-		Z[2] ^= X[2] & m;
-		Z[3] ^= X[3] & m;
-		m = ((long)X[0]<<31) >> 31;
-		X[0] = X[0]>>1 | X[1]<<31;
-		X[1] = X[1]>>1 | X[2]<<31;
-		X[2] = X[2]>>1 | X[3]<<31;
-		X[3] = X[3]>>1 ^ (0xE1000000 & m);
+		m = -(((ulong)Y[i>>5] >> (i&31)) & 1);
+		Z[0] ^= x0 & m;
+		Z[1] ^= x1 & m;
+		Z[2] ^= x2 & m;
+		Z[3] ^= x3 & m;
+		m = -(x0 & 1);
+		x0 = x0>>1 | (x1 & 1)<<31;
+		x1 = x1>>1 | (x2 & 1)<<31;
+		x2 = x2>>1 | (x3 & 1)<<31;
+		x3 = x3>>1 ^ (0xE1000000UL & m);
 	}
 }
 

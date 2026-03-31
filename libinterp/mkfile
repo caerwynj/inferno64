@@ -31,6 +31,7 @@ OFILES=\
 	string.$O\
 	sqlite.$O\
 	sqlite3.$O\
+	tls.$O\
 
 
 HFILES=\
@@ -51,6 +52,7 @@ MODULES=\
 	../module/ipints.m\
 	../module/crypt.m\
 	../module/sqlite.m\
+	../module/tls.m\
 	keyringif.m\
 
 <$ROOT/mkfiles/mksyslib-$SHELLTYPE
@@ -94,6 +96,9 @@ keyringif.h:D:	$MODULES keyringif.m
 sqlitemod.h:D: ../module/sqlite.m
 	rm -f $target && limbo -t Sqlite -I../module ../module/sqlite.m > $target
 
+tlsmod.h:D:	$MODULES
+	rm -f $target && limbo -t Tls -I../module ../module/runt.m > $target
+
 bench.h:D:../module/bench.m
 	rm -f $target && limbo -a -I../module ../module/bench.m > $target
 
@@ -111,6 +116,7 @@ loader.$O:	loadermod.h
 freetype.$O:	freetypemod.h $ROOT/include/freetype.h
 math.$O:	$ROOT/include/mathi.h
 sqlite.$O:	sqlitemod.h
+tls.$O:		tlsmod.h runt.h
 
 das-spim.c:N:	das-mips.c
 comp-spim.c:N:	comp-mips.c

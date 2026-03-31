@@ -1,28 +1,5 @@
 # do not edit; automatically generated
 
-%	mem
-*	indir
-/	root
-C	cmd
-D	ssl
-F	tinyfs
-I	ip
-M	mnt
-P	prof
-U	fs
-^	snarf
-a	arch
-c	cons
-d	dup
-e	env
-i	draw
-k	ds
-m	pointer
-p	prog
-s	srv
-|	pipe
-τ	tk
-₪	srv9
 
 α	local use
 β	local use

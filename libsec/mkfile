@@ -5,6 +5,7 @@ LIB=libsec.a
 CFILES = des.c desmodes.c desECB.c desCBC.c des3ECB.c des3CBC.c\
 	aes.c aes_gcm.c blowfish.c \
 	chacha.c chachablock.c poly1305.c ccpoly.c \
+	curve25519.c curve25519_dh.c \
 	idea.c \
 	hmac.c md5.c md5block.c md4.c sha1.c sha1block.c\
 	sha2.c sha256block.c sha512block.c\
@@ -16,6 +17,7 @@ CFILES = des.c desmodes.c desECB.c desCBC.c des3ECB.c des3CBC.c\
 	rsagen.c rsafill.c rsaencrypt.c rsadecrypt.c rsaalloc.c rsaprivtopub.c \
 	eggen.c egencrypt.c egdecrypt.c egalloc.c egprivtopub.c egsign.c egverify.c \
 	dsagen.c dsaalloc.c dsaprivtopub.c dsasign.c dsaverify.c \
+	tlshand.c \
 
 OFILES=${CFILES:%.c=%.$O}
 

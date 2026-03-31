@@ -113,6 +113,7 @@ struct TlsRec
 	int		ref;				/* serialized by tdlock for atomic destroy */
 	int		version;			/* version of the protocol we are speaking */
 	char		verset;			/* version has been set */
+	char		tls13;			/* TLS 1.3 mode */
 	char		opened;			/* opened command every issued? */
 	char		err[ERRMAX];		/* error message to return to handshake requests */
 	vlong	handin;			/* bytes communicated by the record layer */
@@ -250,6 +251,10 @@ static int	ccpoly_aead_enc(Secret *sec, uchar *aad, int aadlen, uchar *reciv, uc
 static int	ccpoly_aead_dec(Secret *sec, uchar *aad, int aadlen, uchar *reciv, uchar *data, int len);
 static int	aesgcm_aead_enc(Secret *sec, uchar *aad, int aadlen, uchar *reciv, uchar *data, int len);
 static int	aesgcm_aead_dec(Secret *sec, uchar *aad, int aadlen, uchar *reciv, uchar *data, int len);
+static int	aesgcm_aead_enc_tls13(Secret *sec, uchar *aad, int aadlen, uchar *reciv, uchar *data, int len);
+static int	aesgcm_aead_dec_tls13(Secret *sec, uchar *aad, int aadlen, uchar *reciv, uchar *data, int len);
+static int	ccpoly_aead_enc_tls13(Secret *sec, uchar *aad, int aadlen, uchar *reciv, uchar *data, int len);
+static int	ccpoly_aead_dec_tls13(Secret *sec, uchar *aad, int aadlen, uchar *reciv, uchar *data, int len);
 static int	noenc(Secret *sec, uchar *buf, int n);
 static int	sslunpad(uchar *buf, int n, int block);
 static int	tlsunpad(uchar *buf, int n, int block);
@@ -822,13 +827,30 @@ tlsrecread(TlsRec *tr)
 		if(unpad_len >= sec->maclen)
 			len = unpad_len - sec->maclen;
 
-		/* update length */
-		put16(header+3, len);
-		aadlen = (*tr->packAAD)(in->seq++, header, aad);
+		if(tr->tls13 && sec->aead_dec != nil){
+			/* TLS 1.3: AAD uses ciphertext length (incl. tag) from wire */
+			aadlen = (*tr->packAAD)(in->seq++, header, aad);
+			/* update length for record routing below */
+			put16(header+3, len);
+		} else {
+			/* TLS 1.2: AAD uses plaintext length */
+			put16(header+3, len);
+			aadlen = (*tr->packAAD)(in->seq++, header, aad);
+		}
 		if(sec->aead_dec != nil) {
 			len = (*sec->aead_dec)(sec, aad, aadlen, p - ivlen, p, unpad_len);
 			if(len < 0)
 				rcvError(tr, EBadRecordMac, "record mac mismatch");
+			/* TLS 1.3: outer type is always application_data; real type is last byte */
+			if(tr->tls13 && type == RApplication){
+				while(len > 0 && p[len-1] == 0)
+					len--;
+				if(len <= 0)
+					rcvError(tr, EDecodeError, "tls13: empty record");
+				type = p[len-1];
+				len--;
+				header[0] = type;
+			}
 		} else {
 			packMac(sec, aad, aadlen, p, len, hmac);
 			if(unpad_len < sec->maclen)
@@ -906,7 +928,8 @@ tlsrecread(TlsRec *tr)
 			dechandq(tr);
 		}else{
 			unlock(&tr->hqlock);
-			if(tr->verset && tr->version != SSL3Version && !waserror()){
+			/* TLS 1.3: post-handshake messages (e.g. NewSessionTicket) are silently discarded */
+			if(!tr->tls13 && tr->verset && tr->version != SSL3Version && !waserror()){
 				sendAlert(tr, ENoRenegotiation);
 				poperror();
 			}
@@ -1252,6 +1275,9 @@ tlsrecwrite(TlsRec *tr, int type, Block *b)
 		if(sec != nil){
 			maclen = sec->maclen;
 			pad = maclen + sec->block;
+			/* TLS 1.3: extra byte for inner content type appended to plaintext */
+			if(tr->tls13 && type != RChangeCipherSpec)
+				pad++;
 			ivlen = sec->recivlen;
 			if(tr->version >= TLS11Version){
 				if(ivlen == 0)
@@ -1278,7 +1304,24 @@ tlsrecwrite(TlsRec *tr, int type, Block *b)
 		put16(p+1, tr->version);
 		put16(p+3, n);
 
-		if(sec != nil){
+		if(sec != nil && tr->tls13 && type != RChangeCipherSpec){
+			/*
+			 * TLS 1.3: outer type = application_data (0x17);
+			 * append real type byte to plaintext (TLSInnerPlaintext).
+			 * Need 1 extra byte; the -pad reserve includes the tag so extend wp.
+			 */
+			nb->wp[0] = type;	/* real content type appended */
+			nb->wp++;
+			n++;
+			p[0] = RApplication;
+			put16(p+1, TLS12Version);
+			/* TLS 1.3: AAD length field must be the final ciphertext+tag length, not plaintext */
+			put16(p+3, n + sec->maclen + ivlen);
+			aadlen = (*tr->packAAD)(out->seq++, p, aad);
+			n = (*sec->aead_enc)(sec, aad, aadlen, p + RecHdrLen, p + RecHdrLen, n) + ivlen;
+			nb->wp = p + RecHdrLen + n;
+			put16(p+3, n);
+		} else if(sec != nil){
 			aadlen = (*tr->packAAD)(out->seq++, p, aad);
 			if(sec->aead_enc != nil)
 				n = (*sec->aead_enc)(sec, aad, aadlen, p + RecHdrLen, p + RecHdrLen + ivlen, n) + ivlen;
@@ -1425,6 +1468,9 @@ struct Encalg
 	void	(*initkey)(Encalg *ea, Secret *, uchar*, uchar*);
 };
 
+static void	initaesgcmkey_tls13(Encalg *ea, Secret *s, uchar *p, uchar *iv);
+static void	initccpolykey_tls13(Encalg *ea, Secret *s, uchar *p, uchar *iv);
+
 static void
 initRC4key(Encalg *ea, Secret *s, uchar *p, uchar *iv)
 {
@@ -1505,6 +1551,9 @@ static Encalg encrypttab[] =
 	{ "ccpoly96_aead", 256/8, 96/8, initccpolykey },
 	{ "aes_128_gcm_aead", 128/8, 4, initaesgcmkey },
 	{ "aes_256_gcm_aead", 256/8, 4, initaesgcmkey },
+	{ "aes_128_gcm_aead_tls13", 128/8, 12, initaesgcmkey_tls13 },
+	{ "aes_256_gcm_aead_tls13", 256/8, 12, initaesgcmkey_tls13 },
+	{ "ccpoly96_aead_tls13",    256/8, 12, initccpolykey_tls13 },
 	{ 0 }
 };
 
@@ -1615,6 +1664,13 @@ tlswrite(Chan *c, void *a, long n, vlong off)
 			tr->packAAD = tlsPackAAD;
 		tr->verset = 1;
 		tr->version = m;
+	}else if(strcmp(cb->f[0], "tls13") == 0){
+		if(cb->nf != 2)
+			error("usage: tls13 1");
+		if(strtol(cb->f[1], nil, 0) == 1){
+			tr->tls13 = 1;
+			tr->packAAD = tlsPackAAD;	/* seqno[8]+header[5]=13 bytes; TLS 1.3 AEADs use header-only for cipher */
+		}
 	}else if(strcmp(cb->f[0], "secret") == 0){
 		if(cb->nf != 5)
 			error("usage: secret hashalg encalg isclient secretdata");
@@ -1689,16 +1745,37 @@ tlswrite(Chan *c, void *a, long n, vlong off)
 		if(tr->out.new == nil)
 			error("cannot change cipher spec without setting secret");
 
-		qunlock(&tr->in.seclock);
-		qunlock(&tr->out.seclock);
-		poperror();
-		free(cb);
-		poperror();
+		/* TLS 1.3 app key switch: do NOT send a second CCS.
+		 * Sending an encrypted CCS after the handshake is not permitted.
+		 * Only the first CCS (while out->sec == nil) is sent unencrypted for compat. */
+		if(tr->tls13 && tr->out.sec != nil){
+			freeSec(tr->out.sec);
+			tr->out.sec = tr->out.new;
+			tr->out.new = nil;
+			tr->out.seq = 0;
+			/* fall through to normal exit to release locks */
+		} else {
+			qunlock(&tr->in.seclock);
+			qunlock(&tr->out.seclock);
+			poperror();
+			free(cb);
+			poperror();
 
-		b = allocb(1);
-		*b->wp++ = 1;
-		tlsrecwrite(tr, RChangeCipherSpec, b);
-		return n;
+			b = allocb(1);
+			*b->wp++ = 1;
+			tlsrecwrite(tr, RChangeCipherSpec, b);
+			return n;
+		}
+	}else if(strcmp(cb->f[0], "setin") == 0){
+		/* TLS 1.3: explicitly activate pending in->new without waiting for incoming CCS */
+		if(cb->nf != 1)
+			error("usage: setin");
+		if(tr->in.new == nil)
+			error("no incoming cipher pending");
+		freeSec(tr->in.sec);
+		tr->in.sec = tr->in.new;
+		tr->in.new = nil;
+		tr->in.seq = 0;
 	}else if(strcmp(cb->f[0], "opened") == 0){
 		if(cb->nf != 1)
 			error("usage: opened");
@@ -2163,6 +2240,94 @@ aesgcm_aead_dec(Secret *sec, uchar *aad, int aadlen, uchar *reciv, uchar *data, 
 	if(aesgcm_decrypt(data, len, aad, aadlen, data+len, sec->enckey) != 0)
 		return -1;
 	return len;
+}
+
+/*
+ * TLS 1.3 AES-GCM AEAD: XOR 12-byte IV with seq; AAD is only the 5-byte record header.
+ * aad[0..7] = sequence number (from packAAD), aad[8..12] = record header.
+ * recivlen = 0 so no explicit IV in record.
+ */
+static int
+aesgcm_aead_enc_tls13(Secret *sec, uchar *aad, int aadlen, uchar *reciv, uchar *data, int len)
+{
+	uchar iv[12];
+	int i;
+	USED(reciv);
+	memmove(iv, sec->mackey, 12);
+	for(i=0; i<8; i++) iv[4+i] ^= aad[i];
+	aesgcm_setiv(sec->enckey, iv, 12);
+	memset(iv, 0, sizeof(iv));
+	aesgcm_encrypt(data, len, aad+8, aadlen-8, data+len, sec->enckey);
+	return len + sec->maclen;
+}
+
+static int
+aesgcm_aead_dec_tls13(Secret *sec, uchar *aad, int aadlen, uchar *reciv, uchar *data, int len)
+{
+	uchar iv[12];
+	int i;
+	USED(reciv);
+	len -= sec->maclen;
+	if(len < 0)
+		return -1;
+	memmove(iv, sec->mackey, 12);
+	for(i=0; i<8; i++) iv[4+i] ^= aad[i];
+	aesgcm_setiv(sec->enckey, iv, 12);
+	memset(iv, 0, sizeof(iv));
+	if(aesgcm_decrypt(data, len, aad+8, aadlen-8, data+len, sec->enckey) != 0)
+		return -1;
+	return len;
+}
+
+static void
+initaesgcmkey_tls13(Encalg *ea, Secret *s, uchar *p, uchar *iv)
+{
+	s->enckey = secalloc(sizeof(AESGCMstate));
+	s->aead_enc = aesgcm_aead_enc_tls13;
+	s->aead_dec = aesgcm_aead_dec_tls13;
+	s->maclen = 16;
+	s->recivlen = 0;
+	memmove(s->mackey, iv, ea->ivlen);	/* full 12-byte static IV */
+	setupAESGCMstate(s->enckey, p, ea->keylen, nil, 0);
+}
+
+/* TLS 1.3 ChaCha20-Poly1305: XOR IV, AAD is 5-byte header only. */
+static int
+ccpoly_aead_enc_tls13(Secret *sec, uchar *aad, int aadlen, uchar *reciv, uchar *data, int len)
+{
+	uchar seq[8];
+	USED(reciv);
+	memmove(seq, aad, 8);
+	ccpoly_aead_setiv(sec, seq);
+	ccpoly_encrypt(data, len, aad+8, aadlen-8, data+len, sec->enckey);
+	return len + sec->maclen;
+}
+
+static int
+ccpoly_aead_dec_tls13(Secret *sec, uchar *aad, int aadlen, uchar *reciv, uchar *data, int len)
+{
+	uchar seq[8];
+	USED(reciv);
+	len -= sec->maclen;
+	if(len < 0)
+		return -1;
+	memmove(seq, aad, 8);
+	ccpoly_aead_setiv(sec, seq);
+	if(ccpoly_decrypt(data, len, aad+8, aadlen-8, data+len, sec->enckey) != 0)
+		return -1;
+	return len;
+}
+
+static void
+initccpolykey_tls13(Encalg *ea, Secret *s, uchar *p, uchar *iv)
+{
+	s->enckey = secalloc(sizeof(Chachastate));
+	s->aead_enc = ccpoly_aead_enc_tls13;
+	s->aead_dec = ccpoly_aead_dec_tls13;
+	s->maclen = Poly1305dlen;
+	s->recivlen = 0;
+	memmove(s->mackey, iv, ea->ivlen);
+	setupChachastate(s->enckey, p, ea->keylen, iv, ea->ivlen, 20);
 }
 
 static DigestState*

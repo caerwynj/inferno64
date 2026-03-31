@@ -79,6 +79,7 @@ extern void cryptmodinit(void);
 extern void ipintsmodinit(void);
 extern void loadermodinit(void);
 extern void sqlitemodinit(void);
+extern void tlsmodinit(void);
 void modinit(void){
 	sysmodinit();
 	drawmodinit();
@@ -90,6 +91,7 @@ void modinit(void){
 	ipintsmodinit();
 	loadermodinit();
 	sqlitemodinit();
+	tlsmodinit();
 }
 
 char* conffile = "emu";

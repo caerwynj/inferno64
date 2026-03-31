@@ -233,6 +233,8 @@ DigestState* hmac_md5(uchar*, ulong, uchar*, ulong, uchar*, DigestState*);
 DigestState* hmac_sha1(uchar*, ulong, uchar*, ulong, uchar*, DigestState*);
 DigestState* hmac_sha2_256(uchar*, ulong, uchar*, ulong, uchar*, DigestState*);
 DigestState* hmac_sha2_224(uchar*, ulong, uchar*, ulong, uchar*, DigestState*);
+DigestState* hmac_sha2_384(uchar*, ulong, uchar*, ulong, uchar*, DigestState*);
+DigestState* hmac_sha2_512(uchar*, ulong, uchar*, ulong, uchar*, DigestState*);
 
 int	tsmemcmp(void*, void*, ulong);
 void	hkdf_x(uchar *salt, ulong nsalt, uchar *info, ulong ninfo, uchar *key, ulong nkey, uchar *d, ulong dlen,
@@ -427,9 +429,19 @@ typedef struct TLSconn{
 	uchar *cert;   /* certificate (local on input, remote on output) */
 	uchar *sessionID;
 	int certlen, sessionIDlen;
+	char *serverName;  /* SNI hostname */
+	uchar *psk;        /* pre-shared key (optional) */
+	int psklen;
+	char *pskID;       /* PSK identity string */
 	int (*trace)(char*fmt, ...);
 	PEMChain *chain; /* optional extra certificate evidence for servers to present */
 } TLSconn;
+
+/* curve25519.c / curve25519_dh.c */
+void	curve25519(uchar mypublic[32], uchar secret[32], uchar basepoint[32]);
+int	x25519(uchar out[32], uchar s[32], uchar u[32]);
+void	curve25519_dh_new(uchar x[32], uchar y[32]);
+int	curve25519_dh_finish(uchar x[32], uchar y[32], uchar z[32]);
 
 /* tlshand.c */
 int tlsClient(int fd, TLSconn *c);
