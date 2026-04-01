@@ -159,6 +159,7 @@ initc(ctxt: ref Context)
 	(retval, nil) = sys->stat("/net/cs");
 	if(retval < 0)
 		startcs();
+	sys->bind("#T", "/dev", sys->MAFTER);
 
 	pgrp = sys->pctl(sys->NEWPGRP, nil);
 	CU = load CharonUtils CharonUtils->PATH;

@@ -65,7 +65,7 @@ SYSMODULES=\
 	draw.m\
 	ecmascript.m\
 	sh.m\
-	ssl3.m\
+	tls.m\
 	string.m\
 	strinttab.m\
 	sys.m\

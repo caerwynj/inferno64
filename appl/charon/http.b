@@ -5,45 +5,7 @@ include "transport.m";
 include "date.m";
 
 #D: Date;
-# sslhs: SSLHS;
-ssl3: SSL3;
-Context: import ssl3;
-# Inferno supported cipher suites:
-ssl_suites := array [] of {
-	byte 0, byte 16r03,	# RSA_EXPORT_WITH_RC4_40_MD5
-	byte 0, byte 16r04,	# RSA_WITH_RC4_128_MD5
-	byte 0, byte 16r05,	# RSA_WITH_RC4_128_SHA
-	byte 0, byte 16r06,	# RSA_EXPORT_WITH_RC2_CBC_40_MD5
-	byte 0, byte 16r07,	# RSA_WITH_IDEA_CBC_SHA
-	byte 0, byte 16r08,	# RSA_EXPORT_WITH_DES40_CBC_SHA
-	byte 0, byte 16r09,	# RSA_WITH_DES_CBC_SHA
-	byte 0, byte 16r0A,	# RSA_WITH_3DES_EDE_CBC_SHA
-	
-	byte 0, byte 16r0B,	# DH_DSS_EXPORT_WITH_DES40_CBC_SHA
-	byte 0, byte 16r0C,	# DH_DSS_WITH_DES_CBC_SHA
-	byte 0, byte 16r0D,	# DH_DSS_WITH_3DES_EDE_CBC_SHA
-	byte 0, byte 16r0E,	# DH_RSA_EXPORT_WITH_DES40_CBC_SHA
-	byte 0, byte 16r0F,	# DH_RSA_WITH_DES_CBC_SHA
-	byte 0, byte 16r10,	# DH_RSA_WITH_3DES_EDE_CBC_SHA
-	byte 0, byte 16r11,	# DHE_DSS_EXPORT_WITH_DES40_CBC_SHA
-	byte 0, byte 16r12,	# DHE_DSS_WITH_DES_CBC_SHA
-	byte 0, byte 16r13,	# DHE_DSS_WITH_3DES_EDE_CBC_SHA
-	byte 0, byte 16r14,	# DHE_RSA_EXPORT_WITH_DES40_CBC_SHA
-	byte 0, byte 16r15,	# DHE_RSA_WITH_DES_CBC_SHA
-	byte 0, byte 16r16,	# DHE_RSA_WITH_3DES_EDE_CBC_SHA
-	
-	byte 0, byte 16r17,	# DH_anon_EXPORT_WITH_RC4_40_MD5
-	byte 0, byte 16r18,	# DH_anon_WITH_RC4_128_MD5
-	byte 0, byte 16r19,	# DH_anon_EXPORT_WITH_DES40_CBC_SHA
-	byte 0, byte 16r1A,	# DH_anon_WITH_DES_CBC_SHA
-	byte 0, byte 16r1B,	# DH_anon_WITH_3DES_EDE_CBC_SHA
-	
-	byte 0, byte 16r1C,	# FORTEZZA_KEA_WITH_NULL_SHA
-	byte 0, byte 16r1D,	# FORTEZZA_KEA_WITH_FORTEZZA_CBC_SHA
-	byte 0, byte 16r1E,	# FORTEZZA_KEA_WITH_RC4_128_SHA
-};
-
-ssl_comprs := array [] of {byte 0};
+tls: Tls;
 
 # local copies from CU
 sys: Sys;
@@ -224,15 +186,12 @@ HTTP_Header: adt {
 	protominor: int;
 	code: int;
 	reason: string;
-	iossl: int; # true for ssl 
-
 	vals: array of string;
 	cookies: list of string;
 
 	new: fn() : ref HTTP_Header;
- 	read: fn(h: self ref HTTP_Header, fd: ref sys->FD, sslx: ref SSL3->Context, buf: array of byte) : (string, int, int);
- 	write: fn(h: self ref HTTP_Header, fd: ref sys->FD, sslx: ref SSL3->Context) : int;
-	usessl: fn(h: self ref HTTP_Header);
+	read: fn(h: self ref HTTP_Header, fd: ref sys->FD, buf: array of byte) : (string, int, int);
+	write: fn(h: self ref HTTP_Header, fd: ref sys->FD) : int;
 	addval: fn(h: self ref HTTP_Header, key: int, val: string);
 	getval: fn(h: self ref HTTP_Header, key: int) : string;
 };
@@ -260,8 +219,6 @@ init(cu: CharonUtils)
 #		CU->raise(sys->sprint("EXInternal: can't load Date: %r"));
 #	D->init(cu);
 	ctype = C->ctype;
-	# sslhs = nil;	# load on demand
-	ssl3 = nil; # load on demand
 	mediatable = CU->makestrinttab(CU->mnames);
 	agent = (CU->config).agentname;
 	dbg = int (CU->config).dbg['n'];
@@ -300,44 +257,20 @@ connect(nc: ref Netconn, bs: ref ByteSource)
 		if(dbg)
 			sys->print("http %d: connected\n", nc.id);
 		if(nc.tstate&TSSL) {
-			#if(sslhs == nil) {
-			#	sslhs = load SSLHS SSLHS->PATH;
-			#	if(sslhs == nil)
-			#		err = sys->sprint("can't load SSLHS: %r");
-			#	else
-			#		sslhs->init(2);
-			#}
-			#if(err == "")
-			#	(err, nc.conn) = sslhs->client(nc.conn.dfd, addr);
-			if(nc.tstate&TProxy) # tunelling SSL through proxy
+			if(nc.tstate&TProxy) # tunnelling TLS through proxy
 				err = tunnel_ssl(nc);
-	 		vers := 0;
- 			if(err == "") {
-				if(ssl3 == nil) {
-	 				m := load SSL3 SSL3->PATH;
- 					if(m == nil)
- 						err = "can't load SSL3 module";
-					else if((err = m->init()) == nil)
-						ssl3 = m;
+			if(err == "") {
+				if(tls == nil) {
+					m := load Tls Tls->PATH;
+					if(m == nil)
+						err = sys->sprint("can't load Tls module: %r");
+					else
+						tls = m;
 				}
-				if(config.usessl == CU->NOSSL)
-					err = "ssl is configured off";
-				else if((config.usessl & CU->SSLV23) == CU->SSLV23)
-					vers = 23;
-	 			else if(config.usessl & CU->SSLV2)
-					vers = 2;
-	 			else if(config.usessl & CU->SSLV3)
-					vers = 3;
 			}
- 			if(err == "") {
- 				nc.sslx = ssl3->Context.new();
- 				if(config.devssl)
- 					nc.sslx.use_devssl();
- 				info := ref SSL3->Authinfo(ssl_suites, ssl_comprs, nil, 
- 						0, nil, nil, nil);
-vers = 3;
- 				(err, nc.vers) =  nc.sslx.client(nc.conn.dfd, addr, vers, info);
- 			}
+			if(err == "") {
+				(nc.tlsfd, err) = tls->tlsclient(nc.conn.dfd, nc.host);
+			}
 		}
 	}
 	if(err == "") {
@@ -413,6 +346,13 @@ need_proxy(h: string) : int
 	return 1;
 }
 
+activefd(nc: ref Netconn) : ref Sys->FD
+{
+	if(nc.tlsfd != nil)
+		return nc.tlsfd;
+	return nc.conn.dfd;
+}
+
 writereq(nc: ref Netconn, bs: ref ByteSource)
 {
 	#
@@ -435,8 +375,6 @@ writereq(nc: ref Netconn, bs: ref ByteSource)
 	else
 		httpvers = "1.1";
 	reqhdr := HTTP_Header.new();
- 	if(nc.tstate&TSSL)
- 		reqhdr.usessl();
 	reqhdr.startline = CU->hmeth[req.method] + " " +  requ + " HTTP/" + httpvers;
 	if(u.port != "")
 		reqhdr.addval(HHost, u.host+ ":" + u.port);
@@ -467,16 +405,13 @@ writereq(nc: ref Netconn, bs: ref ByteSource)
 	err := "";
 	if(dbg > 1) {
 		sys->print("http %d: writing request:\n", nc.id);
-		reqhdr.write(sys->fildes(1), nil);
+		reqhdr.write(sys->fildes(1));
 	}
-	rv := reqhdr.write(nc.conn.dfd, nc.sslx);
+	rv := reqhdr.write(activefd(nc));
 	if(rv >= 0 && req.method == CU->HPost) {
 		if(dbg > 1)
 			sys->print("http %d: writing body:\n%s\n", nc.id, string req.body);
- 		if((nc.tstate&TSSL) && nc.sslx != nil)
- 			rv = nc.sslx.write(req.body, len req.body);
- 		else
- 			rv = sys->write(nc.conn.dfd, req.body, len req.body);
+		rv = sys->write(activefd(nc), req.body, len req.body);
 	}
 	if(rv < 0) {
 		err = sys->sprint("error writing to host: %r");
@@ -494,10 +429,8 @@ writereq(nc: ref Netconn, bs: ref ByteSource)
 gethdr(nc: ref Netconn, bs: ref ByteSource)
 {
 	resph := HTTP_Header.new();
- 	if(nc.tstate&TSSL)
- 		resph.usessl();
 	hbuf := array[8000] of byte;
- 	(err, i, j) := resph.read(nc.conn.dfd, nc.sslx, hbuf);
+	(err, i, j) := resph.read(activefd(nc), hbuf);
 	if(err != "") {
 #constate("gethdr", nc.conn);
 		if(!(nc.tstate&THTTP_1_0)) {
@@ -510,7 +443,7 @@ gethdr(nc: ref Netconn, bs: ref ByteSource)
 	else {
 		if(dbg) {
 			sys->print("http %d: got response header:\n", nc.id);
-			resph.write(sys->fildes(1), nil);
+			resph.write(sys->fildes(1));
 			sys->print("http %d: %d bytes remaining from read\n", nc.id, j-i);
 		}
 		if(resph.protomajor == 1) {
@@ -565,10 +498,7 @@ getdata(nc: ref Netconn, bs: ref ByteSource): int
 		nc.tbuf = nc.tbuf[n:];
 		return n;
 	}
-	if ((nc.tstate&TSSL) && nc.sslx != nil) 
-		n = nc.sslx.read(buf, n);
-	else
-		n = sys->read(nc.conn.dfd, buf, n);
+	n = sys->read(activefd(nc), buf, n);
 	if(dbg > 1)
 		sys->print("http %d: read %d bytes\n", nc.id, n);
 	if (n <= 0) {
@@ -729,12 +659,7 @@ remquotes(s: string) : string
 
 HTTP_Header.new() : ref HTTP_Header
 {
-	return ref HTTP_Header("", 0, 0, 0, "", 0, array[NumHfields] of { * => "" }, nil);
-}
-
-HTTP_Header.usessl(h: self ref HTTP_Header)
-{
- 	h.iossl = 1;
+	return ref HTTP_Header("", 0, 0, 0, "", array[NumHfields] of { * => "" }, nil);
 }
 
 HTTP_Header.addval(h: self ref HTTP_Header, key: int, val: string)
@@ -774,18 +699,13 @@ HTTP_Header.getval(h: self ref HTTP_Header, key: int) : string
 # If bytes > 127 appear, assume Latin-1
 #
 # Header values added will always be trimmed (see trim() above).
-HTTP_Header.read(h: self ref HTTP_Header, fd: ref sys->FD, sslx: ref SSL3->Context, buf: array of byte) : (string, int, int)
+HTTP_Header.read(h: self ref HTTP_Header, fd: ref sys->FD, buf: array of byte) : (string, int, int)
 {
 	i := 0;
 	j := 0;
 	aline : array of byte = nil;
 	eof := 0;
- 	if(h.iossl && sslx != nil) {
- 		(aline, eof, i, j) = ssl_getline(sslx, buf, i, j);
- 	}
- 	else {
- 		(aline, eof, i, j) = CU->getline(fd, buf, i, j);
- 	}
+	(aline, eof, i, j) = CU->getline(fd, buf, i, j);
 	if(aline == nil) {
 		return ("header read got immediate eof", 0, 0);
 	}
@@ -826,12 +746,7 @@ HTTP_Header.read(h: self ref HTTP_Header, fd: ref sys->FD, sslx: ref SSL3->Conte
 	
 	prevkey := -1;
 	while(len aline > 0) {
- 		if(h.iossl && sslx != nil) {
- 			(aline, eof, i, j) = ssl_getline(sslx, buf, i, j);
- 		}
- 		else {
- 			(aline, eof, i, j) = CU->getline(fd, buf, i, j);
- 		}
+		(aline, eof, i, j) = CU->getline(fd, buf, i, j);
 		if(eof)
 			return ("header doesn't end with blank line", 0, 0);
 		if(len aline == 0)
@@ -871,7 +786,7 @@ HTTP_Header.read(h: self ref HTTP_Header, fd: ref sys->FD, sslx: ref SSL3->Conte
 
 # Write in big hunks.  Convert to Latin1.
 # Return last sys->write return value.
-HTTP_Header.write(h: self ref HTTP_Header, fd: ref sys->FD, sslx: ref SSL3->Context) : int
+HTTP_Header.write(h: self ref HTTP_Header, fd: ref sys->FD) : int
 {
 	# Expect almost all responses will fit in this sized buf
 	buf := array[sys->ATOMICIO] of byte;
@@ -904,12 +819,7 @@ HTTP_Header.write(h: self ref HTTP_Header, fd: ref sys->FD, sslx: ref SSL3->Cont
 	buf[i++] = byte '\n';
 	n := 0;
 	for(k := 0; k < i; ) {
- 		if(h.iossl && sslx != nil) {
- 			n = sslx.write(buf[k:], i-k);
- 		}
- 		else {
- 			n = sys->write(fd, buf[k:], i-k);
- 		}
+		n = sys->write(fd, buf[k:], i-k);
 		if(n <= 0)
 			break;
 		k += n;
@@ -979,39 +889,7 @@ closeconn(nc: ref Netconn)
 {
 	nc.conn = nil;
 	nc.connected = 0;
-	nc.sslx = nil;
-}
-
-ssl_getline(sslx: ref SSL3->Context, buf: array of byte, bstart, bend: int)
-	:(array of byte, int, int, int)
-{
- 	ans : array of byte = nil;
- 	last : array of byte = nil;
- 	eof := 0;
-mainloop:
- 	for(;;) {
- 		for(i := bstart; i < bend; i++) {
- 			if(buf[i] == byte '\n') {
- 				k := i;
- 				if(k > bstart && buf[k-1] == byte '\r')
- 					k--;
- 				last = buf[bstart:k];
- 				bstart = i+1;
- 				break mainloop;
- 			}
- 		}
- 		if(bend > bstart)
- 			ans = append(ans, buf[bstart:bend]);
- 		last = nil;
- 		bstart = 0;
- 		bend = sslx.read(buf, len buf);
- 		if(bend <= 0) {
- 			eof = 1;
- 			bend = 0;
- 			break mainloop;
- 		}
- 	}
- 	return (append(ans, last), eof, bstart, bend);
+	nc.tlsfd = nil;
 }
  
 # Append copy of second array to first, return (possibly new)
