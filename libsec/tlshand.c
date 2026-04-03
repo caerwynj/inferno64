@@ -54,10 +54,27 @@ enum {
 	/* named groups */
 	X25519group		= 0x001d,
 
-	/* cipher suites */
+	/* TLS 1.3 cipher suites */
 	TLS_AES_128_GCM_SHA256		= 0x1301,
 	TLS_AES_256_GCM_SHA384		= 0x1302,
 	TLS_CHACHA20_POLY1305_SHA256	= 0x1303,
+
+	/* RFC 5746: renegotiation SCSV — servers with secure-renegotiation require this */
+	TLS_EMPTY_RENEGOTIATION_INFO_SCSV		= 0x00ff,
+
+	/* TLS 1.2 cipher suites (ECDHE with X25519, RFC 8422) */
+	TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256		= 0xc02f,
+	TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384		= 0xc030,
+	TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256	= 0xcca8,
+	TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256	= 0xc02b,
+	TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384	= 0xc02c,
+	TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256	= 0xcca9,
+
+	/* TLS 1.2 handshake message types */
+	HServerKeyExchange	= 12,
+	HCertificateRequest	= 13,
+	HServerHelloDone	= 14,
+	HClientKeyExchange	= 16,
 
 	RandomSize	= 32,
 	X25519Size	= 32,
@@ -94,6 +111,36 @@ findSuite(int id)
 	for(i = 0; i < nelem(suites); i++)
 		if(suites[i].id == id)
 			return &suites[i];
+	return nil;
+}
+
+typedef struct Suite12 Suite12;
+struct Suite12 {
+	int	id;
+	char	*encalg;	/* devtls cipher name */
+	int	keylen;		/* per-direction key bytes */
+	int	ivlen;		/* per-direction IV bytes (4 for GCM, 12 for ChaCha20) */
+	int	hashlen;	/* 32 or 48 */
+	DigestState* (*hmac)(uchar*,ulong,uchar*,ulong,uchar*,DigestState*);
+	DigestState* (*hash)(uchar*,ulong,uchar*,DigestState*);
+};
+
+static Suite12 suites12[] = {
+	{TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,         "aes_128_gcm_aead",    16,  4, 32, hmac_sha2_256, sha256},
+	{TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,         "aes_256_gcm_aead",    32,  4, 48, hmac_sha2_384, sha384},
+	{TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,   "ccpoly96_aead_tls13", 32, 12, 32, hmac_sha2_256, sha256},
+	{TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,       "aes_128_gcm_aead",    16,  4, 32, hmac_sha2_256, sha256},
+	{TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,       "aes_256_gcm_aead",    32,  4, 48, hmac_sha2_384, sha384},
+	{TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256, "ccpoly96_aead_tls13", 32, 12, 32, hmac_sha2_256, sha256},
+};
+
+static Suite12*
+findSuite12(int id)
+{
+	int i;
+	for(i = 0; i < nelem(suites12); i++)
+		if(suites12[i].id == id)
+			return &suites12[i];
 	return nil;
 }
 
@@ -207,6 +254,69 @@ derive_secret(uchar *out,
 {
 	hkdf_expand_label(out, hashlen, secret, slen,
 		label, labellen, transcript_hash, hashlen, hmac, hashlen);
+}
+
+/* ---- TLS 1.2 PRF (RFC 5246 §5) ---- */
+
+/*
+ * P_hash(secret, seed) using HMAC-Hash.
+ * A(0) = seed
+ * A(i) = HMAC(secret, A(i-1))
+ * output = HMAC(secret, A(1)||seed) || HMAC(secret, A(2)||seed) || ...
+ */
+static void
+p_hash(uchar *out, int outlen,
+	uchar *secret, int secretlen,
+	uchar *seed, int seedlen,
+	DigestState* (*hmac)(uchar*,ulong,uchar*,ulong,uchar*,DigestState*),
+	int hashlen)
+{
+	uchar A[64];		/* A(i), at most SHA-384 = 48 bytes */
+	uchar buf[64+256];	/* A(i) || seed */
+	uchar tmp[64];
+	int pos, n;
+
+	/* A(1) = HMAC(secret, seed) */
+	hmac(seed, seedlen, secret, secretlen, A, nil);
+
+	for(pos = 0; pos < outlen; ){
+		/* HMAC(secret, A(i) || seed) */
+		memmove(buf, A, hashlen);
+		memmove(buf+hashlen, seed, seedlen);
+		hmac(buf, hashlen+seedlen, secret, secretlen, tmp, nil);
+		n = outlen - pos;
+		if(n > hashlen) n = hashlen;
+		memmove(out+pos, tmp, n);
+		pos += n;
+		/* A(i+1) = HMAC(secret, A(i)) */
+		hmac(A, hashlen, secret, secretlen, A, nil);
+	}
+	memset(A, 0, sizeof(A));
+	memset(buf, 0, sizeof(buf));
+	memset(tmp, 0, sizeof(tmp));
+}
+
+/*
+ * TLS 1.2 PRF(secret, label, seed, outlen) = P_SHA256(secret, label||seed)
+ * or P_SHA384 for SHA-384 cipher suites.
+ */
+static void
+tls12prf(uchar *out, int outlen,
+	uchar *secret, int secretlen,
+	char *label,
+	uchar *seed, int seedlen,
+	DigestState* (*hmac)(uchar*,ulong,uchar*,ulong,uchar*,DigestState*),
+	int hashlen)
+{
+	uchar ls[512];
+	int labellen, lslen;
+
+	labellen = strlen(label);
+	lslen = labellen + seedlen;
+	memmove(ls, label, labellen);
+	memmove(ls+labellen, seed, seedlen);
+	p_hash(out, outlen, secret, secretlen, ls, lslen, hmac, hashlen);
+	memset(ls, 0, lslen);
 }
 
 /* ---- Transcript hash ---- */
@@ -443,23 +553,51 @@ installKeys(int ctl, Suite *s,
 	return 0;
 }
 
+/*
+ * Install TLS 1.2 AEAD keys into devtls.
+ * key_block from PRF "key expansion" (RFC 5246 §6.3):
+ *   c_write_key[keylen] | s_write_key[keylen] | c_write_IV[ivlen] | s_write_IV[ivlen]
+ *
+ * devtls "secret clear <encalg> 1 <b64>" with isclient=1 (maclen=0):
+ *   tos=out: key=x[0], iv=x[2*keylen]  → client sends with tos → tos = c_write_key/c_write_IV
+ *   toc=in:  key=x[keylen], iv=x[2*keylen+ivlen] → client receives → toc = s_write_key/s_write_IV
+ * key_block is already in the correct layout [c_key|s_key|c_iv|s_iv].
+ */
+static int
+installKeys12(int ctl, Suite12 *s, uchar *key_block)
+{
+	char b64[256];
+	int n = 2*s->keylen + 2*s->ivlen;
+
+	enc64(b64, sizeof(b64), key_block, n);
+	if(ctlFmt(ctl, "secret clear %s 1 %s", s->encalg, b64) < 0)
+		return -1;
+	return 0;
+}
+
 /* ---- handshake message I/O (via /dev/tls/N/hand) ---- */
 
 /*
  * Write one handshake message.
  * Format: type(1) || length(3) || body(length)
+ * Written as a single kwrite so the header and body go in one TLS record.
  */
 static int
 hmsgWrite(int hand, int type, uchar *body, int bodylen)
 {
-	uchar hdr[4];
-	hdr[0] = type;
-	put24(hdr+1, bodylen);
-	if(kwrite(hand, hdr, 4) != 4)
-		return -1;
-	if(bodylen > 0 && kwrite(hand, body, bodylen) != bodylen)
-		return -1;
-	return 0;
+	uchar *buf;
+	int n, r;
+
+	n = 4 + bodylen;
+	buf = malloc(n);
+	if(buf == nil) return -1;
+	buf[0] = type;
+	put24(buf+1, bodylen);
+	if(bodylen > 0)
+		memmove(buf+4, body, bodylen);
+	r = kwrite(hand, buf, n);
+	free(buf);
+	return (r == n) ? 0 : -1;
 }
 
 /*
@@ -501,20 +639,38 @@ hmsgRead(int hand, int *typep, uchar **bodyp, int *bodylenp)
 /* ---- ClientHello builder ---- */
 
 static void
-buildClientHello(Buf *b, uchar *crandom, uchar *ks_pub, TLSconn *conn)
+buildClientHello(Buf *b, uchar *crandom, uchar *ks_pub, TLSconn *conn, int offer12)
 {
 	uchar *ext_lenp, *ext_start;
-	int snilen;
+	int snilen, nsuites;
 
 	bufput16(b, TLS12Legacy);	/* legacy_version */
 	bufbytes(b, crandom, RandomSize);
-	bufbyte(b, 0);			/* empty session_id */
+	/* RFC 8446 §D.4: send non-empty session_id when offering TLS 1.3 for compat */
+	if(offer12){
+		uchar sid[32];
+		genrandom(sid, 32);
+		bufbyte(b, 32);
+		bufbytes(b, sid, 32);
+	} else {
+		bufbyte(b, 0);			/* empty session_id */
+	}
 
-	/* cipher suites */
-	bufput16(b, (int)nelem(suites)*2);
+	/* cipher suites: TLS 1.3 mandatory set, plus TLS 1.2 ECDHE if offer12, plus SCSV */
+	nsuites = nelem(suites) + (offer12 ? (int)nelem(suites12) : 0) + 1; /* +1 for SCSV */
+	bufput16(b, nsuites*2);
 	bufput16(b, TLS_AES_128_GCM_SHA256);
 	bufput16(b, TLS_AES_256_GCM_SHA384);
 	bufput16(b, TLS_CHACHA20_POLY1305_SHA256);
+	if(offer12){
+		bufput16(b, TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256);
+		bufput16(b, TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384);
+		bufput16(b, TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256);
+		bufput16(b, TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256);
+		bufput16(b, TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384);
+		bufput16(b, TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256);
+	}
+	bufput16(b, TLS_EMPTY_RENEGOTIATION_INFO_SCSV);
 
 	/* null compression */
 	bufbyte(b, 1);
@@ -524,23 +680,9 @@ buildClientHello(Buf *b, uchar *crandom, uchar *ks_pub, TLSconn *conn)
 	ext_lenp  = b->p; bufput16(b, 0);
 	ext_start = b->p;
 
-	/* supported_versions: TLS 1.3 */
-	bufput16(b, ExtSupportedVersions); bufput16(b, 3);
-	bufbyte(b, 2); bufput16(b, TLS13Version);
-
-	/* supported_groups: X25519 */
-	bufput16(b, ExtSupportedGroups); bufput16(b, 4);
-	bufput16(b, 2); bufput16(b, X25519group);
-
-	/* key_share */
-	bufput16(b, ExtKeyShare); bufput16(b, 2+2+2+X25519Size);
-	bufput16(b, 2+2+X25519Size);		/* ClientShares length */
-	bufput16(b, X25519group); bufput16(b, X25519Size);
-	bufbytes(b, ks_pub, X25519Size);
-
-	/* psk_key_exchange_modes: psk_dhe_ke */
-	bufput16(b, ExtPSKKeyExchangeModes); bufput16(b, 2);
-	bufbyte(b, 1); bufbyte(b, 1);
+	/* Extension order matches OpenSSL: SNI, ec_point_formats, supported_groups,
+	 * session_ticket, encrypt_then_mac, extended_master_secret,
+	 * sig_algs, supported_versions, psk_key_exchange_modes, key_share */
 
 	/* SNI */
 	if(conn->serverName != nil && conn->serverName[0]){
@@ -553,31 +695,472 @@ buildClientHello(Buf *b, uchar *crandom, uchar *ks_pub, TLSconn *conn)
 		bufbytes(b, (uchar*)conn->serverName, snilen);
 	}
 
-	/* signature_algorithms: rsa_pss_rsae_sha256 (0x0804) */
-	bufput16(b, ExtSigAlgs); bufput16(b, 4);
-	bufput16(b, 2); bufput16(b, 0x0804);
+	if(offer12){
+		/* ec_point_formats: uncompressed + both compressed forms (matches OpenSSL) */
+		bufput16(b, 0x000b); bufput16(b, 4);
+		bufbyte(b, 3); bufbyte(b, 0); bufbyte(b, 1); bufbyte(b, 2);
+	}
+
+	/* supported_groups */
+	if(offer12){
+		/* x25519, secp256r1, x448, secp521r1, secp384r1 (matches OpenSSL named EC groups) */
+		bufput16(b, ExtSupportedGroups); bufput16(b, 12);
+		bufput16(b, 10);
+		bufput16(b, 0x001d);	/* x25519 */
+		bufput16(b, 0x0017);	/* secp256r1 */
+		bufput16(b, 0x001e);	/* x448 */
+		bufput16(b, 0x0019);	/* secp521r1 */
+		bufput16(b, 0x0018);	/* secp384r1 */
+	} else {
+		bufput16(b, ExtSupportedGroups); bufput16(b, 4);
+		bufput16(b, 2); bufput16(b, X25519group);
+	}
+
+	if(offer12){
+		/* session_ticket: empty (no ticket to resume) */
+		bufput16(b, 0x0023); bufput16(b, 0);
+		/* encrypt_then_mac */
+		bufput16(b, 0x0016); bufput16(b, 0);
+		/* extended_master_secret (RFC 7627) */
+		bufput16(b, 0x0017); bufput16(b, 0);
+	}
+
+	/* signature_algorithms: 20 entries matching OpenSSL defaults; inner list = 40 bytes */
+	if(offer12){
+		bufput16(b, ExtSigAlgs); bufput16(b, 42);
+		bufput16(b, 40);
+		bufput16(b, 0x0403);	/* ecdsa_secp256r1_sha256 */
+		bufput16(b, 0x0503);	/* ecdsa_secp384r1_sha384 */
+		bufput16(b, 0x0603);	/* ecdsa_secp521r1_sha512 */
+		bufput16(b, 0x0807);	/* ed25519 */
+		bufput16(b, 0x0808);	/* ed448 */
+		bufput16(b, 0x0809);	/* rsa_pss_pss_sha256 */
+		bufput16(b, 0x080a);	/* rsa_pss_pss_sha384 */
+		bufput16(b, 0x080b);	/* rsa_pss_pss_sha512 */
+		bufput16(b, 0x0804);	/* rsa_pss_rsae_sha256 */
+		bufput16(b, 0x0805);	/* rsa_pss_rsae_sha384 */
+		bufput16(b, 0x0806);	/* rsa_pss_rsae_sha512 */
+		bufput16(b, 0x0401);	/* rsa_pkcs1_sha256 */
+		bufput16(b, 0x0501);	/* rsa_pkcs1_sha384 */
+		bufput16(b, 0x0601);	/* rsa_pkcs1_sha512 */
+		bufput16(b, 0x0303);	/* ecdsa_sha224 */
+		bufput16(b, 0x0301);	/* rsa_pkcs1_sha224 */
+		bufput16(b, 0x0302);	/* dsa_sha224 */
+		bufput16(b, 0x0402);	/* dsa_sha256 */
+		bufput16(b, 0x0502);	/* dsa_sha384 */
+		bufput16(b, 0x0602);	/* dsa_sha512 */
+	} else {
+		bufput16(b, ExtSigAlgs); bufput16(b, 4);
+		bufput16(b, 2); bufput16(b, 0x0804);
+	}
+
+	/* supported_versions: TLS 1.3 + TLS 1.2 + TLS 1.1 + TLS 1.0 (matches OpenSSL) */
+	if(offer12){
+		bufput16(b, ExtSupportedVersions); bufput16(b, 9);
+		bufbyte(b, 8);
+		bufput16(b, TLS13Version);	/* 0x0304 */
+		bufput16(b, TLS12Legacy);	/* 0x0303 */
+		bufput16(b, 0x0302);		/* TLS 1.1 */
+		bufput16(b, 0x0301);		/* TLS 1.0 */
+	} else {
+		bufput16(b, ExtSupportedVersions); bufput16(b, 3);
+		bufbyte(b, 2); bufput16(b, TLS13Version);
+	}
+
+	/* psk_key_exchange_modes: psk_dhe_ke */
+	bufput16(b, ExtPSKKeyExchangeModes); bufput16(b, 2);
+	bufbyte(b, 1); bufbyte(b, 1);
+
+	/* key_share (TLS 1.3; ignored by TLS 1.2 servers) */
+	bufput16(b, ExtKeyShare); bufput16(b, 2+2+2+X25519Size);
+	bufput16(b, 2+2+X25519Size);		/* ClientShares length */
+	bufput16(b, X25519group); bufput16(b, X25519Size);
+	bufbytes(b, ks_pub, X25519Size);
 
 	put16(ext_lenp, b->p - ext_start);
 }
 
-/* ---- tlsClient ---- */
-
-int
-tlsClient(int netfd, TLSconn *conn)
+/* ---- tlsClient13: TLS 1.3 handshake completion ---- */
+/*
+ * Called by tlsClient after ServerHello is read and version confirmed as TLS 1.3.
+ * ctl/hand/data are already open; ch_body is the saved ClientHello body.
+ * Does NOT close ctl/hand/data — caller owns them.
+ * Returns data fd on success, -1 on failure.
+ */
+static int
+tlsClient13(int ctl, int hand, int data,
+	uchar *crandom, uchar *ks_priv,
+	uchar *ch_body, int ch_bodylen,
+	uchar *sh_body, int sh_bodylen,
+	TLSconn *conn)
 {
-	char id[16], path[64], errsave[ERRMAX];
-	int ctl, hand, data, n, r;
-	uchar crandom[RandomSize];
-	uchar ks_priv[X25519Size], ks_pub[X25519Size];
+	int r;
 	uchar dh_shared[X25519Size];
 	uchar th[64];
-	Buf msg;
 	Suite *s;
 	KeySchedule ks;
 	Transcript tr;
 	int suiteid;
 	uchar *body;
 	int bodylen, msgtype;
+
+	USED(crandom);
+
+	if(ctlFmt(ctl, "tls13 1") < 0)
+		return -1;
+
+	/* parse ServerHello for suite and key share */
+	suiteid = 0;
+	body = nil;
+	{
+		uchar *p = sh_body;
+		int sidlen, comp, ext_total, ext_type, ext_len;
+		uchar peer_pub[X25519Size];
+		int got_ks = 0;
+
+		p += 2;			/* skip legacy_version */
+		p += RandomSize;	/* skip server_random */
+		sidlen = *p++; p += sidlen;
+		suiteid = get16(p); p += 2;
+		comp = *p++; USED(comp);
+
+		s = findSuite(suiteid);
+		if(s == nil) return -1;
+
+		/* init transcript */
+		trInit(&tr, s);
+		trAddMsg(&tr, HClientHello, ch_body, ch_bodylen);
+
+		if(p+2 > sh_body+sh_bodylen) goto fail13;
+		ext_total = get16(p); p += 2;
+		uchar *ext_end = p + ext_total;
+		while(p+4 <= ext_end){
+			ext_type = get16(p); p += 2;
+			ext_len  = get16(p); p += 2;
+			if(ext_type == ExtKeyShare && ext_len >= 4){
+				int grp = get16(p);
+				int klen = get16(p+2);
+				if(grp == X25519group && klen == X25519Size){
+					memmove(peer_pub, p+4, X25519Size);
+					got_ks = 1;
+				}
+			}
+			p += ext_len;
+		}
+		if(!got_ks) goto fail13;
+		r = curve25519_dh_finish(ks_priv, peer_pub, dh_shared);
+		if(!r) goto fail13;
+
+		trAddMsg(&tr, HServerHello, sh_body, sh_bodylen);
+	}
+
+	/* derive handshake secrets */
+	trHash(&tr, th);
+	ksEarly(&ks, s, conn->psk, conn->psklen);
+	ksHandshake(&ks, dh_shared, th);
+
+	if(installKeys(ctl, s, ks.c_hs, ks.s_hs, 1) < 0) goto fail13;
+	if(ctlFmt(ctl, "changecipher") < 0) goto fail13;
+
+	/* read EncryptedExtensions */
+	if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail13;
+	if(msgtype != HEncryptedExtensions){ free(body); goto fail13; }
+	trAddMsg(&tr, HEncryptedExtensions, body, bodylen);
+	free(body); body = nil;
+
+	/* read Certificate or Finished */
+	if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail13;
+	if(msgtype == HCertificate){
+		trAddMsg(&tr, HCertificate, body, bodylen);
+		/* extract first cert DER for caller (TLS 1.3 format: ctx_byte | list_len3 | {cert_len3 | cert | exts2}...) */
+		free(conn->cert); conn->cert = nil; conn->certlen = 0;
+		if(bodylen > 1){
+			uchar *cp = body + 1 + *body;
+			if(cp+3 <= body+bodylen){
+				int clen = get24(cp); cp += 3;
+				if(cp+clen <= body+bodylen && clen > 0){
+					conn->cert = malloc(clen);
+					if(conn->cert){ memmove(conn->cert, cp, clen); conn->certlen = clen; }
+				}
+			}
+		}
+		free(body); body = nil;
+
+		/* CertificateVerify */
+		if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail13;
+		if(msgtype != HCertificateVerify){ free(body); goto fail13; }
+		trAddMsg(&tr, HCertificateVerify, body, bodylen);
+		free(body); body = nil;
+
+		/* Finished */
+		if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail13;
+	}
+	if(msgtype != HFinished || bodylen != s->hashlen){ free(body); goto fail13; }
+
+	/* verify server Finished */
+	{
+		uchar pre_fin_hash[64];
+		uchar expected[64];
+		trHash(&tr, pre_fin_hash);
+		computeFinished(expected, s, ks.s_hs, pre_fin_hash);
+		if(tsmemcmp(body, expected, s->hashlen) != 0){
+			if(conn->trace)
+				conn->trace("tls13: server Finished mismatch\n");
+			free(body); goto fail13;
+		}
+	}
+	trAddMsg(&tr, HFinished, body, bodylen);
+	free(body); body = nil;
+
+	/* derive master / application secrets */
+	trHash(&tr, th);
+	ksMaster(&ks, th);
+
+	/* send client Finished */
+	{
+		uchar cfin[64];
+		computeFinished(cfin, s, ks.c_hs, th);
+		if(hmsgWrite(hand, HFinished, cfin, s->hashlen) < 0) goto fail13;
+		trAddMsg(&tr, HFinished, cfin, s->hashlen);
+	}
+
+	/* switch to application keys */
+	if(installKeys(ctl, s, ks.c_ap, ks.s_ap, 1) < 0) goto fail13;
+	if(ctlFmt(ctl, "changecipher") < 0) goto fail13;
+	if(ctlFmt(ctl, "setin") < 0) goto fail13;
+	if(ctlFmt(ctl, "opened") < 0) goto fail13;
+
+	trFree(&tr);
+	memset(&ks, 0, sizeof(ks));
+	memset(dh_shared, 0, sizeof(dh_shared));
+	return data;
+
+fail13:
+	trFree(&tr);
+	memset(&ks, 0, sizeof(ks));
+	memset(dh_shared, 0, sizeof(dh_shared));
+	return -1;
+}
+
+/* ---- tlsClient12: TLS 1.2 handshake completion ---- */
+/*
+ * Called by tlsClient after ServerHello is read and version confirmed as TLS 1.2.
+ * Cipher suites: ECDHE-RSA-AES128/256-GCM-SHA256/384, ECDHE-RSA-ChaCha20-Poly1305.
+ * Key exchange: X25519 (RFC 8422).
+ * Does NOT close ctl/hand/data — caller owns them.
+ * Returns data fd on success, -1 on failure.
+ */
+static int
+tlsClient12(int ctl, int hand, int data,
+	uchar *crandom, uchar *ks_priv, uchar *ks_pub,
+	uchar *ch_body, int ch_bodylen,
+	uchar *sh_body, int sh_bodylen,
+	TLSconn *conn)
+{
+	Suite12 *s12;
+	Suite sfake;		/* minimal Suite for Transcript dispatch */
+	Transcript tr;
+	uchar srandom[RandomSize];
+	uchar server_pub[X25519Size];
+	uchar dh_shared[X25519Size];
+	uchar master[48];
+	uchar key_block[88];	/* max: 2*32 + 2*12 = 88 for ChaCha20 */
+	uchar th[64];
+	uchar cfin[12], sfin[12];
+	uchar seed[2*RandomSize];
+	uchar cke[1+X25519Size];
+	uchar *body;
+	int bodylen, msgtype, suiteid;
+	int ext_ms;	/* extended master secret negotiated (RFC 7627) */
+	uchar *p, *end;
+
+	body = nil;
+
+	/* parse ServerHello: extract srandom, suite id, and extensions */
+	if(sh_bodylen < 2+RandomSize+1)
+		return -1;
+	p = sh_body;
+	p += 2;				/* skip legacy_version */
+	memmove(srandom, p, RandomSize); p += RandomSize;
+	p += *p + 1;			/* skip session_id */
+	if(p+2 > sh_body+sh_bodylen) return -1;
+	suiteid = get16(p); p += 2;
+
+	/* skip compression_method, scan extensions */
+	ext_ms = 0;
+	if(p < sh_body+sh_bodylen) p++;	/* compression */
+	if(p+2 <= sh_body+sh_bodylen){
+		int ext_total = get16(p); p += 2;
+		uchar *ext_end = p + ext_total;
+		if(ext_end > sh_body+sh_bodylen) ext_end = sh_body+sh_bodylen;
+		while(p+4 <= ext_end){
+			int ext_type = get16(p); p += 2;
+			int ext_len  = get16(p); p += 2;
+			if(ext_type == 0x0017)	/* extended_master_secret */
+				ext_ms = 1;
+			p += ext_len;
+		}
+	}
+
+	s12 = findSuite12(suiteid);
+	if(s12 == nil) return -1;
+	/* init transcript using a minimal Suite (only hashlen/hmac/hash used) */
+	memset(&sfake, 0, sizeof(sfake));
+	sfake.hashlen = s12->hashlen;
+	sfake.hmac    = s12->hmac;
+	sfake.hash    = s12->hash;
+	trInit(&tr, &sfake);
+	trAddMsg(&tr, HClientHello, ch_body, ch_bodylen);
+	trAddMsg(&tr, HServerHello, sh_body, sh_bodylen);
+
+	/* read Certificate */
+	if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail12;
+	if(msgtype != HCertificate){ free(body); goto fail12; }
+	trAddMsg(&tr, HCertificate, body, bodylen);
+	/* extract first cert DER (TLS 1.2 format: cert_list_len[3] | {cert_len[3] | cert}...) */
+	free(conn->cert); conn->cert = nil; conn->certlen = 0;
+	{
+		uchar *cp = body;
+		end = body + bodylen;
+		if(cp+3 <= end){
+			int listlen = get24(cp); cp += 3;
+			if(cp+3 <= cp+listlen && cp+3 <= end){
+				int certlen = get24(cp); cp += 3;
+				if(certlen > 0 && cp+certlen <= end){
+					conn->cert = malloc(certlen);
+					if(conn->cert){ memmove(conn->cert, cp, certlen); conn->certlen = certlen; }
+				}
+			}
+		}
+	}
+	free(body); body = nil;
+
+	/* read optional CertificateRequest or ServerKeyExchange */
+	if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail12;
+	if(msgtype == HCertificateRequest){
+		trAddMsg(&tr, HCertificateRequest, body, bodylen);
+		free(body); body = nil;
+		if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail12;
+	}
+	if(msgtype != HServerKeyExchange){ free(body); goto fail12; }
+	trAddMsg(&tr, HServerKeyExchange, body, bodylen);
+
+	/* parse ServerKeyExchange: EC params (RFC 4492)
+	 * curve_type[1]=0x03 | named_curve[2] | publen[1] | pub[publen] | [sig...] */
+	{
+		int grp, pklen;
+		p = body; end = body + bodylen;
+		if(p+4 > end){ free(body); goto fail12; }
+		if(*p++ != 0x03){ free(body); goto fail12; }	/* named_curve */
+		grp = get16(p); p += 2;
+		if(grp != X25519group){ free(body); goto fail12; }
+		pklen = *p++;
+		if(pklen != X25519Size || p+pklen > end){ free(body); goto fail12; }
+		memmove(server_pub, p, X25519Size);
+		/* TODO: verify signature over crandom||srandom||ServerECDHParams */
+	}
+	free(body); body = nil;
+
+	/* read ServerHelloDone */
+	if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail12;
+	if(msgtype != HServerHelloDone){ free(body); goto fail12; }
+	trAddMsg(&tr, HServerHelloDone, body, bodylen);
+	free(body); body = nil;
+
+	/* compute shared secret (curve25519_dh_finish zeroes ks_priv and server_pub) */
+	if(!curve25519_dh_finish(ks_priv, server_pub, dh_shared)) goto fail12;
+
+	/* send ClientKeyExchange BEFORE deriving master (needed for ext_ms session hash) */
+	cke[0] = X25519Size;
+	memmove(cke+1, ks_pub, X25519Size);
+	if(hmsgWrite(hand, HClientKeyExchange, cke, sizeof(cke)) < 0) goto fail12;
+	trAddMsg(&tr, HClientKeyExchange, cke, sizeof(cke));
+
+	/* derive master secret */
+	if(ext_ms){
+		/* RFC 7627: PRF(premaster, "extended master secret", Hash(handshake_messages)) */
+		trHash(&tr, th);
+		tls12prf(master, 48, dh_shared, X25519Size,
+			"extended master secret", th, s12->hashlen, s12->hmac, s12->hashlen);
+	} else {
+		/* RFC 5246: PRF(premaster, "master secret", crandom||srandom) */
+		memmove(seed, crandom, RandomSize);
+		memmove(seed+RandomSize, srandom, RandomSize);
+		tls12prf(master, 48, dh_shared, X25519Size,
+			"master secret", seed, 2*RandomSize, s12->hmac, s12->hashlen);
+	}
+	memset(dh_shared, 0, sizeof(dh_shared));
+
+	/* derive key block: PRF(master, "key expansion", srandom||crandom) */
+	memmove(seed, srandom, RandomSize);
+	memmove(seed+RandomSize, crandom, RandomSize);
+	tls12prf(key_block, 2*s12->keylen + 2*s12->ivlen, master, 48,
+		"key expansion", seed, 2*RandomSize, s12->hmac, s12->hashlen);
+
+	/* compute client Finished BEFORE installing keys.
+	 * trHash here = Hash(CH+SH+Cert+SKE+SHD+CKE) — same as session_hash. */
+	trHash(&tr, th);
+	tls12prf(cfin, 12, master, 48,
+		"client finished", th, s12->hashlen, s12->hmac, s12->hashlen);
+
+	/* install pending keys */
+	if(installKeys12(ctl, s12, key_block) < 0) goto fail12;
+	memset(key_block, 0, sizeof(key_block));
+
+	/* changecipher: sends CCS, activates out.sec */
+	if(ctlFmt(ctl, "changecipher") < 0) goto fail12;
+
+	/* send encrypted client Finished */
+	if(hmsgWrite(hand, HFinished, cfin, 12) < 0) goto fail12;
+	trAddMsg(&tr, HFinished, cfin, 12);
+
+	/* read server Finished (devtls auto-activates in.sec when server CCS arrives).
+	 * Server may send NewSessionTicket (type 4) before CCS; skip it. */
+	if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail12;
+	if(msgtype == 4){	/* NewSessionTicket — must be in transcript for server Finished */
+		trAddMsg(&tr, msgtype, body, bodylen);
+		free(body); body = nil;
+		if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail12;
+	}
+	if(msgtype != HFinished || bodylen != 12){ free(body); goto fail12; }
+
+	/* verify server Finished: PRF(master, "server finished", Hash(all_hs_msgs_incl_cfin)) */
+	trHash(&tr, th);
+	tls12prf(sfin, 12, master, 48,
+		"server finished", th, s12->hashlen, s12->hmac, s12->hashlen);
+	if(tsmemcmp(body, sfin, 12) != 0){
+		free(body); goto fail12;
+	}
+	free(body); body = nil;
+
+	if(ctlFmt(ctl, "opened") < 0) goto fail12;
+
+	trFree(&tr);
+	memset(master, 0, sizeof(master));
+	return data;
+
+fail12:
+	trFree(&tr);
+	memset(master, 0, sizeof(master));
+	memset(key_block, 0, sizeof(key_block));
+	return -1;
+}
+
+/* ---- tlsClient: version-negotiating dispatcher ---- */
+
+int
+tlsClient(int netfd, TLSconn *conn)
+{
+	char id[16], path[64], errsave[ERRMAX];
+	int ctl, hand, data, n;
+	uchar crandom[RandomSize];
+	uchar ks_priv[X25519Size], ks_pub[X25519Size];
+	uchar ch_body[4096];
+	int ch_bodylen;
+	Buf msg;
+	uchar *sh_body;
+	int sh_bodylen, sh_msgtype;
+	int negotiated_ver;
 	int ok = -1;
 
 	if(conn == nil) return -1;
@@ -597,181 +1180,78 @@ tlsClient(int netfd, TLSconn *conn)
 	data = kopen(path, ORDWR);
 	if(data < 0){ kclose(hand); kclose(ctl); return -1; }
 
-	if(ctlFmt(ctl, "fd %d 0x%x", netfd, TLS12Legacy) < 0)
-		goto fail;
-	if(ctlFmt(ctl, "version 0x%x", TLS12Legacy) < 0)
-		goto fail;
-	if(ctlFmt(ctl, "tls13 1") < 0)
+	/* fd command: use 0x0301 (TLS 1.0) for initial record version per RFC 8446 §5.1 compat.
+	 * version command: set after ClientHello so the CH record uses 0x0301.
+	 * tls13 1 is issued inside tlsClient13 after version is confirmed. */
+	if(ctlFmt(ctl, "fd %d 0x%x", netfd, 0x0301) < 0)
 		goto fail;
 
 	/* ephemeral X25519 */
 	genrandom(crandom, RandomSize);
 	curve25519_dh_new(ks_priv, ks_pub);
 
-	/* build ClientHello */
+	/* build and send ClientHello offering TLS 1.3 + TLS 1.2 */
 	bufinit(&msg);
-	buildClientHello(&msg, crandom, ks_pub, conn);
-	if(hmsgWrite(hand, HClientHello, msg.data, buflen(&msg)) < 0)
+	buildClientHello(&msg, crandom, ks_pub, conn, 1);
+	ch_bodylen = buflen(&msg);
+	memmove(ch_body, msg.data, ch_bodylen);
+
+	if(hmsgWrite(hand, HClientHello, msg.data, ch_bodylen) < 0)
 		goto fail;
 
-	/* init transcript; we pick sha256 for now, redo if server picks sha384 */
-	s = &suites[0];
-	trInit(&tr, s);
-	trAddMsg(&tr, HClientHello, msg.data, buflen(&msg));
+	/* set negotiated version after ClientHello; required before secret command */
+	if(ctlFmt(ctl, "version 0x%x", TLS12Legacy) < 0)
+		goto fail;
 
 	/* read ServerHello */
-	body = nil;
-	if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail;
-	if(msgtype != HServerHello || bodylen < 2+RandomSize+1){ free(body); goto fail; }
-
-	suiteid = 0;
-	{
-		uchar *p = body;
-		int sidlen, comp, ext_total, ext_type, ext_len;
-		uchar peer_pub[X25519Size];
-		int got_ks = 0;
-
-		p += 2;			/* skip legacy_version */
-		p += RandomSize;	/* skip server_random */
-		sidlen = *p++; p += sidlen;
-		suiteid = get16(p); p += 2;
-		comp = *p++; USED(comp);
-
-		s = findSuite(suiteid);
-		if(s == nil){ free(body); goto fail; }
-
-		/* re-init transcript with correct hash if needed */
-		if(s->hashlen == 48){
-			trFree(&tr);
-			trInit(&tr, s);
-			trAddMsg(&tr, HClientHello, msg.data, buflen(&msg));
-		}
-
-		if(p+2 > body+bodylen){ free(body); goto fail; }
-		ext_total = get16(p); p += 2;
-		uchar *ext_end = p + ext_total;
-		while(p+4 <= ext_end){
-			ext_type = get16(p); p += 2;
-			ext_len  = get16(p); p += 2;
-			if(ext_type == ExtKeyShare && ext_len >= 4){
-				int grp = get16(p);
-				int klen = get16(p+2);
-				if(grp == X25519group && klen == X25519Size){
-					memmove(peer_pub, p+4, X25519Size);
-					got_ks = 1;
-				}
-			}
-			p += ext_len;
-		}
-		if(!got_ks){ free(body); goto fail; }
-		r = curve25519_dh_finish(ks_priv, peer_pub, dh_shared);
-		if(!r){ free(body); goto fail; }
-
-		trAddMsg(&tr, HServerHello, body, bodylen);
+	sh_body = nil;
+	if(hmsgRead(hand, &sh_msgtype, &sh_body, &sh_bodylen) < 0) goto fail;
+	if(sh_msgtype != HServerHello || sh_bodylen < 2+RandomSize+1){
+		free(sh_body); goto fail;
 	}
-	free(body); body = nil;
 
-	/* derive handshake secrets */
-	trHash(&tr, th);
-	ksEarly(&ks, s, conn->psk, conn->psklen);
-	ksHandshake(&ks, dh_shared, th);
-
-	if(installKeys(ctl, s, ks.c_hs, ks.s_hs, 1) < 0) goto fail;
-	if(ctlFmt(ctl, "changecipher") < 0) goto fail;
-
-
-	/* read EncryptedExtensions */
-	if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail;
-	if(msgtype != HEncryptedExtensions){ free(body); goto fail; }
-	trAddMsg(&tr, HEncryptedExtensions, body, bodylen);
-	free(body); body = nil;
-
-	/* read Certificate or Finished */
-	if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail;
-	if(msgtype == HCertificate){
-		trAddMsg(&tr, HCertificate, body, bodylen);
-		/* extract first cert DER for caller */
-		free(conn->cert); conn->cert = nil; conn->certlen = 0;
-		if(bodylen > 1){
-			uchar *cp = body + 1 + *body;
-			if(cp+3 <= body+bodylen){
-				int clen = get24(cp); cp += 3;
-				if(cp+clen <= body+bodylen && clen > 0){
-					conn->cert = malloc(clen);
-					if(conn->cert){ memmove(conn->cert, cp, clen); conn->certlen = clen; }
+	/* determine negotiated version by scanning for supported_versions extension */
+	negotiated_ver = TLS12Legacy;	/* default: TLS 1.2 */
+	{
+		uchar *p = sh_body;
+		uchar *end = sh_body + sh_bodylen;
+		p += 2 + RandomSize;		/* skip legacy_version + server_random */
+		p += *p + 1;			/* skip session_id */
+		p += 2;				/* skip cipher suite */
+		p++;				/* skip compression */
+		if(p+2 <= end){
+			int ext_total = get16(p); p += 2;
+			uchar *ext_end = p + ext_total;
+			while(p+4 <= ext_end){
+				int ext_type = get16(p); p += 2;
+				int ext_len  = get16(p); p += 2;
+				if(ext_type == ExtSupportedVersions && ext_len == 2){
+					if(get16(p) == TLS13Version)
+						negotiated_ver = TLS13Version;
 				}
+				p += ext_len;
 			}
 		}
-		free(body); body = nil;
-
-		/* CertificateVerify */
-		if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail;
-		if(msgtype != HCertificateVerify){ free(body); goto fail; }
-		trAddMsg(&tr, HCertificateVerify, body, bodylen);
-		free(body); body = nil;
-
-		/* Finished */
-		if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail;
-	}
-	if(msgtype != HFinished || bodylen != s->hashlen){ free(body); goto fail; }
-
-	/* verify server Finished */
-	{
-		uchar pre_fin_hash[64];
-		uchar expected[64];
-		/*
-		 * Finished verify_data = HMAC(finished_key, transcript_hash)
-		 * where transcript_hash covers all messages up to but NOT
-		 * including the Finished itself.  trHash() on our current
-		 * state gives exactly that (we haven't added Finished yet).
-		 */
-		trHash(&tr, pre_fin_hash);
-		computeFinished(expected, s, ks.s_hs, pre_fin_hash);
-		if(tsmemcmp(body, expected, s->hashlen) != 0){
-			if(conn->trace)
-				conn->trace("tls13: server Finished mismatch\n");
-			free(body); goto fail;
-		}
-	}
-	trAddMsg(&tr, HFinished, body, bodylen);
-	free(body); body = nil;
-
-	/* derive master / application secrets using transcript through server Finished */
-	trHash(&tr, th);
-	ksMaster(&ks, th);
-
-	/* send client Finished */
-	{
-		uchar cfin[64];
-		/*
-		 * Client finished key uses c_hs traffic secret, but verify_data
-		 * is computed over transcript through server Finished (th above).
-		 */
-		computeFinished(cfin, s, ks.c_hs, th);
-		if(hmsgWrite(hand, HFinished, cfin, s->hashlen) < 0) goto fail;
-		trAddMsg(&tr, HFinished, cfin, s->hashlen);
 	}
 
-	/* switch to application keys */
-	if(installKeys(ctl, s, ks.c_ap, ks.s_ap, 1) < 0) goto fail;
-	if(ctlFmt(ctl, "changecipher") < 0) goto fail;  /* switches out->sec to c_ap */
-	if(ctlFmt(ctl, "setin") < 0) goto fail;          /* switches in->sec to s_ap (no server CCS in TLS 1.3) */
-	if(ctlFmt(ctl, "opened") < 0) goto fail;
+	if(negotiated_ver == TLS13Version)
+		ok = tlsClient13(ctl, hand, data, crandom, ks_priv,
+			ch_body, ch_bodylen, sh_body, sh_bodylen, conn);
+	else
+		ok = tlsClient12(ctl, hand, data, crandom, ks_priv, ks_pub,
+			ch_body, ch_bodylen, sh_body, sh_bodylen, conn);
 
-	ok = data;
+	free(sh_body);
+	if(ok < 0) goto fail;
 	goto done;
 
 fail:
-	/* save error now, before kclose clobbers it via devtls checkstate */
 	kgerrstr(errsave, sizeof(errsave));
 	kclose(data);
 	ok = -1;
 
 done:
-	trFree(&tr);
-	memset(&ks, 0, sizeof(ks));
 	memset(ks_priv, 0, sizeof(ks_priv));
-	memset(dh_shared, 0, sizeof(dh_shared));
 	kclose(hand);
 	kclose(ctl);
 	if(ok < 0)
