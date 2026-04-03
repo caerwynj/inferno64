@@ -355,10 +355,11 @@ TokLoop:
 			popfontsize(ps);
 
 		# <!ELEMENT BLOCKQUOTE - - %body.content>
-		LX->Tblockquote =>
+		# BQ is a legacy alias for BLOCKQUOTE
+		LX->Tbq or LX->Tblockquote =>
 			changeindent(ps, BQTAB);
 
-		LX->Tblockquote+RBRA =>
+		LX->Tbq+RBRA or LX->Tblockquote+RBRA =>
 			changeindent(ps, -BQTAB);
 
 		# <!ELEMENT BODY O O %body.content>
@@ -400,6 +401,40 @@ TokLoop:
 		# <!ELEMENT BR - O EMPTY>
 		LX->Tbr =>
 			addlinebrk(ps, atabval(tok, LX->Aclear, clear_tab, 0));
+
+		# <!ELEMENT BUTTON - - (%flow)* -(A|%formctrl)>
+		LX->Tbutton =>
+			if(ps.skipping)
+				continue;
+			ps.skipwhite = 0;
+			if(is.curform == nil) {
+				if(warn)
+					sys->print("<BUTTON> not inside <FORM>\n");
+				continue;
+			}
+			btntype := atabval(tok, LX->Atype, input_tab, Fsubmit);
+			val := aval(tok, LX->Avalue);
+			field := Formfield.new(btntype,
+					++is.curform.nfields,
+					is.curform,
+					aval(tok, LX->Aname),
+					val,
+					0, 0);
+			label := "";
+			(label, toki) = getpcdata(toks, toki);
+			if(label == "" && val == "")
+				if(btntype == Freset)
+					label = "Reset";
+				else
+					label = "Submit";
+			if(label != "")
+				field.value = label;
+			is.curform.fields = field :: is.curform.fields;
+			ffit := Item.newformfield(field);
+			additem(ps, ffit, tok);
+
+		LX->Tbutton+RBRA =>
+			;	# content already consumed by getpcdata in Tbutton handler
 
 		# <!ELEMENT CAPTION - - (%text;)*>
 		LX->Tcaption =>
@@ -504,6 +539,24 @@ TokLoop:
 				changehang(ps, -10*LISTTAB);
 			changehang(ps, 10*LISTTAB);
 			ps.hangstk = 1 :: ps.hangstk;
+
+		# <!ELEMENT FIELDSET - - (#PCDATA,LEGEND,(%flow;)*)>
+		LX->Tfieldset =>
+			addbrk(ps, 1, 0);
+			changeindent(ps, BQTAB);
+
+		LX->Tfieldset+RBRA =>
+			addbrk(ps, 1, 0);
+			changeindent(ps, -BQTAB);
+
+		# <!ELEMENT LEGEND - - (%inline;)*>
+		LX->Tlegend =>
+			addbrk(ps, 0, 0);
+			pushfontstyle(ps, FntB);
+
+		LX->Tlegend+RBRA =>
+			popfontstyle(ps);
+			addbrk(ps, 0, 0);
 
 		# <!ELEMENT FONT - - (%text)*>
 		LX->Tfont =>
@@ -868,6 +921,16 @@ TokLoop:
 			additem(ps, Item.newformfield(ff), tok);
 			addbrk(ps, 1, 0);
 
+		# <!ELEMENT IFRAME - - (%flow)*>
+		# Renders fallback content (between tags) as an indented block
+		LX->Tiframe =>
+			addbrk(ps, 1, 0);
+			changeindent(ps, BQTAB);
+
+		LX->Tiframe+RBRA =>
+			addbrk(ps, 1, 0);
+			changeindent(ps, -BQTAB);
+
 		# <!ELEMENT LI - O %flow>
 		LX->Tli =>
 			if(ps.listtypestk == nil) {
@@ -974,6 +1037,30 @@ TokLoop:
 			if(doscripts)
 				ps.skipping = 0;
 
+		# <!ELEMENT OBJECT - - (PARAM | %flow)*>
+		# Render fallback content between the tags
+		LX->Tobject =>
+			addbrk(ps, 0, 0);
+
+		LX->Tobject+RBRA =>
+			addbrk(ps, 0, 0);
+
+		# <!ELEMENT OPTGROUP - - (OPTION)+>
+		LX->Toptgroup =>
+			if(is.curform == nil || is.curform.fields == nil)
+				continue;
+			field := hd is.curform.fields;
+			if(field.ftype != Fselect)
+				continue;
+			lbl := astrval(tok, LX->Alabel, "");
+			if(lbl != "") {
+				opt := ref Option(0, "", "-- " + lbl + " --");
+				field.options = opt :: field.options;
+			}
+
+		LX->Toptgroup+RBRA =>
+			;	# end of option group - transparent
+
 		# <!ELEMENT OPTION - O (#PCDATA)>
 		LX->Toption =>
 			if(is.curform == nil || is.curform.fields == nil) {
@@ -1023,6 +1110,13 @@ TokLoop:
 				popfontstyle(ps);
 				ps.literal = 0;
 			}
+
+		# <!ELEMENT Q - - (%text)*>
+		LX->Tq =>
+			addtext(ps, "\"");
+
+		LX->Tq+RBRA =>
+			addtext(ps, "\"");
 
 		# <!ELEMENT SCRIPT - - CDATA>
 		LX->Tscript =>
@@ -1155,16 +1249,39 @@ TokLoop:
 				(hd opts).selected = 1;
 			field.options = opts;
 
-		# <!ELEMENT (STRIKE|U) - - (%text)*>
-		LX->Tstrike or LX->Tu =>
-			if(tag == LX->Tstrike)
+		# <!ELEMENT (DEL|INS) - - (%flow)*>
+		# DEL renders as strikethrough; INS renders as underline
+		LX->Tdel or LX->Tins =>
+			if(tag == LX->Tdel)
 				ulty := ULmid;
 			else
 				ulty = ULunder;
 			ps.ulstk = ulty :: ps.ulstk;
 			ps.curul = ulty;
 
-		LX->Tstrike+RBRA or LX->Tu+RBRA =>
+		LX->Tdel+RBRA or LX->Tins+RBRA =>
+			if(ps.ulstk == nil) {
+				if(warn)
+					sys->print("warning: unexpected %s\n", tok.tostring());
+				continue;
+			}
+			ps.ulstk = tl ps.ulstk;
+			if(ps.ulstk != nil)
+				ps.curul = hd ps.ulstk;
+			else
+				ps.curul = ULnone;
+
+		# <!ELEMENT (S|STRIKE|U) - - (%text)*>
+		# S is an alias for STRIKE
+		LX->Ts or LX->Tstrike or LX->Tu =>
+			if(tag == LX->Ts || tag == LX->Tstrike)
+				ulty := ULmid;
+			else
+				ulty = ULunder;
+			ps.ulstk = ulty :: ps.ulstk;
+			ps.curul = ulty;
+
+		LX->Ts+RBRA or LX->Tstrike+RBRA or LX->Tu+RBRA =>
 			if(ps.ulstk == nil) {
 				if(warn)
 					sys->print("warning: unexpected %s\n", tok.tostring());
@@ -1486,7 +1603,10 @@ TokLoop:
 		or LX->Tarea+RBRA
 		or LX->Tbase+RBRA
 		or LX->Tbasefont+RBRA
+		or LX->Tbdo or LX->Tbdo+RBRA		# bidirectional override - transparent
 		or LX->Tbr+RBRA
+		or LX->Tcol or LX->Tcol+RBRA		# column spec - informational only
+		or LX->Tcolgroup or LX->Tcolgroup+RBRA	# column group - informational only
 		or LX->Tdd+RBRA
 		or LX->Tdt+RBRA
 		or LX->Tframe+RBRA
@@ -1496,34 +1616,20 @@ TokLoop:
 		or LX->Timg+RBRA
 		or LX->Tinput+RBRA
 		or LX->Tisindex+RBRA
+		or LX->Tlabel or LX->Tlabel+RBRA	# form label - transparent inline
 		or LX->Tli+RBRA
 		or LX->Tlink or LX->Tlink+RBRA
 		or LX->Tmeta+RBRA
 		or LX->Toption+RBRA
 		or LX->Tparam+RBRA
+		or LX->Tspan or LX->Tspan+RBRA		# inline grouping - transparent
+		or LX->Ttbody or LX->Ttbody+RBRA	# table body section - transparent
 		or LX->Ttextarea+RBRA
+		or LX->Ttfoot or LX->Ttfoot+RBRA	# table foot section - transparent
+		or LX->Tthead or LX->Tthead+RBRA	# table head section - transparent
 		or LX->Ttitle+RBRA
 		=>
 			;
-
-		# Tags not implemented
-		LX->Tbdo or LX->Tbdo+RBRA
-		or LX->Tbutton or LX->Tbutton+RBRA
-		or LX->Tdel or LX->Tdel+RBRA
-		or LX->Tfieldset or LX->Tfieldset+RBRA
-		or LX->Tiframe or LX->Tiframe+RBRA
-		or LX->Tins or LX->Tins+RBRA
-		or LX->Tlabel or LX->Tlabel+RBRA
-		or LX->Tlegend or LX->Tlegend+RBRA
-		or LX->Tobject or LX->Tobject+RBRA
-		or LX->Toptgroup or LX->Toptgroup+RBRA
-		or LX->Tspan or LX->Tspan+RBRA
-		=>
-			if(warn) {
-				if(tag > RBRA)
-					tag -= RBRA;
-				sys->print("warning: unimplemented HTML tag: %s\n", LX->tagnames[tag]);
-			}
 
 		* =>
 			if(warn)
