@@ -92,7 +92,7 @@ relscheme(s: string): int
 {
 	# schemes we know to be suitable as "Relative Uniform Resource Locators"
 	# as defined in RFC1808 (+ others)
-	return (s=="http" || s=="https" || s=="file" || s=="ftp" || s=="nntp");
+	return (s=="http" || s=="https" || s=="file" || s=="ftp" || s=="nntp" || s=="gemini");
 }
 
 Parsedurl.tostring(u: self ref Parsedurl): string

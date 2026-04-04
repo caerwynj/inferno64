@@ -155,7 +155,7 @@ ItemSource.new(bs: ref ByteSource, f: ref Layout->Frame, mtype: int) : ref ItemS
 		chset = latin1;
 	ts := TokenSource.new(bs, chset, mtype);
 	psstk := list of { Pstate.new() };
-	if(mtype != CU->TextHtml) {
+	if(mtype != CU->TextHtml && mtype != CU->TextGemini) {
 		ps := hd psstk;
 		ps.curstate &= ~IFwrap;
 		ps.literal = 1;

@@ -664,6 +664,31 @@ gather:
 			ai = pcdai;
 		}
 	}
+	else if(ts.mtype == CU->TextGemini) {
+		# Gemtext tokenization: convert gemtext lines to HTML tokens
+		while(ai < ToksMax - 12) {
+			state := getstate(ts);
+			(line, complete) := getgemline(ts);
+			if(line == nil) {
+				if(!complete && !eof(ts)) {
+					lim = ts.state.bi;
+					rewind(ts, state);
+				}
+				else if(eof(ts)) {
+					# Close any open contexts at EOF
+					ai = gemclosetags(ts, a, ai);
+				}
+				break;
+			}
+			if(!complete && !eof(ts)) {
+				# Incomplete line, need more data
+				lim = ts.state.bi;
+				rewind(ts, state);
+				break;
+			}
+			ai = gemlinetoks(ts, a, ai, line);
+		}
+	}
 	else {
 		# plain text (non-html) tokens
 		while(ai < ToksMax) {
@@ -1336,5 +1361,173 @@ rewind(ts : ref TokenSource, state : ref TSstate)
 getstate(ts : ref TokenSource) : ref TSstate
 {
 	return ref *ts.state;
+}
+
+# Gemtext parsing support
+# State bits stored in ts.inxmp (repurposed for gemtext mode)
+GEMPRE:		con 1;	# inside preformatted block
+GEMLIST:	con 2;	# inside unordered list
+GEMQUOTE:	con 4;	# inside blockquote
+
+# Read one line of gemtext (without trailing \n).
+# Returns (line, complete) where complete=1 if line ended at \n or EOF.
+# Returns (nil, 0) if no data available (EOB).
+getgemline(ts: ref TokenSource): (string, int)
+{
+	s := "";
+	j := 0;
+	for(c := getchar(ts); c >= 0; c = getchar(ts)) {
+		if(c == '\r')
+			continue;
+		if(c == '\n')
+			return (s, 1);
+		s[j++] = c;
+	}
+	if(j == 0)
+		return (nil, eof(ts));
+	# Partial line: complete only at true EOF
+	return (s, eof(ts));
+}
+
+# Close any open gemtext block contexts (list, blockquote)
+gemclosetags(ts: ref TokenSource, a: array of ref Token, ai: int): int
+{
+	if(ts.inxmp & GEMLIST) {
+		a[ai++] = ref Token(Tul+RBRA, nil, nil);
+		ts.inxmp &= ~GEMLIST;
+	}
+	if(ts.inxmp & GEMQUOTE) {
+		a[ai++] = ref Token(Tblockquote+RBRA, nil, nil);
+		ts.inxmp &= ~GEMQUOTE;
+	}
+	return ai;
+}
+
+# Parse a single gemtext line and append HTML-compatible tokens to a[ai:].
+# Returns new ai.
+gemlinetoks(ts: ref TokenSource, a: array of ref Token, ai: int, line: string): int
+{
+	n := len line;
+
+	# Inside preformatted block
+	if(ts.inxmp & GEMPRE) {
+		if(n >= 3 && line[0:3] == "```") {
+			a[ai++] = ref Token(Tpre+RBRA, nil, nil);
+			ts.inxmp &= ~GEMPRE;
+		}
+		else {
+			a[ai++] = ref Token(Data, line + "\n", nil);
+		}
+		return ai;
+	}
+
+	# Preformatted toggle
+	if(n >= 3 && line[0:3] == "```") {
+		ai = gemclosetags(ts, a, ai);
+		a[ai++] = ref Token(Tpre, nil, nil);
+		ts.inxmp |= GEMPRE;
+		return ai;
+	}
+
+	# Heading: # / ## / ###
+	if(n >= 2 && line[0] == '#') {
+		ai = gemclosetags(ts, a, ai);
+		level := 1;
+		if(n >= 2 && line[1] == '#') {
+			level = 2;
+			if(n >= 3 && line[2] == '#')
+				level = 3;
+		}
+		text := line[level:];
+		if(len text > 0 && text[0] == ' ')
+			text = text[1:];
+		tag := Th1 + level - 1;
+		a[ai++] = ref Token(tag, nil, nil);
+		if(text != "")
+			a[ai++] = ref Token(Data, text, nil);
+		a[ai++] = ref Token(tag+RBRA, nil, nil);
+		return ai;
+	}
+
+	# Link: => URL [display text]
+	if(n >= 2 && line[0:2] == "=>") {
+		ai = gemclosetags(ts, a, ai);
+		rest := line[2:];
+		# Skip leading whitespace
+		i := 0;
+		while(i < len rest && (rest[i] == ' ' || rest[i] == '\t'))
+			i++;
+		# Extract URL (up to next whitespace)
+		j := i;
+		while(j < len rest && rest[j] != ' ' && rest[j] != '\t')
+			j++;
+		if(j <= i)
+			return ai;	# no URL, skip line
+		url := rest[i:j];
+		# Extract optional display text
+		k := j;
+		while(k < len rest && (rest[k] == ' ' || rest[k] == '\t'))
+			k++;
+		display := url;
+		if(k < len rest)
+			display = rest[k:];
+		attrs := Attr(Ahref, url) :: nil;
+		a[ai++] = ref Token(Ta, nil, attrs);
+		a[ai++] = ref Token(Data, display, nil);
+		a[ai++] = ref Token(Ta+RBRA, nil, nil);
+		a[ai++] = ref Token(Tbr, nil, nil);
+		return ai;
+	}
+
+	# List item: * text
+	if(n >= 2 && line[0] == '*' && line[1] == ' ') {
+		if(ts.inxmp & GEMQUOTE) {
+			a[ai++] = ref Token(Tblockquote+RBRA, nil, nil);
+			ts.inxmp &= ~GEMQUOTE;
+		}
+		if(!(ts.inxmp & GEMLIST)) {
+			a[ai++] = ref Token(Tul, nil, nil);
+			ts.inxmp |= GEMLIST;
+		}
+		text := line[2:];
+		a[ai++] = ref Token(Tli, nil, nil);
+		if(text != "")
+			a[ai++] = ref Token(Data, text, nil);
+		return ai;
+	}
+
+	# Blockquote: > text
+	if(n >= 1 && line[0] == '>') {
+		if(ts.inxmp & GEMLIST) {
+			a[ai++] = ref Token(Tul+RBRA, nil, nil);
+			ts.inxmp &= ~GEMLIST;
+		}
+		if(!(ts.inxmp & GEMQUOTE)) {
+			a[ai++] = ref Token(Tblockquote, nil, nil);
+			ts.inxmp |= GEMQUOTE;
+		}
+		text := "";
+		if(n > 1 && line[1] == ' ')
+			text = line[2:];
+		else if(n > 1)
+			text = line[1:];
+		if(text != "")
+			a[ai++] = ref Token(Data, text, nil);
+		a[ai++] = ref Token(Tbr, nil, nil);
+		return ai;
+	}
+
+	# Plain text or blank line
+	ai = gemclosetags(ts, a, ai);
+	if(n == 0) {
+		# Blank line - paragraph break
+		a[ai++] = ref Token(Tp, nil, nil);
+		a[ai++] = ref Token(Tp+RBRA, nil, nil);
+	}
+	else {
+		a[ai++] = ref Token(Data, line, nil);
+		a[ai++] = ref Token(Tbr, nil, nil);
+	}
+	return ai;
 }
 

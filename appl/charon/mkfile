@@ -9,6 +9,7 @@ TARG=\
 	event.dis\
 	file.dis\
 	ftp.dis\
+	gemini.dis\
 	gui.dis\
 	http.dis\
 	img.dis\

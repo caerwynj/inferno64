@@ -913,7 +913,7 @@ get(g: ref GoSpec, f: ref Frame, origkind: int, hn: ref HistNode) : string
 		curres = newres;
 	}
 	if(hdr.mtype == CU->TextHtml || hdr.mtype == CU->TextPlain ||
-					I->supported(hdr.mtype)) {
+					hdr.mtype == CU->TextGemini || I->supported(hdr.mtype)) {
 		G->seturl(sdest);
 		history.add(f, g, origkind);
 		resetkeyfocus(f);
