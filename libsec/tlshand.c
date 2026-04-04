@@ -868,8 +868,16 @@ tlsClient13(int ctl, int hand, int data,
 	trAddMsg(&tr, HEncryptedExtensions, body, bodylen);
 	free(body); body = nil;
 
-	/* read Certificate or Finished */
+	/* read CertificateRequest (optional), Certificate, or Finished */
+	int client_cert_requested = 0;
 	if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail13;
+	if(msgtype == HCertificateRequest){
+		/* server requested client certificate; note it for later */
+		client_cert_requested = 1;
+		trAddMsg(&tr, HCertificateRequest, body, bodylen);
+		free(body); body = nil;
+		if(hmsgRead(hand, &msgtype, &body, &bodylen) < 0) goto fail13;
+	}
 	if(msgtype == HCertificate){
 		trAddMsg(&tr, HCertificate, body, bodylen);
 		/* extract first cert DER for caller (TLS 1.3 format: ctx_byte | list_len3 | {cert_len3 | cert | exts2}...) */
@@ -916,9 +924,20 @@ tlsClient13(int ctl, int hand, int data,
 	trHash(&tr, th);
 	ksMaster(&ks, th);
 
-	/* send client Finished */
+	/* send empty client Certificate if requested (RFC 8446 §4.4.2) */
+	if(client_cert_requested){
+		uchar empty_cert[4];
+		empty_cert[0] = 0;	/* certificate_request_context length = 0 */
+		put24(empty_cert+1, 0);	/* certificate_list length = 0 */
+		if(hmsgWrite(hand, HCertificate, empty_cert, 4) < 0) goto fail13;
+		trAddMsg(&tr, HCertificate, empty_cert, 4);
+	}
+
+	/* send client Finished — transcript hash must include client Certificate if sent */
 	{
 		uchar cfin[64];
+		if(client_cert_requested)
+			trHash(&tr, th);	/* recompute: now includes client Certificate */
 		computeFinished(cfin, s, ks.c_hs, th);
 		if(hmsgWrite(hand, HFinished, cfin, s->hashlen) < 0) goto fail13;
 		trAddMsg(&tr, HFinished, cfin, s->hashlen);

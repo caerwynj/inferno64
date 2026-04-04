@@ -274,7 +274,7 @@ layout(f: ref Frame, bsmain: ref ByteSource, linkclick: int) : array of byte
 	l := Lay.new(f.cr.dx(), Aleft, f.marginw, di.background);
 	f.layout = l;
 	anyanim := 0;
-	if(hdr.mtype == CU->TextHtml || hdr.mtype == CU->TextPlain) {
+	if(hdr.mtype == CU->TextHtml || hdr.mtype == CU->TextPlain || hdr.mtype == CU->TextGemini) {
 		itsrc := ItemSource.new(bsmain, f, hdr.mtype);
 		sources = Sources.new(ref Source.Shtml(bsmain, 0, itsrc));
 	}

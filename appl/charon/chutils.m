@@ -32,7 +32,7 @@ CharonUtils: module
 
 	MultiDigest, MultiMixed,
 
-	TextCss, TextEnriched, TextHtml, TextJavascript, TextPlain, TextRichtext,
+	TextCss, TextEnriched, TextGemini, TextHtml, TextJavascript, TextPlain, TextRichtext,
 	TextSgml, TextTabSeparatedValues, TextXml,
 
 	VideoMpeg, VideoQuicktime : con iota;

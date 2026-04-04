@@ -34,12 +34,13 @@ netconnid := 0;
 netconns := array[10] of ref Netconn;
 sptab : con " \t";
 
-THTTP, TFTP, TFILE, TMAX: con iota;
+THTTP, TFTP, TFILE, TGEMINI, TMAX: con iota;
 transports := array[TMAX] of Transport;
 tpaths := array [TMAX] of {
 	THTTP =>	Transport->HTTPPATH,
 	TFTP =>	Transport->FTPPATH,
 	TFILE =>	Transport->FILEPATH,
+	TGEMINI =>	Transport->GEMINIPATH,
 };
 
 schemes := array [] of {
@@ -47,6 +48,7 @@ schemes := array [] of {
 	("https",	THTTP),
 	("ftp",	TFTP),
 	("file",	TFILE),
+	("gemini",	TGEMINI),
 };
 
 ngchan : chan of (int, list of ref ByteSource, ref Netconn, chan of ref ByteSource);
@@ -86,6 +88,7 @@ mnames = array[] of {
 	"multipart/mixed",
 	"text/css",
 	"text/enriched",
+	"text/gemini",
 	"text/html",
 	"text/javascript",
 	"text/plain",
@@ -164,7 +167,9 @@ fileexttable := array[] of { T->StringInt
 	("bit2", ImageXBit2),
 	("bitm", ImageXBitmulti),
 	("eps", ApplPostscript),
+	("gemini", TextGemini),
 	("gif", ImageGif),
+	("gmi", TextGemini),
 	("gz",	ApplOctets),
 	("htm", TextHtml),
 	("html", TextHtml),
