@@ -22,6 +22,8 @@ static Type*	TDESstate;
 static Type*	TIDEAstate;
 static Type*	TBFstate;
 static Type*	TRC4state;
+static Type*	TChachastate;
+static Type*	TAESGCMstate;
 
 static Type*	TSigAlg;
 static Type*	TCertificate;
@@ -49,6 +51,8 @@ static uchar DESstatemap[] = Keyring_DESstate_map;
 static uchar IDEAstatemap[] = Keyring_IDEAstate_map;
 static uchar BFstatemap[] = Keyring_BFstate_map;
 static uchar RC4statemap[] = Keyring_RC4state_map;
+static uchar Chachastatemap[] = Keyring_Chachastate_map;
+static uchar AESGCMstatemap[] = Keyring_AESGCMstate_map;
 
 static uchar SigAlgmap[] = Keyring_SigAlg_map;
 static uchar SKmap[] = Keyring_SK_map;
@@ -1346,7 +1350,7 @@ keyring_hmac_x(Array *data, int n, Array *key, Array *digest, int dlen, Keyring_
 		cdata = nil;
 	}
 
-	if(key == H || key->len > 64)
+	if(key == H || key->len > 128)
 		error(exBadKey);
 
 	if(digest != H){
@@ -1392,6 +1396,293 @@ Keyring_hmac_md5(void *fp)
 	*f->ret = H;
 	destroy(r);
 	*f->ret = keyring_hmac_x(f->data, f->n, f->key, f->digest, MD5dlen, f->state, hmac_md5);
+}
+
+void
+Keyring_hmac_sha2_256(void *fp)
+{
+	F_Keyring_hmac_sha2_256 *f;
+	void *r;
+
+	f = fp;
+	r = *f->ret;
+	*f->ret = H;
+	destroy(r);
+	*f->ret = keyring_hmac_x(f->data, f->n, f->key, f->digest, SHA256dlen, f->state, hmac_sha2_256);
+}
+
+void
+Keyring_hmac_sha2_512(void *fp)
+{
+	F_Keyring_hmac_sha2_512 *f;
+	void *r;
+
+	f = fp;
+	r = *f->ret;
+	*f->ret = H;
+	destroy(r);
+	*f->ret = keyring_hmac_x(f->data, f->n, f->key, f->digest, SHA512dlen, f->state, hmac_sha2_512);
+}
+
+void
+Keyring_curve25519_dh_new(void *fp)
+{
+	F_Keyring_curve25519_dh_new *f;
+
+	f = fp;
+	if(f->x == H || f->x->len < 32)
+		error(exBadKey);
+	if(f->y == H || f->y->len < 32)
+		error(exBadKey);
+	curve25519_dh_new(f->x->data, f->y->data);
+}
+
+void
+Keyring_curve25519_dh_finish(void *fp)
+{
+	F_Keyring_curve25519_dh_finish *f;
+
+	f = fp;
+	if(f->x == H || f->x->len < 32)
+		error(exBadKey);
+	if(f->y == H || f->y->len < 32)
+		error(exBadKey);
+	if(f->z == H || f->z->len < 32)
+		error(exBadKey);
+	*f->ret = curve25519_dh_finish(f->x->data, f->y->data, f->z->data);
+}
+
+void
+Keyring_chachasetup(void *fp)
+{
+	F_Keyring_chachasetup *f;
+	Heap *h;
+	XChachastate *cs;
+	void *r;
+	uchar *ivec;
+	ulong ivlen;
+
+	f = fp;
+	r = *f->ret;
+	*f->ret = H;
+	destroy(r);
+
+	if(f->key == H || (f->key->len != 16 && f->key->len != 32))
+		error(exBadKey);
+	if(f->ivec != H){
+		ivec = f->ivec->data;
+		ivlen = f->ivec->len;
+	}else{
+		ivec = nil;
+		ivlen = 0;
+	}
+
+	h = heap(TChachastate);
+	cs = H2D(XChachastate*, h);
+
+	setupChachastate(&cs->state, f->key->data, f->key->len, ivec, ivlen, f->rounds);
+
+	*f->ret = (Keyring_Chachastate*)cs;
+}
+
+void
+Keyring_chachasetiv(void *fp)
+{
+	F_Keyring_chachasetiv *f;
+	XChachastate *cs;
+
+	f = fp;
+	if(f->ivec == H)
+		error(exBadIvec);
+	cs = checktype(f->state, TChachastate, exBadState, 0);
+	chacha_setiv(&cs->state, f->ivec->data);
+}
+
+void
+Keyring_chachasetblock(void *fp)
+{
+	F_Keyring_chachasetblock *f;
+	XChachastate *cs;
+
+	f = fp;
+	cs = checktype(f->state, TChachastate, exBadState, 0);
+	chacha_setblock(&cs->state, f->blockno);
+}
+
+void
+Keyring_chachaencrypt(void *fp)
+{
+	F_Keyring_chachaencrypt *f;
+	XChachastate *cs;
+
+	f = fp;
+	if(f->buf == H)
+		return;
+	if(f->n < 0 || f->n > f->buf->len)
+		error(exBounds);
+	cs = checktype(f->state, TChachastate, exBadState, 0);
+	chacha_encrypt(f->buf->data, f->n, &cs->state);
+}
+
+void
+Keyring_ccpolyencrypt(void *fp)
+{
+	F_Keyring_ccpolyencrypt *f;
+	XChachastate *cs;
+	uchar *aad;
+	ulong naad;
+
+	f = fp;
+	if(f->dat == H)
+		return;
+	if(f->ndat < 0 || f->ndat > f->dat->len)
+		error(exBounds);
+	if(f->tag == H || f->tag->len < 16)
+		error(exBadDigest);
+	cs = checktype(f->state, TChachastate, exBadState, 0);
+	if(f->aad != H){
+		aad = f->aad->data;
+		naad = f->naad;
+		if(naad > f->aad->len)
+			naad = f->aad->len;
+	}else{
+		aad = nil;
+		naad = 0;
+	}
+	ccpoly_encrypt(f->dat->data, f->ndat, aad, naad, f->tag->data, &cs->state);
+}
+
+void
+Keyring_ccpolydecrypt(void *fp)
+{
+	F_Keyring_ccpolydecrypt *f;
+	XChachastate *cs;
+	uchar *aad;
+	ulong naad;
+
+	f = fp;
+	*f->ret = 0;
+	if(f->dat == H)
+		return;
+	if(f->ndat < 0 || f->ndat > f->dat->len)
+		error(exBounds);
+	if(f->tag == H || f->tag->len < 16)
+		error(exBadDigest);
+	cs = checktype(f->state, TChachastate, exBadState, 0);
+	if(f->aad != H){
+		aad = f->aad->data;
+		naad = f->naad;
+		if(naad > f->aad->len)
+			naad = f->aad->len;
+	}else{
+		aad = nil;
+		naad = 0;
+	}
+	*f->ret = ccpoly_decrypt(f->dat->data, f->ndat, aad, naad, f->tag->data, &cs->state);
+}
+
+void
+Keyring_aesgcmsetup(void *fp)
+{
+	F_Keyring_aesgcmsetup *f;
+	Heap *h;
+	XAESGCMstate *gs;
+	void *r;
+	uchar *ivec;
+	int ivlen;
+
+	f = fp;
+	r = *f->ret;
+	*f->ret = H;
+	destroy(r);
+
+	if(f->key == H ||
+	   (f->key->len != 16 && f->key->len != 24 && f->key->len != 32))
+		error(exBadKey);
+	if(f->ivec != H){
+		ivec = f->ivec->data;
+		ivlen = f->ivec->len;
+	}else{
+		ivec = nil;
+		ivlen = 0;
+	}
+
+	h = heap(TAESGCMstate);
+	gs = H2D(XAESGCMstate*, h);
+
+	setupAESGCMstate(&gs->state, f->key->data, f->key->len, ivec, ivlen);
+
+	*f->ret = (Keyring_AESGCMstate*)gs;
+}
+
+void
+Keyring_aesgcmsetiv(void *fp)
+{
+	F_Keyring_aesgcmsetiv *f;
+	XAESGCMstate *gs;
+
+	f = fp;
+	if(f->ivec == H)
+		error(exBadIvec);
+	gs = checktype(f->state, TAESGCMstate, exBadState, 0);
+	aesgcm_setiv(&gs->state, f->ivec->data, f->ivec->len);
+}
+
+void
+Keyring_aesgcmencrypt(void *fp)
+{
+	F_Keyring_aesgcmencrypt *f;
+	XAESGCMstate *gs;
+	uchar *aad;
+	ulong naad;
+
+	f = fp;
+	if(f->dat == H)
+		return;
+	if(f->ndat < 0 || f->ndat > f->dat->len)
+		error(exBounds);
+	if(f->tag == H || f->tag->len < 16)
+		error(exBadDigest);
+	gs = checktype(f->state, TAESGCMstate, exBadState, 0);
+	if(f->aad != H){
+		aad = f->aad->data;
+		naad = f->naad;
+		if(naad > f->aad->len)
+			naad = f->aad->len;
+	}else{
+		aad = nil;
+		naad = 0;
+	}
+	aesgcm_encrypt(f->dat->data, f->ndat, aad, naad, f->tag->data, &gs->state);
+}
+
+void
+Keyring_aesgcmdecrypt(void *fp)
+{
+	F_Keyring_aesgcmdecrypt *f;
+	XAESGCMstate *gs;
+	uchar *aad;
+	ulong naad;
+
+	f = fp;
+	*f->ret = 0;
+	if(f->dat == H)
+		return;
+	if(f->ndat < 0 || f->ndat > f->dat->len)
+		error(exBounds);
+	if(f->tag == H || f->tag->len < 16)
+		error(exBadDigest);
+	gs = checktype(f->state, TAESGCMstate, exBadState, 0);
+	if(f->aad != H){
+		aad = f->aad->data;
+		naad = f->naad;
+		if(naad > f->aad->len)
+			naad = f->aad->len;
+	}else{
+		aad = nil;
+		naad = 0;
+	}
+	*f->ret = aesgcm_decrypt(f->dat->data, f->ndat, aad, naad, f->tag->data, &gs->state);
 }
 
 void
@@ -2108,6 +2399,10 @@ keyringmodinit(void)
 		sizeof(BFstatemap));
 	TRC4state = dtype(freeheap, sizeof(XRC4state), RC4statemap,
 		sizeof(RC4statemap));
+	TChachastate = dtype(freeheap, sizeof(XChachastate), Chachastatemap,
+		sizeof(Chachastatemap));
+	TAESGCMstate = dtype(freeheap, sizeof(XAESGCMstate), AESGCMstatemap,
+		sizeof(AESGCMstatemap));
 	TAuthinfo = dtype(freeheap, sizeof(Keyring_Authinfo), Authinfomap, sizeof(Authinfomap));
 	TDSAsk = dtype(freeheap, sizeof(Keyring_DSAsk), DSAskmap, sizeof(DSAskmap));
 	TDSApk = dtype(freeheap, sizeof(Keyring_DSApk), DSApkmap, sizeof(DSApkmap));

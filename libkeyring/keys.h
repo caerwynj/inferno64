@@ -8,6 +8,8 @@ typedef struct XAESstate XAESstate;
 typedef struct XDESstate XDESstate;
 typedef struct XIDEAstate XIDEAstate;
 typedef struct XRC4state XRC4state;
+typedef struct XChachastate XChachastate;
+typedef struct XAESGCMstate XAESGCMstate;
 
 enum
 {
@@ -62,6 +64,20 @@ struct XRC4state
 {
 	Keyring_RC4state	x;
 	RC4state	state;
+};
+
+/* ChaCha20 state */
+struct XChachastate
+{
+	Keyring_Chachastate	x;
+	Chachastate	state;
+};
+
+/* AES-GCM state */
+struct XAESGCMstate
+{
+	Keyring_AESGCMstate	x;
+	AESGCMstate	state;
 };
 
 /* generic secret key */
