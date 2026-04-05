@@ -194,6 +194,10 @@ Keyring: module
 		ref DigestState;
 	hmac_md5: fn(data: array of byte, n: int, key: array of byte, digest: array of byte, state: ref DigestState):
 		ref DigestState;
+	hmac_sha2_256: fn(data: array of byte, n: int, key: array of byte, digest: array of byte, state: ref DigestState):
+		ref DigestState;
+	hmac_sha2_512: fn(data: array of byte, n: int, key: array of byte, digest: array of byte, state: ref DigestState):
+		ref DigestState;
 
 	SHA1dlen:	con 20;
 	SHA224dlen:	con 28;
@@ -234,6 +238,38 @@ Keyring: module
 	rc4:	fn(state: ref RC4state, buf: array of byte, n: int);
 	rc4skip:	fn(state: ref RC4state, n: int);
 	rc4back:	fn(state: ref RC4state, n: int);
+
+	# ChaCha20-Poly1305 AEAD
+	Chachastate: adt
+	{
+		x:	int;		# dummy for C compiler for runt.h
+		# all the state is hidden
+	};
+
+	chachasetup: fn(key: array of byte, ivec: array of byte, rounds: int): ref Chachastate;
+	chachasetiv: fn(state: ref Chachastate, ivec: array of byte);
+	chachasetblock: fn(state: ref Chachastate, blockno: big);
+	chachaencrypt: fn(buf: array of byte, n: int, state: ref Chachastate);
+	ccpolyencrypt: fn(dat: array of byte, ndat: int, aad: array of byte, naad: int, tag: array of byte, state: ref Chachastate);
+	ccpolydecrypt: fn(dat: array of byte, ndat: int, aad: array of byte, naad: int, tag: array of byte, state: ref Chachastate): int;
+
+	Poly1305dlen:	con 16;
+
+	# AES-GCM AEAD
+	AESGCMstate: adt
+	{
+		x:	int;		# dummy for C compiler for runt.h
+		# all the state is hidden
+	};
+
+	aesgcmsetup: fn(key: array of byte, ivec: array of byte): ref AESGCMstate;
+	aesgcmsetiv: fn(state: ref AESGCMstate, ivec: array of byte);
+	aesgcmencrypt: fn(dat: array of byte, ndat: int, aad: array of byte, naad: int, tag: array of byte, state: ref AESGCMstate);
+	aesgcmdecrypt: fn(dat: array of byte, ndat: int, aad: array of byte, naad: int, tag: array of byte, state: ref AESGCMstate): int;
+
+	# Curve25519 Diffie-Hellman
+	curve25519_dh_new: fn(x: array of byte, y: array of byte);
+	curve25519_dh_finish: fn(x: array of byte, y: array of byte, z: array of byte): int;
 
 	# create an alpha and p for diffie helman exchanges
 	dhparams: fn(nbits: int): (ref IPint, ref IPint);
