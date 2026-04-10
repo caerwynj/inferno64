@@ -19,16 +19,20 @@ nuke:V:	nuke-$HOSTMODEL
 install-Nt:QV:
 	(cd $SYSTARG && mk SHELLTYPE=sh SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE i$CONF.exe) || exit 1
 	cp $SYSTARG/i$CONF.exe $ROOT/$SYSTARG/$OBJTYPE/bin/$CONF.exe
-	strip $ROOT/$SYSTARG/$OBJTYPE/bin/$CONF.exe || exit 1
-	if command -v upx >/dev/null 2>&1; then \
+	if test "x$DOSTRIP" = xyes; then \
+		strip $ROOT/$SYSTARG/$OBJTYPE/bin/$CONF.exe || exit 1; \
+	fi
+	if test "x$DOUPX" = xyes && command -v upx >/dev/null 2>&1; then \
 		upx --best --lzma $ROOT/$SYSTARG/$OBJTYPE/bin/$CONF.exe || exit 1; \
 	fi
 
 safeinstall-Nt:QV:
 	(cd $SYSTARG && mk SHELLTYPE=sh SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE i$CONF.exe) || exit 1
 	test -f $ROOT/$SYSTARG/$OBJTYPE/bin/$CONF.exe || cp $SYSTARG/i$CONF.exe $ROOT/$SYSTARG/$OBJTYPE/bin/$CONF.exe
-	strip $ROOT/$SYSTARG/$OBJTYPE/bin/$CONF.exe || exit 1
-	if command -v upx >/dev/null 2>&1; then \
+	if test "x$DOSTRIP" = xyes; then \
+		strip $ROOT/$SYSTARG/$OBJTYPE/bin/$CONF.exe || exit 1; \
+	fi
+	if test "x$DOUPX" = xyes && command -v upx >/dev/null 2>&1; then \
 		upx --best --lzma $ROOT/$SYSTARG/$OBJTYPE/bin/$CONF.exe || exit 1; \
 	fi
 

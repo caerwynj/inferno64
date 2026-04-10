@@ -4,10 +4,14 @@
 #	They are almost always the same.
 
 #	On Nt systems, the ROOT path MUST be of the form `drive:/path'
-#ROOT=C:/msys64/home/sphynkx/i64mingw
+##ROOT=C:/msys64/home/sphynkx/i64mingw
 
 ## MKSH used in utils/mk/Nt.c:179
 #MKSH=/usr/bin/sh.exe
+
+## Set `yes` to get more compact binary (need the `upx` utility installed).
+DOSTRIP=yes
+DOUPX=yes
 
 #
 #	Specify the flavour of Tk (std for standard builds)

@@ -31,4 +31,4 @@ As of MinGW branch:
 * Reworked some mkfiles - cmd-style commands replaced with bash-style ones; resolved cycle build issues.
 * Some tiny code modifications.
 * Set static linking to prevent MSYS2 dlls requirement.
-* Set strip and upx pack for final binary (5.3M -> 396k)
+* Set strip and upx pack for final binary (5.3M -> 396k). Optionally - added params in `mkconfig`.
