@@ -5,6 +5,7 @@ This is a build Inferno64 (MinGW branch) adopted for MSYS2 env.
 Install [MSYS2](https://www.msys2.org/), run its shell and:
 ```bash
 pacman -S mingw-w64-x86_64-gcc
+pacman -S upx
 pacman -S git
 cd /opt
 git clone https://github.com/sphynkx/inferno64

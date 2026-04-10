@@ -47,7 +47,7 @@ default:V:	i$CONF.exe
 
 i$CONF.exe:	$OBJ $CONF.c $CONF.root.h $LIBFILES
 	$CC $CFLAGS '-DKERNDATE='$KERNDATE $CONF.c
-	$LD $LDFLAGS -o $target $OBJ $CONF.$O $LIBFILES $SYSLIBS
+	$LD $LDFLAGS -static -o $target $OBJ $CONF.$O $LIBFILES $SYSLIBS
 
 install:V: i$CONF.exe
 	cp i$CONF.exe $INSTALLDIR/$CONF.exe

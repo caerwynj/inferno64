@@ -371,3 +371,6 @@ os/pc64/forth.h
 
 .env
 
+## Misc
+_wrk
+usr/sphynkx/

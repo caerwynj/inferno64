@@ -17,15 +17,20 @@ nuke:V:	nuke-$HOSTMODEL
 	cd MinGW && mk $MKFLAGS $stem
 
 install-Nt:QV:
-	echo "(cd MinGW && mk $MKFLAGS SHELLTYPE=sh SYSTARG=MinGW OBJTYPE=amd64 iemu.exe)"
-	(cd MinGW && mk $MKFLAGS SHELLTYPE=sh SYSTARG=MinGW OBJTYPE=amd64 iemu.exe) || exit 1
-	echo "cp MinGW/iemu.exe $ROOT/MinGW/amd64/bin/emu.exe"
-	cp MinGW/iemu.exe $ROOT/MinGW/amd64/bin/emu.exe
+	(cd $SYSTARG && mk SHELLTYPE=sh SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE i$CONF.exe) || exit 1
+	cp $SYSTARG/i$CONF.exe $ROOT/$SYSTARG/$OBJTYPE/bin/$CONF.exe
+	strip $ROOT/$SYSTARG/$OBJTYPE/bin/$CONF.exe || exit 1
+	if command -v upx >/dev/null 2>&1; then \
+		upx --best --lzma $ROOT/$SYSTARG/$OBJTYPE/bin/$CONF.exe || exit 1; \
+	fi
 
 safeinstall-Nt:QV:
-	echo "(cd MinGW && mk $MKFLAGS SHELLTYPE=sh SYSTARG=MinGW OBJTYPE=amd64 iemu.exe)"
-	(cd MinGW && mk $MKFLAGS SHELLTYPE=sh SYSTARG=MinGW OBJTYPE=amd64 iemu.exe) || exit 1
-	test -f $ROOT/MinGW/amd64/bin/emu.exe || cp MinGW/iemu.exe $ROOT/MinGW/amd64/bin/emu.exe
+	(cd $SYSTARG && mk SHELLTYPE=sh SYSTARG=$SYSTARG OBJTYPE=$OBJTYPE i$CONF.exe) || exit 1
+	test -f $ROOT/$SYSTARG/$OBJTYPE/bin/$CONF.exe || cp $SYSTARG/i$CONF.exe $ROOT/$SYSTARG/$OBJTYPE/bin/$CONF.exe
+	strip $ROOT/$SYSTARG/$OBJTYPE/bin/$CONF.exe || exit 1
+	if command -v upx >/dev/null 2>&1; then \
+		upx --best --lzma $ROOT/$SYSTARG/$OBJTYPE/bin/$CONF.exe || exit 1; \
+	fi
 
 clean-Nt:QV:
 	cd $SYSTARG && mk $MKFLAGS clean
