@@ -32,3 +32,4 @@ As of MinGW branch:
 * Some tiny code modifications.
 * Set static linking to prevent MSYS2 dlls requirement.
 * Set strip and upx pack for final binary (5.3M -> 396k). Optionally - added params in `mkconfig`.
+* Running app and wm window are beautified by app icon.

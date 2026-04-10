@@ -14,6 +14,10 @@ CLEANCONFLIST=
 
 INSTALLDIR=$ROOT/$SYSTARG/$OBJTYPE/bin	#path of directory where kernel is installed
 
+ICONOBJ=inferno-icon.o
+ICONRC=inferno.rc
+ICONFILE=inferno-icon.ico
+
 #end configurable parameters
 
 OSX=os
@@ -45,9 +49,12 @@ default:V:	i$CONF.exe
 
 <../port/portmkfile
 
-i$CONF.exe:	$OBJ $CONF.c $CONF.root.h $LIBFILES
+$ICONOBJ: $ICONRC $ICONFILE
+	windres -i $ICONRC -o $ICONOBJ
+
+i$CONF.exe:	$OBJ $CONF.c $CONF.root.h $LIBFILES $ICONOBJ
 	$CC $CFLAGS '-DKERNDATE='$KERNDATE $CONF.c
-	$LD $LDFLAGS -static -o $target $OBJ $CONF.$O $LIBFILES $SYSLIBS
+	$LD $LDFLAGS -static -o $target $OBJ $CONF.$O $ICONOBJ $LIBFILES $SYSLIBS
 
 install:V: i$CONF.exe
 	cp i$CONF.exe $INSTALLDIR/$CONF.exe
