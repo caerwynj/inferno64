@@ -61,7 +61,7 @@ nukedist:V: nuke
 	done
 
 &-Nt:QV:
-	for j in $DIRS utils tools
+	for j in $DIRS
 	do
 		echo "(cd $j; mk $MKFLAGS $stem)"
 		(cd $j; mk $MKFLAGS $stem) || exit 1

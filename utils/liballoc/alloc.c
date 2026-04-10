@@ -30,7 +30,7 @@ kcalloc(size_t n, size_t szelem)
 }	
 
 void*
-mallocz(size_t n, int clr)
+mallocz(ulong n, int clr)
 {
 	void *v;
 	v = malloc(n);

@@ -47,7 +47,7 @@ NOTPLAN9=\
 	ka\
 	kc\
 	kl\
-	mk\
+#	mk\
 	ksize\
 	kstrip\
 	md5sum\
@@ -111,11 +111,20 @@ nuke:QV:	nuke-$TARGMODEL
 		(cd $j; mk $MKFLAGS $stem) || exit 1
 	done
 
+#%-Nt:QV:
+#	for (j in  $ALWAYS $NTONLY $NOTPLAN9)
+#	{
+#		test -d $j && {
+#			echo.exe '@{cd' $j '; mk $MKFLAGS $stem}'
+#			@{cd $j; mk $MKFLAGS $stem }
+#		} || test ! -e $j
+#	}
 %-Nt:QV:
-	for (j in  $ALWAYS $NTONLY $NOTPLAN9)
-	{
-		test -d $j && {
-			echo.exe '@{cd' $j '; mk $MKFLAGS $stem}'
-			@{cd $j; mk $MKFLAGS $stem }
-		} || test ! -e $j
-	}
+	for j in $ALWAYS $NTONLY $NOTPLAN9; do \
+		if test -d "$j"; then \
+			echo.exe "cd $j && mk $MKFLAGS $stem"; \
+			(cd "$j" && mk $MKFLAGS $stem); \
+		else \
+			test ! -e "$j"; \
+		fi; \
+	done

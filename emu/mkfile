@@ -1,7 +1,9 @@
 <../mkconfig
 
 all:V:	all-$HOSTMODEL
+
 install:V:	install-$HOSTMODEL
+	
 safeinstall:V:	safeinstall-$HOSTMODEL
 clean:V:	clean-$HOSTMODEL
 nuke:V:	nuke-$HOSTMODEL
@@ -11,8 +13,25 @@ nuke:V:	nuke-$HOSTMODEL
 	(cd $SYSTARG; mk $MKFLAGS $stem) || exit 1
 
 &-Nt:QV:
-	echo '@{builtin cd' $SYSTARG '; mk $MKFLAGS $stem}'
-	@{builtin cd $SYSTARG; mk $MKFLAGS $stem }
+	echo 'cd $SYSTARG && mk $MKFLAGS $stem'
+	cd MinGW && mk $MKFLAGS $stem
+
+install-Nt:QV:
+	echo "(cd MinGW && mk $MKFLAGS SHELLTYPE=sh SYSTARG=MinGW OBJTYPE=amd64 iemu.exe)"
+	(cd MinGW && mk $MKFLAGS SHELLTYPE=sh SYSTARG=MinGW OBJTYPE=amd64 iemu.exe) || exit 1
+	echo "cp MinGW/iemu.exe $ROOT/MinGW/amd64/bin/emu.exe"
+	cp MinGW/iemu.exe $ROOT/MinGW/amd64/bin/emu.exe
+
+safeinstall-Nt:QV:
+	echo "(cd MinGW && mk $MKFLAGS SHELLTYPE=sh SYSTARG=MinGW OBJTYPE=amd64 iemu.exe)"
+	(cd MinGW && mk $MKFLAGS SHELLTYPE=sh SYSTARG=MinGW OBJTYPE=amd64 iemu.exe) || exit 1
+	test -f $ROOT/MinGW/amd64/bin/emu.exe || cp MinGW/iemu.exe $ROOT/MinGW/amd64/bin/emu.exe
+
+clean-Nt:QV:
+	cd $SYSTARG && mk $MKFLAGS clean
+
+nuke-Nt:QV:
+	cd $SYSTARG && mk $MKFLAGS nuke
 
 &-Plan9:QV:
 	echo '@{builtin cd' $SYSTARG '; mk $MKFLAGS $stem}'
