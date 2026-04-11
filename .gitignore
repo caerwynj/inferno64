@@ -373,4 +373,5 @@ os/pc64/forth.h
 
 ## Misc
 _wrk
-usr/sphynkx/
+usr/sphynkx
+n/local/
