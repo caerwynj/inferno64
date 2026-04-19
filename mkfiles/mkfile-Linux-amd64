@@ -21,6 +21,7 @@ CFLAGS=		-g\
 		-I$ROOT/include\
 		-DLINUX_AMD64\
 		-DSQLITE_OS_INFERNO\
+		-D_GNU_SOURCE\
 
 ANSICPP=
 LD=		cc
