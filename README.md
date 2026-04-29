@@ -12,7 +12,7 @@ How this fork differs: the focus is on using limbo as a programming language on 
 
 To build the repo, install the package dependencies on Linux
 ```
-$ apt install libx11-dev libxext-dev linux-libc-dev
+$ apt install libx11-dev libxext-dev linux-libc-dev libpulse-dev
 ```
 
 Then in the root folder of the repo,

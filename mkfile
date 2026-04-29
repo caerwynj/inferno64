@@ -34,7 +34,7 @@ DIRS=\
 	appl\
 
 foo:QV:
-	echo mk all, clean, install, installall or nuke
+	echo mk all, clean, install, installall, nuke, or mkdirs
 
 all:V:		all-$HOSTMODEL
 clean:V:	clean-$HOSTMODEL
