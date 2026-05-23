@@ -94,6 +94,9 @@ init(ctxt: ref Draw->Context, argv: list of string)
 	if(wmrectIO == nil)
 		fatal(sys->sprint("cannot make /chan/wmrect: %r"));
 
+	resize := chan of int;
+	spawn watchresize(resize);
+
 	sync := chan of string;
 	argv = tl argv;
 	if(argv == nil)
@@ -116,6 +119,21 @@ init(ctxt: ref Draw->Context, argv: list of string)
 		wmclient->win.wmctl(c);
 		if(win.image != screen.image)
 			reshaped(win);
+	<-resize =>
+		# Host window resized: re-attach to the screen image and let
+		# reshaped() re-tile children proportionally.
+		token := readwinname();
+		if(token != nil){
+			newimg := display.namedimage(token);
+			if(newimg != nil){
+				display.image = newimg;
+				# Trigger wmreq's putimage path so wmclient updates
+				# win.image, then re-tile via the existing pipeline.
+				wmclient->win.wmctl(sys->sprint("!reshape . -1 %s", r2s(newimg.r)));
+				if(win.image != screen.image)
+					reshaped(win);
+			}
+		}
 	c := <-wmctxt.kbd or
 	c = int <-fakekbd =>
 		if(kbdfocus != nil)
@@ -704,4 +722,34 @@ command(ctxt: ref Draw->Context, args: list of string, sync: chan of string)
 	}
 	sync <-= nil;
 	c->init(ctxt, args);
+}
+
+# Block on /dev/draw/wmevent; signal `resize` each time the host
+# window changes size. The kernel wakes the read once per resize.
+watchresize(resize: chan of int)
+{
+	fd := sys->open("/dev/draw/wmevent", Sys->OREAD);
+	if(fd == nil){
+		sys->fprint(sys->fildes(2), "wm: cannot open /dev/draw/wmevent: %r\n");
+		return;
+	}
+	buf := array[32] of byte;
+	for(;;){
+		n := sys->read(fd, buf, len buf);
+		if(n <= 0)
+			return;
+		resize <-= 1;
+	}
+}
+
+readwinname(): string
+{
+	fd := sys->open("/dev/draw/winname", Sys->OREAD);
+	if(fd == nil)
+		return nil;
+	buf := array[64] of byte;
+	n := sys->read(fd, buf, len buf);
+	if(n <= 0)
+		return nil;
+	return string buf[0:n];
 }

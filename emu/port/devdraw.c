@@ -14,6 +14,8 @@ enum
 	Qnew,
 	Q3rd,
 	Q2nd,
+	Qwinname,	/* /dev/draw/winname  - token, changes on resize */
+	Qwmevent,	/* /dev/draw/wmevent  - blocking read, fires on resize */
 	Qcolormap,
 	Qctl,
 	Qdata,
@@ -162,6 +164,22 @@ extern	void		flushmemscreen(Rectangle);
 	Client*		drawclientofpath(ulong);
 static int	drawclientop(Client*);
 
+/*
+ * Host-window-resize signalling. screenresize() (called from the
+ * platform-specific win-*.c on host resize) bumps the winname token,
+ * re-registers the screen Memimage under the new name, and wakes any
+ * Qwmevent reader so the wm-side watcher can call Display.getwindow
+ * to re-attach to the resized screen.
+ */
+static	char		winname[64];
+static	int		winnameseq;
+static	Rendez		wmeventr;
+static	int		wmevpending;
+static	DImage		screendi;	/* DName entry for screenimage; never freed */
+static	int		screendiinited;
+	void		screenresize(int, int, uchar*, int);
+static	void		installscreenname(void);
+
 static	char Enodrawimage[] =	"unknown id for draw image";
 static	char Enodrawscreen[] =	"unknown id for draw screen";
 static	char Eshortdraw[] =	"short draw message";
@@ -232,19 +250,27 @@ drawgen(Chan *c, char *name, Dirtab *tab, int x, int s, Dir *dp)
 	}
 
 	/*
-	 * Second level contains "new" plus all the clients.
+	 * Second level contains "new", "winname", "wmevent", and all clients.
 	 */
 	if(t == Q2nd || t == Qnew){
 		if(s == 0){
 			mkqid(&q, Qnew, 0, QTFILE);
 			devdir(c, q, "new", 0, eve, 0666, dp);
 		}
-		else if(s <= sdraw.nclient){
-			cl = sdraw.client[s-1];
+		else if(s == 1){
+			mkqid(&q, Qwinname, 0, QTFILE);
+			devdir(c, q, "winname", 0, eve, 0444, dp);
+		}
+		else if(s == 2){
+			mkqid(&q, Qwmevent, 0, QTFILE);
+			devdir(c, q, "wmevent", 0, eve, 0444, dp);
+		}
+		else if(s-2 <= sdraw.nclient){
+			cl = sdraw.client[s-3];
 			if(cl == 0)
 				return 0;
 			sprint(up->genbuf, "%d", cl->clientid);
-			mkqid(&q, (s<<QSHIFT)|Q3rd, 0, QTDIR);
+			mkqid(&q, ((s-2)<<QSHIFT)|Q3rd, 0, QTDIR);
 			devdir(c, q, up->genbuf, 0, eve, 0555, dp);
 			return 1;
 		}
@@ -881,7 +907,92 @@ initscreenimage(void)
 
 	screenimage->width = width;
 	screenimage->clipr = r;
+
+	/*
+	 * Register the screen as a named image so libdraw's gengetwindow
+	 * (via Display.getwindow) can re-attach after a host resize.
+	 */
+	snprint(winname, sizeof winname, "noborder.%d", ++winnameseq);
+	installscreenname();
 	return 1;
+}
+
+/*
+ * (Re-)register screenimage in the named-image table under the current
+ * winname token. Replaces any prior registration of screendi so the old
+ * name disappears (and libdraw's old open of /dev/winname will fail to
+ * resolve via namedimage, prompting it to re-read). Caller must hold
+ * sdraw.q.
+ */
+static void
+installscreenname(void)
+{
+	int i, n;
+	DName *new, *t;
+
+	if(!screendiinited){
+		memset(&screendi, 0, sizeof screendi);
+		screendi.id = -1;
+		screendi.ref = 1;
+		screendiinited = 1;
+	}
+	screendi.image = screenimage;
+
+	for(i = 0; i < sdraw.nname; ){
+		if(sdraw.name[i].dimage == &screendi)
+			drawdelname(sdraw.name + i);
+		else
+			i++;
+	}
+
+	n = strlen(winname);
+	t = smalloc((sdraw.nname+1) * sizeof(DName));
+	memmove(t, sdraw.name, sdraw.nname * sizeof(DName));
+	free(sdraw.name);
+	sdraw.name = t;
+	new = &sdraw.name[sdraw.nname++];
+	new->name = smalloc(n+1);
+	memmove(new->name, winname, n);
+	new->name[n] = 0;
+	new->dimage = &screendi;
+	new->client = nil;
+	new->vers = ++sdraw.vers;
+}
+
+/*
+ * Called by the platform-specific win-*.c after the host window has been
+ * resized and a fresh framebuffer (newdata, of stride `width`) allocated.
+ * We resize the existing Memimage in place — clients hold raw Memimage*
+ * pointers in their DImage table, so freeing it would dangle them.
+ * Caller must hold drawqlock (== sdraw.q).
+ */
+void
+screenresize(int w, int h, uchar *newdata, int width)
+{
+	Rectangle r;
+
+	r = Rect(0, 0, w, h);
+	screendata.bdata = newdata;
+	if(screenimage != nil){
+		screenimage->r = r;
+		screenimage->clipr = r;
+		screenimage->width = width;
+		screenimage->zero = 0;
+	}
+	flushrect = Rect(10000, 10000, -10000, -10000);
+
+	snprint(winname, sizeof winname, "noborder.%d", ++winnameseq);
+	installscreenname();
+
+	wmevpending++;
+	Wakeup(&wmeventr);
+}
+
+static int
+wmevactive(void *unused)
+{
+	USED(unused);
+	return wmevpending != 0;
 }
 
 void
@@ -1046,6 +1157,19 @@ drawread(Chan *c, void *a, long n, vlong off)
 	USED(index);
 	if(c->qid.type & QTDIR)
 		return devdirread(c, a, n, 0, 0, drawgen);
+
+	switch(QID(c->qid)){
+	case Qwinname:
+		return readstr(offset, a, n, winname);
+	case Qwmevent:
+		if(n < 8)
+			error(Eshortread);
+		Sleep(&wmeventr, wmevactive, nil);
+		if(wmevpending > 0)
+			wmevpending--;
+		return snprint(a, n, "resize\n");
+	}
+
 	cl = drawclient(c);
 	qlock(&sdraw.q);
 	if(waserror()){

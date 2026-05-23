@@ -104,9 +104,15 @@ static void		xkeyboard(XEvent*);
 static void		xsetcursor(XEvent*);
 static void		xkbdproc(void*);
 static void		xdestroy(XEvent*);
+static void		xconfigure(XEvent*);
 static void		xselect(XEvent*, XDisplay*);
 static void		xproc(void*);
 static void		xinitscreen(int, int, ulong, ulong*, int*);
+static void		xresize(int, int);
+static int		allocfb(void);
+static void		freefb(void);
+extern void		flushmemscreen(Rectangle);
+extern void		screenresize(int, int, uchar*, int);
 static void		initxcmap(XWindow);
 static XGC		creategc(XDrawable);
 static void		graphicsgmap(XColor*, int);
@@ -122,6 +128,7 @@ static XVisual		*xvis;
 static XGC		xgc;
 static XImage 		*img;
 static int              is_shm;
+static XShmSegmentInfo	*shminfo;
 
 static int putsnarf, assertsnarf;
 extern char gkscanid[];
@@ -159,8 +166,6 @@ clean_errhandlers(void)
 static int
 makesharedfb(void)
 {
-	XShmSegmentInfo *shminfo;
-
 	shminfo = malloc(sizeof(XShmSegmentInfo));
 	if(shminfo == nil) {
 		fprint(2, "emu: cannot allocate XShmSegmentInfo\n");
@@ -235,8 +240,6 @@ makesharedfb(void)
 uchar*
 attachscreen(Rectangle *r, ulong *chan, int *d, int *width, int *softscreen)
 {
-	int depth;
-
 	Xsize &= ~0x3;	/* ensure multiple of 4 */
 
 	r->min.x = 0;
@@ -261,30 +264,8 @@ attachscreen(Rectangle *r, ulong *chan, int *d, int *width, int *softscreen)
 	displaychan = *chan;
 	displaydepth = *d;
 
-	/* check for X Shared Memory Extension */
-	is_shm = XShmQueryExtension(xdisplay);
-
-	if(!is_shm || !makesharedfb()){
-		is_shm = 0;
-		depth = xscreendepth;
-		if(depth == 24)
-			depth = 32;
-
-		/* allocate virtual screen */
-		gscreendata = malloc(Xsize * Ysize * (displaydepth >> 3));
-		xscreendata = malloc(Xsize * Ysize * (depth >> 3));
-		if(gscreendata == nil || xscreendata == nil) {
-			fprint(2, "emu: can not allocate virtual screen buffer (%dx%dx%d[%d])\n", Xsize, Ysize, displaydepth, depth);
-			return 0;
-		}
-		img = XCreateImage(xdisplay, xvis, xscreendepth, ZPixmap, 0,
-				   (char*)xscreendata, Xsize, Ysize, 8, Xsize * (depth >> 3));
-		if(img == nil) {
-			fprint(2, "emu: can not allocate virtual screen buffer (%dx%dx%d)\n", Xsize, Ysize, depth);
-			return 0;
-		}
-
-	}
+	if(!allocfb())
+		return 0;
 
 	if(!triedscreen){
 		triedscreen = 1;
@@ -293,6 +274,132 @@ attachscreen(Rectangle *r, ulong *chan, int *d, int *width, int *softscreen)
 	}
 
 	return gscreendata;
+}
+
+/*
+ * Allocate (or reallocate, after a host resize) the dual framebuffer:
+ *   - gscreendata: the Inferno-side draw buffer (memimage data).
+ *   - xscreendata + img: the X11-side image we blit to the window.
+ * Tries the X11 shared-memory extension first; falls back to plain malloc
+ * + XCreateImage if the server has no shm support.
+ * Caller must have set Xsize/Ysize and xscreendepth/displaydepth before
+ * calling. Returns 1 on success.
+ */
+static int
+allocfb(void)
+{
+	int depth;
+
+	is_shm = XShmQueryExtension(xdisplay);
+	if(is_shm && makesharedfb())
+		return 1;
+
+	is_shm = 0;
+	depth = xscreendepth;
+	if(depth == 24)
+		depth = 32;
+
+	gscreendata = malloc(Xsize * Ysize * (displaydepth >> 3));
+	xscreendata = malloc(Xsize * Ysize * (depth >> 3));
+	if(gscreendata == nil || xscreendata == nil) {
+		fprint(2, "emu: can not allocate virtual screen buffer (%dx%dx%d[%d])\n", Xsize, Ysize, displaydepth, depth);
+		return 0;
+	}
+	img = XCreateImage(xdisplay, xvis, xscreendepth, ZPixmap, 0,
+			   (char*)xscreendata, Xsize, Ysize, 8, Xsize * (depth >> 3));
+	if(img == nil) {
+		fprint(2, "emu: can not allocate virtual screen buffer (%dx%dx%d)\n", Xsize, Ysize, depth);
+		return 0;
+	}
+	return 1;
+}
+
+/*
+ * Tear down the framebuffer allocated by allocfb(). For the shm path,
+ * detach the shared segment from both client and server; for the non-shm
+ * path, free the two buffers and the XImage. Leaves gscreendata, xscreendata
+ * and img nil.
+ */
+static void
+freefb(void)
+{
+	if(is_shm){
+		if(shminfo != nil){
+			XShmDetach(xdisplay, shminfo);
+			XSync(xdisplay, 0);
+			shmdt(shminfo->shmaddr);
+			free(shminfo);
+			shminfo = nil;
+		}
+		if(img != nil){
+			XDestroyImage(img);	/* also frees img->data == xscreendata */
+			img = nil;
+		}
+		xscreendata = nil;
+		free(gscreendata);
+		gscreendata = nil;
+	}else{
+		if(img != nil){
+			XDestroyImage(img);
+			img = nil;
+		}
+		free(gscreendata);
+		gscreendata = nil;
+		/* xscreendata was passed into XCreateImage and freed by XDestroyImage */
+		xscreendata = nil;
+	}
+}
+
+/*
+ * Handle a host-window resize: tear down the old framebuffer, update
+ * Xsize/Ysize, allocate a new framebuffer, ask devdraw to reshape its
+ * screenimage to match, then signal the wm-side watcher so the inferno
+ * desktop re-tiles.
+ */
+static void
+xresize(int newW, int newH)
+{
+	newW &= ~0x3;		/* keep the multiple-of-4 invariant */
+	if(newW < 64)
+		newW = 64;
+	if(newH < 48)
+		newH = 48;
+	if(newW == Xsize && newH == Ysize)
+		return;
+
+	drawqlock();
+	freefb();
+	Xsize = newW;
+	Ysize = newH;
+	if(!allocfb()){
+		drawqunlock();
+		fprint(2, "emu: cannot reallocate framebuffer at %dx%d\n", Xsize, Ysize);
+		return;
+	}
+	screenresize(Xsize, Ysize, gscreendata, (Xsize/4)*(displaydepth/8));
+	drawqunlock();
+
+	flushmemscreen(Rect(0, 0, Xsize, Ysize));
+}
+
+/*
+ * X11 ConfigureNotify dispatch: detect a host-window size change and
+ * forward to xresize. Silently ignore other StructureNotify subtypes
+ * (e.g. map/unmap/reparent) and configure events for child windows.
+ */
+static void
+xconfigure(XEvent *e)
+{
+	XConfigureEvent *ce;
+
+	if(e->type != ConfigureNotify)
+		return;
+	ce = (XConfigureEvent*)e;
+	if(ce->window != xdrawable)
+		return;
+	if(ce->width == Xsize && ce->height == Ysize)
+		return;
+	xresize(ce->width, ce->height);
 }
 
 static void
@@ -593,6 +700,7 @@ xproc(void *arg)
 		xselect(&event, xd);
 		xmouse(&event);
 		xexpose(&event);
+		xconfigure(&event);
 		xdestroy(&event);
 	}
 }
@@ -942,9 +1050,11 @@ xinitscreen(int xsize, int ysize, ulong reqchan, ulong *chan, int *d)
 	name.nitems = strlen((char*)name.value);
 
 	memset(&normalhints, 0, sizeof(normalhints));
-	normalhints.flags = USSize|PMaxSize;
-	normalhints.max_width = normalhints.width = xsize;
-	normalhints.max_height = normalhints.height = ysize;
+	normalhints.flags = USSize|PMinSize;
+	normalhints.width = xsize;
+	normalhints.height = ysize;
+	normalhints.min_width = 64;
+	normalhints.min_height = 48;
 	hints.flags = InputHint|StateHint;
 	hints.input = 1;
 	hints.initial_state = NormalState;
