@@ -383,9 +383,22 @@ xresize(int newW, int newH)
 }
 
 /*
- * X11 ConfigureNotify dispatch: detect a host-window size change and
- * forward to xresize. Silently ignore other StructureNotify subtypes
- * (e.g. map/unmap/reparent) and configure events for child windows.
+ * Debouncing state for ConfigureNotify. WMs emit many ConfigureNotify
+ * events per second while the user is dragging a resize handle; doing a
+ * full xresize() for each one bumps the winname token faster than the
+ * guest can consume it, so guest namedimage(token) lookups race past the
+ * register/unregister and fail with "flushimage fail". Coalesce: stash
+ * the most-recent geometry and the time, then let xproc apply the resize
+ * once events have been quiet for ResizeQuietMs.
+ */
+enum { ResizeQuietMs = 200 };
+static int	pendingResizeW, pendingResizeH;
+static long	pendingResizeDeadline;
+static int	pendingResize;
+
+/*
+ * X11 ConfigureNotify dispatch: record the new size; the actual resize
+ * is deferred until xproc sees a quiet period (see ResizeQuietMs).
  */
 static void
 xconfigure(XEvent *e)
@@ -399,7 +412,10 @@ xconfigure(XEvent *e)
 		return;
 	if(ce->width == Xsize && ce->height == Ysize)
 		return;
-	xresize(ce->width, ce->height);
+	pendingResizeW = ce->width;
+	pendingResizeH = ce->height;
+	pendingResizeDeadline = osmillisec() + ResizeQuietMs;
+	pendingResize = 1;
 }
 
 static void
@@ -696,6 +712,29 @@ xproc(void *arg)
 	XLockDisplay(xd);	/* should be ours alone */
 	XSelectInput(xd, xdrawable, mask);
 	for(;;){
+		/*
+		 * While a resize is pending, poll instead of blocking so we can
+		 * apply the resize once events have been quiet for the debounce
+		 * window. New ConfigureNotify events extend the deadline.
+		 */
+		while(pendingResize){
+			while(XPending(xd) > 0){
+				XNextEvent(xd, &event);
+				xselect(&event, xd);
+				xmouse(&event);
+				xexpose(&event);
+				xconfigure(&event);
+				xdestroy(&event);
+			}
+			if(osmillisec() >= pendingResizeDeadline){
+				int w = pendingResizeW, h = pendingResizeH;
+				pendingResize = 0;
+				if(w != Xsize || h != Ysize)
+					xresize(w, h);
+				break;
+			}
+			osmillisleep(20);
+		}
 		XNextEvent(xd, &event);
 		xselect(&event, xd);
 		xmouse(&event);
