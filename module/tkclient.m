@@ -19,6 +19,7 @@ Tkclient: module
 	startinput:		fn(top: ref Tk->Toplevel, devs: list of string);
 	wmctl:		fn(top: ref Tk->Toplevel, request: string): string;
 	settitle:		fn(top: ref Tk->Toplevel, name: string): string;
+	seticon:		fn(top: ref Tk->Toplevel, iconpath: string): string;
 	handler:		fn(top: ref Tk->Toplevel, stop: chan of int);
 
 	snarfput:	fn(buf: string);

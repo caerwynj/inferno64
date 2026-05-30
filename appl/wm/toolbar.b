@@ -55,6 +55,10 @@ defaultscript :=
 tbtop: ref Tk->Toplevel;
 screenr: Rect;
 
+# Cache of registered icon images, keyed by absolute .bit path
+# (e.g. /usr/inferno/!Calc/icons/!Calc.bit), value is the tk image name.
+iconcache: list of (string, string);
+
 badmodule(p: string)
 {
 	sys->fprint(stderr(), "toolbar: cannot load %s: %r\n", p);
@@ -254,10 +258,13 @@ handlerequest(clientid: string, args: list of string): string
 	n := len args;
 	case hd args {
 	"task" =>
-		# task name
-		if(n != 2)
+		# task name [iconpath]
+		if(n < 2)
 			return "no task label given";
-		iconify(clientid, hd tl args);
+		iconpath := "";
+		if(n >= 3)
+			iconpath = hd tl tl args;
+		iconify(clientid, hd tl args, iconpath);
 	"untask" or
 	"unhide" =>
 		deiconify(clientid);
@@ -267,14 +274,50 @@ handlerequest(clientid: string, args: list of string): string
 	return nil;
 }
 
-iconify(id, label: string)
+iconify(id, label, iconpath: string)
 {
 	label = condenselabel(label);
 	e := tk->cmd(tbtop, "button .toolbar." +id+" -relief sunken -height 32 -command {send task "+id+"} -takefocus 0 ");
-	cmd(tbtop, ".toolbar." +id+" configure" + font + " -text '" + label);
+	# When an icon path was supplied (via tkclient->seticon / $wmicon) and
+	# the bitmap registers cleanly, display it instead of the label text.
+	name := "";
+	if(iconpath != "")
+		name = registericon(iconpath);
+	if(name != "")
+		cmd(tbtop, ".toolbar." +id+" configure -image " + name);
+	else
+		cmd(tbtop, ".toolbar." +id+" configure" + font + " -text '" + label);
 	if(e[0] != '!')
 		cmd(tbtop, "pack .toolbar."+id+" -side left -padx 3 -pady 3 ");
 	cmd(tbtop, "update");
+}
+
+# Register the icon as a tk bitmap (once per distinct path).
+# The mask path is derived from the .bit path. Returns the tk image
+# name on success, or "" on failure (caller falls back to text).
+registericon(iconpath: string): string
+{
+	for(l := iconcache; l != nil; l = tl l) {
+		(p, n) := hd l;
+		if(p == iconpath)
+			return n;
+	}
+	maskpath := iconpath;
+	if(len iconpath >= 4 && iconpath[len iconpath - 4:] == ".bit")
+		maskpath = iconpath[0:len iconpath - 4] + ".mask";
+	name := sys->sprint("WmBar_%d", len iconcache);
+	cmds := sys->sprint("image create bitmap %s -file @%s -maskfile @%s",
+		name, iconpath, maskpath);
+	e := tk->cmd(tbtop, cmds);
+	if(e == nil || e[0] == '!') {
+		# mask absent? retry without -maskfile
+		cmds = sys->sprint("image create bitmap %s -file @%s", name, iconpath);
+		e = tk->cmd(tbtop, cmds);
+		if(e == nil || e[0] == '!')
+			return "";
+	}
+	iconcache = (iconpath, name) :: iconcache;
+	return name;
 }
 
 deiconify(id: string)

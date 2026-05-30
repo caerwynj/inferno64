@@ -17,9 +17,15 @@ include "wmlib.m";
 	qword, splitqword, s2r: import wmlib;
 include "titlebar.m";
 	titlebar: Titlebar;
+include "env.m";
 include "tkclient.m";
 
 Background: con int 16r777777FF;		# should be drawn over immediately, but just in case...
+
+# Per-toplevel icon path. Set via seticon() or auto-picked-up from the
+# $wmicon environment variable by toplevel(). Threaded through to the
+# wm/toolbar as a second argument on the "task" wmctl request.
+iconmap: list of (ref Toplevel, string);
 
 init()
 {
@@ -60,6 +66,13 @@ toplevel(ctxt: ref Draw->Context, topconfig: string, title: string, buts: int): 
 	readscreenrect(top);
 	c := titlebar->new(top, buts);
 	titlebar->settitle(top, title);
+	# Auto-pick-up of the !App folder icon set by the filer's launch_app.
+	e := load Env Env->PATH;
+	if(e != nil) {
+		ip := e->getenv("wmicon");
+		if(ip != nil && ip != "")
+			seticon(top, ip);
+	}
 	return (top, c);
 }
 
@@ -128,8 +141,14 @@ wmctl(top: ref Tk->Toplevel, req: string): string
 		cmd(top, "update");
 	"task" =>
 		(r, nil) := splitqword(req, next);
-		if(r.t0 == r.t1)
-			req = sys->sprint("task %q", cmd(top, ".Wm_t.title cget -text"));
+		if(r.t0 == r.t1) {
+			title := cmd(top, ".Wm_t.title cget -text");
+			ip := geticon(top);
+			if(ip != "")
+				req = sys->sprint("task %q %q", title, ip);
+			else
+				req = sys->sprint("task %q", title);
+		}
 		if(wmreq(top, c, req, next) == nil)
 			cmd(top, ". unmap; update");
 	"untask" =>
@@ -209,6 +228,37 @@ recvimage(top: ref Tk->Toplevel, name, reqid: string)
 settitle(top: ref Tk->Toplevel, name: string): string
 {
 	return titlebar->settitle(top, name);
+}
+
+# Associate an absolute path (e.g. <approot>/icons/<name>.bit) with this
+# toplevel. The path is appended to subsequent "task" wmctl requests so
+# the wm/toolbar can render an icon for the minimized window.
+seticon(top: ref Tk->Toplevel, iconpath: string): string
+{
+	nm: list of (ref Toplevel, string);
+	found := 0;
+	for(l := iconmap; l != nil; l = tl l) {
+		(t, p) := hd l;
+		if(t == top) {
+			nm = (top, iconpath) :: nm;
+			found = 1;
+		} else
+			nm = (t, p) :: nm;
+	}
+	if(!found)
+		nm = (top, iconpath) :: nm;
+	iconmap = nm;
+	return nil;
+}
+
+geticon(top: ref Tk->Toplevel): string
+{
+	for(l := iconmap; l != nil; l = tl l) {
+		(t, p) := hd l;
+		if(t == top)
+			return p;
+	}
+	return "";
 }
 
 handler(top: ref Tk->Toplevel, stop: chan of int)
