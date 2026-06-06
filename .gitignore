@@ -368,3 +368,4 @@ os/pc64/forth.h
 
 .env
 lib/dict
+lib/sshkeys

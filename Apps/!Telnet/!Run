@@ -1,0 +1,6 @@
+#!/dis/sh.dis
+load std
+or {ftest -e /net/dns} {ftest -e /env/emuhost} {ndb/dns}
+or {ftest -e /net/cs} {ndb/cs}
+or {ftest -e '#sfactotum/ctl' }  {auth/factotum; auth/feedkey}
+wm/telnet

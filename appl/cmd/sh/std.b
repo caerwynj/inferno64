@@ -617,7 +617,9 @@ pctlnames := array[] of {
 	("newns", Sys->NEWNS),
 	("forkns", Sys->FORKNS),
 	("newpgrp", Sys->NEWPGRP),
-	("nodevs", Sys->NODEVS)
+	("nodevs", Sys->NODEVS),
+	("newenv", Sys->NEWENV),
+	("forkenv", Sys->FORKENV)
 };
 
 builtin_pctl(ctxt: ref Context, argv: list of ref Listnode, nil: int): string

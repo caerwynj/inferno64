@@ -609,13 +609,13 @@ rread(int fd, void *va, long n, vlong *offp)
 	vlong off;
 
 	if(waserror()){
-		print("rread fd %d va 0x%p n %d offp %lld fdtochan failed: %r\n", fd, va, n, offp);
+		//print("rread fd %d va 0x%p n %d offp %lld fdtochan failed: %r\n", fd, va, n, offp);
 		return -1;
 	}
 
 	c.c = fdtochan(up->env->fgrp, fd, OREAD, 1, 1);
 	if(waserror()){
-		print("rread fd %d va 0x%p n %d offp %lld fdtochan failed: %r\n", fd, va, n, offp);
+		//print("rread fd %d va 0x%p n %d offp %lld fdtochan failed: %r\n", fd, va, n, offp);
 		cclose(c.c);
 		nexterror();
 	}

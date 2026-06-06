@@ -1,0 +1,262 @@
+.TH PINBOARD 1
+.SH NAME
+pinboard \- desktop surface for the window manager
+.SH SYNOPSIS
+.B wm/pinboard
+.SH DESCRIPTION
+.I Pinboard
+is a frameless, full-screen, always-bottom window that owns the
+.IR wm (1)
+desktop. Icons are pinned to arbitrary positions on it; the pinboard
+can carry a backdrop image; and it is scripted both interactively
+(by dragging icons from
+.IR wm-filer (1)
+or by clicks on its own canvas) and by writing a small line-oriented
+text protocol to
+.BR /chan/pinboard .
+.PP
+The design is loosely modelled on the RISC OS 3.7 pinboard. Each
+pinned icon is just a link: a double-click on one runs the
+associated application directly (for
+.B !App
+folders, by sourcing
+.B !Boot
+and executing
+.B !Run
+under a fresh namespace) or hands the path to
+.IR plumber (1)
+otherwise.
+.PP
+.I Pinboard
+is normally started from
+.B /lib/wmsetup
+by the line
+.PP
+.RS
+.B wmrun wm/pinboard
+.RE
+.PP
+right after
+.IR plumber (1)
+is brought up, so that toolbar's
+.B "#s"
+mount on
+.B /chan
+is the parent of pinboard's namespace and the
+.B /chan/pinboard
+entry it creates is visible to every other wm-launched application.
+.PP
+.I Pinboard
+also relies on the
+.B Sticky
+flag supported by the modified
+.IR wm (1)
+in this tree: the flag tells the wm not to auto-raise the pinboard
+when the pointer lands on it, so user clicks on bare desktop don't
+bring the pinboard above the toolbar or any other window.
+.SH "TEXT PROTOCOL"
+Pinboard serves a single
+.IR file2chan (2)
+file at
+.BR /chan/pinboard .
+Each write may carry one or more newline-terminated commands; writes
+that don't end on a newline are buffered until the next write. Lines
+that don't begin with one of the verbs below are silently ignored.
+.TP
+.BI pin " path " "[ x y]"
+Place an icon for
+.I path
+on the pinboard. If
+.I x
+and
+.I y
+are present they are screen-relative pixel coordinates of the
+icon's centre; otherwise the icon is auto-placed in the next free
+slot of a row-major grid. The icon image is chosen by extension/type
+the same way
+.IR wm-filer (1)
+does:
+.B !App
+folders use their own
+.BI icons/ basename .bit
+icon, plain directories use
+.BR dir.bit ,
+.B .dis
+files use
+.BR dis.bit ,
+the image formats
+.RB ( .bit ,
+.BR .mask ,
+.BR .gif ,
+.BR .jpg ,
+.BR .jpeg ,
+.BR .png )
+use
+.BR pic.bit ,
+and everything else uses
+.BR file.bit .
+.TP
+.BI unpin " path"
+Remove the pinned icon whose path is
+.IR path .
+Silently ignored if no such pin exists.
+.TP
+.BI backdrop " imgpath"
+Replace the desktop backdrop with the image at
+.IR imgpath .
+Only Inferno
+.B .bit
+files are supported in this release; other formats need conversion
+first (see
+.IR image (6)).
+.TP
+.B clear
+Remove every pinned icon. The backdrop is preserved.
+.PP
+A read from
+.B /chan/pinboard
+returns the current state in the same protocol, suitable for
+saving to a file and writing back later:
+.PP
+.RS
+.EX
+% cp /chan/pinboard $home/lib/pinboard
+.\" later, after a fresh wm or `clear`:
+% cp $home/lib/pinboard /chan/pinboard
+.EE
+.RE
+.PP
+The first line of the dump is a
+.B backdrop
+line if one is in effect, followed by one
+.B pin
+line per icon (in insertion order).
+.PP
+Example: place a Calc icon at (200, 200), then a file icon, then
+remove the first:
+.PP
+.RS
+.EX
+% echo 'pin /usr/inferno/!Calc 200 200' >/chan/pinboard
+% echo 'pin /NOTICE'                   >/chan/pinboard
+% echo 'unpin /usr/inferno/!Calc'      >/chan/pinboard
+.EE
+.RE
+.SH MOUSE
+Within the pinboard, button bindings are:
+.TP 8
+.B B1
+on an icon: select it (replacing any prior selection) and drag to
+move; on empty desktop: deselect all.
+.TP 8
+.B B1-drag
+on a selected icon: move the whole current selection in lock step.
+.TP 8
+.B B2
+anywhere: post the context menu (see below).
+.TP 8
+.B B3-drag
+on empty desktop: rubber-band selection; every icon whose
+bounding box overlaps the dashed rectangle becomes selected on
+release.
+.TP 8
+.B Double-B1
+on an icon: activate it. If the icon's path is a RISC OS-style
+.B !App
+folder (a directory whose name begins with
+.B !
+containing a
+.B !Boot
+file), pinboard forks a private namespace, applies the app's
+.B !Boot
+script, sets
+.B $approot
+and
+.B $wmicon
+in the environment, and runs
+.BI !Run .
+Any other path is handed to
+.IR plumber (1)
+as a text message; the plumb rules decide which viewer or editor
+opens it.
+.PP
+Drags initiated in
+.IR wm-filer (1)
+that miss every filer window are forwarded to
+.B /chan/pinboard
+as
+.B pin
+commands at the drop point.
+.SH "CONTEXT MENU"
+Posted by B2, the menu offers:
+.TP
+.B Remove
+Delete every currently selected icon from the pinboard.
+.TP
+.B "Clear backdrop"
+Drop the current backdrop image, exposing the canvas's solid bg.
+.TP
+.B Tidy
+Re-flow every pin onto a row-major grid based on the current
+screen rectangle.
+.SH FILES
+.TP
+.B /chan/pinboard
+The text-protocol file2chan. Created at startup and removed when
+.I pinboard
+exits.
+.TP
+.B /lib/wmsetup
+Standard wm initialisation script; should
+.B wmrun
+.B wm/pinboard
+right after starting
+.IR plumber (1).
+.TP
+.B /usr/inferno/!Pinboard/
+The
+.B !App
+folder for the pinboard itself, providing
+.BR !Boot ,
+.BR !Run ,
+and
+.BR icons/!Pinboard.bit / .mask .
+.SH SOURCE
+.B /appl/wm/pinboard.b
+.SH "SEE ALSO"
+.IR wm (1),
+.IR wm-filer (1),
+.IR toolbar (1),
+.IR plumber (1),
+.IR plumbmsg (2),
+.IR tkclient (2),
+.IR image (6).
+.SH BUGS
+The
+.B backdrop
+verb only accepts native Inferno
+.B .bit
+images. The
+.IR wm (1)
+in this tree exposes a
+.B Sticky
+client flag specifically so the pinboard can stay at the back of
+the z-order; running
+.I pinboard
+under a stock wm will let pointer events keep raising it to the
+front.
+.PP
+The
+.B !App
+icons shipped under
+.B /usr/inferno/!*
+often have rectangular
+.B .mask
+files that don't follow the icon's actual silhouette. When such an
+icon is pinned, its internal background colour fills the bounding
+box. Use the
+.B maskify
+helper in
+.B /home/caerwyn/github/icons/
+to regenerate per-icon masks by chroma-keying against the icon's
+corner pixel.

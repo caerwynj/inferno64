@@ -38,6 +38,7 @@ TARG=\
 ##	mpeg.dis\
 	mprof.dis\
 	pen.dis\
+	pinboard.dis\
 	polyhedra.dis\
 	prof.dis\
 ##	qt.dis\

@@ -1,0 +1,2 @@
+#!/dis/sh.dis
+ebook/ebook `{wm/filename -d /lib/ebook}

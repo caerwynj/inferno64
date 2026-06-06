@@ -3,8 +3,8 @@
 
 # image files go to wm/view
 kind is text
-data matches '[a-zA-Z0-9_\-./]+'
-data matches '([a-zA-Z0-9_\-./]+)\.(jpg|jpeg|gif|bit|png)'
+data matches '[!a-zA-Z0-9_\-./]+'
+data matches '([!a-zA-Z0-9_\-./]+)\.(jpg|jpeg|gif|bit|png)'
 data isfile     $0
 plumb alwaysstart view
 plumb start /dis/wm/view.dis $file
@@ -46,14 +46,29 @@ data isfile     /dis/$0
 plumb alwaysstart app
 plumb start $file
 
-# existing files, possibly tagged by line number, go to wm/brutus
+# RISC OS style !App folders
 kind is text
-data matches '([.a-zA-Z0-9_/\-]+[a-zA-Z0-9_/\-])(:[0-9]+)?'
+data matches '([!a-zA-Z0-9_/.\-]+)'
+data isdir $1
+data isfile $1/!Boot
+plumb alwaysstart wmapp
+plumb start /lib/wmapp $1
+
+# markdown files, possibly tagged by line number, go to wm/brutus
+kind is text
+data matches '([a-zA-Z0-9_]+\.md)(:[0-9]+)?'
+data isfile     $1
+plumb alwaysstart markdown
+plumb start /dis/wm/brutus.dis $file
+
+# existing files, possibly tagged by line number, go to wm/edit
+kind is text
+data matches '([!.a-zA-Z0-9_/\- ]+[a-zA-Z0-9_/\- ])(:[0-9]+)?'
 data isfile     $1
 plumb alwaysstart edit
 plumb start /dis/wm/edit.dis $file
 
-# existing files go to brutus
+# existing dirs go to filer
 kind is text
 data matches '[a-zA-Z0-9_./\-]+'
 data isdir      $0

@@ -20,7 +20,7 @@ Wm: module {
 	init:	fn(ctxt: ref Draw->Context, argv: list of string);
 };
 
-Ptrstarted, Kbdstarted, Controlstarted, Controller, Fixedorigin: con 1<<iota;
+Ptrstarted, Kbdstarted, Controlstarted, Controller, Fixedorigin, Sticky: con 1<<iota;
 Bdwidth: con 3;
 Sminx, Sminy, Smaxx, Smaxy: con iota;
 Minx, Miny, Maxx, Maxy: con 1<<iota;
@@ -127,7 +127,8 @@ init(ctxt: ref Draw->Context, argv: list of string)
 			c := wmsrv->find(p.xy);
 			if(c != nil){
 				ptrfocus = c;
-				c.ctl <-= "raise";
+				if((c.flags & Sticky) == 0)
+					c.ctl <-= "raise";
 				setfocus(win, c);
 			}
 		}
@@ -304,6 +305,17 @@ handlerequest(win: ref Wmclient->Window, wmctxt: ref Wmcontext, c: ref Client, r
 
 	"lower" =>
 		c.bottom();
+
+	"sticky" =>
+		# sticky [on|off] — when on, the wm will not auto-raise this
+		# client on pointer-press, so it can stay at the bottom of the
+		# z-order. Pinboard uses this to be the desktop surface.
+		if(n == 1 || (n == 2 && hd tl args == "on"))
+			c.flags |= Sticky;
+		else if(n == 2 && hd tl args == "off")
+			c.flags &= ~Sticky;
+		else
+			return "bad sticky arg";
 
 	"!move" or
 	"!size" =>
@@ -493,7 +505,11 @@ reshape(c: ref Client, tag: string, r: Rect): string
 		if(c.setimage(tag, img) == -1)
 			return "can't do two at once";
 	}
-	c.top();
+	# Sticky clients (e.g. pinboard) keep their z-order: a popup menu
+	# or other sub-window allocation must not promote the whole client
+	# to the top of the stack.
+	if((c.flags & Sticky) == 0)
+		c.top();
 	return nil;
 }
 

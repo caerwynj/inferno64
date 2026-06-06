@@ -1,0 +1,58 @@
+#!/dis/sh.dis
+#
+# wmapp <approot> [args ...]
+#
+# Launch a RISC OS-style !App folder so that when the launched
+# program minimizes to the toolbar, the toolbar shows the app's own
+# icon. Sets $approot and $wmicon in the env, applies the folder's
+# !Boot namespace description (if non-empty), then runs !Run with
+# any extra args passed straight through.
+#
+# Designed to be safe to call from /lib/wmsetup, the toolbar's start
+# menu, a plumber rule, or directly from a shell prompt. The env
+# changes stay in this process (and its children) because we fork
+# the environment via `pctl forkenv`.
+
+load std
+
+if {~ $#* 0} {
+	echo 'usage: wmapp <approot> [args ...]' >[1=2]
+	raise usage
+}
+
+approot := $1
+extra := $*(2-)
+
+if {! ftest -d $approot} {
+	echo wmapp: $approot is not a directory >[1=2]
+	raise notdir
+}
+if {! ftest -f $approot ^ '/!Boot'} {
+	echo wmapp: $approot has no '!Boot' >[1=2]
+	raise notapp
+}
+
+# Fork the environment so $approot/$wmicon don't leak back to the
+# caller — without this they'd pollute the toolbar shell's env and
+# affect every later `wmrun wm/foo`.
+pctl forkenv
+
+approot = $approot
+base := `{basename $approot}
+iconp := $approot ^ '/icons/' ^ $base ^ '.bit'
+if {ftest -f $iconp} {
+	wmicon = $iconp
+} {
+	# No bundled icon: clear any stale value inherited from the
+	# parent env.
+	wmicon = ''
+}
+
+# Empty !Boot is the standard convention for apps that need no
+# extra namespace setup, so only invoke nsbuild when there's
+# actually something to apply.
+if {test -s $approot ^ '/!Boot'} {
+	nsbuild $approot ^ '/!Boot'
+}
+
+$approot ^ '/!Run' $extra

@@ -20,6 +20,21 @@ fn wmrun {
 	} > /chan/wmstdout >[2] /chan/wmstderr &
 }
 
+# Launch a RISC OS-style !App folder (a directory containing !Boot
+# and !Run) so its toolbar-minimize icon comes from the folder's
+# own icons/<base>.bit. Implemented as a thin wrapper around the
+# /lib/wmapp shell script so plumber rules and command-line callers
+# can use the same logic (`/lib/wmapp /usr/inferno/!Calc`).
+fn wmapp {
+	args := $*
+	{
+		pctl newpgrp
+		fn wmapp
+		fn wmrun
+		/lib/wmapp $args
+	} > /chan/wmstdout >[2] /chan/wmstderr &
+}
+
 fn cd {
 	builtin cd $*;
 	rescue 'bad redir' {} {
@@ -28,33 +43,35 @@ fn cd {
 }
 
 plumber -v /lib/plumbing >/chan/wmstdout >[2=1]
-menu Shell			{wmrun wm/sh}
-menu Acme			{wmrun acme}
-menu Edit			{wmrun wm/edit}
-menu Charon			{wmrun charon}
-menu Manual			{wmrun wm/man}
-menu Files			{if {ftest -d $home} {wmrun wm/dir $home} {wmrun wm/dir /}}
+wmrun wm/pinboard
+menu Shell			{wmapp /Apps/!Shell}
+menu Acme			{wmapp /Apps/!Acme}
+menu Edit			{wmapp /Apps/!Edit}
+menu Charon			{wmapp /Apps/!Web}
+menu Manual			{wmapp /Apps/!Manual}
+menu Apps			{wmrun wm/filer /Apps}
+menu Files			{if {ftest -d $home} {wmapp /Apps/!Filer $home} {wmapp /Apps/!Filer /}}
 menu ''	''
-menu System			'Debugger'		{wmrun wm/deb}
-menu System			'Module manager'	{wmrun wm/rt}
-menu System			'Task manager'		{wmrun wm/task}
-menu System			'Memory monitor'	{wmrun wm/memory}
-menu System			'Chars'	{wmrun wm/unibrowse}
-menu System			'About'			{wmrun wm/about}
-menu Misc			'Coffee'			{wmrun wm/coffee}
-menu Misc			'Colours'			{wmrun wm/colors}
+menu System			'Debugger'		{wmapp /Apps/!Debugger}
+menu System			'Module manager'	{wmapp /Apps/!DisManager}
+menu System			'Task manager'		{wmapp /Apps/!TaskManager}
+menu System			'Memory monitor'	{wmapp /Apps/!Memory}
+menu System			'Chars'	{wmapp /Apps/!Chars}
+menu System			'About'			{wmapp /Apps/!About}
+menu Misc			'Coffee'			{wmapp /Apps/!Coffee}
+menu Misc			'Colours'			{wmapp /Apps/!Colours}
 #menu Misc			'Winctl'			{wmrun wm/winctl}
-menu Misc			'Clock'			{wmrun wm/clock}
-menu Misc			'Calculator'		{wmrun tkcalc}
-menu Misc			'Calendar'		{wmrun wm/calendar}
-menu Misc			'Stopwatch'		{wmrun wm/stopwatch}
-menu Games			'Tetris'			{wmrun wm/tetris}
-menu Games			'Bounce'			{wmrun wm/bounce}
-menu Games			'Snake'			{wmrun wm/snake}
-menu Games			'Sweeper'		{wmrun wm/sweeper}
-menu Games			'Reversi'		{wmrun wm/reversi}
-menu Games			'Connect4'		{wmrun wm/c4}
-menu Games			'Cards'			{wmrun wm/cards}
+menu Misc			'Clock'			{wmapp /Apps/!Clock}
+menu Misc			'Calculator'		{wmapp /Apps/!Calc}
+menu Misc			'Calendar'		{wmapp /Apps/!Calendar}
+menu Misc			'Stopwatch'		{wmapp /Apps/!Stopwatch}
+menu Games			'Tetris'			{wmapp /Apps/!Tetris}
+menu Games			'Bounce'			{wmapp /Apps/!Bounce}
+menu Games			'Snake'			{wmapp /Apps/!Snake}
+menu Games			'Sweeper'		{wmapp /Apps/!Sweeper}
+menu Games			'Reversi'		{wmapp /Apps/!Reversi}
+menu Games			'Connect4'		{wmapp /Apps/Connect4}
+menu Games			'Cards'			{wmapp /Apps/!Cards}
 #menu Games			'Game client'		{wmrun games/gameclient >/dev/null >[2=1]}
 #menu Games			'Game client (local)'	{wmrun games/gameclient -l > /dev/null >[2=1]}
 
