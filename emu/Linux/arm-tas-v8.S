@@ -1,10 +1,11 @@
+	.file	"arm-tas-v8.S"
 /*
- * int _tas(int *p)
+ * ulong _tas(ulong *p)
  *
  * Test-and-set: atomically read *p and set it to non-zero.
  * Returns the old value.
  *
- * x0 = pointer to int
+ * x0 = pointer to ulong
  * Returns: old value in x0
  */
 	.global	_tas
