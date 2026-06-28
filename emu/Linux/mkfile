@@ -32,13 +32,18 @@ LIBNAMES=${LIBS:%=lib%.a}
 HFILES=\
 
 CFLAGS='-DROOT="'$ROOT'"' -DEMU -I. -I../port -I$ROOT/$SYSTARG/$OBJTYPE/include -I$ROOT/include -I$ROOT/libinterp $CTHREADFLAGS $CFLAGS $EMUOPTIONS
-SYSLIBS= $X11LIBS -lm -lpthread
+SYSLIBS= $X11LIBS -lm -lpthread -lpulse-simple -lpulse
 KERNDATE=`{$NDATE}
-WRAP='-Wl,--wrap=malloc' '-Wl,--wrap=mallocz' '-Wl,--wrap=free' '-Wl,--wrap=realloc' '-Wl,--wrap=calloc'
+#WRAP='-Wl,--wrap=malloc' '-Wl,--wrap=mallocz' '-Wl,--wrap=free' '-Wl,--wrap=realloc' '-Wl,--wrap=calloc'
+WRAP=
 
 default:V:	$O.$CONF
 
 $O.$CONF:	$OBJ $CONF.c $CONF.root.h $LIBNAMES
+	if [ "`uname -o`" = 'Android' ]
+	then
+		SYSLIBS="$SYSLIBS -landroid-shmem"
+	fi
 	$CC $CFLAGS '-DKERNDATE='$KERNDATE $CONF.c
 	$LD $LDFLAGS $WRAP -o $target $OBJ $CONF.$O $LIBFILES $SYSLIBS
 
