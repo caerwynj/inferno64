@@ -40,8 +40,11 @@ childproc(Targ *t)
 
 	if(Debug)
 		print("devcmd: '%s'", t->args[0]);
-
+#ifndef __ANDROID__
 	nfd = getdtablesize();
+#else
+	nfd = sysconf(_SC_OPEN_MAX);
+#endif
 	for(i = 0; i < nfd; i++)
 		if(i != t->fd[0] && i != t->fd[1] && i != t->fd[2] && i != t->wfd)
 			close(i);

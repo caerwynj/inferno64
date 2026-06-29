@@ -15,6 +15,9 @@
 #endif
 #include <features.h>
 #include <sys/types.h>
+#ifdef __ANDROID__
+#include <sys/stat.h>
+#endif
 #include <stdlib.h>
 #include <stdarg.h>
 #define sync __os_sync
@@ -29,6 +32,9 @@
 #include <float.h>
 #include <time.h>
 #include <endian.h>
+#ifdef __ANDROID__
+#include <ctype.h>
+#endif
 
 #define	getwd	infgetwd
 
@@ -46,6 +52,10 @@ typedef struct Proc Proc;
 typedef unsigned char	uchar;
 typedef signed char	schar;
 typedef unsigned int Rune;
+#ifdef __ANDROID__
+typedef unsigned long ulong;
+typedef unsigned short ushort;
+#endif
 typedef unsigned long	usize;
 typedef long long int	vlong;
 typedef unsigned long long int	uvlong;

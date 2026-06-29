@@ -117,7 +117,9 @@ kproc(char *name, void (*func)(void*), void *arg, int flags)
 	Egrp *eg;
 	pthread_attr_t attr;
 	Osdep *os;
-
+#ifdef __ANDROID__
+	extern int pthread_attr_setinheritsched(pthread_attr_t* _Nonnull __attr, int __flag);
+#endif
 	p = newproc();
 	if(p == nil)
 		panic("kproc: no memory");

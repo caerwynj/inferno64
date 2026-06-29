@@ -40,6 +40,10 @@ WRAP=
 default:V:	$O.$CONF
 
 $O.$CONF:	$OBJ $CONF.c $CONF.root.h $LIBNAMES
+	if [ "`uname -o`" = 'Android' ]
+	then
+		SYSLIBS="$SYSLIBS -landroid-shmem"
+	fi
 	$CC $CFLAGS '-DKERNDATE='$KERNDATE $CONF.c
 	$LD $LDFLAGS $WRAP -o $target $OBJ $CONF.$O $LIBFILES $SYSLIBS
 
