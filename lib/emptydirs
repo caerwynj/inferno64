@@ -33,6 +33,9 @@ Inferno/wrap
 Linux/386/bin
 Linux/386/include
 Linux/386/lib
+Linux/amd64/bin
+Linux/amd64/include
+Linux/amd64/lib
 Linux/arm/bin
 Linux/arm/include
 Linux/arm/lib
