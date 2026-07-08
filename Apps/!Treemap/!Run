@@ -1,2 +1,0 @@
-#!/dis/sh.dis
-du -a `{wm/filename} | wm/tmap

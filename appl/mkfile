@@ -7,12 +7,12 @@ DIRS=\
 	cmd\
 #	collab\
 #	demo\
-#	ebook\
+	ebook\
 	grid\
 	lib\
 	math\
 #	mux\
-#	spree\
+	spree\
 	svc\
 	tiny\
 	wm\

@@ -73,7 +73,7 @@ kind is text
 data matches '[a-zA-Z0-9_./\-]+'
 data isdir      $0
 plumb alwaysstart dir # nasty plumbing hack
-plumb start /dis/wm/dir.dis $dir
+plumb start /dis/wm/filer.dis $dir
 
 # man pages
 kind is text

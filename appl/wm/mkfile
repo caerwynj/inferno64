@@ -1,7 +1,7 @@
 <../../mkconfig
 
 DIRS=\
-	brutus\
+#	brutus\
 	camera\
 	drawmux\
 	ftree\
@@ -27,6 +27,7 @@ TARG=\
 	dir.dis\
 	edit.dis\
 	filename.dis\
+	filer.dis\
 	getauthinfo.dis\
 	keyboard.dis\
 	logon.dis\

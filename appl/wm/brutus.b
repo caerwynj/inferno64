@@ -5,7 +5,7 @@ include "sys.m";
 
 include "draw.m";
 	draw: Draw;
-	Context: import draw;
+	Context, Point, Font, Display, Image, Rect: import draw;
 	ctxt: ref Context;
 
 include "tk.m";
@@ -24,6 +24,12 @@ include	"bufio.m";
 	bufio: Bufio;
 	Iobuf: import bufio;
 
+include "imagefile.m";
+	imageremap: Imageremap;
+	readgif: RImagefile;
+	readjpg: RImagefile;
+	readpng: RImagefile;
+
 include	"workdir.m";
 
 include	"plumbmsg.m";
@@ -31,27 +37,14 @@ include	"plumbmsg.m";
 	Msg: import plumbmsg;
 
 include	"brutus.m";
-include	"brutusext.m";
 
-EXTDIR:	con "/dis/wm/brutus";
-NEXTRA:	con NTAG-NFONTTAG;
 DEFFONT:	con "/fonts/lucidasans/unicode.8.font";
-DEFFONTNAME:	con "Roman";
 DEFSIZE:	con 10;
-DEFTAG:	con "Roman.10";
+DEFTAG:		con "Roman.10";
 SETFONT:	con " -font "+DEFFONT+" ";
-FOCUS:	con "focus .ft.t";
-NOSEL:	con ".ft.t tag remove sel sel.first sel.last";
-UPDATE:	con "update";
-
-#
-# Foreign keyboards and languages
-#
-Remaptab: adt
-{
-	in, out:	int;
-};
-include	"hebrew.m";
+FOCUS:		con "focus .ft.t";
+NOSEL:		con ".ft.t tag remove sel sel.first sel.last";
+UPDATE:		con "update";
 
 BS:		con 8;		# ^h backspace character
 BSW:		con 23;		# ^w bacspace word
@@ -72,24 +65,12 @@ menu_cfg := array[] of {
 
 brutus_cfg := array[] of {
 	# buttons
-	"button .b.Tag -text Tag -command {send cmd tag} -state disabled",
-	"menubutton .b.Font -text Roman -menu .b.Font.menu -underline -1 -state disabled",
-	"menu .b.Font.menu",
-	".b.Font.menu add command -label Roman -command {send cmd font Roman}",
-	".b.Font.menu add command -label Italic -command {send cmd font Italic}",
-	".b.Font.menu add command -label Bold -command {send cmd font Bold}",
-	".b.Font.menu add command -label Type -command {send cmd font Type}",
-	"checkbutton .b.Applyfont -variable Applyfont -command {send cmd applyfont}} -state disabled",
-	"button .b.Applyfontnow -text Font -command {send cmd applyfontnow} -state disabled",
-	"button .b.Applysizenow -text Size -command {send cmd applysizenow} -state disabled",
-	"button .b.Applyfontsizenow -text F&S -command {send cmd applyfontsizenow} -state disabled",
-	"menubutton .b.Size -text 10pt -menu .b.Size.menu -underline -1 -state disabled",
-	"menu .b.Size.menu",
-	".b.Size.menu add command -label 6pt -command {send cmd size 6}",
-	".b.Size.menu add command -label 8pt -command {send cmd size 8}",
-	".b.Size.menu add command -label 10pt -command {send cmd size 10}",
-	".b.Size.menu add command -label 12pt -command {send cmd size 12}",
-	".b.Size.menu add command -label 16pt -command {send cmd size 16}",
+	"button .b.Bold -text B -command {send cmd mdbold}",
+	"button .b.Italic -text I -command {send cmd mditalic}",
+	"button .b.H1 -text H1 -command {send cmd mdheading 1}",
+	"button .b.H2 -text H2 -command {send cmd mdheading 2}",
+	"button .b.H3 -text H3 -command {send cmd mdheading 3}",
+	"button .b.View -text Raw -command {send cmd mdview}",
 	"button .b.Put -text Put -command {send cmd put} -state disabled",
 
 	# text
@@ -99,7 +80,7 @@ brutus_cfg := array[] of {
 	FOCUS,
 
 	# pack
-	"pack .b.File .b.Ext .b.Tag .b.Applyfontnow .b.Applysizenow .b.Applyfontsizenow .b.Applyfont .b.Font .b.Size .b.Put -side left",
+	"pack .b.File .b.Bold .b.Italic .b.H1 .b.H2 .b.H3 .b.View .b.Put -side left",
 	"pack .b -anchor w",
 	"pack .ft.scroll -side left -fill y",
 	"pack .ft.t -fill both -expand 1",
@@ -143,17 +124,6 @@ input_cfg := array[] of {
 	UPDATE
 };
 
-fontbuts := array[] of {
-	".b.Ext",
-	".b.Tag",
-	".b.Applyfontnow",
-	".b.Applysizenow",
-	".b.Applyfontsizenow",
-	".b.Applyfont",
-	".b.Font",
-	".b.Size",
-};
-
 fontname = array[NFONT] of {
 	"Roman",
 	"Italic",
@@ -169,8 +139,8 @@ sizename = array[NSIZE] of {
 	"16",
 };
 
+# Tag names and their configurations used for markdown rendering.
 tagname = array[NTAG] of {
-	# first NFONT*NSIZE are font/size names
 	"Roman.6",
 	"Roman.8",
 	"Roman.10",
@@ -244,49 +214,147 @@ tagconfig = array[NTAG] of {
 
 enabled := array[] of {"disabled", "normal"};
 
+# alignment for table cells (subset of what table.b used)
+Aleft, Acenter, Aright: con iota;
+
+# Horizontal / vertical padding between table cells.
+TABHPAD: con 10;
+TABVPAD: con 4;
+
+# Font style indices for table cells (match the internal ordering used
+# by table.b).  Only the sizes actually rendered are populated; picking
+# a different size per cell means opening another font.
+TBL_NFONT: con 4;
+TBL_NSIZE: con 5;
+TBL_NFONTTAG: con TBL_NFONT * TBL_NSIZE;
+
+TBL_Roman,
+TBL_Italic,
+TBL_Bold,
+TBL_Type: con iota;
+
+TBL_Size6,
+TBL_Size8,
+TBL_Size10,
+TBL_Size12,
+TBL_Size16: con iota;
+
+# Font files keyed by (style*TBL_NSIZE + size).
+tbl_fontnames := array[TBL_NFONTTAG] of {
+	"/fonts/lucidasans/unicode.6.font",
+	"/fonts/lucidasans/unicode.7.font",
+	"/fonts/lucidasans/unicode.8.font",
+	"/fonts/lucidasans/unicode.10.font",
+	"/fonts/lucidasans/unicode.13.font",
+	"/fonts/lucidasans/italiclatin1.6.font",
+	"/fonts/lucidasans/italiclatin1.7.font",
+	"/fonts/lucidasans/italiclatin1.8.font",
+	"/fonts/lucidasans/italiclatin1.10.font",
+	"/fonts/lucidasans/italiclatin1.13.font",
+	"/fonts/lucidasans/boldlatin1.6.font",
+	"/fonts/lucidasans/boldlatin1.7.font",
+	"/fonts/lucidasans/boldlatin1.8.font",
+	"/fonts/lucidasans/boldlatin1.10.font",
+	"/fonts/lucidasans/boldlatin1.13.font",
+	"/fonts/lucidasans/typelatin1.6.font",
+	"/fonts/lucidasans/typelatin1.7.font",
+	"/fonts/pelm/latin1.9.font",
+	"/fonts/pelm/ascii.12.font",
+	"/fonts/pelm/ascii.16.font",
+};
+
+tbl_fontrefs := array[TBL_NFONTTAG] of ref Font;
+tbl_fontused := array[TBL_NFONTTAG] of { * => 0 };
+
 File: adt
 {
 	tk:			ref Tk->Toplevel;
 	isctl:			int;
-	applyfont:		int;
-	fontsused:	int;
 	name:		string;
 	dirty:		int;
-	font:			string;	# set by the buttons, not nec. by the text
-	size:			int;		# set by the buttons, not nec. by the text
-	fonttag:		string;	# set by the buttons, not nec. by the text
-	configed:		array of int;
+	size:			int;		# base font size used for markdown
+	configed:	array of int;
 	button1:		int;
 	button3:		int;
-	fontsok:		int;		# fonts and tags can be set
-	extensions:	list of ref Ext;
+	rawview:	int;		# 1 iff currently showing raw markdown source
+	tables:		list of ref MdTable;
+	tablectr:	int;
+	images:		list of ref MdImage;
+	imagectr:	int;
 };
 
-Ext: adt
+MdTable: adt
 {
-	tkname:		string;
-	modname:	string;
-	mod:		Brutusext;
-	args:			string;
+	canv:	string;		# full widget path of the embedded canvas
+	src:	string;		# original markdown block (with trailing \n)
+};
+
+MdImage: adt
+{
+	canv:	string;		# full widget path of the embedded canvas
+	img:	string;		# Tk image resource name
+	src:	string;		# original markdown line (with trailing \n)
+};
+
+# Per-cell text run rendered in a single font.
+TblItem: adt
+{
+	s:		string;
+	fontnum:	int;
+	pos:		Point;
+	width:	int;
+	next:		cyclic ref TblItem;
+};
+
+TblCell: adt
+{
+	items:	ref TblItem;
+	halign:	int;
+	width:	int;
+	height:	int;
+	ascent:	int;
+	pos:		Point;	# nw corner of cell, in canvas coords
+	row:		int;
+	col:		int;
+};
+
+TblRow: adt
+{
+	cells:	array of ref TblCell;
+	height:	int;
+	ascent:	int;
+	pos:		Point;
+};
+
+TblCol: adt
+{
+	width:	int;
+	halign:	int;
+	pos:		Point;
+};
+
+Tbl: adt
+{
+	nrow:	int;
+	ncol:	int;
+	width:	int;
+	height:	int;
+	border:	int;
+	cols:		array of ref TblCol;
+	rows:		array of ref TblRow;
 };
 
 menuindex := "0";
 snarftext := "";
-snarfsgml := "";
 central: chan of (ref File, string);
 files:	array of ref File;	# global but modified only by control thread
 plumbed := 0;
 curdir := "";
-lang := "";
 
 init(c: ref Context, argv: list of string)
 {
 	ctxt = c;
 	sys = load Sys Sys->PATH;
-	if (ctxt == nil) {
-		sys->fprint(sys->fildes(2), "brutus: no window context\n");
-		raise "fail:bad context";
-	}
  	draw = load Draw Draw->PATH;
 	tk = load Tk Tk->PATH;
 	tkclient = load Tkclient Tkclient->PATH;
@@ -295,7 +363,7 @@ init(c: ref Context, argv: list of string)
 	bufio = load Bufio Bufio->PATH;
 	plumbmsg = load Plumbmsg Plumbmsg->PATH;
 
-	if(plumbmsg->init(1, "edit", 1000) >= 0){
+	if(plumbmsg->init(1, "markdown", 1000) >= 0){
 		plumbed = 1;
 		workdir := load Workdir Workdir->PATH;
 		curdir = workdir->init();
@@ -303,6 +371,13 @@ init(c: ref Context, argv: list of string)
 	}
 
 	tkclient->init();
+	if (ctxt == nil) {
+		ctxt = tkclient->makedrawcontext();
+		if (ctxt == nil) {
+		sys->fprint(sys->fildes(2), "brutus: no window context\n");
+		raise "fail:bad context";
+		}
+	}
 	dialog->init();
 	selectfile->init();
 	sys->pctl(Sys->NEWPGRP, nil);	# so we can pass "exit" command to tkclient
@@ -356,7 +431,7 @@ control(ctxt: ref Context)
 
 	# f is not used to store anything, just to simplify interfaces
 	# shared by control and brutus
-	f := ref File (t, 1, 0, 0, "", 0, DEFFONTNAME, DEFSIZE, DEFTAG, nil, 0, 0, 0, nil);
+	f := ref File (t, 1, "", 0, DEFSIZE, nil, 0, 0, 0, nil, 0, nil, 0);
 
 	tkcmds(t, menu_cfg);
 	tkcmd(t, "frame .b");
@@ -370,7 +445,6 @@ control(ctxt: ref Context)
 
 	tkcmd(t, ".ft.t mark set typingstart 1.0; .ft.t mark gravity typingstart left");
 	central <-= (nil, "");	# signal readiness
-#	spawn tkclient->wmctl(t, "task");
 	curfile: ref File;
 
 	plumbc := chan of (string, string);
@@ -395,7 +469,6 @@ control(ctxt: ref Context)
 			}
 			break;
 		}
-		# spawn tkclient->wmctl(t, menu);
 		tkclient->wmctl(t, menu);
 
 	ecmd := <-edit =>
@@ -408,9 +481,9 @@ control(ctxt: ref Context)
 		* =>
 			sys->print("unknown control cmd %s\n",c );
 		"File" =>
-			filemenu(t, 0, 0);
+			filemenu(t, 0);
 		"new" =>
-			(name, ok, nil) := getfilename(ctxt, t, "file for new window", f.name, 1, 0, 0);
+			(name, ok) := getfilename(ctxt, t, "file for new window", f.name, 1);
 			if(ok)
 				spawn brutus(ctxt, name);
 		"select" =>
@@ -437,7 +510,6 @@ control(ctxt: ref Context)
 			nfiles = nil;	# make sure references don't linger
 			files[len files-1] = file;
 		"name" =>
-			name := nameof(file);
 			index := 0;
 			for(i:=1; i<len files; i++)
 				if(files[i] == file){
@@ -480,6 +552,7 @@ control(ctxt: ref Context)
 			}
 			file = nil;
 		}
+
 	c := <-keys =>
 		char := typing(f, c);
 		if(curfile!=nil && char=='\n' && insat(t, "end"))
@@ -520,7 +593,7 @@ brutus(ctxt: ref Context, filename: string)
 	addr := "";
 	for(i:=len filename; --i>0; ){
 		if(filename[i] == ':'){
-			(ok, dir) := sys->stat(filename[0:i]);
+			(ok, nil) := sys->stat(filename[0:i]);
 			if(ok >= 0){
 				addr = filename[i+1:];
 				filename = filename[0:i];
@@ -531,29 +604,29 @@ brutus(ctxt: ref Context, filename: string)
 
 	(t, titlectl)  := tkclient->toplevel(ctxt, SETFONT, Name, Tkclient->Appl);
 
-	f := ref File (t, 0, 0, 0, filename, 0, DEFFONTNAME, DEFSIZE, DEFTAG, nil, 0, 0, 0, nil);
+	f := ref File (t, 0, filename, 0, DEFSIZE, nil, 0, 0, 0, nil, 0, nil, 0);
 	f.configed = array[NTAG] of {* => 0};
 
 	tkcmds(t, menu_cfg);
 	tkcmd(t, "frame .b");
 	tkcmd(t, buttoncfg("File", ""));
-	tkcmd(t, buttoncfg("Ext", "-state disabled"));
 
 	tkcmds(t, brutus_cfg);
 	tkcmds(t, input_cfg);
 
-	# buttons work better when they grab the mouse
-	a := array[] of {".b.Tag", ".b.Applyfontnow", ".b.Applysizenow", ".b.Applyfontsizenow"};
-	for(i=0; i<len a; i++){
-		tkcmd(t, "bind "+a[i]+" <Button-1> +{grab set "+a[i]+"}");
-		tkcmd(t, "bind "+a[i]+" <ButtonRelease-1> +{grab release "+a[i]+"}");
-	}
-
 	(keys, edit, cmd, but1, but2, but3, drag) := tkchans(t);
 
+	# Pre-configure the tags we'll use for markdown rendering.
+	configfont(f, DEFTAG);
+	configfont(f, "Bold.10");
+	configfont(f, "Bold.12");
+	configfont(f, "Bold.16");
+	configfont(f, "Italic.10");
+	configfont(f, "Type.10");
 	configfont(f, "Heading");
-	configfont(f, "Title");
-	configfont(f, f.fonttag);
+	configfont(f, "List");
+	configfont(f, "List-elem");
+	configfont(f, "Example");
 	tkcmd(t, ".ft.t mark set typingstart 1.0; .ft.t mark gravity typingstart left");
 	tkcmd(t, "image create bitmap waiting -file cursor.wait");
 
@@ -588,7 +661,7 @@ brutus(ctxt: ref Context, filename: string)
 				"cancel" =>
 					continue;
 				"exitclean" =>
-					if(dumpfile(f, f.name, f.fontsused) < 0)
+					if(dumpfile(f, f.name) < 0)
 						continue;
 					break;
 				"exitdirty" =>
@@ -615,11 +688,9 @@ brutus(ctxt: ref Context, filename: string)
 		* =>
 			sys->print("unknown command %s\n", command);
 		"File" =>
-			filemenu(t, 1, f.fontsok);
-		"Ext" =>
-			extmenu(t);
+			filemenu(t, 1);
 		"new" =>
-			(name, ok, nil) := getfilename(ctxt, t, "file for new window", f.name, 1, 0, 0);
+			(name, ok) := getfilename(ctxt, t, "file for new window", f.name, 1);
 			if(ok)
 				spawn brutus(ctxt, name);
 		"open" =>
@@ -629,14 +700,14 @@ brutus(ctxt: ref Context, filename: string)
 				"cancel" =>
 					continue;
 				"exitclean" =>
-					if(dumpfile(f, f.name, f.fontsused) < 0)
+					if(dumpfile(f, f.name) < 0)
 						continue;
 					break;
 				"exitdirty" =>
 					break;
 				}
 			}
-			(name, ok, nil) := getfilename(ctxt, t, "file for this window", f.name, 1, 0, 0);
+			(name, ok) := getfilename(ctxt, t, "file for this window", f.name, 1);
 			if(ok && name!=""){
 				setfilename(f, name);
 				if(loadfile(f, name) < 0){
@@ -648,7 +719,7 @@ brutus(ctxt: ref Context, filename: string)
 				}
 			}
 		"name" =>
-			(name, ok, nil) := getfilename(ctxt, t, "remembered file name", f.name, 1, 0, 0);
+			(name, ok) := getfilename(ctxt, t, "remembered file name", f.name, 1);
 			if(ok){
 				if(name != f.name){
 					setfilename(f, name);
@@ -656,76 +727,32 @@ brutus(ctxt: ref Context, filename: string)
 				}
 			}
 		"write" =>
-			(name, ok, sgml) := getfilename(ctxt, t, "file to write", f.name, 1, 1, f.fontsused);
+			(name, ok) := getfilename(ctxt, t, "file to write", f.name, 1);
 			if(ok && name!=""){
 				if(f.name == ""){
 					setfilename(f, name);
 					dirty(f, 1);
 				}
-				dumpfile(f, name, sgml);
-			}
-		"fonts" =>
-			if(f.fontsok==0 && f.fontsused==0){
-				action := confirm(ctxt, t, "Converting "+nameof(f)+" to SGML", 0);
-				case action {
-				"cancel" =>
-					continue;
-				"exitdirty" =>
-					usingfonts(f);
-					dirty(f, 1);
-				}
-			}
-			enablefonts(f, !f.fontsok);
-		"language" =>
-			if(lang == "")
-				lang = "Hebrew";
-			else
-				lang = "";
-		"addext" =>
-			ext := hd tl c;
-			(args, ok, nil) := getfilename(ctxt, t, "parameters for "+ext, "", 0, 0, 0);
-			if(ok){
-				tkcmd(t, "cursor -image waiting; update");
-				addextension(f, ext+" "+args, nil);
-				usingfonts(f);
-				dirty(f, 1);
-				tkcmd(t, "cursor -default; update");
+				dumpfile(f, name);
 			}
 		"select" =>
 			central <-= (f, command);
-		"tag" =>
-			tageditor(ctxt, f);
-			tkcmd(t, FOCUS);
-		"font" =>
-			f.font = hd tl c;
-			tkcmd(t, ".b.Font configure -text "+f.font+";"+UPDATE);
-			f.fonttag = f.font+"."+string f.size;
-			configfont(f, f.fonttag);
-			if(changefont(f, f.font))
-				dirty(f, 1);
-		"size" =>
-			sz := hd tl c;
-			tkcmd(t, ".b.Size configure -text "+sz+"pt; update");
-			f.size = int sz;
-			f.fonttag = f.font+"."+string f.size;
-			configfont(f, f.fonttag);
-			if(changesize(f, string f.size))
-				dirty(f, 1);
-		"applyfont" =>
-			f.applyfont = int tkcmd(t, "variable Applyfont");
-			if(f.applyfont)
-				configfont(f, f.fonttag);
-		"applyfontnow" =>
-			if(changefont(f, f.font))
-				dirty(f, 1);
-		"applysizenow" =>
-			if(changesize(f, string f.size))
-				dirty(f, 1);
-		"applyfontsizenow" =>
-			if(changefontsize(f, f.fonttag))
-				dirty(f, 1);
 		"put" =>
-			dumpfile(f, f.name, f.fontsused);
+			dumpfile(f, f.name);
+		"mdbold" =>
+			if(mdtoggletag(f, "Bold."+string f.size))
+				dirty(f, 1);
+		"mditalic" =>
+			if(mdtoggletag(f, "Italic."+string f.size))
+				dirty(f, 1);
+		"mdheading" =>
+			level := 1;
+			if(tl c != nil)
+				level = int hd tl c;
+			if(mdapplyheading(f, level))
+				dirty(f, 1);
+		"mdview" =>
+			mdviewtoggle(f);
 		"focus" =>
 			central <-= (f, "focus");
 		}
@@ -749,27 +776,6 @@ brutus(ctxt: ref Context, filename: string)
 	}
 }
 
-kbdremap(c: int) : (int, int)
-{
-	tab: array of Remaptab;
-
-	dir := 1;
-	case lang{
-	"" =>
-		return (c, dir);
-	"Hebrew" =>
-		tab = hebrewtab;
-		dir = -1;
-	* =>
-		sys->print("unknown language %s\n", lang);
-		return (c, dir);
-	}
-	for(i:=0; i<len tab; i++)
-		if(c == tab[i].in)
-			return (tab[i].out, dir);
-	return (c, 1);
-}
-
 typing(f: ref File, c: string): int
 {
 	t := f.tk;
@@ -781,24 +787,7 @@ typing(f: ref File, c: string): int
 		cut(f, 1);
 	case char {
 	* =>
-		dir := 1;
-		if(c[1] != '\\')	# safe character; remap it
-			(c[1], dir) = kbdremap(char);
-		s := ".ft.t insert insert "+c;
-		if(dir < 0)
-			s += ";.ft.t mark set insert insert-1c";
-		if(f.applyfont){
-			usingfonts(f);
-			s += f.fonttag;
-		}
-		tkcmd(t, s+update);
-		if(f.fontsused && f.applyfont==0){
-			# nasty goo to make sure we don't insert text without a font tag;
-			# must ask after the fact if default rules set a tag.
-			names := tkcmd(t, ".ft.t tag names insert-1chars");
-			if(!somefont(names))
-				tkcmd(t, ".ft.t tag add "+DEFTAG+" insert-1chars");
-		}
+		tkcmd(t, ".ft.t insert insert "+c+update);
 		dirty(f, 1);
 	ESC =>
 		if(nullsel(t))
@@ -841,7 +830,6 @@ mousebut2(f: ref File, c: string)
 		(nil, l) := sys->tokenize(c, " ");
 		x := int hd l - 50;
 		y := int hd tl l - int tk->cmd(f.tk, ".m yposition "+menuindex) - 10;
-#		tkcmd(f.tk, "focus .ft.t");
 		tkcmd(f.tk, ".m activate "+menuindex+"; .m post "+string x+" "+string y+
 			"; update");
 	}
@@ -876,8 +864,6 @@ mousebut3(f: ref File, c: string)
 	if(insel)
 		text := tk->cmd(t, ".ft.t get sel.first sel.last");
 	else{
-		# have line with text in it
-		# now extract whitespace-bounded string around click
 		(nil, w) := sys->tokenize(index, ".");
 		charno := int hd tl w;
 		left := tk->cmd(t, ".ft.t index {"+index+" linestart}");
@@ -914,15 +900,7 @@ directory(f: ref File): string
 	return curdir;
 }
 
-enablefonts(f: ref File, enable: int)
-{
-	for(i:=0; i<len fontbuts; i++)
-		tkcmd(f.tk, fontbuts[i] + " configure -state "+enabled[enable]);
-	tkcmd(f.tk, "update");
-	f.fontsok = enable;
-}
-
-filemenu(t: ref tk->Toplevel, buttons, fontsok: int)
+filemenu(t: ref tk->Toplevel, buttons: int)
 {
 	tkcmd(t, "menu .b.Filemenu");
 	tkcmd(t, ".b.Filemenu add command -label New -command {send cmd new}");
@@ -930,18 +908,6 @@ filemenu(t: ref tk->Toplevel, buttons, fontsok: int)
 		tkcmd(t, ".b.Filemenu add command -label Open -command {send cmd open}");
 		tkcmd(t, ".b.Filemenu add command -label Name -command {send cmd name}");
 		tkcmd(t, ".b.Filemenu add command -label Write -command {send cmd write}");
-		if(fontsok)
-			pre := "Dis";
-		else
-			pre = "En";
-		tkcmd(t, ".b.Filemenu add command -label {"
-			+pre+"able Fonts} -command {send cmd fonts}");
-		if(lang == "")
-			pre = "En";
-		else
-			pre = "Dis";
-		tkcmd(t, ".b.Filemenu add command -label {"
-			+pre+"able Hebrew} -command {send cmd language}");
 	}
 	tkcmd(t, ".b.Filemenu add command -label {["+Name+"]} -command {send cmd select 0}");
 	if(files != nil)
@@ -958,30 +924,6 @@ filemenu(t: ref tk->Toplevel, buttons, fontsok: int)
 	x := tk->cmd(t, ".ft.scroll cget actx");
 	y := tk->cmd(t, ".ft.scroll cget acty");
 	tkcmd(t, ".b.Filemenu post "+x+" "+y+"; grab set .b.Filemenu; update");
-}
-
-extmenu(t: ref tk->Toplevel)
-{
-	fd := sys->open(EXTDIR, Sys->OREAD);
-	if(fd == nil || ((n,dir):=sys->dirread(fd)).t0<=0){
-		sys->print("%s: can't find extension directory %s: %r\n", Name, EXTDIR);
-		return;
-	}
-
-	tkcmd(t, "menu .b.Extmenu");
-	for(i:=0; i<n; i++){
-		name := dir[i].name;
-		if(len name>4 && name[len name-4:]==".dis"){
-			name = name[0:len name-4];
-			tkcmd(t, ".b.Extmenu add command -label {Add "+name+
-				"} -command {send cmd addext "+name+"}");
-		}
-	}
-
-	tkcmd(t, "bind .b.Extmenu <Unmap> {destroy .b.Extmenu}");
-	x := tk->cmd(t, ".ft.scroll cget actx");
-	y := tk->cmd(t, ".ft.scroll cget acty");
-	tkcmd(t, ".b.Extmenu post "+x+" "+y+"; grab set .b.Extmenu; update");
 }
 
 basepath(file: string): (string, string)
@@ -1069,7 +1011,7 @@ editor(f: ref File, ecmd: string)
 	"cut" =>
 		menuindex = "0";
 		cut(f, 1);
-	
+
 	"paste" =>
 		menuindex = "1";
 		paste(f);
@@ -1099,39 +1041,26 @@ cut(f: ref File, snarfit: int)
 	dirty(f, 1);
 	if(snarfit)
 		snarf(f);
-	# sometimes when clicking fast, selection and insert point can
-	# separate.  the only time this really matters is when typing into
-	# a double-clicked selection.  it's easy to fix here.
 	tkcmd(f.tk, ".ft.t mark set insert sel.first;.ft.t delete sel.first sel.last");
 }
 
 snarf(f: ref File)
 {
-	# convert sel.first and sel.last to numeric forms because sgml()
-	# must clear selection to avoid <sel> tags in result.
 	(nil, sel) := sys->tokenize(tkcmd(f.tk, ".ft.t tag ranges sel"), " ");
 	snarftext = tkcmd(f.tk, ".ft.t get "+hd sel+" "+hd tl sel);
-	snarfsgml = sgml(f.tk, "-sgml", hd sel, hd tl sel);
 	tkclient->snarfput(snarftext);
 }
 
 paste(f: ref File)
 {
-#	good question
 	snarftext = tkclient->snarfget();
-	if(snarftext == "" && (f.fontsused == 0 || snarfsgml == nil))
+	if(snarftext == "")
 		return;
 	cut(f, 0);
 	dirty(f, 1);
-
 	t := f.tk;
 	start := tkcmd(t, ".ft.t index insert");
-	if(f.fontsused == 0)
-		tkcmd(t, ".ft.t insert insert '"+snarftext);
-	else if(f.applyfont)
-		tkcmd(t, ".ft.t insert insert "+tk->quote(snarftext)+" "+f.fonttag);
-	else
-		insert(f, snarfsgml);
+	tkcmd(t, ".ft.t insert insert "+tk->quote(snarftext));
 	tkcmd(t, ".ft.t tag add sel "+start+" insert");
 }
 
@@ -1149,15 +1078,6 @@ look(f: ref File)
 	tkcmd(t, "cursor -default; update");
 }
 
-# First time fonts are used explicitly, establish font tags for all extant text.
-usingfonts(f: ref File)
-{
-	if(f.fontsused)
-		return;
-	tkcmd(f.tk, ".ft.t tag add "+DEFTAG+" 1.0 end");
-	f.fontsused = 1;
-}
-
 word(t: ref Tk->Toplevel): (string, string)
 {
 	start := "sel.first";
@@ -1166,7 +1086,6 @@ word(t: ref Tk->Toplevel): (string, string)
 		insert := tkcmd(t, ".ft.t index insert");
 		start = tkcmd(t, ".ft.t index {insert wordstart}");
 		if(insert == start){	# tk's definition of 'wordstart' is bogus
-			# if at beginning, tk->cmd will return !error and a0 will be false.
 			a0 := isalnum(tk->cmd(t, ".ft.t get insert-1chars"));
 			a1 := isalnum(tk->cmd(t, ".ft.t get insert"));
 			if(a0==0 && a1==0)
@@ -1179,121 +1098,6 @@ word(t: ref Tk->Toplevel): (string, string)
 			return (nil, nil);
 	}
 	return (start, end);
-}
-
-# Change the font associated with the selection
-changefont(f: ref File, font: string): int
-{
-	t := f.tk;
-	(sel0, sel1) := word(f.tk);
-	mod := 0;
-	if(sel0 == nil)
-		return mod;
-	usingfonts(f);
-	for(i:=0; i<NFONT; i++){
-		if(fontname[i] == font)
-			continue;
-		for(j:=0; j<NSIZE; j++){
-			tag := fontname[i]+"."+sizename[j];
-			start := sel0;
-			for(;;){
-				range := tkcmd(t, ".ft.t tag nextrange "+tag+" "+start+" "+sel1);
-				if(len range > 0 && range[0] == '!')
-					break;
-				(nil, tt) := sys->tokenize(range, " ");
-				if(tt == nil)
-					break;
-				tkcmd(t, ".ft.t tag remove "+tag+" "+hd tt+" "+hd tl tt);
-				fs := font+"."+sizename[j];
-				tkcmd(t, ".ft.t tag add "+fs+" "+hd tt+" "+hd tl tt);
-				configfont(f, fs);
-				start = hd tl tt;
-				mod = 1;
-			}
-		}
-	}
-	tkcmd(t, UPDATE);
-	return mod;
-}
-
-# See if tag list includes a font name
-somefont(tag: string): int
-{
-	(nil, tt) := sys->tokenize(tag, " ");
-	for(; tt!=nil; tt=tl tt)
-		for(i:=0; i<NFONT*NSIZE; i++){
-			if(tagname[i] == hd tt)
-				return 1;
-		}
-	return 0;
-}
-
-# Change the size associated with the selection
-changesize(f: ref File, size: string): int
-{
-	t := f.tk;
-	(sel0, sel1) := word(f.tk);
-	mod := 0;
-	if(sel0 == nil)
-		return mod;
-	usingfonts(f);
-	for(i:=0; i<NFONT; i++){
-		for(j:=0; j<NSIZE; j++){
-			if(sizename[j] == size)
-				continue;
-			tag := fontname[i]+"."+sizename[j];
-			start := sel0;
-			for(;;){
-				range := tkcmd(t, ".ft.t tag nextrange "+tag+" "+start+" "+sel1);
-				if(len range > 0 && range[0] == '!')
-					break;
-				(nil, tt) := sys->tokenize(range, " ");
-				if(tt == nil)
-					break;
-				tkcmd(t, ".ft.t tag remove "+tag+" "+hd tt+" "+hd tl tt);
-				fs := fontname[i]+"."+size;
-				tkcmd(t, ".ft.t tag add "+fs+" "+hd tt+" "+hd tl tt);
-				configfont(f, fs);
-				start = hd tl tt;
-				mod = 1;
-			}
-		}
-	}
-	tkcmd(t, UPDATE);
-	return mod;
-}
-
-# Change the font and size associated with the selection
-changefontsize(f: ref File, newfontsize: string): int
-{
-	t := f.tk;
-	(sel0, sel1) := word(f.tk);
-	if(sel0 == nil)
-		return 0;
-	usingfonts(f);
-	(nil, names) := sys->tokenize(tkcmd(t, ".ft.t tag names"), " ");
-	# clear old tags
-	tags := tagname[0:NFONT*NSIZE];
-	for(l:=names; l!=nil; l=tl l)
-		for(i:=0; i<len tags; i++)
-			if(tags[i] == hd l)
-				tkcmd(t, ".ft.t tag remove "+hd l+" "+sel0+" "+sel1);
-	tkcmd(t, ".ft.t tag add "+newfontsize+" "+sel0+" "+sel1+"; update");
-	return 1;
-}
-
-listtostring(l: list of string): string
-{
-	s := "{";
-	while(l != nil){
-		if(len s == 1)
-			s += hd l;
-		else
-			s += " " + hd l;
-		l = tl l;
-	}
-	s += "}";
-	return s;
 }
 
 # splitl based on indices rather than slices.  this version returns char
@@ -1310,206 +1114,504 @@ splitl(str: string, i, j: int, pat: string): int
 	return i;
 }
 
-# splitstrl based on indices rather than slices. this version returns char
-# position of the beginning of the matching string.
-splitstrl(str: string, i, j: int, pat: string): int
+# Insert text at the cursor with the given list of tags.  The tag
+# argument is a whitespace-separated list of tag names (e.g. "Heading
+# Bold.16").  Tk's `.ft.t insert` expects the tag list as a single Tcl
+# list, so we wrap it in braces; otherwise multi-tag lists get parsed
+# as "chars tag chars tag ...".
+mdput(f: ref File, s, tag: string)
 {
-	l := len pat;
-	if(l == 0)	# shouldn't happen, but be safe
-		return j;
-	first := pat[0];
-	while(i <= j-l){
-		# check first char for speed
-		if(str[i] == first){
-			for(k:=1; k<l && str[i+k]==pat[k]; k++)
-				;
-			if(k == l)
-				return i;
+	if(s == "")
+		return;
+	tkcmd(f.tk, ".ft.t insert insert "+tk->quote(s)+" {"+tag+"}");
+}
+
+# Parse inline markdown (bold, italic, inline code) within a single
+# line.  basetag is the space-separated tag list that applies to plain
+# text on this line.
+mdinline(f: ref File, line, basetag: string)
+{
+	end := len line;
+	sizestr := string f.size;
+	i := 0;
+	while(i < end){
+		j := i;
+		while(j < end){
+			c := line[j];
+			if(c=='`' || c=='*' || c=='_' || c=='\\')
+				break;
+			j++;
 		}
+		if(j > i)
+			mdput(f, line[i:j], basetag);
+		if(j >= end)
+			return;
+		c := line[j];
+		if(c == '\\' && j+1 < end){
+			mdput(f, line[j+1:j+2], basetag);
+			i = j+2;
+			continue;
+		}
+		if(c == '`'){
+			k := j+1;
+			while(k < end && line[k] != '`')
+				k++;
+			if(k < end){
+				tag := "Type."+sizestr;
+				configfont(f, tag);
+				mdput(f, line[j+1:k], basetag+" "+tag);
+				i = k+1;
+				continue;
+			}
+			mdput(f, line[j:j+1], basetag);
+			i = j+1;
+			continue;
+		}
+		# '*' or '_': bold if doubled, italic otherwise
+		if(j+1 < end && line[j+1] == c){
+			k := j+2;
+			found := 0;
+			while(k+1 < end){
+				if(line[k] == c && line[k+1] == c){
+					found = 1;
+					break;
+				}
+				k++;
+			}
+			if(found){
+				tag := "Bold."+sizestr;
+				configfont(f, tag);
+				mdput(f, line[j+2:k], basetag+" "+tag);
+				i = k+2;
+				continue;
+			}
+		}
+		k := j+1;
+		found := 0;
+		while(k < end){
+			if(line[k] == c){
+				found = 1;
+				break;
+			}
+			k++;
+		}
+		if(found){
+			tag := "Italic."+sizestr;
+			configfont(f, tag);
+			mdput(f, line[j+1:k], basetag+" "+tag);
+			i = k+1;
+			continue;
+		}
+		mdput(f, line[j:j+1], basetag);
+		i = j+1;
+	}
+}
+
+# Parse markdown text and insert it into the text widget with tags.
+mdinsert(f: ref File, md: string)
+{
+	configfont(f, DEFTAG);
+	lines := mdlines(md);
+	n := len lines;
+	i := 0;
+	while(i < n){
+		line := lines[i];
+		# fenced code block
+		if(len line >= 3 && line[0:3] == "```"){
+			code := "";
+			i++;
+			while(i < n){
+				if(len lines[i] >= 3 && lines[i][0:3] == "```"){
+					i++;
+					break;
+				}
+				if(code != "")
+					code += "\n";
+				code += lines[i];
+				i++;
+			}
+			configfont(f, "Example");
+			mdput(f, code+"\n", "Example");
+			continue;
+		}
+		# pipe-syntax table
+		(nlines, cells, align) := mdtableblock(lines, i);
+		if(nlines > 0){
+			src := "";
+			for(k := 0; k < nlines; k++){
+				if(src != "")
+					src += "\n";
+				src += lines[i+k];
+			}
+			src += "\n";
+			err := mdrendertable(f, cells, align, src);
+			if(err != "")
+				sys->print("%s: table error: %s\n", Name, err);
+			i += nlines;
+			continue;
+		}
+		# standalone image: ![alt](path)
+		(imgok, imgalt, imgpath) := mdimageblock(line);
+		if(imgok){
+			err := mdrenderimage(f, imgalt, imgpath, line+"\n");
+			if(err != "")
+				sys->print("%s: image error: %s\n", Name, err);
+			i++;
+			continue;
+		}
+		# heading
+		if(len line >= 2 && line[0] == '#'){
+			level := 0;
+			while(level < len line && line[level] == '#')
+				level++;
+			if(level >= 1 && level <= 6 && level < len line && line[level] == ' '){
+				text := line[level+1:];
+				sz := "10";
+				if(level == 1)
+					sz = "16";
+				else if(level == 2)
+					sz = "12";
+				btag := "Bold."+sz;
+				configfont(f, "Heading");
+				configfont(f, btag);
+				tag := "Heading "+btag;
+				mdinline(f, text, tag);
+				mdput(f, "\n", tag);
+				i++;
+				continue;
+			}
+		}
+		# bullet list item
+		if(len line >= 2 && (line[0] == '-' || line[0] == '*') && line[1] == ' '){
+			text := line[2:];
+			configfont(f, "List");
+			configfont(f, "List-elem");
+			tag := "List List-elem";
+			mdinline(f, text, tag);
+			mdput(f, "\n", tag);
+			i++;
+			continue;
+		}
+		# indented code block (4+ spaces)
+		if(len line >= 4 && line[0:4] == "    "){
+			configfont(f, "Example");
+			mdput(f, line[4:]+"\n", "Example");
+			i++;
+			continue;
+		}
+		# blank line -> paragraph break
+		if(line == ""){
+			mdput(f, "\n", DEFTAG);
+			i++;
+			continue;
+		}
+		# plain paragraph line
+		mdinline(f, line, DEFTAG);
+		mdput(f, "\n", DEFTAG);
 		i++;
 	}
-	return j;
 }
 
-# place the text, as annotated by SGML tags, into document
-# where indicated by insert mark
-insert(f: ref File, sgml: string)
+# Apply or remove a font tag on the current selection (or word at cursor).
+# Returns 1 if the widget was modified.
+mdtoggletag(f: ref File, tag: string): int
 {
-	taglist: list of string;
-
 	t := f.tk;
-	usingfonts(f);
-	if(f.applyfont)
-		taglist = f.fonttag :: taglist;
-	tag := listtostring(taglist);
-	end := len sgml;
-	j: int;
-	for(i:=0; i<end; i=j){
-		j = splitl(sgml, i, end, "<&");
-		tt := tag;
-		if(tt=="" || tt=="{}")
-			tt = DEFTAG;	# can happen e.g. when pasting plain text
-		if(j > i)
-			tkcmd(t, ".ft.t insert insert "+tk->quote(sgml[i:j])+" "+tt);
-		if(j < end)
-			case sgml[j] {
-			'&' =>
-				if(j+4<=end && sgml[j:j+4]=="&lt;"){
-					tkcmd(t, ".ft.t insert insert "+"{<} "+tt);
-					j += 4;
-				}else{
-					tkcmd(t, ".ft.t insert insert {&} "+tt);
-					j += 1;
-				}
-			'<' =>
-				(nc, newtag, on) := tagstring(sgml, j, end);
-				if(nc < 0){
-					tkcmd(t, ".ft.t insert insert "+"{<} "+tt);
-					j += 1;
-				}else if(len newtag>9 && newtag[0:10]=="Extension "){
-					addextension(f, newtag[10:], taglist);
-					j += nc;
-				}else if(len newtag>9 && newtag[0:7]=="Window "){
-					repostextension(f, newtag[7:], taglist);
-					j += nc;
-				}else{
+	(sel0, sel1) := word(t);
+	if(sel0 == nil)
+		return 0;
+	configfont(f, tag);
+	names := tkcmd(t, ".ft.t tag names "+sel0);
+	(nil, nl) := sys->tokenize(names, " ");
+	has := 0;
+	for(ll:=nl; ll!=nil; ll=tl ll)
+		if(hd ll == tag){
+			has = 1;
+			break;
+		}
+	if(has){
+		tkcmd(t, ".ft.t tag remove "+tag+" "+sel0+" "+sel1);
+	}else{
+		# remove other bold/italic variants in the range so one font wins
+		family := "";
+		if(len tag > 5 && tag[0:5] == "Bold.")
+			family = "Bold.";
+		else if(len tag > 7 && tag[0:7] == "Italic.")
+			family = "Italic.";
+		if(family != "")
+			for(i:=0; i<NSIZE; i++){
+				other := family+sizename[i];
+				if(other != tag)
+					tkcmd(t, ".ft.t tag remove "+other+" "+sel0+" "+sel1);
+			}
+		tkcmd(t, ".ft.t tag add "+tag+" "+sel0+" "+sel1);
+	}
+	tkcmd(t, UPDATE);
+	return 1;
+}
+
+# Apply a markdown heading (level 1..3) to the lines covered by the selection.
+mdapplyheading(f: ref File, level: int): int
+{
+	t := f.tk;
+	(sel0, sel1) := word(t);
+	if(sel0 == nil)
+		return 0;
+	sz := "10";
+	if(level == 1)
+		sz = "16";
+	else if(level == 2)
+		sz = "12";
+	btag := "Bold."+sz;
+	configfont(f, "Heading");
+	configfont(f, btag);
+	start := tkcmd(t, ".ft.t index {"+sel0+" linestart}");
+	endidx := tkcmd(t, ".ft.t index {"+sel1+" lineend}");
+	# remove other bold sizes so the new heading level wins
+	for(i:=0; i<NSIZE; i++){
+		other := "Bold."+sizename[i];
+		if(other != btag)
+			tkcmd(t, ".ft.t tag remove "+other+" "+start+" "+endidx);
+	}
+	tkcmd(t, ".ft.t tag add Heading "+start+" "+endidx);
+	tkcmd(t, ".ft.t tag add "+btag+" "+start+" "+endidx);
+	tkcmd(t, UPDATE);
+	return 1;
+}
+
+# Toggle between the rendered view and the raw markdown source view.
+# The button label shows the target state (click "Raw" to go raw, then
+# it becomes "Render").
+mdviewtoggle(f: ref File)
+{
+	t := f.tk;
+	if(f.rawview){
+		# raw -> rendered: re-parse current text as markdown
+		src := tkcmd(t, ".ft.t get 1.0 {end - 1 char}");
+		tkcmd(t, ".ft.t delete 1.0 end");
+		mdcleartables(f);
+		mdclearimages(f);
+		mdinsert(f, src);
+		f.rawview = 0;
+		tkcmd(t, ".b.View configure -text Raw");
+	}else{
+		# rendered -> raw: dump to markdown, replace with plain text
+		md := mddump(f);
+		tkcmd(t, ".ft.t delete 1.0 end");
+		mdcleartables(f);
+		mdclearimages(f);
+		if(md != "")
+			tkcmd(t, ".ft.t insert 1.0 "+tk->quote(md));
+		f.rawview = 1;
+		tkcmd(t, ".b.View configure -text Render");
+	}
+	tkcmd(t, ".ft.t mark set insert 1.0; update");
+}
+
+# Walk the tagged dump of the widget and emit markdown text.
+#
+# The SGML dump can emit tags in any order at a given position.  In
+# particular, <Bold.16> typically appears before <Heading> at the start
+# of a heading line.  That means when we see Bold open we don't yet
+# know whether the upcoming text is inside a heading (in which case
+# we must not emit "**") or a plain paragraph (where we must).  So we
+# defer the emission of the bold / italic / code markers until we
+# reach a visible character, at which point every tag that opens at
+# this position has been observed and we can make the decision.
+mddump(f: ref File): string
+{
+	t := f.tk;
+	s := sgml(t, "1.0", "end");
+
+	out := "";
+
+	# "open" flags mean we have already emitted an opening marker
+	# that needs a matching closer.  "pend" flags mean a tag is
+	# active but we haven't committed a marker yet.
+	boldopen := 0;
+	boldpend := 0;
+	italicopen := 0;
+	italicpend := 0;
+	codeopen := 0;
+	codepend := 0;
+
+	heading := 0;
+	example := 0;
+	boldsize := 10;
+	atlinestart := 1;
+	pendinghead := 0;
+	pendinglist := 0;
+	inlist := 0;
+
+	end := len s;
+	i := 0;
+	while(i < end){
+		c := s[i];
+		if(c == '<'){
+			(nc, tag, on) := tagstring(s, i, end);
+			if(nc >= 0){
+				if(tag == "Heading"){
+					heading = on;
+					if(on)
+						pendinghead = 1;
+					else
+						pendinghead = 0;
+				}else if(len tag > 5 && tag[0:5] == "Bold."){
 					if(on){
-						taglist = newtag :: taglist;
-						configfont(f, newtag);
+						sz := int tag[5:];
+						if(sz > 0)
+							boldsize = sz;
+						if(!heading && !example)
+							boldpend = 1;
 					}else{
-						taglist = drop(taglist, newtag);
-						if(f.applyfont && hasfonts(taglist)==0)
-							taglist = f.fonttag :: taglist;
+						if(boldopen){
+							out += "**";
+							boldopen = 0;
+						}
+						boldpend = 0;
 					}
-					j += nc;
-					tag = listtostring(taglist);
+				}else if(len tag > 7 && tag[0:7] == "Italic."){
+					if(on){
+						if(!heading && !example)
+							italicpend = 1;
+					}else{
+						if(italicopen){
+							out += "*";
+							italicopen = 0;
+						}
+						italicpend = 0;
+					}
+				}else if(len tag > 5 && tag[0:5] == "Type."){
+					if(on){
+						if(!heading && !example)
+							codepend = 1;
+					}else{
+						if(codeopen){
+							out += "`";
+							codeopen = 0;
+						}
+						codepend = 0;
+					}
+				}else if(tag == "Example"){
+					if(on){
+						example = 1;
+						if(!atlinestart){
+							out += "\n";
+							atlinestart = 1;
+						}
+						out += "```\n";
+					}else{
+						example = 0;
+						if(!atlinestart){
+							out += "\n";
+							atlinestart = 1;
+						}
+						out += "```\n";
+					}
+				}else if(tag == "List-elem"){
+					if(on){
+						pendinglist = 1;
+						inlist = 1;
+					}else{
+						pendinglist = 0;
+						inlist = 0;
+					}
+				}else if(len tag > 7 && tag[0:7] == "Window "){
+					# Embedded widget: look up the original markdown
+					# source and splice it back into the output.
+					name := tag[7:];
+					src := mdfindtable(f, name);
+					if(src == "")
+						src = mdfindimage(f, name);
+					if(src != ""){
+						if(!atlinestart)
+							out += "\n";
+						out += src;
+						atlinestart = 1;
+					}
 				}
+				# other tags: ignore
+				i += nc;
+				continue;
 			}
-	}
-}
-
-drop(l: list of string, s: string): list of string
-{
-	n: list of string;
-	while(l != nil){
-		if(s != hd l)
-			n = hd l :: n;
-		l = tl l;
-	}
-	return n;
-}
-
-extid := 0;
-addextension(f: ref File, s: string, taglist: list of string)
-{
-	for(i:=0; i<len s; i++)
-		if(s[i] == ' ')
-			break;
-	if(i == 0 || i == len s){
-		sys->print("Brutus: badly formed extension %s\n", s);
-		return;
-	}
-	modname := s[0:i];
-	s = s[i+1:];
-
-	mod: Brutusext;
-	for(el:=f.extensions; el!=nil; el=tl el)
-		if(modname == (hd el).modname){
-			mod = (hd el).mod;
-			break;
+			# fall through: literal '<'
 		}
 
-	if(mod == nil){
-		file := modname;
-		if(i < 4 || file[i-4:i] != ".dis")
-			file += ".dis";
-		if(file[0] != '/')
-			file = "/dis/wm/brutus/" + file;
-		mod = load Brutusext file;
-		if(mod == nil){
-			sys->print("%s: can't load module %s: %r\n", Name, file);
-			return;
+		# Everything below emits one visible character (possibly after
+		# flushing any pending prefix / inline markers).
+		ch: string;
+		if(c == '&' && i+4 <= end && s[i:i+4] == "&lt;"){
+			ch = "<";
+			i += 4;
+		}else{
+			ch = s[i:i+1];
+			i++;
 		}
-	}
-	mkextension(f, mod, modname, s, taglist);
-}
 
-repostextension(f: ref File, tkname: string, taglist: list of string)
-{
-	mod: Brutusext;
-	for(el:=f.extensions; el!=nil; el=tl el)
-		if(tkname == (hd el).tkname){
-			mod = (hd el).mod;
-			break;
-		}
-	if(mod == nil){
-		sys->print("Brutus: can't find extension widget %s: %r\n", tkname);
-		return;
-	}
-
-	mkextension(f, mod, (hd el).modname, (hd el).args, taglist);
-}
-
-mkextension(f: ref File, mod: Brutusext, modname, args: string, taglist: list of string)
-{
-	t := f.tk;
-
-	name := ".ext"+string extid++;
-	mod->init(sys, draw, bufio, tk, tkclient);
-	err := mod->create(f.name, t, name, args);
-	if(err != ""){
-		sys->print("%s: can't create extension widget %s: %s\n", Name, modname, err);
-		return;
-	}
-	tkcmd(t, ".ft.t window create insert -window "+name);
-	while(taglist != nil){
-		tkcmd(t, ".ft.t tag add "+hd taglist+" "+name);
-		taglist = tl taglist;
-	}
-	f.extensions = ref Ext(name, modname, mod, args) :: f.extensions;
-}
-
-# rewrite <window .ext1> tags into <Extension module args>
-extrewrite(f: ref File, sgml: string): string
-{
-	if(f.extensions == nil)
-		return sgml;
-
-	new := "";
-
-	end := len sgml;
-	j: int;
-	for(i:=0; i<end; i=j){
-		j = splitstrl(sgml, i, end, "<Window ");
-		if(j > i)
-			new += sgml[i:j];
-		if(j < end){
-			j += 8;
-			for(k:=j; sgml[k]!='>' && k<end; k++)
-				;
-			tkname := sgml[j:k];
-			for(el:=f.extensions; el!=nil; el=tl el)
-				if((hd el).tkname == tkname)
-					break;
-			if(el == nil)
-				sys->print("%s: unrecognized extension %s\n", Name, tkname);
-			else{
-				e := hd el;
-				new += "<Extension "+e.modname+" "+e.args+">";
+		if(ch == "\n"){
+			# close any open inline markers so they don't leak across lines
+			if(codeopen){
+				out += "`";
+				codeopen = 0;
 			}
-			j = k+1;	# skip '>'
+			if(italicopen){
+				out += "*";
+				italicopen = 0;
+			}
+			if(boldopen){
+				out += "**";
+				boldopen = 0;
+			}
+			# discard pending markers that never reached a char
+			boldpend = 0;
+			italicpend = 0;
+			codepend = 0;
+			pendinghead = 0;
+			pendinglist = 0;
+			out += "\n";
+			atlinestart = 1;
+			# consecutive list items share the same <List-elem> tag in
+			# the sgml dump, so re-arm the "- " prefix for the next line
+			if(inlist)
+				pendinglist = 1;
+			continue;
 		}
-	}
-	return new;
-}
 
-hasfonts(l: list of string): int
-{
-	for(i:=0; i<NFONT*NSIZE; i++)
-		for(ll:=l; ll!=nil; ll=tl ll)
-			if(hd ll == tagname[i])
-				return 1;
-	return 0;
+		if(pendinghead){
+			if(boldsize >= 16) out += "# ";
+			else if(boldsize >= 12) out += "## ";
+			else out += "### ";
+			pendinghead = 0;
+		}
+		if(pendinglist){
+			out += "- ";
+			pendinglist = 0;
+		}
+		if(!heading && !example){
+			if(boldpend){
+				out += "**";
+				boldpend = 0;
+				boldopen = 1;
+			}
+			if(italicpend){
+				out += "*";
+				italicpend = 0;
+				italicopen = 1;
+			}
+			if(codepend){
+				out += "`";
+				codepend = 0;
+				codeopen = 1;
+			}
+		}
+		out += ch;
+		atlinestart = 0;
+	}
+	# close any still-open markers at EOF
+	if(codeopen) out += "`";
+	if(italicopen) out += "*";
+	if(boldopen) out += "**";
+	return out;
 }
 
 # s[i] is known to be a less-than sign
@@ -1527,32 +1629,918 @@ tagstring(s: string, i, end: int): (int, string, int)
 		i++;
 	}
 	tag = s[i+1:j];
-# NEED TO CHECK VALIDITY OF TAG
 	return (nc, tag, on);
 }
 
-sgml(t: ref Tk->Toplevel, flag, start, end: string): string
+sgml(t: ref Tk->Toplevel, start, end: string): string
 {
 	# turn off selection, to avoid getting that in output
 	sel := tkcmd(t, ".ft.t tag ranges sel");
 	if(sel != "")
 		tkcmd(t, ".ft.t tag remove sel "+sel);
-	s := tkcmd(t, ".ft.t dump "+flag+" "+start+" "+end);
+	s := tkcmd(t, ".ft.t dump -sgml "+start+" "+end);
 	if(sel != "")
 		tkcmd(t, ".ft.t tag add sel "+sel);
 	return s;
 }
 
+# Parse a pipe-syntax markdown table starting at lines[i].
+# Returns (n, cells, align): n is the number of consumed lines
+# (0 if no match), cells is cells[row][col] with headers as row 0,
+# and align[col] is Aleft / Acenter / Aright from the separator row.
+mdtableblock(lines: array of string, start: int)
+	: (int, array of array of string, array of int)
+{
+	if(start+1 >= len lines)
+		return (0, nil, nil);
+	header := lines[start];
+	sep := lines[start+1];
+	if(!mdtableishead(header) || !mdtableissep(sep))
+		return (0, nil, nil);
+	hcells := mdtablesplit(header);
+	scells := mdtablesplit(sep);
+	ncol := len hcells;
+	if(ncol == 0 || len scells != ncol)
+		return (0, nil, nil);
+
+	align := array[ncol] of int;
+	for(k := 0; k < ncol; k++)
+		align[k] = mdtablealign(scells[k]);
+
+	rows := list of {hcells};
+	i := start + 2;
+	while(i < len lines){
+		if(!mdtableishead(lines[i]))
+			break;
+		c := mdtablesplit(lines[i]);
+		if(len c != ncol){
+			# pad / truncate to match the header width
+			padded := array[ncol] of string;
+			for(k = 0; k < ncol; k++){
+				if(k < len c)
+					padded[k] = c[k];
+				else
+					padded[k] = "";
+			}
+			c = padded;
+		}
+		rows = c :: rows;
+		i++;
+	}
+	nrow := 0;
+	for(l := rows; l != nil; l = tl l)
+		nrow++;
+	cells := array[nrow] of array of string;
+	# rows is in reverse order
+	idx := nrow - 1;
+	for(l = rows; l != nil; l = tl l){
+		cells[idx] = hd l;
+		idx--;
+	}
+	return (i - start, cells, align);
+}
+
+# Does the line look like a table row (contains at least one '|')?
+mdtableishead(s: string): int
+{
+	for(i := 0; i < len s; i++)
+		if(s[i] == '|')
+			return 1;
+	return 0;
+}
+
+# Is the line a separator row (pipes, dashes, colons, whitespace only)?
+mdtableissep(s: string): int
+{
+	# must have at least one '-' and at least one '|'
+	seenpipe := 0;
+	seendash := 0;
+	for(i := 0; i < len s; i++){
+		c := s[i];
+		case c {
+		'|' =>
+			seenpipe = 1;
+		'-' =>
+			seendash = 1;
+		':' or ' ' or '\t' =>
+			;
+		* =>
+			return 0;
+		}
+	}
+	return seenpipe && seendash;
+}
+
+# Split a pipe row into cells, trimming whitespace and stripping
+# leading / trailing empty cells produced by surrounding pipes.
+mdtablesplit(s: string): array of string
+{
+	parts := list of {""};
+	n := len s;
+	# skip one leading pipe if present
+	i := 0;
+	while(i < n && (s[i] == ' ' || s[i] == '\t'))
+		i++;
+	if(i < n && s[i] == '|')
+		i++;
+	cur := "";
+	for(; i < n; i++){
+		c := s[i];
+		if(c == '\\' && i+1 < n){
+			cur[len cur] = s[i+1];
+			i++;
+			continue;
+		}
+		if(c == '|'){
+			parts = cur :: parts;
+			cur = "";
+			continue;
+		}
+		cur[len cur] = c;
+	}
+	# drop trailing empty cell if the row ended with '|'
+	trail := 1;
+	for(j := len cur-1; j >= 0; j--)
+		if(cur[j] != ' ' && cur[j] != '\t'){
+			trail = 0;
+			break;
+		}
+	if(!trail)
+		parts = cur :: parts;
+	n2 := 0;
+	for(l := parts; l != nil; l = tl l)
+		n2++;
+	arr := array[n2] of string;
+	idx := n2 - 1;
+	for(l = parts; l != nil; l = tl l){
+		arr[idx] = mdtrim(hd l);
+		idx--;
+	}
+	return arr;
+}
+
+# Decide a column's alignment from its separator cell (":---", "---:", ":-:").
+mdtablealign(sep: string): int
+{
+	left := 0;
+	right := 0;
+	for(i := 0; i < len sep; i++){
+		if(sep[i] == ':'){
+			# first colon of the cell marks left; last marks right
+			if(left == 0)
+				left = 1;
+			right = 1;
+			# look for subsequent colons
+			for(j := i+1; j < len sep; j++)
+				if(sep[j] == ':'){
+					right = 1;
+				}
+			break;
+		}
+	}
+	# recompute: left = ':' at start of trimmed cell, right = ':' at end
+	t := mdtrim(sep);
+	left = len t > 0 && t[0] == ':';
+	right = len t > 0 && t[len t - 1] == ':';
+	if(left && right)
+		return Acenter;
+	if(right)
+		return Aright;
+	return Aleft;
+}
+
+mdtrim(s: string): string
+{
+	i := 0;
+	while(i < len s && (s[i] == ' ' || s[i] == '\t'))
+		i++;
+	j := len s;
+	while(j > i && (s[j-1] == ' ' || s[j-1] == '\t'))
+		j--;
+	return s[i:j];
+}
+
+# Split a string on '\n' into an array of lines.  The trailing newline,
+# if any, does not produce an empty final element.
+mdlines(s: string): array of string
+{
+	n := 0;
+	for(i := 0; i < len s; i++)
+		if(s[i] == '\n')
+			n++;
+	if(len s > 0 && s[len s-1] != '\n')
+		n++;
+	arr := array[n] of string;
+	idx := 0;
+	start := 0;
+	for(i = 0; i < len s; i++)
+		if(s[i] == '\n'){
+			arr[idx++] = s[start:i];
+			start = i+1;
+		}
+	if(start < len s)
+		arr[idx++] = s[start:];
+	return arr;
+}
+
+# Convert a cell's raw text into a list of TblItem runs (one per
+# styled fragment).  Defaults to the Roman.10 font; bold / italic /
+# inline-code runs use matching font families.
+tbl_cellitems(text: string): ref TblItem
+{
+	head: ref TblItem;
+	var_tail: ref TblItem;
+	end := len text;
+	i := 0;
+	while(i < end){
+		j := i;
+		while(j < end){
+			c := text[j];
+			if(c == '*' || c == '_' || c == '`' || c == '\\')
+				break;
+			j++;
+		}
+		if(j > i){
+			it := ref TblItem(text[i:j], tbl_fnum(TBL_Roman, TBL_Size10),
+				Point(0,0), 0, nil);
+			(head, var_tail) = tbl_append(head, var_tail, it);
+		}
+		if(j >= end)
+			break;
+		c := text[j];
+		if(c == '\\' && j+1 < end){
+			it := ref TblItem(text[j+1:j+2], tbl_fnum(TBL_Roman, TBL_Size10),
+				Point(0,0), 0, nil);
+			(head, var_tail) = tbl_append(head, var_tail, it);
+			i = j+2;
+			continue;
+		}
+		if(c == '`'){
+			k := j+1;
+			while(k < end && text[k] != '`')
+				k++;
+			if(k < end){
+				it := ref TblItem(text[j+1:k],
+					tbl_fnum(TBL_Type, TBL_Size10), Point(0,0), 0, nil);
+				(head, var_tail) = tbl_append(head, var_tail, it);
+				i = k+1;
+				continue;
+			}
+			# unterminated: treat literally
+			it := ref TblItem(text[j:j+1], tbl_fnum(TBL_Roman, TBL_Size10),
+				Point(0,0), 0, nil);
+			(head, var_tail) = tbl_append(head, var_tail, it);
+			i = j+1;
+			continue;
+		}
+		# '*' or '_': bold if doubled, italic otherwise
+		if(j+1 < end && text[j+1] == c){
+			k := j+2;
+			found := 0;
+			while(k+1 < end){
+				if(text[k] == c && text[k+1] == c){
+					found = 1;
+					break;
+				}
+				k++;
+			}
+			if(found){
+				it := ref TblItem(text[j+2:k],
+					tbl_fnum(TBL_Bold, TBL_Size10), Point(0,0), 0, nil);
+				(head, var_tail) = tbl_append(head, var_tail, it);
+				i = k+2;
+				continue;
+			}
+		}
+		k := j+1;
+		found := 0;
+		while(k < end){
+			if(text[k] == c){
+				found = 1;
+				break;
+			}
+			k++;
+		}
+		if(found){
+			it := ref TblItem(text[j+1:k],
+				tbl_fnum(TBL_Italic, TBL_Size10), Point(0,0), 0, nil);
+			(head, var_tail) = tbl_append(head, var_tail, it);
+			i = k+1;
+			continue;
+		}
+		it := ref TblItem(text[j:j+1], tbl_fnum(TBL_Roman, TBL_Size10),
+			Point(0,0), 0, nil);
+		(head, var_tail) = tbl_append(head, var_tail, it);
+		i = j+1;
+	}
+	return head;
+}
+
+tbl_append(head, var_tail, it: ref TblItem): (ref TblItem, ref TblItem)
+{
+	if(head == nil)
+		return (it, it);
+	var_tail.next = it;
+	return (head, it);
+}
+
+tbl_fnum(fstyle, fsize: int): int
+{
+	n := fstyle * TBL_NSIZE + fsize;
+	if(n < 0 || n >= TBL_NFONTTAG)
+		n = tbl_fnum(TBL_Roman, TBL_Size10);
+	tbl_fontused[n] = 1;
+	return n;
+}
+
+tbl_loadfonts(display: ref Draw->Display): string
+{
+	for(i := 0; i < TBL_NFONTTAG; i++){
+		if(tbl_fontused[i] && tbl_fontrefs[i] == nil){
+			fname := tbl_fontnames[i];
+			fnt := Font.open(display, fname);
+			if(fnt == nil)
+				return sys->sprint("can't open font %s: %r", fname);
+			tbl_fontrefs[i] = fnt;
+		}
+	}
+	return "";
+}
+
+# Assumes items are set but no geometry.  Computes width / height /
+# ascent for a single-line cell, and positions items within it.
+tbl_cell_geom(c: ref TblCell)
+{
+	h := 0;
+	a := 0;
+	for(it := c.items; it != nil; it = it.next){
+		fnt := tbl_fontrefs[it.fontnum];
+		if(fnt == nil)
+			continue;
+		if(fnt.ascent > a){
+			h += fnt.ascent - a;
+			a = fnt.ascent;
+		}
+		bh := fnt.height - fnt.ascent;
+		if(bh > h - a)
+			h = a + bh;
+	}
+	x := 0;
+	for(it = c.items; it != nil; it = it.next){
+		fnt := tbl_fontrefs[it.fontnum];
+		if(fnt == nil){
+			it.width = 0;
+			it.pos = Point(x, 0);
+			continue;
+		}
+		it.width = fnt.width(it.s);
+		it.pos = Point(x, a - fnt.ascent);
+		x += it.width;
+	}
+	c.width = x;
+	c.height = h;
+	c.ascent = a;
+}
+
+tbl_col_geom(tab: ref Tbl, ci: int)
+{
+	col := tab.cols[ci];
+	col.width = 0;
+	for(ri := 0; ri < tab.nrow; ri++){
+		c := tab.rows[ri].cells[ci];
+		if(c == nil)
+			continue;
+		if(c.width > col.width)
+			col.width = c.width;
+	}
+}
+
+tbl_row_geom(tab: ref Tbl, ri: int)
+{
+	row := tab.rows[ri];
+	h := 0;
+	a := 0;
+	for(ci := 0; ci < tab.ncol; ci++){
+		c := row.cells[ci];
+		if(c == nil)
+			continue;
+		if(c.height > h)
+			h = c.height;
+		if(c.ascent > a)
+			a = c.ascent;
+	}
+	row.height = h;
+	row.ascent = a;
+}
+
+# Assuming row / col geoms are set, position rows, cols, and cells.
+tbl_table_geom(tab: ref Tbl)
+{
+	bd := tab.border;
+	orig := Point(0, 0);
+	if(bd > 0)
+		orig = Point(TABHPAD+bd, TABVPAD+bd);
+
+	o := orig;
+	for(ci := 0; ci < tab.ncol; ci++){
+		col := tab.cols[ci];
+		col.pos = o;
+		o.x += col.width;
+		if(ci < tab.ncol-1)
+			o.x += TABHPAD;
+	}
+	if(bd > 0)
+		o.x += TABHPAD + bd;
+	tab.width = o.x;
+
+	o = orig;
+	for(ri := 0; ri < tab.nrow; ri++){
+		row := tab.rows[ri];
+		row.pos = o;
+		o.y += row.height;
+		if(ri < tab.nrow-1)
+			o.y += TABVPAD;
+	}
+	if(bd > 0)
+		o.y += TABVPAD + bd;
+	tab.height = o.y;
+
+	# position each cell: origin is at the column's top-left, adjusted
+	# for per-cell horizontal alignment.
+	for(ri = 0; ri < tab.nrow; ri++){
+		row := tab.rows[ri];
+		for(ci := 0; ci < tab.ncol; ci++){
+			c := row.cells[ci];
+			if(c == nil)
+				continue;
+			col := tab.cols[ci];
+			x := col.pos.x;
+			y := row.pos.y;
+			al := c.halign;
+			case al {
+			Aright =>
+				x += col.width - c.width;
+			Acenter =>
+				x += (col.width - c.width) / 2;
+			}
+			# vertical center within the row
+			y += (row.height - c.height) / 2;
+			c.pos = Point(x, y);
+		}
+	}
+}
+
+# Draw all cell text items on the named canvas.
+tbl_create_cells(f: ref File, tab: ref Tbl, canv: string): string
+{
+	t := f.tk;
+	for(ri := 0; ri < tab.nrow; ri++){
+		row := tab.rows[ri];
+		for(ci := 0; ci < tab.ncol; ci++){
+			c := row.cells[ci];
+			if(c == nil)
+				continue;
+			for(it := c.items; it != nil; it = it.next){
+				fnt := tbl_fontrefs[it.fontnum];
+				if(fnt == nil || it.s == "")
+					continue;
+				x := c.pos.x + it.pos.x;
+				y := c.pos.y + it.pos.y;
+				v := tkcmd(t, canv + " create text " + string x + " "
+					+ string y + " -anchor nw -font " + fnt.name
+					+ " -text " + tk->quote(it.s));
+				if(len v > 0 && v[0] == '!')
+					return v;
+			}
+		}
+	}
+	return "";
+}
+
+tbl_create_border(f: ref File, tab: ref Tbl, canv: string): string
+{
+	t := f.tk;
+	bd := tab.border;
+	if(bd <= 0)
+		return "";
+	x1 := bd / 2;
+	y1 := bd / 2;
+	x2 := tab.width - bd/2 - 1;
+	y2 := tab.height - bd/2 - 1;
+	v := tkcmd(t, canv + " create rectangle " + string x1 + " " + string y1
+		+ " " + string x2 + " " + string y2 + " -width " + string bd);
+	if(len v > 0 && v[0] == '!')
+		return v;
+	return "";
+}
+
+# Draw a horizontal rule under the header row, and a vertical rule
+# between each pair of columns.
+tbl_create_rules(f: ref File, tab: ref Tbl, canv: string): string
+{
+	t := f.tk;
+	if(tab.nrow >= 2){
+		y := tab.rows[0].pos.y + tab.rows[0].height + TABVPAD/2;
+		v := tkcmd(t, canv + " create line 0 " + string y + " "
+			+ string tab.width + " " + string y + " -width 1");
+		if(len v > 0 && v[0] == '!')
+			return v;
+	}
+	for(ci := 0; ci < tab.ncol-1; ci++){
+		col := tab.cols[ci];
+		x := col.pos.x + col.width + TABHPAD/2;
+		v := tkcmd(t, canv + " create line " + string x + " 0 "
+			+ string x + " " + string tab.height + " -width 1");
+		if(len v > 0 && v[0] == '!')
+			return v;
+	}
+	return "";
+}
+
+# Build the Tbl object from a parsed cell matrix and alignment vector.
+tbl_build(cells: array of array of string, align: array of int): ref Tbl
+{
+	nrow := len cells;
+	if(nrow == 0)
+		return nil;
+	ncol := len align;
+	if(ncol == 0)
+		return nil;
+	tab := ref Tbl(nrow, ncol, 0, 0, 1, array[ncol] of ref TblCol,
+		array[nrow] of ref TblRow);
+	for(ci := 0; ci < ncol; ci++)
+		tab.cols[ci] = ref TblCol(0, align[ci], Point(0,0));
+	for(ri := 0; ri < nrow; ri++){
+		row := ref TblRow(array[ncol] of ref TblCell, 0, 0, Point(0,0));
+		for(ci = 0; ci < ncol; ci++){
+			text := "";
+			if(ri < len cells && ci < len cells[ri])
+				text = cells[ri][ci];
+			items := tbl_cellitems(text);
+			# header row is bold
+			if(ri == 0)
+				items = tbl_promotebold(items);
+			c := ref TblCell(items, align[ci], 0, 0, 0, Point(0,0), ri, ci);
+			tbl_cell_geom(c);
+			row.cells[ci] = c;
+		}
+		tab.rows[ri] = row;
+	}
+	for(ci = 0; ci < ncol; ci++)
+		tbl_col_geom(tab, ci);
+	for(ri = 0; ri < nrow; ri++)
+		tbl_row_geom(tab, ri);
+	tbl_table_geom(tab);
+	return tab;
+}
+
+# Upgrade each Roman item in a run to Bold (used for header cells).
+tbl_promotebold(head: ref TblItem): ref TblItem
+{
+	for(it := head; it != nil; it = it.next){
+		if(it.fontnum == tbl_fnum(TBL_Roman, TBL_Size10))
+			it.fontnum = tbl_fnum(TBL_Bold, TBL_Size10);
+	}
+	return head;
+}
+
+# Render a parsed markdown table at the current insert cursor.  Creates
+# a canvas, lays it out, embeds it via `window create`, and records the
+# (canvas, source) pair so mddump can round-trip it.
+mdrendertable(f: ref File, cells: array of array of string,
+	align: array of int, src: string): string
+{
+	t := f.tk;
+	display: ref Draw->Display;
+	if(t != nil && t.image != nil)
+		display = t.image.display;
+	else if(ctxt != nil)
+		display = ctxt.display;
+	if(display == nil)
+		return "no display";
+	tab := tbl_build(cells, align);
+	if(tab == nil)
+		return "empty table";
+	err := tbl_loadfonts(display);
+	if(err != "")
+		return err;
+	# rebuild geometry now that fonts are loaded (widths may have been 0
+	# during initial cell_geom if fonts weren't yet open)
+	for(ri := 0; ri < tab.nrow; ri++)
+		for(ci := 0; ci < tab.ncol; ci++)
+			tbl_cell_geom(tab.rows[ri].cells[ci]);
+	for(ci = 0; ci < tab.ncol; ci++)
+		tbl_col_geom(tab, ci);
+	for(ri = 0; ri < tab.nrow; ri++)
+		tbl_row_geom(tab, ri);
+	tbl_table_geom(tab);
+
+	id := f.tablectr;
+	f.tablectr = id + 1;
+	canv := ".ft.t.table" + string id;
+	v := tkcmd(t, "canvas " + canv + " -width " + string tab.width
+		+ " -height " + string tab.height);
+	if(len v > 0 && v[0] == '!')
+		return v;
+
+	err = tbl_create_cells(f, tab, canv);
+	if(err != "")
+		return err;
+	err = tbl_create_border(f, tab, canv);
+	if(err != "")
+		return err;
+	err = tbl_create_rules(f, tab, canv);
+	if(err != "")
+		return err;
+
+	tkcmd(t, ".ft.t window create insert -window " + canv);
+	mdput(f, "\n", DEFTAG);
+	f.tables = ref MdTable(canv, src) :: f.tables;
+	return "";
+}
+
+# Destroy any embedded table canvases and forget them.  Safe to call
+# even if f.tables is empty.
+mdcleartables(f: ref File)
+{
+	t := f.tk;
+	for(l := f.tables; l != nil; l = tl l){
+		m := hd l;
+		tkcmd(t, "destroy " + m.canv);
+	}
+	f.tables = nil;
+	f.tablectr = 0;
+}
+
+# Look up a canvas path in f.tables by short or long name.  The dump
+# stream reports widget paths like ".ft.t.table0"; we compare against
+# both the stored path and its trailing component.
+mdfindtable(f: ref File, name: string): string
+{
+	for(l := f.tables; l != nil; l = tl l){
+		m := hd l;
+		if(m.canv == name)
+			return m.src;
+		# strip any leading path components: match on last segment
+		c := m.canv;
+		i := len c;
+		while(i > 0 && c[i-1] != '.')
+			i--;
+		if(c[i:] == name)
+			return m.src;
+		i = len name;
+		while(i > 0 && name[i-1] != '.')
+			i--;
+		if(name[i:] == c[i:] && c != "" && name != "")
+			return m.src;
+	}
+	return "";
+}
+
+# Recognise a standalone markdown image block: the whole line is
+# exactly `![alt](path)`.  Returns (1, alt, path) on match, else
+# (0, "", "").  Inline images (with surrounding prose) are not
+# rendered as embedded widgets - they remain as literal text.
+mdimageblock(ln: string)
+	: (int, string, string)
+{
+	n := len ln;
+	if(n < 5 || ln[0] != '!' || ln[1] != '[')
+		return (0, "", "");
+	i := 2;
+	while(i < n && ln[i] != ']')
+		i++;
+	if(i >= n || i+1 >= n || ln[i+1] != '(')
+		return (0, "", "");
+	altstr := ln[2:i];
+	j := i+2;
+	while(j < n && ln[j] != ')')
+		j++;
+	if(j != n-1)
+		return (0, "", "");
+	path := ln[i+2:j];
+	if(path == "")
+		return (0, "", "");
+	return (1, altstr, path);
+}
+
+# Join a parent file's path with a relative image path.  If `file` is
+# absolute (starts with '/' or '#') it is returned unchanged.
+mdfullname(parent, file: string): string
+{
+	if(len parent == 0 || (len file > 0 && (file[0] == '/' || file[0] == '#')))
+		return file;
+	for(i := len parent - 1; i >= 0; i--)
+		if(parent[i] == '/')
+			return parent[0:i+1] + file;
+	return file;
+}
+
+mdloadgif(): RImagefile
+{
+	if(readgif == nil){
+		readgif = load RImagefile RImagefile->READGIFPATH;
+		if(readgif != nil)
+			readgif->init(bufio);
+	}
+	return readgif;
+}
+
+mdloadjpg(): RImagefile
+{
+	if(readjpg == nil){
+		readjpg = load RImagefile RImagefile->READJPGPATH;
+		if(readjpg != nil)
+			readjpg->init(bufio);
+	}
+	return readjpg;
+}
+
+mdloadpng(): RImagefile
+{
+	if(readpng == nil){
+		readpng = load RImagefile RImagefile->READPNGPATH;
+		if(readpng != nil)
+			readpng->init(bufio);
+	}
+	return readpng;
+}
+
+mdfiletype(file: string, fd: ref Iobuf): RImagefile
+{
+	if(len file > 4 && file[len file - 4:] == ".gif")
+		return mdloadgif();
+	if(len file > 4 && file[len file - 4:] == ".jpg")
+		return mdloadjpg();
+	if(len file > 5 && file[len file - 5:] == ".jpeg")
+		return mdloadjpg();
+	if(len file > 4 && file[len file - 4:] == ".png")
+		return mdloadpng();
+	buf := array[20] of byte;
+	if(fd.read(buf, len buf) != len buf)
+		return nil;
+	fd.seek(big 0, 0);
+	if(string buf[0:6] == "GIF87a" || string buf[0:6] == "GIF89a")
+		return mdloadgif();
+	if(buf[0] == byte 16r89 && buf[1] == byte 'P' && buf[2] == byte 'N' && buf[3] == byte 'G')
+		return mdloadpng();
+	jpmagic := array[] of {byte 16rFF, byte 16rD8, byte 16rFF, byte 16rE0,
+		byte 0, byte 0, byte 'J', byte 'F', byte 'I', byte 'F', byte 0};
+	for(i := 0; i < len jpmagic; i++)
+		if(jpmagic[i] > byte 0 && buf[i] != jpmagic[i])
+			return nil;
+	return mdloadjpg();
+}
+
+mdtransparency(display: ref Draw->Display, r: ref RImagefile->Rawimage): ref Draw->Image
+{
+	if(r.transp == 0 || r.nchans != 1)
+		return nil;
+	i := display.newimage(r.r, display.image.chans, 0, 0);
+	if(i == nil)
+		return nil;
+	pic := r.chans[0];
+	npic := len pic;
+	mpic := array[npic] of byte;
+	index := r.trindex;
+	for(j := 0; j < npic; j++)
+		if(pic[j] == index)
+			mpic[j] = byte 0;
+		else
+			mpic[j] = byte 16rFF;
+	i.writepixels(i.r, mpic);
+	return i;
+}
+
+# Load an image file.  First tries display.open (Inferno native bitmap
+# format), then falls back to GIF / JPEG via the imagefile decoders.
+mdloadimage(display: ref Draw->Display, parent, file: string)
+	: (ref Draw->Image, ref Draw->Image, string)
+{
+	path := mdfullname(parent, file);
+	im := display.open(path);
+	mask: ref Draw->Image;
+	if(im != nil)
+		return (im, nil, "");
+
+	fd := bufio->open(path, Bufio->OREAD);
+	if(fd == nil)
+		return (nil, nil, sys->sprint("can't open %s: %r", path));
+	mod := mdfiletype(path, fd);
+	if(mod == nil)
+		return (nil, nil, sys->sprint("unknown image format: %s", path));
+	(ri, err) := mod->read(fd);
+	if(ri == nil)
+		return (nil, nil, sys->sprint("%s: %s", path, err));
+	mask = mdtransparency(display, ri);
+
+	if(imageremap == nil){
+		imageremap = load Imageremap Imageremap->PATH;
+		if(imageremap == nil)
+			return (nil, nil, sys->sprint("can't load imageremap: %r"));
+	}
+	(im, err) = imageremap->remap(ri, display, 1);
+	if(im == nil)
+		return (nil, nil, sys->sprint("remap %s: %s", path, err));
+	return (im, mask, "");
+}
+
+# Render a standalone markdown image at the current insert cursor.
+# Loads the image, installs it as a Tk image resource, draws it on a
+# child canvas of the text widget, embeds the canvas via `window
+# create`, and records the (canvas, img, source) triple so mddump can
+# round-trip it.
+mdrenderimage(f: ref File, alttxt, path, src: string): string
+{
+	alttxt = nil;
+	t := f.tk;
+	display: ref Draw->Display;
+	if(t != nil && t.image != nil)
+		display = t.image.display;
+	else if(ctxt != nil)
+		display = ctxt.display;
+	if(display == nil)
+		return "no display";
+
+	parent := "";
+	for(k := len f.name - 1; k >= 0; k--)
+		if(f.name[k] == '/'){
+			parent = f.name[0:k+1];
+			break;
+		}
+
+	(im, mask, err) := mdloadimage(display, parent, path);
+	if(err != "")
+		return err;
+
+	id := f.imagectr;
+	f.imagectr = id + 1;
+	imgname := "brutusimg" + string id;
+	canv := ".ft.t.img" + string id;
+
+	v := tkcmd(t, "image create bitmap " + imgname);
+	if(len v > 0 && v[0] == '!')
+		return v;
+	v = tk->putimage(t, imgname, im, mask);
+	if(len v > 0 && v[0] == '!'){
+		tkcmd(t, "image delete " + imgname);
+		return v;
+	}
+	w := im.r.dx();
+	h := im.r.dy();
+	v = tkcmd(t, "canvas " + canv + " -width " + string w + " -height " + string h);
+	if(len v > 0 && v[0] == '!'){
+		tkcmd(t, "image delete " + imgname);
+		return v;
+	}
+	v = tkcmd(t, canv + " create image 0 0 -anchor nw -image " + imgname);
+	if(len v > 0 && v[0] == '!'){
+		tkcmd(t, "destroy " + canv);
+		tkcmd(t, "image delete " + imgname);
+		return v;
+	}
+	tkcmd(t, ".ft.t window create insert -window " + canv);
+	mdput(f, "\n", DEFTAG);
+	f.images = ref MdImage(canv, imgname, src) :: f.images;
+	return "";
+}
+
+# Destroy any embedded image canvases (and their backing Tk image
+# resources).  Safe to call when f.images is empty.
+mdclearimages(f: ref File)
+{
+	t := f.tk;
+	for(l := f.images; l != nil; l = tl l){
+		m := hd l;
+		tkcmd(t, "destroy " + m.canv);
+		tkcmd(t, "image delete " + m.img);
+	}
+	f.images = nil;
+	f.imagectr = 0;
+}
+
+# Look up a canvas path in f.images; matches on full path or trailing
+# widget component.  Mirrors mdfindtable.
+mdfindimage(f: ref File, name: string): string
+{
+	for(l := f.images; l != nil; l = tl l){
+		m := hd l;
+		if(m.canv == name)
+			return m.src;
+		c := m.canv;
+		i := len c;
+		while(i > 0 && c[i-1] != '.')
+			i--;
+		if(c[i:] == name)
+			return m.src;
+	}
+	return "";
+}
+
 loadfile(f: ref File, file: string): int
 {
 	f.size = DEFSIZE;
-	f.font = DEFFONTNAME;
-	f.fonttag = DEFTAG;
-	f.fontsused = 0;
-	enablefonts(f, 0);
 	t := f.tk;
-	tkcmd(t, ".b.Font configure -text "+f.font);
-	tkcmd(t, ".b.Size configure -text "+string f.size+"pt");
 	tkcmd(t, "cursor -image waiting; update");
 	r := loadfile1(f, file);
 	tkcmd(t, "cursor -default");
@@ -1577,26 +2565,26 @@ loadfile1(f: ref File, file: string): int
 		return -1;
 	t := f.tk;
 	tkcmd(t, ".ft.t delete 1.0 end");
-	if(len a>=7 && string a[0:7]=="<SGML>\n")
-		insert(f, string a[7:n]);
-	else
-		tkcmd(t, ".ft.t insert 1.0 '"+string a[0:n]);
+	mdcleartables(f);
+	f.rawview = 0;
+	mdinsert(f, string a[0:n]);
+	tkcmd(t, ".b.View configure -text Raw");
 	dirty(f, 0);
 	tkcmd(t, ".ft.t mark set insert 1.0; update");
 	return 1;
 }
 
-dumpfile(f: ref File, file: string, sgml: int): int
+dumpfile(f: ref File, file: string): int
 {
 	tkcmd(f.tk, "cursor -image waiting");
-	r := dumpfile1(f, file, sgml);
+	r := dumpfile1(f, file);
 	tkcmd(f.tk, "cursor -default");
 	return r;
 }
 
-dumpfile1(f: ref File, file: string, sgml: int): int
+dumpfile1(f: ref File, file: string): int
 {
-	if(writefile(f, file, sgml) < 0){
+	if(writefile(f, file) < 0){
 		dialog->prompt(ctxt, f.tk.image, "error -fg red",
 			"Write file",
 			sys->sprint("Can't write %s:\n%r", file),
@@ -1607,7 +2595,7 @@ dumpfile1(f: ref File, file: string, sgml: int): int
 	return 1;
 }
 
-writefile(f: ref File, file: string, sgmlfmt: int): int
+writefile(f: ref File, file: string): int
 {
 	if(file == "")
 		return -1;
@@ -1616,32 +2604,15 @@ writefile(f: ref File, file: string, sgmlfmt: int): int
 		return -1;
 
 	t := f.tk;
-	flag := "";
-	if(sgmlfmt){
-		flag = "-sgml";
-		prefix := "<SGML>\n";
-		if(f.fontsused == 0)
-			prefix += "<"+DEFTAG+">";
-		x := array of byte prefix;
-		if(fd.write(x, len x) != len x){
-			fd.close();
-			return -1;
-		}
-	}
-	sgmltext := sgml(t, flag, "1.0", "end");
-	if(sgmlfmt)
-		sgmltext = extrewrite(f, sgmltext);
-	a := array of byte sgmltext;
+	md: string;
+	if(f.rawview)
+		md = tkcmd(t, ".ft.t get 1.0 {end - 1 char}");
+	else
+		md = mddump(f);
+	a := array of byte md;
 	if(fd.write(a, len a) != len a){
 		fd.close();
 		return -1;
-	}
-	if(sgmlfmt && f.fontsused==0){
-		suffix := array of byte ("</"+DEFTAG+">");
-		if(fd.write(suffix, len suffix) != len suffix){
-			fd.close();
-			return -1;
-		}
 	}
 	if(fd.flush() < 0){
 		fd.close();
@@ -1649,7 +2620,7 @@ writefile(f: ref File, file: string, sgmlfmt: int): int
 	}
 	fd.close();
 	if(file == f.name){
-		dirty(f, sgmlfmt!=f.fontsused);
+		dirty(f, 0);
 		tkcmd(t, UPDATE);
 	}
 	return 1;
@@ -1665,7 +2636,7 @@ shutdown(s: ref Draw->Context, t: ref Tk->Toplevel): int
 			"cancel" =>
 				return 0;
 			"exitclean" =>
-				if(dumpfile(f, f.name, f.fontsused) < 0)
+				if(dumpfile(f, f.name) < 0)
 					return 0;
 			"exitdirty" =>
 				break;
@@ -1694,7 +2665,6 @@ tkcmd(t: ref Tk->Toplevel, s: string): string
 confirm_cfg := array[] of {
 	"frame .f -borderwidth 2 -relief groove -padx 3 -pady 3",
 	"frame .f.f",
-#	"label .f.f.l -bitmap error -foreground red",
 	"label .f.f.l -text Warning:",
 	"label .f.f.m",
 	"button .f.exitclean -text {  Write and Proceed  } -width 17w -command {send cmd exitclean}",
@@ -1718,7 +2688,7 @@ widget(parent: ref Tk->Toplevel, ctxt: ref Draw->Context, cfg: array of string):
 tkcmds(top: ref Tk->Toplevel, a: array of string)
 {
 	for(i := 0; i < len a; i++)
-		v := tkcmd(top, a[i]);
+		tkcmd(top, a[i]);
 }
 
 confirm(ctxt: ref Draw->Context, parent: ref Tk->Toplevel, message: string, write: int): string
@@ -1753,24 +2723,23 @@ getfilename_cfg := array[] of {
 	"frame .f",
 	"label .f.Message",
 	"entry .f.Name -width 25w",
-	"checkbutton .f.SGML -text { Write SGML } -variable SGML",
 	"button .f.Ok -text {  OK  } -width 14w -command {send cmd ok}",
 	"button .f.Browse -text {  Browse  } -width 14w -command {send cmd browse}",
 	"button .f.Cancel -text {  Cancel  } -width 14w -command {send cmd cancel}",
 	"bind .f.Name <Control-j> {send cmd ok}",
-	"pack .f.Message .f.Name .f.SGML .f.Ok .f.Browse .f.Cancel -padx 10 -pady 10",
+	"pack .f.Message .f.Name .f.Ok .f.Browse .f.Cancel -padx 10 -pady 10",
 	"pack .f",
 	"focus .f.Name",
 };
 
-getfilename(ctxt: ref Draw->Context, parent: ref Tk->Toplevel, message, name: string, browse, sgml, nowsgml: int): (string, int, int)
+getfilename(ctxt: ref Draw->Context, parent: ref Tk->Toplevel, message, name: string, browse: int): (string, int)
 {
-	(s, i, issgml) := getfilename1(ctxt, parent, message, name, browse, sgml, nowsgml);
+	(s, i) := getfilename1(ctxt, parent, message, name, browse);
 	tkcmd(parent, FOCUS);
-	return (s, i, issgml);
+	return (s, i);
 }
 
-getfilename1(ctxt: ref Draw->Context, parent: ref Tk->Toplevel, message, name: string, browse, sgml, nowsgml: int): (string, int, int)
+getfilename1(ctxt: ref Draw->Context, parent: ref Tk->Toplevel, message, name: string, browse: int): (string, int)
 {
 	t := widget(parent, ctxt, getfilename_cfg);
 	tkcmds(t, getfilename_cfg);
@@ -1779,10 +2748,6 @@ getfilename1(ctxt: ref Draw->Context, parent: ref Tk->Toplevel, message, name: s
 	tk->cmd(t, ".f.Name insert 0 "+name);
 	if(browse == 0)
 		tkcmd(t, "destroy .f.Browse");
-	if(sgml == 0)
-		tkcmd(t, "destroy .f.SGML");
-	else if(nowsgml)
-		tkcmd(t, ".f.SGML select");
 	tkcmd(t, UPDATE);
 	cmd := chan of string;
 	tk->namechan(t, cmd, "cmd");
@@ -1796,95 +2761,27 @@ getfilename1(ctxt: ref Draw->Context, parent: ref Tk->Toplevel, message, name: s
 		c := <-cmd =>
 			case c {
 			"ok" =>
-				return (tkcmd(t, ".f.Name get"), 1, int tkcmd(t, "variable SGML"));
+				return (tkcmd(t, ".f.Name get"), 1);
 			"cancel" =>
-				return ("", 0, 0);
+				return ("", 0);
 			"browse" =>
 				name = tkcmd(t, ".f.Name get");
 				(dir, path) := basepath(name);
-	
+
 				pat := list of {
 					"* (All files)",
-					"*.sgml (SGML dump files)",
-					"*.html (Web source files)",
-					"*.tex (Latex source files)",
+					"*.md (Markdown files)",
 					"*.[bm] (Limbo source files)"
 				};
-	
+
 				path = selectfile->filename(ctxt, parent.image, message, pat, dir);
 				if(path != "")
 					name = path;
 				tk->cmd(t, ".f.Name delete 0 end; .f.Name insert 0 "+name+";focus .f.Name; update");
 				if(path != "")
-					return (name, 1, int tkcmd(t, "variable SGML"));
+					return (name, 1);
 		}
 	}
-}
-
-tageditor(ctxt: ref Draw->Context, f: ref File)
-{
-	(start, end) := word(f.tk);
-	if(start == nil)
-		return;
-	cfg := array[100] of string;
-	i := 0;
-	cfg[i++] = "frame .f";
-	(nil, names) := sys->tokenize(tkcmd(f.tk, ".ft.t tag names "+start), " ");
-	pack := "pack";
-	set := array[NEXTRA] of int;
-	for(j:=0; j<NEXTRA; j++){
-		n := tagname[j+NFONT*NSIZE];
-		cfg[i++] = "checkbutton .f.c"+string j+" -variable c"+string j+
-			" -text {"+n+"} -command {send cmd "+string j+"} -anchor w";
-		pack += " .f.c"+string j;
-		set[j] = 0;
-		for(l:=names; l!=nil; l=tl l)
-			if(hd l == n){
-				cfg[i++] = ".f.c"+string j+" select";
-				set[j] = 1;
-			}
-	}
-	cfg[i++] = "button .f.Ok -text {  OK  } -width 6w -command {send cmd ok}";
-	cfg[i++] = "button .f.Cancel -text {  Cancel  } -width 6w -command {send cmd cancel}";
-	cfg[i++] = pack + " -padx 3 -pady 0 -fill x";
-	cfg[i++] = "pack .f.Ok .f.Cancel -padx 2 -pady 2 -side left";
-	cfg[i++] = "pack .f; grab set .f; update";
-	t := widget(f.tk, ctxt, cfg[0:i]);
-	cmd := chan of string;
-	tk->namechan(t, cmd, "cmd");
-	tkclient->onscreen(t, "exact");
-	tkclient->startinput(t, "kbd"::"ptr"::nil);
-
-    loop:
-	for(;;){
-		alt{
-		s := <-t.ctxt.kbd =>
-			tk->keyboard(t, s);
-		s := <-t.ctxt.ptr =>
-			tk->pointer(t, *s);
-		c := <-cmd =>
-			case c {
-			"ok" =>
-				break loop;
-			"cancel" =>
-				return;
-			* =>
-				j = int c;
-				set[j] = (tkcmd(t, "variable c"+c) == "1");
-			}
-		}
-	}
-	for(j=0; j<NEXTRA; j++){
-		s := tagname[j+NFONT*NSIZE];
-		if(set[j]){
-			configfont(f, s);
-			tkcmd(f.tk, ".ft.t tag add "+s+" "+start+" "+end);
-		}else
-			tkcmd(f.tk, ".ft.t tag remove "+s+" "+start+" "+end);
-	}
-	dirty(f, 1);
-	usingfonts(f);
-	tkcmd(f.tk, UPDATE);
 }
 
 plumbpid: int;
@@ -2005,8 +2902,6 @@ showaddr(f: ref File, addr: string)
 		return;
 	t := f.tk;
 	if(addr[0]=='#' || ('0'<=addr[0] && addr[0]<='9')){
-		# UGLY! just do line and character numbers until we get a
-		# decent command/address interface set up.
 		if(!nullsel(t))
 			tkcmd(t, NOSEL);
 		if(addr[0] == '#'){
